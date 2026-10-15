@@ -1,0 +1,36 @@
+# Secretos: nunca al repo público
+.env
+.env.*
+!.env.example
+
+# Material del docente y exports de Stitch (carpeta local)
+insumos/
+
+# Python / entornos virtuales
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node (compilación de Tailwind)
+node_modules/
+
+# Django
+staticfiles/
+media/
+*.sqlite3
+
+# Editor y sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Configuración personal de Claude Code (la skill sí se sube)
+.claude/settings.local.json
