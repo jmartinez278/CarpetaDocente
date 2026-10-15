@@ -7,6 +7,8 @@ El sistema cubre tres dimensiones de la gestión pedagógica del docente de prim
 2. Registro y control de notas
 3. Control de asistencia
 
+Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de diseño y alcance las toma el equipo.
+
 **Stack:** Django · PostgreSQL · HTMX · Tailwind CSS · Alpine.js ([ver justificación](<docs/01 Inicio/10. Stack tecnológico V_1_2_0.md>))
 
 **Equipo:** Martinez Llanos Marco Jhair (Director de Proyecto) · Cuicapuza Remigio Nayely Nilda · Vera Zea Jhoanna Hade
