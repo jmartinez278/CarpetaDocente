@@ -35,7 +35,7 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 8. [Usuarios](<docs/01 Inicio/08. Usuarios V_1_1_0.md>)
 9. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_0_0.md>)
 10. [Stack tecnológico](<docs/01 Inicio/10. Stack tecnológico V_1_2_0.md>)
-11. [Base de datos](<docs/01 Inicio/11. Base de datos V_1_0_0.md>)
+11. [Base de datos](<docs/01 Inicio/11. Base de datos V_1_1_0.md>)
 12. [Modelo C4](<docs/01 Inicio/12. Modelo C4 V_1_1_0.md>)
 13. [Restricciones](<docs/01 Inicio/13. Restricciones V_1_1_0.md>)
 
