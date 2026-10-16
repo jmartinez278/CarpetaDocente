@@ -54,6 +54,9 @@ Restricciones:
 - `permissions: contents: read` a nivel del workflow; ningún trabajo necesita escribir. CodeQL no usa este workflow (D8).
 - `actions/checkout` con `persist-credentials: false`. `SonarQube Cloud` usa `fetch-depth: 0`, porque SonarQube necesita el historial para saber qué código es nuevo.
 - `timeout-minutes` en cada trabajo (15 en general), para que un proceso colgado no gaste minutos.
+- **Ajustes en la implementación (16/10/2026, aprobados por el usuario):**
+  - Permisos: `permissions: {}` a nivel del workflow y `contents: read` en **cada trabajo**, en lugar de `contents: read` para todo el workflow. Es más estricto: un trabajo nuevo empieza sin permisos.
+  - Concurrencia: el grupo es `ci-pr-<número>` en los PR y `ci-push-<run_id>` en los push a `main`. Con un grupo común para `main` (`github.ref`), GitHub deja una sola ejecución pendiente por grupo y descarta la anterior aunque `cancel-in-progress` sea `false` (documentación de GitHub Actions, *Concurrency*). Con un grupo por ejecución, ninguna ejecución de `main` se cancela. `queue: max` lo resolvería en orden, pero actionlint 1.7.12 todavía no reconoce esa clave.
 
 ### D3. Python con uv, igual que en local
 
@@ -110,6 +113,7 @@ Restricciones:
   - `sonar.sources=src`, `sonar.tests=src/backend`, `sonar.test.inclusions=**/tests/**` y `sonar.exclusions=**/migrations/**,**/tests/**,**/static/dist/**,**/node_modules/**`.
   - `sonar.python.version=3.13` y `sonar.python.coverage.reportPaths=coverage.xml`.
 - **Sin `sonar.qualitygate.wait`.** SonarQube Cloud publica la puerta de calidad en el PR como la verificación `SonarCloud Code Analysis`, por medio de su aplicación de GitHub, y esa verificación es la que exige el *ruleset*. La documentación desaconseja usar la espera para informar la puerta en un PR: alarga el trabajo y duplica la señal. Así, el trabajo `SonarQube Cloud` solo falla si el análisis no se pudo subir (por ejemplo, si falta el token).
+  - **Revisado en la implementación (16/10/2026):** se probó `sonar.qualitygate.wait=true` y el usuario decidió volver a esta decisión, sin espera. `sonar-project.properties` no lleva ese parámetro; la puerta de calidad la informa solo `SonarCloud Code Analysis`.
 - Condición `if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository`: siempre corre en push a `main`, y se salta en los PR desde *forks*, que no reciben secretos. El equipo trabaja en el mismo repositorio, así que en la práctica siempre corre.
 - **Puerta de calidad: Sonar way.** Es la única disponible en el plan gratuito. Pide en el código nuevo: cobertura de 80 % o más, duplicación de 3 % o menos, calificaciones A en fiabilidad, seguridad y mantenibilidad, y todos los *security hotspots* revisados. Es **más estricta** que el texto de la DoD ("sin críticas ni altas"): bloquea también problemas menores nuevos. Se anota en "Pendientes de documentación".
 
@@ -147,6 +151,11 @@ Restricciones:
 - Revisión local antes del commit, sin agregar dependencias al proyecto:
   - `uvx --from actionlint-py actionlint` (sintaxis y expresiones);
   - `uvx zizmor .github/workflows/` (permisos, credenciales persistidas, acciones sin fijar, inyección en expresiones).
+- **Ajustes en la implementación (16/10/2026, aprobados por el usuario):**
+  - **Todas** las acciones van fijadas por SHA completo, también las `actions/*`. zizmor exige SHA en todas desde su v1.20 (antes aceptaba versión en las de GitHub), y la tarea pide zizmor sin hallazgos.
+  - Versiones vigentes al implementar (tabla de SHA en `verificacion.md`, 4.1): `actions/checkout` v7.0.1, `actions/setup-node` v7.1.0, `actions/upload-artifact` v7.0.2, `actions/download-artifact` v8.0.2, `astral-sh/setup-uv` v10.3.0 y `SonarSource/sonarqube-scan-action` v8.3.0 (D9 mencionaba la v7). Las notas de cada versión mayor no afectan este uso.
+  - actionlint también se ejecuta con shellcheck (`uvx --from actionlint-py --with shellcheck-py actionlint`), para que revise los scripts de `run:`.
+  - Con `--persona=auditor`, zizmor muestra dos hallazgos que su perfil por defecto suprime: `unpinned-images` (`postgres:17` sin digest, igual que en el compose; la base vive solo durante el trabajo) y `secrets-outside-env` (`SONAR_TOKEN` fuera de un *environment* de GitHub). Ninguno se corrige en EN-08; el segundo queda como posible mejora del equipo.
 
 ### D12. *Ruleset* de `main`: tarea del equipo documentada (paso B10), no código
 

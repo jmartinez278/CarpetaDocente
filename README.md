@@ -155,6 +155,53 @@ Las pruebas marcadas `e2e` abren la aplicación en Chromium. `uv run pytest` no 
 | El puerto 5432 ya está en uso | Poner otro puerto en `POSTGRES_PORT` (por ejemplo `5433`) y el mismo en `DATABASE_URL` |
 | Se quiere empezar con la base vacía | `docker compose down -v` (borra la base local y sus datos) y luego `docker compose up` |
 
+## Integración continua
+
+Cada Pull Request hacia `main`, y cada push a `main`, pasa por el workflow `CI` (`.github/workflows/ci.yml`, EN-08). Con eso se comprueban los criterios 1, 2 y 5 de la DoD. CodeQL corre aparte, con la configuración por defecto de GitHub. Un commit nuevo en el PR vuelve a ejecutar todo.
+
+### Verificaciones
+
+| Verificación | Qué revisa | Cómo reproducirla en la laptop |
+|---|---|---|
+| `Ruff` | Estilo, formato y reglas de seguridad `S` (Bandit), con las reglas de `pyproject.toml`. Los problemas aparecen como anotaciones en las líneas del PR | `uv run ruff check .` y `uv run ruff format --check .` |
+| `Pruebas y cobertura` | Todas las pruebas, menos las `e2e`, contra un PostgreSQL 17 temporal. Falla si una prueba falla o si la cobertura total baja de 80 % | Con `db` levantado: `uv run pytest --cov` |
+| `Playwright` | Compila el CSS y abre la página inicial en Chromium (pruebas `e2e`) | Los tres pasos de [Pruebas de punta a punta](#pruebas-de-punta-a-punta-playwright) |
+| `SonarQube Cloud` | Sube el análisis y la cobertura (`coverage.xml`) a SonarQube Cloud. Solo falla si el análisis no se pudo subir | No se reproduce: necesita el token. El informe que sube se genera con `uv run pytest --cov --cov-report=xml` |
+| `SonarCloud Code Analysis` | Puerta de calidad **Sonar way** sobre el código nuevo del PR: cobertura de 80 % o más, duplicación de 3 % o menos, calificación A en fiabilidad, seguridad y mantenibilidad, y *hotspots* revisados. La publica la aplicación de SonarQube Cloud | No se reproduce: se ve en SonarQube Cloud, en el PR |
+| CodeQL | Análisis de seguridad de Python, JavaScript y los workflows. Se bloquea la fusión con alertas de severidad alta o crítica | No se reproduce: las alertas aparecen en el PR y en *Security → Code scanning*. Ruff con las reglas `S` cubre una parte en la laptop |
+
+El canal no usa claves reales:
+- La base es un PostgreSQL de servicio, sin contraseña, que se destruye al terminar cada trabajo. Solo tiene los datos ficticios que crean las pruebas.
+- La clave de Django se genera en cada ejecución.
+- El único secreto es el token de SonarQube Cloud. **Vive solo en los secretos de GitHub** (`SONAR_TOKEN`) y el workflow lo lee como `${{ secrets.SONAR_TOKEN }}`. No va en el repositorio, en `.env` ni en ningún mensaje.
+
+> **No renombrar los trabajos de `ci.yml`.** El `name:` de cada uno (`Ruff`, `Pruebas y cobertura`, `Playwright`, `SonarQube Cloud`) es la verificación que exige el *ruleset* de `main`. Si se renombra uno, el *ruleset* se queda esperando una verificación que ya no existe y ningún PR se puede fusionar. Si hace falta renombrar, hay que actualizar el *ruleset* en el mismo momento.
+
+### Puesta en marcha (equipo, una sola vez)
+
+1. **SonarQube Cloud:** importar `jmartinez278/CarpetaDocente` (plan gratuito). En *Administration → Analysis Method*, apagar *Automatic Analysis*: si quedan activos el análisis automático y el de CI, el de CI falla. La organización y la clave del proyecto van en `sonar-project.properties`.
+2. **Token:** generarlo en SonarQube Cloud y pegarlo en GitHub, en *Settings → Secrets and variables → Actions → New repository secret*, con el nombre `SONAR_TOKEN`. El valor no se comparte con nadie.
+3. **CodeQL:** *Settings → Code security → Code scanning → CodeQL analysis → Set up → Default*, con el conjunto de consultas *Default*. No hay workflow de CodeQL en el repositorio.
+
+### *Ruleset* de `main` (equipo, paso B10)
+
+Se crea **después** de que el canal corra una vez en un PR: GitHub solo deja elegir verificaciones que ya existen en el repositorio. Ruta: *Settings → Rules → Rulesets → New ruleset → New branch ruleset*. *Enforcement status*: *Active*. *Target branches*: *Include default branch*. Se recomienda dejar vacía la lista de excepciones (*bypass list*), para que nadie fusione sin cumplir.
+
+Lo que exige EN-08:
+
+| Regla | Valor |
+|---|---|
+| *Require status checks to pass* | `Ruff`, `Pruebas y cobertura`, `Playwright`, `SonarQube Cloud` y `SonarCloud Code Analysis`; activar *Require branches to be up to date before merging* |
+| *Require code scanning results* | Herramienta CodeQL: *Security alerts* "High or higher" y *Alerts* "Errors" |
+
+Lo que el equipo agrega en el mismo paso B10, fuera de EN-08:
+
+| Regla | Valor |
+|---|---|
+| *Require a pull request before merging* | 1 aprobación; *Dismiss stale pull request approvals when new commits are pushed*; *Require approval of the most recent reviewable push* (DoD 3: aprueba otra integrante) |
+| *Block force pushes* | Activa |
+| *Restrict deletions* | Activa |
+
 ## Datos
 
 El repositorio es público: solo contiene datos ficticios. No se suben datos reales de estudiantes.

@@ -177,3 +177,202 @@ $ DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium
 PS> $env:DJANGO_ALLOW_ASYNC_UNSAFE = "true"; uv run pytest -m e2e --browser chromium
 ====================== 4 passed, 37 deselected in 2.88s =======================
 ```
+
+## 4.1 Versiones y SHA de las acciones
+
+Consultado el 16/10/2026 con `git ls-remote` (tags del repositorio de cada acción). Los seis son tags ligeros (sin entrada `^{}`), así que el SHA del tag es el del commit. Las entradas usadas se comprobaron en el `action.yml` de cada SHA; todas corren en `node24`.
+
+| Acción | Versión | SHA completo |
+|---|---|---|
+| `actions/checkout` | v7.0.1 | `3d3c42e5aac5ba805825da76410c181273ba90b1` |
+| `actions/setup-node` | v7.1.0 | `949feb2413d6458794dcd2491c4babbbce0c15c1` |
+| `actions/upload-artifact` | v7.0.2 | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` |
+| `actions/download-artifact` | v8.0.2 | `9000827ccba6bdab643e8b6fd33ac0654aef8333` |
+| `astral-sh/setup-uv` | v10.3.0 | `1c37ad07a6a961277cf70c0d37d6f313000f5884` |
+| `SonarSource/sonarqube-scan-action` | v8.3.0 | `d209202bc7d53ff1cc128f7f907dac145c9d6ae9` |
+
+Notas de la consulta:
+- `sonarqube-scan-action`: la documentación de SonarQube Cloud todavía muestra la v7. La v8 solo cambia un valor por defecto (`skipSignatureVerification` pasa a `false`: el escáner descargado se verifica por firma) y no cambia el uso de `SONAR_TOKEN` ni de `sonar-project.properties`.
+- `download-artifact` v8: un hash que no coincide ahora hace fallar el paso (`digest-mismatch: error`); al descargar por nombre, los archivos siguen quedando directo en `path`.
+- zizmor 1.31.1 exige, desde la v1.20, SHA también en `actions/*` (antes aceptaba versión). Por eso las seis acciones van fijadas por SHA, no solo las dos de terceros.
+
+## 4.2 a 4.4 Workflow y `sonar-project.properties`
+
+Fecha: 16/10/2026. El usuario aprobó `.github/workflows/ci.yml` después de revisar el borrador completo; la copia en el repositorio es idéntica al borrador aprobado (`cmp` sin diferencias). Ajustes respecto del design: ver las notas de "Ajustes en la implementación" en D2, D9 y D11 de `design.md`.
+
+Reglas pedidas por el usuario y dónde se cumplen en `ci.yml`:
+- Disparadores: solo `pull_request` hacia `main` y `push` a `main`; no hay `pull_request_target`.
+- Permisos: `permissions: {}` en el workflow y `contents: read` en cada uno de los cuatro trabajos.
+- Acciones: las seis por SHA completo verificado con `git ls-remote` (tabla de 4.1).
+- Token: solo `${{ secrets.SONAR_TOKEN }}`, en el `env:` del paso del análisis.
+- Sin `continue-on-error`.
+- `DJANGO_ALLOW_ASYNC_UNSAFE`: solo en el `env:` del paso "Pruebas de punta a punta".
+- `sonar-project.properties` sin `sonar.qualitygate.wait` (D9).
+
+### actionlint y zizmor sobre `.github/workflows/`
+
+```text
+$ uvx --from actionlint-py --with shellcheck-py actionlint -verbose
+verbose: Collected 1 YAML files
+verbose: Found 0 parse errors in 0 ms for .github\workflows\ci.yml
+verbose: Rule "pyflakes" was disabled: exec: "pyflakes": executable file not found in %PATH%
+verbose: Found total 0 errors in 65 ms for .github\workflows\ci.yml
+exit=0
+
+$ uvx zizmor .github/workflows/
+ INFO zizmor: 🌈 zizmor v1.31.1
+ WARN audit: zizmor: zizmor is running in offline mode by default; some audits and auto-fixes will not be available.
+ INFO audit: zizmor: 🌈 completed .github\workflows\ci.yml
+No findings to report. Good job! (3 suppressed)
+exit=0
+```
+
+actionlint 1.7.12 corre con shellcheck (de `shellcheck-py`), que revisa los scripts de `run:`; la regla `pyflakes` queda deshabilitada porque no hay Python en línea. zizmor corre sin conexión (sin `gh` ni token de GitHub), así que no ejecuta las auditorías en línea; los SHA de las acciones se verificaron aparte con `git ls-remote`.
+
+Los 3 hallazgos suprimidos solo aparecen con `--persona=auditor` y no se corrigen en EN-08 (D11):
+
+```text
+$ uvx zizmor --persona=auditor .github/workflows/
+error[unpinned-images]: unpinned image references          --> .github\workflows\ci.yml:57:9
+error[unpinned-images]: unpinned image references          --> .github\workflows\ci.yml:104:9
+warning[secrets-outside-env]: secrets referenced without a dedicated environment --> .github\workflows\ci.yml:183:28
+3 findings: 0 informational, 0 low, 1 medium, 2 high
+```
+
+### Búsqueda de tokens (4.4)
+
+`ci.yml` y `sonar-project.properties` aún no estaban en el índice, por eso se usó `--untracked` (los archivos ignorados, como `.env`, quedan fuera).
+
+```text
+$ git grep --untracked -n -i "sonar_token\|token"
+.env.example:6:            secrets.token_urlsafe(50)   ← cómo generar la clave de Django
+.github/workflows/ci.yml:8:      comentario: "El único secreto es SONAR_TOKEN…"
+.github/workflows/ci.yml:82:     secrets.token_urlsafe(50)   ← clave de Django generada en el trabajo
+.github/workflows/ci.yml:139:    secrets.token_urlsafe(50)   ← ídem, trabajo Playwright
+.github/workflows/ci.yml:183:    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   ← única referencia al token
+README.md:69:                    secrets.token_urlsafe(50)   ← cómo generar la clave de Django
+sonar-project.properties:2:      comentario: "el token vive en los secretos de GitHub"
+docs/…, openspec/…:              textos de documentación (design, proposal, spec, tasks, verificación)
+```
+
+Resultado: la única referencia al token es `${{ secrets.SONAR_TOKEN }}`; el resto es documentación o la función `secrets.token_urlsafe`, que no contiene ningún valor.
+
+Control adicional de patrones de claves reales (tokens de SonarQube `sqp_`/`sqa_`/`squ_`, de GitHub, de AWS, llaves privadas y `django-insecure`):
+
+```text
+$ git grep --untracked -n -E "sq[pau]_[0-9a-f]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY|django-insecure"
+openspec/changes/en-01-proyecto-django-base/verificacion.md:122:- Patrones de claves (`django-insecure`, …): ninguno.
+```
+
+Única coincidencia: el texto de EN-01 que describe esta misma búsqueda. No hay claves.
+
+## 4.5 Sección "Integración continua" del README
+
+Fecha: 16/10/2026. La sección incluye la tabla de verificaciones con cómo reproducir cada una en la laptop, la puesta en marcha (pasos 1.1 a 1.3), la guía del *ruleset* de `main` (paso B10) separando lo que exige EN-08 de lo que agrega el equipo, el aviso de no renombrar los trabajos y que el token vive solo en los secretos de GitHub. `SonarQube Cloud`, `SonarCloud Code Analysis` y CodeQL no se reproducen en la laptop; la tabla lo dice.
+
+Cada comando local de la tabla, ejecutado tal cual (con `db` levantado):
+
+```text
+$ uv run ruff check .
+All checks passed!
+$ uv run ruff format --check .
+105 files already formatted
+$ uv run pytest --cov
+Required test coverage of 80.0% reached. Total coverage: 87.10%
+====================== 37 passed, 4 deselected in 3.94s =======================
+$ uv run pytest --cov --cov-report=xml
+Coverage XML written to file coverage.xml
+Required test coverage of 80.0% reached. Total coverage: 87.10%
+====================== 37 passed, 4 deselected in 3.91s =======================
+$ uv run playwright install chromium        → exit 0
+$ cd src/frontend && npm ci && npm run build → Done
+$ DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium
+====================== 4 passed, 37 deselected in 2.51s =======================
+```
+
+## 4.6 Revisión local completa antes del commit
+
+Fecha: 16/10/2026. Con `db` levantado (`docker compose up -d db`), el CSS compilado y Chromium instalado. Las pruebas `e2e` se corren con `DJANGO_ALLOW_ASYNC_UNSAFE=true`, como indica el README (sin la variable fallan con `SynchronousOnlyOperation`, ver 3.3).
+
+```text
+$ uv run ruff check .
+All checks passed!
+exit=0
+
+$ uv run ruff format --check .
+105 files already formatted
+exit=0
+
+$ uv run pytest --cov
+============================= test session starts =============================
+platform win32 -- Python 3.13.16, pytest-9.1.1, pluggy-1.7.0
+django: version: 5.2.18, settings: config.settings (from ini)
+rootdir: C:\Proyectos\CarpetaDocente
+configfile: pyproject.toml
+testpaths: src/backend
+plugins: cov-7.1.0, django-4.14.0, playwright-0.10.0
+collected 41 items / 4 deselected / 37 selected
+
+src\backend\config\tests\test_base_datos.py .                            [  2%]
+src\backend\cuentas\tests\test_admin.py ...                              [ 10%]
+src\backend\cuentas\tests\test_modelos.py ............                   [ 43%]
+src\backend\institucion\tests\test_admin.py .                            [ 45%]
+src\backend\institucion\tests\test_modelos.py ......                     [ 62%]
+src\backend\config\tests\test_settings.py .......                        [ 81%]
+src\backend\cuentas\tests\test_inicio.py .......                         [100%]
+
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.13.16-final-0 _______________
+
+Name                                Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------
+src\backend\actividad\apps.py           4      0   100%
+src\backend\asistencia\apps.py          4      0   100%
+src\backend\catalogo\apps.py            4      0   100%
+src\backend\config\asgi.py              4      4     0%   10-16
+src\backend\config\settings.py         26      0   100%
+src\backend\config\urls.py              4      0   100%
+src\backend\config\wsgi.py              4      4     0%   10-16
+src\backend\cuentas\admin.py           19      0   100%
+src\backend\cuentas\apps.py             4      0   100%
+src\backend\cuentas\models.py          25      0   100%
+src\backend\cuentas\views.py            3      0   100%
+src\backend\direccion\apps.py           4      0   100%
+src\backend\exportaciones\apps.py       4      0   100%
+src\backend\institucion\admin.py        6      0   100%
+src\backend\institucion\apps.py         4      0   100%
+src\backend\institucion\models.py      17      1    94%   43
+src\backend\manage.py                  11     11     0%   4-23
+src\backend\notas\apps.py               4      0   100%
+src\backend\repositorio\apps.py         4      0   100%
+-----------------------------------------------------------------
+TOTAL                                 155     20    87%
+
+32 empty files skipped.
+Required test coverage of 80.0% reached. Total coverage: 87.10%
+====================== 37 passed, 4 deselected in 4.04s =======================
+exit=0
+
+$ DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium
+============================= test session starts =============================
+platform win32 -- Python 3.13.16, pytest-9.1.1, pluggy-1.7.0
+django: version: 5.2.18, settings: config.settings (from ini)
+rootdir: C:\Proyectos\CarpetaDocente
+configfile: pyproject.toml
+testpaths: src/backend
+plugins: cov-7.1.0, django-4.14.0, playwright-0.10.0
+collected 41 items / 37 deselected / 4 selected
+
+src\backend\cuentas\tests\test_inicio_e2e.py ....                        [100%]
+
+====================== 4 passed, 37 deselected in 2.64s =======================
+exit=0
+```
+
+### Revisión del diff (DoD 8 y claves)
+
+Se revisaron las 371 líneas agregadas respecto de `HEAD` en `README.md`, `design.md`, `tasks.md`, `verificacion.md`, `.github/workflows/ci.yml` y `sonar-project.properties`.
+
+- **DoD 8, sin datos reales:** no hay correos, números de 8 o 9 dígitos (DNI o teléfonos), nombres de estudiantes ni datos de la I.E. El workflow no carga datos: la base del canal solo tiene lo que crean las pruebas. La única referencia a una persona es `jmartinez278`, el usuario dueño del repositorio público, que también es la organización pública de SonarQube Cloud (`sonar.organization` y `sonar.projectKey`).
+- **Claves:** la única referencia al token en archivos que se ejecutan es `.github/workflows/ci.yml:183` (`SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}`). Las demás menciones de `secrets.SONAR_TOKEN` están en la documentación (README, design, verificación). `secrets.token_urlsafe` es la función que genera la clave de Django en cada trabajo. No aparecen patrones de claves reales (`sqp_`/`sqa_`/`squ_`, tokens de GitHub, claves de AWS, llaves privadas ni `django-insecure`). Las únicas coincidencias son los textos de esta verificación que describen esa búsqueda. No hay contraseñas: el PostgreSQL del canal usa `POSTGRES_HOST_AUTH_METHOD: trust`.
+- **Archivos fuera del repositorio:** `coverage.xml` y `src/backend/static/dist/` están ignorados y no entran en el diff; `.env` no aparece.
