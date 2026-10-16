@@ -9,6 +9,7 @@ class GestorUsuarios(UserManager):
     """Gestor de usuarios: todo superusuario tiene el rol ADMINISTRADOR."""
 
     def create_superuser(self, username, email=None, password=None, **extra_fields):
+        """Crea un superusuario con rol ADMINISTRADOR; rechaza cualquier otro rol."""
         extra_fields.setdefault("rol", Usuario.Rol.ADMINISTRADOR)
         if extra_fields["rol"] != Usuario.Rol.ADMINISTRADOR:
             raise ValueError("El superusuario debe tener rol=ADMINISTRADOR.")

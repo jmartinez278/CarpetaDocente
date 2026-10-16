@@ -42,16 +42,16 @@ Ejecución con pruebas primero (TDD): en cada tarea con comportamiento, la prueb
 
 ## 7. Documentación (DoD 9)
 
-- [ ] 7.1 README, sección "Configuración local": requisitos (Docker Desktop; uv y Node 24 solo para la opción B), copiar `.env`, opción A `docker compose up` (el servicio `frontend` compila el CSS), opción B `db` en Docker + `uv run ... runserver` + `npm run dev` en otra terminal, nota "si la página sale sin estilos, falta compilar el CSS", `pytest` y Ruff, cambio de `POSTGRES_PORT`. Verificar: seguir los pasos desde un clon limpio levanta el proyecto con estilos en ambas opciones
-- [ ] 7.2 Crear `docs/03 Implementación/Catálogo de rutas.md` (D11) con `/` y `/admin/` (método, vista, rol, RF) y el enlace de retorno al README; enlazarlo desde el README. Verificar: las rutas del catálogo coinciden con `config/urls.py`
-- [ ] 7.3 Actualizar en el README el estado del proyecto (Sprint 1 en curso). Verificar: enlaces relativos funcionan
+- [x] 7.1 README, sección "Configuración local": requisitos (Docker Desktop; uv y Node 24 solo para la opción B), copiar `.env`, opción A `docker compose up` (el servicio `frontend` compila el CSS), opción B `db` en Docker + `uv run ... runserver` + `npm run dev` en otra terminal, nota "si la página sale sin estilos, falta compilar el CSS", `pytest` y Ruff, cambio de `POSTGRES_PORT`. Verificar: seguir los pasos desde un clon limpio levanta el proyecto con estilos en ambas opciones
+- [x] 7.2 Crear `docs/03 Implementación/Catálogo de rutas.md` (D11) con `/` y `/admin/` (método, vista, rol, RF) y el enlace de retorno al README; enlazarlo desde el README. Verificar: las rutas del catálogo coinciden con `config/urls.py`
+- [x] 7.3 Actualizar en el README el estado del proyecto (Sprint 1 en curso). Verificar: enlaces relativos funcionan
 
 ## 8. Verificación integral y cierre según la DoD
 
-- [ ] 8.1 Desde una base vacía (`docker compose down -v`): `docker compose up` responde en `/` con estilos; `uv run pytest --cov` en verde con cobertura de 80 % o más (DoD 1); `uv run ruff check .` y `uv run ruff format --check .` limpios. Verificar: salida de cada comando registrada en el PR
-- [ ] 8.2 Versión de Python igual en laptop y contenedor. Verificar: `uv run python --version` y `docker compose run --rm web python --version` muestran 3.13.x
-- [ ] 8.3 DoD 9: README, docstrings en modelos, vista y configuración, catálogo de rutas y specs del cambio al día. Verificar: lista de comprobación en la descripción del PR
-- [ ] 8.4 DoD 8 y revisión antes de cerrar: `git status` y diff sin `.env`, `insumos/`, claves, datos reales de estudiantes ni archivos de terceros; solo datos ficticios en pruebas. Verificar: lista de archivos del commit revisada con el usuario
+- [x] 8.1 Desde una base vacía (`docker compose down -v`): `docker compose up` responde en `/` con estilos; `uv run pytest --cov` en verde con cobertura de 80 % o más (DoD 1); `uv run ruff check .` y `uv run ruff format --check .` limpios. Verificar: salida de cada comando registrada en el PR
+- [x] 8.2 Versión de Python igual en laptop y contenedor. Verificar: `uv run python --version` y `docker compose run --rm web python --version` muestran 3.13.x
+- [x] 8.3 DoD 9: README, docstrings en modelos, vista y configuración, catálogo de rutas y specs del cambio al día. Verificar: lista de comprobación en la descripción del PR
+- [x] 8.4 DoD 8 y revisión antes de cerrar: `git status` y diff sin `.env`, `insumos/`, claves, datos reales de estudiantes ni archivos de terceros; solo datos ficticios en pruebas. Verificar: lista de archivos del commit revisada con el usuario
 
 ## Workflow follow-up
 

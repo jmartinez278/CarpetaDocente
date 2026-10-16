@@ -41,3 +41,12 @@ select = ["E", "W", "F", "I", "B", "UP", "DJ", "S"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S101"]
+
+[tool.coverage.run]
+# Código propio de src/backend; no cuentan las migraciones generadas ni las pruebas.
+source = ["src/backend"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
