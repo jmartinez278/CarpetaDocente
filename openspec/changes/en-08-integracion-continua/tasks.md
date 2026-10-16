@@ -16,11 +16,11 @@ Ejecución con pruebas primero (TDD) donde hay comportamiento: la prueba se escr
 
 ## 3. Playwright y pruebas de punta a punta
 
-- [ ] 3.1 Consultar Context7 (pytest-playwright, `live_server` de pytest-django y su manejo de estáticos, `DJANGO_ALLOW_ASYNC_UNSAFE`) y agregar `pytest-playwright` al grupo `dev` con `uv add --dev pytest-playwright`. Verificar: `uv.lock` actualizado y `uv sync --locked` termina sin errores
-- [ ] 3.2 Registrar el marcador `e2e` en `[tool.pytest]` y agregar `addopts = ["-m", "not e2e"]` (D10). Verificar: `uv run pytest` ejecuta las mismas pruebas que antes y termina en verde sin navegadores instalados
-- [ ] 3.3 Prueba primero: `src/backend/cuentas/tests/test_inicio_e2e.py`, con docstring y `pytestmark = pytest.mark.e2e`. Comprueba el nombre y las tres dimensiones en orden, que `app.css` responde 200 y que `htmx` y `Alpine` están definidos en la página. Verificar en rojo: con `src/backend/static/dist/` vacío, `uv run playwright install chromium` y luego `uv run pytest -m e2e --browser chromium` falla por el CSS y los scripts ausentes
-- [ ] 3.4 Ajustar lo necesario según 3.1 (variable de entorno para Playwright síncrono, si hace falta) sin tocar `settings.py` para producción. Verificar en verde: `npm run build` en `src/frontend/` y luego `uv run pytest -m e2e --browser chromium` pasa
-- [ ] 3.5 Documentar en el README cómo correr las pruebas de punta a punta en la laptop: instalar Chromium una vez, compilar el CSS y el comando de 3.4. Verificar: los comandos del README, ejecutados tal cual, dan el resultado de 3.4
+- [x] 3.1 Consultar Context7 (pytest-playwright, `live_server` de pytest-django y su manejo de estáticos, `DJANGO_ALLOW_ASYNC_UNSAFE`) y agregar `pytest-playwright` al grupo `dev` con `uv add --dev pytest-playwright`. Verificar: `uv.lock` actualizado y `uv sync --locked` termina sin errores
+- [x] 3.2 Registrar el marcador `e2e` en `[tool.pytest]` y agregar `addopts = ["-m", "not e2e"]` (D10). Verificar: `uv run pytest` ejecuta las mismas pruebas que antes y termina en verde sin navegadores instalados
+- [x] 3.3 Prueba primero: `src/backend/cuentas/tests/test_inicio_e2e.py`, con docstring y `pytestmark = pytest.mark.e2e`. Comprueba el nombre y las tres dimensiones en orden, que `app.css` responde 200 y que `htmx` y `Alpine` están definidos en la página. Verificar en rojo: con `src/backend/static/dist/` vacío, `uv run playwright install chromium` y luego `uv run pytest -m e2e --browser chromium` falla por el CSS y los scripts ausentes
+- [x] 3.4 Ajustar lo necesario según 3.1 (variable de entorno para Playwright síncrono, si hace falta) sin tocar `settings.py` para producción. Verificar en verde: `npm run build` en `src/frontend/` y luego `uv run pytest -m e2e --browser chromium` pasa
+- [x] 3.5 Documentar en el README cómo correr las pruebas de punta a punta en la laptop: instalar Chromium una vez, compilar el CSS y el comando de 3.4. Verificar: los comandos del README, ejecutados tal cual, dan el resultado de 3.4
 
 ## 4. Workflow de integración continua
 

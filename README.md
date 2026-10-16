@@ -119,6 +119,33 @@ uv run ruff format --check .
 
 Para generar el informe que lee SonarQube Cloud: `uv run pytest --cov --cov-report=xml`. El archivo `coverage.xml` es local y no se versiona (está en `.gitignore`).
 
+#### Pruebas de punta a punta (Playwright)
+
+Las pruebas marcadas `e2e` abren la aplicación en Chromium. `uv run pytest` no las ejecuta, así que no hace falta un navegador para las pruebas de siempre. Para correrlas en la laptop:
+
+1. Instalar Chromium para Playwright, una sola vez: `uv run playwright install chromium`.
+2. Compilar el CSS. Si `frontend` de Docker Compose (opción A) está corriendo, ya está compilado. Si no:
+
+   ```bash
+   cd src/frontend
+   npm ci
+   npm run build
+   ```
+
+3. Con `db` levantado, desde la raíz del repositorio:
+
+   ```bash
+   # Git Bash
+   DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium
+   ```
+
+   ```powershell
+   # PowerShell
+   $env:DJANGO_ALLOW_ASYNC_UNSAFE = "true"; uv run pytest -m e2e --browser chromium
+   ```
+
+`DJANGO_ALLOW_ASYNC_UNSAFE` hace falta porque Playwright deja abierto un bucle asíncrono en el hilo de la prueba y Django rechaza el acceso a la base desde ahí (`SynchronousOnlyOperation`). Va solo en este comando y en el canal, nunca en `.env` ni en `settings.py` (en PowerShell queda definida hasta cerrar esa terminal).
+
 ### Problemas frecuentes
 
 | Síntoma | Solución |
