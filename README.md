@@ -115,6 +115,10 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
+`uv run pytest --cov` falla si la cobertura total baja de **80 %** (DoD 1), aunque todas las pruebas pasen. El umbral está en `pyproject.toml` (`fail_under`) y es el mismo que aplica el canal de integración continua. La cobertura no cuenta las migraciones ni las pruebas.
+
+Para generar el informe que lee SonarQube Cloud: `uv run pytest --cov --cov-report=xml`. El archivo `coverage.xml` es local y no se versiona (está en `.gitignore`).
+
 ### Problemas frecuentes
 
 | Síntoma | Solución |

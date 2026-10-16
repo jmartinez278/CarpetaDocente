@@ -4,15 +4,15 @@ Ejecución con pruebas primero (TDD) donde hay comportamiento: la prueba se escr
 
 ## 1. Preparación fuera del repositorio (equipo)
 
-- [ ] 1.1 **(equipo)** Importar `jmartinez278/CarpetaDocente` en SonarQube Cloud (plan gratuito), apagar *Automatic Analysis* en *Administration → Analysis Method* y comunicar al asistente `sonar.organization` y `sonar.projectKey`, que son públicos. Verificar: *Analysis Method* muestra el análisis automático en OFF
-- [ ] 1.2 **(equipo)** Generar el token en SonarQube Cloud y pegarlo como secreto de repositorio `SONAR_TOKEN` en *Settings → Secrets and variables → Actions*. Verificar: la lista de secretos muestra `SONAR_TOKEN` (el valor no se comparte con nadie)
-- [ ] 1.3 **(equipo)** Activar CodeQL con la configuración por defecto (D8): *Settings → Code security → Code scanning → CodeQL analysis → Set up → Default*, con consultas *Default*. Verificar: la página muestra "Default setup" con Python entre los lenguajes y el primer análisis de `main` terminado
+- [x] 1.1 **(equipo)** Importar `jmartinez278/CarpetaDocente` en SonarQube Cloud (plan gratuito), apagar *Automatic Analysis* en *Administration → Analysis Method* y comunicar al asistente `sonar.organization` y `sonar.projectKey`, que son públicos. Verificar: *Analysis Method* muestra el análisis automático en OFF
+- [x] 1.2 **(equipo)** Generar el token en SonarQube Cloud y pegarlo como secreto de repositorio `SONAR_TOKEN` en *Settings → Secrets and variables → Actions*. Verificar: la lista de secretos muestra `SONAR_TOKEN` (el valor no se comparte con nadie)
+- [x] 1.3 **(equipo)** Activar CodeQL con la configuración por defecto (D8): *Settings → Code security → Code scanning → CodeQL analysis → Set up → Default*, con consultas *Default*. Verificar: la página muestra "Default setup" con Python entre los lenguajes y el primer análisis de `main` terminado
 
 ## 2. Cobertura con umbral de 80 %
 
-- [ ] 2.1 Con `db` levantado, medir la cobertura actual (`uv run pytest --cov`) antes de poner el umbral. Verificar: el total queda anotado en `verificacion.md`; si es menor que 80 %, detenerse y reportarlo al equipo, sin bajar el umbral
-- [ ] 2.2 Agregar `fail_under = 80` en `[tool.coverage.report]` y `relative_files = true` en `[tool.coverage.run]` de `pyproject.toml` (D6). Verificar en rojo: `uv run pytest --cov -k test_pagina_inicial_responde` falla por cobertura menor a 80 %. Verificar en verde: `uv run pytest --cov --cov-report=xml` pasa y en `coverage.xml` las rutas empiezan por `src/backend/`
-- [ ] 2.3 Actualizar en el README la sección "3. Pruebas y calidad del código": el umbral de 80 % y que `coverage.xml` no se versiona (agregarlo a `.gitignore`). Verificar: `git status` no lista `coverage.xml` después de 2.2
+- [x] 2.1 Con `db` levantado, medir la cobertura actual (`uv run pytest --cov`) antes de poner el umbral. Verificar: el total queda anotado en `verificacion.md`; si es menor que 80 %, detenerse y reportarlo al equipo, sin bajar el umbral
+- [x] 2.2 Agregar `fail_under = 80` en `[tool.coverage.report]` y `relative_files = true` en `[tool.coverage.run]` de `pyproject.toml` (D6). Verificar en rojo: con el umbral puesto de forma temporal en 90, `uv run pytest --cov` falla por cobertura aunque las pruebas pasen (una sola prueba no baja de 80 %, porque al arrancar Django se importa casi todo el código; el rojo con 80 % se muestra en 6.4). Verificar en verde: con el umbral en 80, `uv run pytest --cov --cov-report=xml` pasa y `coverage.xml` no tiene rutas absolutas: `<source>src/backend</source>` y cada archivo relativo a esa carpeta
+- [x] 2.3 Actualizar en el README la sección "3. Pruebas y calidad del código": el umbral de 80 % y que `coverage.xml` no se versiona (agregarlo a `.gitignore`). Verificar: `git status` no lista `coverage.xml` después de 2.2
 
 ## 3. Playwright y pruebas de punta a punta
 

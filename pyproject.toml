@@ -46,7 +46,11 @@ select = ["E", "W", "F", "I", "B", "UP", "DJ", "S"]
 # Código propio de src/backend; no cuentan las migraciones generadas ni las pruebas.
 source = ["src/backend"]
 omit = ["*/migrations/*", "*/tests/*"]
+# Rutas relativas en coverage.xml: SonarQube Cloud no encuentra las rutas absolutas del ejecutor.
+relative_files = true
 
 [tool.coverage.report]
 show_missing = true
 skip_empty = true
+# DoD 1: el mismo umbral en la laptop y en el canal (EN-08).
+fail_under = 80
