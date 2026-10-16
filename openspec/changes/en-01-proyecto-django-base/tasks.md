@@ -21,11 +21,11 @@ Ejecución con pruebas primero (TDD): en cada tarea con comportamiento, la prueb
 
 ## 4. Modelos `Institucion` y `Usuario`
 
-- [ ] 4.1 Pruebas primero de `Institucion` según `specs/cuentas-usuarios` (solo nombre válido, código modular repetido rechazado, organización de periodos fuera de BIMESTRE/TRIMESTRE rechazada), con datos ficticios. Verificar: fallan antes de 4.2
-- [ ] 4.2 Implementar `institucion.Institucion` (D7, `db_table = "institucion"`, restricciones con nombre, docstrings) y registrarla en el panel. Verificar: pruebas de 4.1 en verde
-- [ ] 4.3 Pruebas primero de `Usuario` (rol no permitido, DOCENTE sin institución rechazado, ADMINISTRADOR sin institución aceptado, institución con usuarios no se elimina, contraseña con hash, valores iniciales de los campos de control, `create_superuser` deja `rol = ADMINISTRADOR`), con datos ficticios. Verificar: fallan antes de 4.4
-- [ ] 4.4 Implementar `cuentas.Usuario` (D7, `AUTH_USER_MODEL` se define aquí y no antes, `db_table = "usuario"`, `ck_usuario_institucion` y check de rol, gestor con `create_superuser` que asigna `ADMINISTRADOR`, docstrings) y registrarlo en el panel; generar las migraciones iniciales. Verificar: pruebas de 4.3 en verde y `uv run python src/backend/manage.py makemigrations --check --dry-run` sin cambios pendientes
-- [ ] 4.5 Aplicar migraciones sobre la base vacía. Verificar: `uv run python src/backend/manage.py migrate` sin errores y `\dt` en `psql` lista `usuario` e `institucion`
+- [x] 4.1 Pruebas primero de `Institucion` según `specs/cuentas-usuarios` (solo nombre válido, código modular repetido rechazado, organización de periodos fuera de BIMESTRE/TRIMESTRE rechazada), con datos ficticios. Verificar: fallan antes de 4.2
+- [x] 4.2 Implementar `institucion.Institucion` (D7, `db_table = "institucion"`, restricciones con nombre, docstrings) y registrarla en el panel. Verificar: pruebas de 4.1 en verde
+- [x] 4.3 Pruebas primero de `Usuario` (rol no permitido, DOCENTE sin institución rechazado, ADMINISTRADOR sin institución aceptado, institución con usuarios no se elimina, contraseña con hash, valores iniciales de los campos de control, `create_superuser` deja `rol = ADMINISTRADOR`), con datos ficticios. Verificar: fallan antes de 4.4
+- [x] 4.4 Implementar `cuentas.Usuario` (D7, `AUTH_USER_MODEL` se define aquí y no antes, `db_table = "usuario"`, `ck_usuario_institucion` y check de rol, gestor con `create_superuser` que asigna `ADMINISTRADOR`, docstrings) y registrarlo en el panel; generar las migraciones iniciales. Verificar: pruebas de 4.3 en verde y `uv run python src/backend/manage.py makemigrations --check --dry-run` sin cambios pendientes
+- [x] 4.5 Aplicar migraciones sobre la base vacía. Verificar: `uv run python src/backend/manage.py migrate` sin errores y `\dt` en `psql` lista `usuario` e `institucion`
 
 ## 5. Frontend y página inicial
 

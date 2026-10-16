@@ -30,6 +30,8 @@ python_files = ["test_*.py"]
 [tool.ruff]
 target-version = "py313"
 line-length = 100
+# Las apps viven en src/backend: así Ruff las reconoce como código propio
+src = ["src/backend"]
 extend-exclude = ["**/migrations/**"]
 
 [tool.ruff.lint]

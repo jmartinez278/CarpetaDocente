@@ -93,7 +93,11 @@ DATABASES = {
 DATABASES["default"].setdefault("OPTIONS", {}).setdefault("connect_timeout", 10)
 
 
-# Contraseñas
+# Usuarios y contraseñas
+
+# Modelo de usuario propio (documento 11, sección 3.2)
+AUTH_USER_MODEL = "cuentas.Usuario"
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
