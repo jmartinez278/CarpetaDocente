@@ -80,6 +80,7 @@ Es la LTS vigente al iniciar el desarrollo (documento 10, sección 4), con sopor
 
 - `config/settings.py` lee `.env` de la raíz del repositorio con django-environ: `DJANGO_SECRET_KEY` (obligatoria, sin valor por defecto), `DJANGO_DEBUG` (por defecto `False`), `DJANGO_ALLOWED_HOSTS` (lista) y `DATABASE_URL` (obligatoria, parseada a `DATABASES`).
 - Si una variable obligatoria falta, Django falla al arrancar con `ImproperlyConfigured` y el nombre de la variable.
+- La conexión a PostgreSQL lleva `connect_timeout = 10` s por defecto (un `connect_timeout` en `DATABASE_URL` tiene prioridad). Hallazgo de la tarea 3.2: en Windows, sin base levantada, la conexión no se rechaza sino que espera indefinidamente y pytest queda colgado. 10 s deja margen al arranque en frío de Neon (EN-02).
 - Un solo archivo de configuración; las diferencias entre local, vista previa y producción las ponen las variables (documento 12, sección 6: "solo cambian las variables").
 - **Alternativas:** `dj-database-url` + `os.environ` (dos piezas y lectura manual de `.env`); varios `settings/` por ambiente (más archivos sin ganancia mientras todo dependa de variables).
 - Idioma `es-pe`, zona horaria `America/Lima`, `USE_TZ = True`, `DEFAULT_AUTO_FIELD = BigAutoField` (coincide con `BIGSERIAL` del documento 11).

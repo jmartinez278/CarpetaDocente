@@ -1,0 +1,24 @@
+# Entorno de desarrollo local (documento 10, sección 4; EN-01).
+# Las credenciales salen de .env (copiar .env.example); aquí no hay contraseñas.
+
+services:
+  db:
+    # Provisional: el documento 10 no fija la versión de PostgreSQL.
+    # En EN-02 se iguala a la versión mayor de Neon.
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Definir POSTGRES_DB en .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Definir POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD en .env}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  datos_postgres:
