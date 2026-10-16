@@ -7,11 +7,15 @@ Define cómo cualquier integrante levanta, configura y verifica el sistema en su
 ## ADDED Requirements
 
 ### Requirement: Entorno local con un solo comando
-El sistema SHALL levantarse en local con Docker Compose, con un servicio de PostgreSQL y un servicio de la aplicación web, de modo que tras clonar el repositorio y crear `.env` desde `.env.example` baste un comando para tener la aplicación respondiendo y conectada a PostgreSQL.
+El sistema SHALL levantarse en local con Docker Compose, con un servicio de PostgreSQL, uno de la aplicación web y uno que compila los estilos, de modo que tras clonar el repositorio y crear `.env` desde `.env.example` baste un comando para tener la aplicación respondiendo con estilos y conectada a PostgreSQL, sin instalar Node en la laptop.
 
 #### Scenario: Entorno levantado
 - **WHEN** un integrante clona el repositorio, crea `.env` a partir de `.env.example` y ejecuta `docker compose up`
 - **THEN** PostgreSQL queda disponible y la aplicación responde en el navegador conectada a esa base de datos
+
+#### Scenario: Estilos sin Node en la laptop
+- **WHEN** un integrante sin Node instalado ejecuta `docker compose up` en un clon sin los estilos compilados
+- **THEN** el servicio de compilación genera la hoja de estilos y la página inicial se ve con estilos
 
 #### Scenario: Solo la base de datos en Docker
 - **WHEN** un integrante levanta únicamente el servicio de PostgreSQL y ejecuta el servidor de desarrollo de Django en su laptop

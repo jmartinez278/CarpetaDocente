@@ -34,7 +34,7 @@ CarpetaDocente/
 ├── uv.lock
 ├── .python-version       # 3.13
 ├── Dockerfile            # imagen de la app web (desarrollo)
-├── docker-compose.yml    # servicios db y web
+├── docker-compose.yml    # servicios db, web y frontend
 ├── .env.example
 └── src/
     ├── backend/
@@ -114,7 +114,7 @@ Si nadie compila, la página sale sin estilos. Por eso cada forma de levantar el
 
 | Forma | Quién compila | Qué hace el integrante |
 |---|---|---|
-| `docker compose up` (opción A) | Servicio `frontend` del compose (`node:24-slim`): `npm ci` y luego `npm run dev` en modo observación, escribiendo en `src/backend/static/dist/` por la carpeta montada | Nada; no necesita Node en la laptop |
+| `docker compose up` (opción A) | Servicio `frontend` del compose (`node:24-slim`): `npm ci` y luego `npm run dev:contenedor` (modo observación por sondeo, `--poll=1000`), escribiendo en `src/backend/static/dist/` por la carpeta montada | Nada; no necesita Node en la laptop |
 | `db` en Docker + Django en la laptop (opción B) | El integrante, en otra terminal: `npm ci` (una vez) y `npm run dev` en `src/frontend/` | Tener Node 24 instalado |
 | Solo pruebas (`pytest`) | Nadie | Las pruebas verifican el enlace al CSS, no su contenido |
 
@@ -157,7 +157,7 @@ No se editan en este cambio; se proponen aparte, con subida de versión si el eq
 
 - [Puerto 5432 ocupado por un PostgreSQL instalado en la laptop] → El puerto publicado se toma de una variable `POSTGRES_PORT` con valor por defecto 5432; el README lo explica.
 - [Integrante sin compilar el CSS ve la página sin estilos] → En la opción A lo compila el servicio `frontend` (D9b); en la opción B, paso explícito en el README. La prueba de la página inicial verifica el enlace, no el archivo.
-- [El modo observación de Tailwind dentro del contenedor puede no detectar cambios de archivos guardados desde Windows en la carpeta montada] → El README indica reiniciar el servicio (`docker compose restart frontend`) o usar `npm run dev` en la laptop. No afecta a `runserver`, que revisa los archivos por sondeo.
+- [El modo observación de Tailwind dentro del contenedor no detecta cambios de archivos guardados desde Windows en la carpeta montada: comprobado en la tarea 6.3] → El servicio `frontend` usa `npm run dev:contenedor`, que observa por sondeo (`--poll=1000`); con eso el cambio se detecta en unos 2 s. En la laptop, `npm run dev` usa los eventos nativos. No afecta a `runserver`, que revisa los archivos por sondeo.
 - [Python 3.15 instalado en la laptop] → uv descarga y usa 3.13 según `.python-version`.
 - [Finales de línea de Windows dentro del contenedor] → No se usan scripts de shell en la imagen; el comando del servicio va en `docker-compose.yml`.
 - [Solo dos tablas del documento 11 en EN-01] → Desviación aprobada; cada historia agrega las suyas con pruebas. Conviene ajustar el escenario 2 de EN-01 en el documento 02/01 (propuesta aparte, con subida de versión).

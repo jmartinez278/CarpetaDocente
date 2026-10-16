@@ -29,16 +29,16 @@ Ejecución con pruebas primero (TDD): en cada tarea con comportamiento, la prueb
 
 ## 5. Frontend y página inicial
 
-- [ ] 5.1 Crear `src/frontend/` (D9): `package.json` con tailwindcss y @tailwindcss/cli v4, htmx.org 2.0.x y alpinejs 3.x; `css/app.css` con `@source` hacia las plantillas; `scripts/copiar-vendor.mjs`; scripts `build` y `dev`. Verificar: `npm ci && npm run build` genera `src/backend/static/dist/app.css`, `dist/vendor/htmx.min.js` y `dist/vendor/alpine.min.js`
-- [ ] 5.2 Pruebas primero de la página inicial: `/` responde 200, muestra el nombre del sistema y las tres dimensiones en orden, y enlaza `dist/app.css`, `htmx.min.js` y `alpine.min.js`. Verificar: fallan antes de 5.3
-- [ ] 5.3 Implementar `templates/base.html` (`lang="es"`, viewport para celular, estáticos de 5.1; sin aplicar todavía la identidad visual), `templates/inicio.html`, la vista `inicio` en `cuentas` con docstring y la ruta `/`. Verificar: pruebas de 5.2 en verde y la página se ve con estilos en `runserver`
+- [x] 5.1 Crear `src/frontend/` (D9): `package.json` con tailwindcss y @tailwindcss/cli v4, htmx.org 2.0.x y alpinejs 3.x; `css/app.css` con `@source` hacia las plantillas; `scripts/copiar-vendor.mjs`; scripts `build` y `dev`. Verificar: `npm ci && npm run build` genera `src/backend/static/dist/app.css`, `dist/vendor/htmx.min.js` y `dist/vendor/alpine.min.js`
+- [x] 5.2 Pruebas primero de la página inicial: `/` responde 200, muestra el nombre del sistema y las tres dimensiones en orden, y enlaza `dist/app.css`, `htmx.min.js` y `alpine.min.js`. Verificar: fallan antes de 5.3
+- [x] 5.3 Implementar `templates/base.html` (`lang="es"`, viewport para celular, estáticos de 5.1; sin aplicar todavía la identidad visual), `templates/inicio.html`, la vista `inicio` en `cuentas` con docstring y la ruta `/`. Verificar: pruebas de 5.2 en verde y la página se ve con estilos en `runserver`
 
 ## 6. Aplicación web y compilación del CSS en Docker Compose
 
-- [ ] 6.1 Crear `Dockerfile` con `python:3.13-slim` (la misma versión que `.python-version`) + uv, `uv sync --frozen`, entorno fuera de la carpeta montada, y `.dockerignore`. Verificar: `docker compose build web` termina sin errores
-- [ ] 6.2 Agregar el servicio `web` a `docker-compose.yml` (D8: `DATABASE_URL` armado con `POSTGRES_*` y host `db`, depende de `db` sano, `migrate` y luego `runserver 0.0.0.0:8000`, montaje de `src/backend/`). Verificar: con la base vacía, `docker compose up` aplica migraciones y `http://localhost:8000/` responde
-- [ ] 6.3 Agregar el servicio `frontend` (D9b: `node:24-slim`, monta `src/frontend/` y `src/backend/`, `node_modules` en volumen con nombre, `npm ci` y `npm run dev`). Verificar: tras `docker compose up` en un clon sin `static/dist/`, el archivo `app.css` aparece y `http://localhost:8000/` se ve con estilos sin haber instalado Node en la laptop
-- [ ] 6.4 Alinear `proposal.md`, `design.md` (D1) y `specs/entorno-desarrollo` con los tres servicios de Compose (`db`, `web`, `frontend`). Verificar: ningún artefacto dice "dos servicios" y `openspec validate --strict` pasa
+- [x] 6.1 Crear `Dockerfile` con `python:3.13-slim` (la misma versión que `.python-version`) + uv, `uv sync --frozen`, entorno fuera de la carpeta montada, y `.dockerignore`. Verificar: `docker compose build web` termina sin errores
+- [x] 6.2 Agregar el servicio `web` a `docker-compose.yml` (D8: `DATABASE_URL` armado con `POSTGRES_*` y host `db`, depende de `db` sano, `migrate` y luego `runserver 0.0.0.0:8000`, montaje de `src/backend/`). Verificar: con la base vacía, `docker compose up` aplica migraciones y `http://localhost:8000/` responde
+- [x] 6.3 Agregar el servicio `frontend` (D9b: `node:24-slim`, monta `src/frontend/` y `src/backend/`, `node_modules` en volumen con nombre, `npm ci` y `npm run dev`). Verificar: tras `docker compose up` en un clon sin `static/dist/`, el archivo `app.css` aparece y `http://localhost:8000/` se ve con estilos sin haber instalado Node en la laptop
+- [x] 6.4 Alinear `proposal.md`, `design.md` (D1) y `specs/entorno-desarrollo` con los tres servicios de Compose (`db`, `web`, `frontend`). Verificar: ningún artefacto dice "dos servicios" y `openspec validate --strict` pasa
 
 ## 7. Documentación (DoD 9)
 

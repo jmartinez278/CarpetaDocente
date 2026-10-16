@@ -20,5 +20,39 @@ services:
       timeout: 5s
       retries: 10
 
+  web:
+    build: .
+    # Aplica las migraciones y arranca el servidor de desarrollo; si migrate falla, web no arranca.
+    command: >-
+      sh -c "python src/backend/manage.py migrate
+      && python src/backend/manage.py runserver 0.0.0.0:8000"
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Definir DJANGO_SECRET_KEY en .env}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:?Definir DJANGO_DEBUG en .env}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?Definir DJANGO_ALLOWED_HOSTS en .env}
+      # Dentro de Compose la base de datos está en el host "db" (el DATABASE_URL de .env apunta a localhost).
+      DATABASE_URL: postgres://${POSTGRES_USER:?Definir POSTGRES_USER en .env}:${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD en .env}@db:5432/${POSTGRES_DB:?Definir POSTGRES_DB en .env}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/backend:/app/src/backend
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    # Compila Tailwind en modo observación hacia src/backend/static/dist/ (design.md, D9b).
+    # No necesita variables de entorno ni Node instalado en la laptop.
+    image: node:24-slim
+    working_dir: /app/src/frontend
+    # Sondeo (--poll): los eventos de archivos de Windows no llegan al contenedor.
+    command: sh -c "npm ci && npm run dev:contenedor"
+    volumes:
+      - ./src/frontend:/app/src/frontend
+      - ./src/backend:/app/src/backend
+      # node_modules de Linux en un volumen propio, separado del de Windows
+      - node_modules_frontend:/app/src/frontend/node_modules
+
 volumes:
   datos_postgres:
+  node_modules_frontend:

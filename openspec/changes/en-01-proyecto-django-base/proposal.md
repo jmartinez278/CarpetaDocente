@@ -12,7 +12,7 @@ Ninguna historia del Sprint 1 puede empezar sin un proyecto Django común que lo
 - Nueve apps de Django, con los nombres del C4 (documento 12, nivel 3): `cuentas`, `institucion`, `catalogo`, `repositorio` (dimensión 1: planificación de sesiones de aprendizaje), `notas` (dimensión 2), `asistencia` (dimensión 3), `direccion`, `exportaciones` y `actividad`. En EN-01 solo `cuentas` e `institucion` tienen modelos; las demás quedan vacías y registradas.
 - Modelo de usuario propio `cuentas.Usuario` (`AUTH_USER_MODEL`) y modelo `institucion.Institucion`, con los campos y restricciones `CHECK` del DDL del documento 11 para esas dos tablas.
 - Configuración leída solo desde variables de entorno / `.env` (`DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL`, `POSTGRES_*`), sin claves en el código.
-- `docker-compose.yml` con dos servicios: `db` (PostgreSQL) y `web` (Django con `runserver`). Se puede levantar todo junto o solo `db` y correr Django en la laptop.
+- `docker-compose.yml` con tres servicios: `db` (PostgreSQL), `web` (Django con `runserver`) y `frontend` (compila Tailwind en modo observación). Se puede levantar todo junto o solo `db` y correr Django y la compilación del CSS en la laptop.
 - Gestor de dependencias **uv** con **Python 3.13** fijado en `.python-version` (justificación en `design.md`).
 - Página inicial en `/` con la plantilla base (Tailwind, HTMX y Alpine.js cargados).
 - pytest + pytest-django + pytest-cov y Ruff configurados en `pyproject.toml`, con pruebas iniciales.
