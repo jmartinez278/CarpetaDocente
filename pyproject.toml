@@ -1,0 +1,52 @@
+[project]
+name = "carpetadocente"
+version = "0.1.0"
+description = "Sistema web para la gestión y planificación pedagógica en educación primaria – I.E. Virgen del Carmen, Huayucachi"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "django>=5.2,<5.3",
+    "django-environ>=0.14.0",
+    "psycopg[binary]>=3.3.6",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-django>=4.14.0",
+    "ruff>=0.17.1",
+]
+
+[tool.pytest]
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["src/backend"]
+testpaths = ["src/backend"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+# Las apps viven en src/backend: así Ruff las reconoce como código propio
+src = ["src/backend"]
+extend-exclude = ["**/migrations/**"]
+
+[tool.ruff.lint]
+# E/W: pycodestyle · F: Pyflakes · I: isort · B: bugbear · UP: pyupgrade
+# DJ: flake8-django · S: reglas de seguridad derivadas de Bandit
+select = ["E", "W", "F", "I", "B", "UP", "DJ", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101"]
+
+[tool.coverage.run]
+# Código propio de src/backend; no cuentan las migraciones generadas ni las pruebas.
+source = ["src/backend"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true

@@ -22,6 +22,8 @@ node_modules/
 
 # Django
 staticfiles/
+# CSS y JS compilados desde src/frontend
+src/backend/static/dist/
 media/
 *.sqlite3
 

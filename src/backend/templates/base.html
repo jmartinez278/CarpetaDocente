@@ -1,0 +1,14 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}CarpetaDocente{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'dist/app.css' %}">
+  <script src="{% static 'dist/vendor/htmx.min.js' %}" defer></script>
+  <script src="{% static 'dist/vendor/alpine.min.js' %}" defer></script>
+</head>
+<body class="min-h-screen bg-white text-gray-900 antialiased">
+  {% block contenido %}{% endblock %}
+</body>
+</html>

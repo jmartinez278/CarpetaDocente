@@ -1,0 +1,20 @@
+{
+  "name": "carpetadocente-frontend",
+  "private": true,
+  "description": "Fuentes de Tailwind CSS y copia de HTMX y Alpine.js hacia los estáticos de src/backend (documento 10; EN-01)",
+  "type": "module",
+  "scripts": {
+    "build": "npm run copiar-vendor && tailwindcss -i ./css/app.css -o ../backend/static/dist/app.css --minify",
+    "dev": "npm run copiar-vendor && tailwindcss -i ./css/app.css -o ../backend/static/dist/app.css --watch=always",
+    "dev:contenedor": "npm run copiar-vendor && tailwindcss -i ./css/app.css -o ../backend/static/dist/app.css --watch=always --poll=1000",
+    "copiar-vendor": "node scripts/copiar-vendor.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  },
+  "dependencies": {
+    "alpinejs": "^3.17.4",
+    "htmx.org": "~2.0.11"
+  }
+}

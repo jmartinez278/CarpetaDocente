@@ -1,0 +1,58 @@
+# CLAUDE.md
+
+Guía para Claude Code en este repositorio. El repo es **público**: aquí no van claves, correos personales ni datos reales.
+
+## Proyecto
+
+Sistema web de gestión y planificación pedagógica para primaria (EBR), I.E. Virgen del Carmen – Huayucachi (Huancayo, Junín). Proyecto de tesis: VI "Implementación de un sistema web"; VD "Gestión y planificación pedagógica".
+
+Tres dimensiones, en este orden:
+1. Planificación de sesiones de aprendizaje
+2. Registro y control de notas
+3. Control de asistencia
+
+Enfoque descartado: aula virtual / LMS con IA y analítica. No reintroducirlo.
+
+## Fuente de verdad
+
+- `docs/01 Inicio/` y `docs/02 Planificación/`: requisitos (06, 07), usuarios (08), reglas de negocio (09), stack (10), base de datos (11), C4 (12), historias y enablers (02/01).
+- No regenerar esos documentos. Contradicciones o vacíos entre documentos: reportar con archivo y apartado; si el equipo aprueba, editar subiendo versión (V_1_1_0 / V_2_0_0) con historial de cambios.
+- Contradicciones del aplicativo con la tesis (variables, dimensiones, alcance): no resolverlas, anotarlas en `docs/PENDIENTES_TESIS.md`.
+- El equipo (3 integrantes) decide; Claude propone.
+
+## Stack (decidido, documento 10)
+
+Django (LTS) + PostgreSQL (Docker Compose en local) + plantillas de Django con HTMX, Tailwind CSS y Alpine.js. Pruebas con pytest / pytest-django; estilo con Ruff. Despliegue posterior: Vercel + Neon (EN-02). Archivos de sesiones en Cloudflare R2: **EN-03, no EN-02**.
+
+Reglas de diseño: las reglas de negocio van en una capa de servicios (las vistas no escriben directo en la BD); la entidad Institución existe desde el inicio.
+
+## Flujo de trabajo
+
+- La propuesta y las tareas las genera **OpenSpec** (`/opsx:propose`, luego `/opsx:apply`), no Superpowers.
+- **No** usar las habilidades `brainstorming` ni `writing-plans` de Superpowers.
+- De Superpowers usar solo: ejecución con pruebas primero (TDD), debugging sistemático y revisión antes de cerrar.
+- Para Django, HTMX y Tailwind consultar **Context7**, no la memoria.
+- Alcance actual: solo las historias y enablers del Sprint 1.
+
+## Interfaz
+
+- Las pantallas se diseñan con **Google Stitch desde US-001**; los exports van a `insumos/stitch/` (local, no se sube) y se convierten en plantillas de Django.
+- **Impeccable** (pulido de la interfaz) y **Playwright MCP** (navegador manejado por el asistente) se usan solo al final, en el pulido; no durante la construcción de cada historia.
+- **Identidad visual (propuesta del equipo, por ratificar).** No se aplica en EN-01; es instrucción para Stitch y Tailwind desde US-001:
+  - Primario café `#6c4f3d`: barra superior, navegación activa y botones principales.
+  - Fondos crema `#fcf9f3` y `#f6f3ed`.
+  - Acentos dorado/ocre para insignias y sellos: **hex por definir; no inventarlo**.
+  - Texto con contraste de 4,5:1 o más (RNF-008).
+
+## Git y Pull Requests
+
+- Una rama y un PR por issue: `feature/<ID>-<descripcion>` desde `main`.
+- Todo PR se abre **hacia `main`**: el plan gratuito de SonarQube Cloud solo analiza `main` y los PR dirigidos a ella.
+- Cada PR lo aprueba **otra integrante**, no quien lo abre (DoD, criterio 3).
+- Commits con el correo noreply de GitHub del autor y **sin** `Co-Authored-By`.
+- Sin force push. Commit y push solo con aprobación explícita; antes, mostrar qué archivos entran y el mensaje propuesto.
+- Nunca subir `.env`, `insumos/`, datos reales de estudiantes ni archivos de terceros. Solo `.env.example` sin valores.
+
+## Datos
+
+Solo datos ficticios. Datos de la I.E. no confirmados: `[DATO I.E. PENDIENTE]`.

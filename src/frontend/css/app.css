@@ -1,0 +1,6 @@
+/* Entrada de Tailwind CSS v4. Se compila a src/backend/static/dist/app.css. */
+@import "tailwindcss";
+
+/* Plantillas de Django donde Tailwind busca clases (rutas relativas a este archivo). */
+@source "../../backend/templates";
+@source "../../backend/*/templates";
