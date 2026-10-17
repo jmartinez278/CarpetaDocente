@@ -1,0 +1,183 @@
+# Canal de integración continua de CarpetaDocente (EN-08): verifica la DoD 1, 2 y 5
+# en cada Pull Request hacia main y en cada push a main. CodeQL no está aquí: usa la
+# configuración por defecto de GitHub (Settings → Code security).
+#
+# ATENCIÓN: el `name:` de cada trabajo es la verificación que exige el ruleset de main.
+# No renombrar un trabajo sin actualizar el ruleset (README, "Integración continua").
+#
+# El único secreto es SONAR_TOKEN, que vive en los secretos de GitHub. La base de datos
+# es un PostgreSQL temporal sin contraseña y la clave de Django se genera en cada trabajo.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  # PR: un grupo por PR, y un commit nuevo cancela la ejecución anterior de ese PR.
+  # Push a main: un grupo por ejecución, así ninguna se cancela. Con un grupo común, GitHub
+  # deja una sola ejecución pendiente y descarta la anterior aunque cancel-in-progress sea false.
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('push-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Sin permisos por defecto: cada trabajo declara los suyos.
+permissions: {}
+
+jobs:
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Ruff check (anotaciones en el PR)
+        run: uv run ruff check --output-format=github .
+      - name: Ruff format
+        run: uv run ruff format --check .
+
+  pruebas:
+    name: Pruebas y cobertura
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          # Temporal y sin contraseña: vive solo durante este trabajo.
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: carpetadocente
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d carpetadocente"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres@localhost:5432/carpetadocente
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          enable-cache: true
+      - name: Generar la clave de Django para esta ejecución
+        run: |
+          clave="$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')"
+          echo "::add-mask::$clave"
+          echo "DJANGO_SECRET_KEY=$clave" >> "$GITHUB_ENV"
+      - run: uv sync --locked
+      - name: Pruebas con cobertura (mínimo 80 %, fijado en pyproject.toml)
+        run: uv run pytest --cov --cov-report=term-missing --cov-report=xml
+      - name: Subir coverage.xml para SonarQube Cloud
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: error
+          retention-days: 1
+
+  playwright:
+    name: Playwright
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: carpetadocente
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d carpetadocente"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Obligatoria: settings.py no arranca sin ella y live_server usa la base.
+      DATABASE_URL: postgres://postgres@localhost:5432/carpetadocente
+      # No son imprescindibles (pytest-django fuerza DEBUG=False y live_server agrega su
+      # host a ALLOWED_HOSTS); se fijan igual que en "Pruebas y cobertura" (design D5).
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+      - name: Compilar el CSS y copiar HTMX y Alpine
+        working-directory: src/frontend
+        run: npm ci && npm run build
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          enable-cache: true
+      - name: Generar la clave de Django para esta ejecución
+        run: |
+          clave="$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')"
+          echo "::add-mask::$clave"
+          echo "DJANGO_SECRET_KEY=$clave" >> "$GITHUB_ENV"
+      - run: uv sync --locked
+      - name: Instalar Chromium
+        run: uv run playwright install --with-deps chromium
+      - name: Pruebas de punta a punta
+        env:
+          # Playwright síncrono deja un bucle asíncrono en el hilo de la prueba (README).
+          # Solo en este paso; nunca en settings.py ni en producción.
+          DJANGO_ALLOW_ASYNC_UNSAFE: "true"
+        run: uv run pytest -m e2e --browser chromium --tracing retain-on-failure
+      - name: Subir las trazas de Playwright si algo falló
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: trazas-playwright
+          path: test-results/
+          retention-days: 7
+
+  sonarqube:
+    name: SonarQube Cloud
+    needs: pruebas
+    # Siempre en push a main; se salta en PR desde forks, que no reciben secretos.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Historial completo: SonarQube Cloud lo usa para saber qué código es nuevo.
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Descargar coverage.xml
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage-xml
+          # En la raíz, donde lo busca sonar.python.coverage.reportPaths.
+          path: .
+      - name: Análisis de SonarQube Cloud
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
