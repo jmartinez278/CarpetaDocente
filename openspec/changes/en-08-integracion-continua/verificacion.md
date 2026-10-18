@@ -376,3 +376,168 @@ Se revisaron las 371 líneas agregadas respecto de `HEAD` en `README.md`, `desig
 - **DoD 8, sin datos reales:** no hay correos, números de 8 o 9 dígitos (DNI o teléfonos), nombres de estudiantes ni datos de la I.E. El workflow no carga datos: la base del canal solo tiene lo que crean las pruebas. La única referencia a una persona es `jmartinez278`, el usuario dueño del repositorio público, que también es la organización pública de SonarQube Cloud (`sonar.organization` y `sonar.projectKey`).
 - **Claves:** la única referencia al token en archivos que se ejecutan es `.github/workflows/ci.yml:183` (`SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}`). Las demás menciones de `secrets.SONAR_TOKEN` están en la documentación (README, design, verificación). `secrets.token_urlsafe` es la función que genera la clave de Django en cada trabajo. No aparecen patrones de claves reales (`sqp_`/`sqa_`/`squ_`, tokens de GitHub, claves de AWS, llaves privadas ni `django-insecure`). Las únicas coincidencias son los textos de esta verificación que describen esa búsqueda. No hay contraseñas: el PostgreSQL del canal usa `POSTGRES_HOST_AUTH_METHOD: trust`.
 - **Archivos fuera del repositorio:** `coverage.xml` y `src/backend/static/dist/` están ignorados y no entran en el diff; `.env` no aparece.
+
+## 6. Puesta en marcha y evidencia de los escenarios
+
+Datos aportados por el equipo el 17/10/2026. Las capturas de la demostración están en el documento de pruebas del equipo `merge_fallido.docx` (17/10/2026); no se copian imágenes al repositorio.
+
+### 6.1 Integración de `main`
+
+`main` se integró en la rama con `git merge main` (merge `4518e0b`), sin rebase ni force push.
+
+**Repetición de 4.6:** fecha 17/10/2026, en `chore/archivar-en-08` (`214b4f0`). Con `db` levantado (`docker compose up -d db`) y Chromium ya instalado. El código es el mismo que tenía la rama después del merge: `git diff 4518e0b de0c5b0` no muestra diferencias, y de `de0c5b0` a `214b4f0` solo cambian `README.md` y el documento 11. Las cuatro revisiones pasan.
+
+```text
+$ uv run ruff check .
+All checks passed!
+exit=0
+
+$ uv run ruff format --check .
+107 files already formatted
+exit=0
+
+$ uv run pytest --cov
+============================= test session starts =============================
+platform win32 -- Python 3.13.16, pytest-9.1.1, pluggy-1.7.0
+django: version: 5.2.18, settings: config.settings (from ini)
+rootdir: C:\Proyectos\CarpetaDocente
+configfile: pyproject.toml
+testpaths: src/backend
+plugins: cov-7.1.0, django-4.14.0, playwright-0.10.0
+collected 41 items / 4 deselected / 37 selected
+
+src\backend\config\tests\test_base_datos.py .                            [  2%]
+src\backend\cuentas\tests\test_admin.py ...                              [ 10%]
+src\backend\cuentas\tests\test_modelos.py ............                   [ 43%]
+src\backend\institucion\tests\test_admin.py .                            [ 45%]
+src\backend\institucion\tests\test_modelos.py ......                     [ 62%]
+src\backend\config\tests\test_settings.py .......                        [ 81%]
+src\backend\cuentas\tests\test_inicio.py .......                         [100%]
+
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.13.16-final-0 _______________
+
+Name                                Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------
+src\backend\actividad\apps.py           4      0   100%
+src\backend\asistencia\apps.py          4      0   100%
+src\backend\catalogo\apps.py            4      0   100%
+src\backend\config\asgi.py              4      4     0%   10-16
+src\backend\config\settings.py         26      0   100%
+src\backend\config\urls.py              4      0   100%
+src\backend\config\wsgi.py              4      4     0%   10-16
+src\backend\cuentas\admin.py           19      0   100%
+src\backend\cuentas\apps.py             4      0   100%
+src\backend\cuentas\models.py          25      0   100%
+src\backend\cuentas\views.py            3      0   100%
+src\backend\direccion\apps.py           4      0   100%
+src\backend\exportaciones\apps.py       4      0   100%
+src\backend\institucion\admin.py        6      0   100%
+src\backend\institucion\apps.py         4      0   100%
+src\backend\institucion\models.py      17      1    94%   43
+src\backend\manage.py                  11     11     0%   4-23
+src\backend\notas\apps.py               4      0   100%
+src\backend\repositorio\apps.py         4      0   100%
+-----------------------------------------------------------------
+TOTAL                                 155     20    87%
+
+32 empty files skipped.
+Required test coverage of 80.0% reached. Total coverage: 87.10%
+====================== 37 passed, 4 deselected in 4.44s =======================
+exit=0
+
+$ cd src/frontend && npm run build
+
+> build
+> npm run copiar-vendor && tailwindcss -i ./css/app.css -o ../backend/static/dist/app.css --minify
+
+
+> copiar-vendor
+> node scripts/copiar-vendor.mjs
+
+copiado htmx.min.js
+copiado alpine.min.js
+≈ tailwindcss v4.3.3
+
+Done in 95ms
+exit=0
+
+$ DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium
+============================= test session starts =============================
+platform win32 -- Python 3.13.16, pytest-9.1.1, pluggy-1.7.0
+django: version: 5.2.18, settings: config.settings (from ini)
+rootdir: C:\Proyectos\CarpetaDocente
+configfile: pyproject.toml
+testpaths: src/backend
+plugins: cov-7.1.0, django-4.14.0, playwright-0.10.0
+collected 41 items / 37 deselected / 4 selected
+
+src\backend\cuentas\tests\test_inicio_e2e.py ....                        [100%]
+
+====================== 4 passed, 37 deselected in 4.41s =======================
+exit=0
+```
+
+### 6.2 PR de EN-08
+
+- PR #52, fusionado en `main` (merge `de0c5b0`), con las 8 verificaciones en verde.
+- Análisis de SonarQube Cloud en `main` sobre `de0c5b0`: cobertura de 83,3 %.
+
+**Pendiente:** los nombres de las 8 verificaciones del PR #52.
+
+### 6.3 *Ruleset* de `main`
+
+*Ruleset* "proteger-main" activo: 1 aprobación, fusión por *merge commit*, verificaciones requeridas y *code scanning*. La fusión bloqueada se confirmó en el PR #53 (6.5).
+
+**Pendiente:** captura del *ruleset*.
+
+### 6.4 Rama `demo/EN-08-rojo`
+
+La salida local de `uv run pytest --cov` con la prueba fallando no se guardó. Consta el PR #53 (6.5).
+
+### 6.5 PR de demostración #53
+
+PR #53, cerrado sin fusionar; la rama se borró.
+
+| Estado | Verificaciones |
+|---|---|
+| En rojo (3) | `Code scanning results / CodeQL`, `CI / Pruebas y cobertura` y `CI / Ruff` |
+| Omitida | `CI / SonarQube Cloud` (*skipped*) |
+| Pendiente | `SonarCloud Code Analysis` (*Expected*, sin estado reportado) |
+| En verde | `CI / Playwright`, `CodeQL / Analyze (python)` y `CodeQL / Analyze (javascript-typescript)` |
+
+- **CodeQL:** 1 alerta nueva de seguridad, regla "SQL query built from user-controlled sources", severidad *High*, en `src/backend/cuentas/demo_vista_sql.py`, línea 15. Bloqueó la fusión.
+- **SonarQube Cloud:** omitido, porque el trabajo se salta cuando falla `Pruebas y cobertura`. No hay resultado de la puerta de calidad.
+- **Fusión bloqueada:** falta 1 aprobación y CodeQL detectó 1 alerta.
+
+## 6.6 Escenarios de EN-08 (D14)
+
+| Escenario | Evidencia | Estado |
+|---|---|---|
+| Pull Request que cumple | PR #52 con las 8 verificaciones en verde; SonarQube Cloud en `main` sobre `de0c5b0` con 83,3 % de cobertura | Verificado |
+| Prueba fallida o cobertura insuficiente | Lista de verificaciones del PR #53, con `CI / Pruebas y cobertura` en rojo, y la fusión bloqueada | Verificado; la captura del registro del trabajo no consta |
+| Alerta crítica de seguridad | PR #53: alerta de CodeQL "SQL query built from user-controlled sources", severidad *High*, en `src/backend/cuentas/demo_vista_sql.py:15`, que bloqueó la fusión | Verificado |
+| Puerta de calidad no superada | PR #53: `CI / SonarQube Cloud` omitido y `SonarCloud Code Analysis` sin estado; no hay resultado de la puerta | **Sin demostrar:** el trabajo de SonarQube Cloud se salta cuando falla `Pruebas y cobertura` (D9) |
+| Canal sin claves reales | Revisión de `ci.yml` y búsqueda de claves (4.4 y 4.6); ejecución del PR #52 (16/10/2026) y del push a `main` sobre `de0c5b0` | Verificado |
+
+## 6.6 DoD 1 a 9 (D15)
+
+| N.° | Estado | Evidencia |
+|---|---|---|
+| 1 | Cumple | Umbral de 80 % en el canal; 87,10 % en local (4.6); PR #52 en verde; 83,3 % en SonarQube Cloud sobre `de0c5b0` |
+| 2 | Cumple | Ruff, CodeQL y SonarQube Cloud entre las 8 verificaciones en verde del PR #52 |
+| 3 | Cumple | El PR #52 tiene una aprobación (*APPROVED*) de otra integrante del equipo |
+| 4 | No aplica | Vista previa de Vercel hasta EN-02. **Pendiente:** confirmar que se indicó en el PR #52 |
+| 5 | Cumple | Prueba de punta a punta de la página inicial (`Playwright`) en verde en el PR #52; 4 pasan en local (4.6) |
+| 6 | **Pendiente** | D15 no lo trata; el equipo debe indicar si aplica a EN-08 |
+| 7 | No aplica | No hay pantallas nuevas |
+| 8 | Cumple | Revisión del diff de EN-08 sin datos reales (4.6) |
+| 9 | Cumple | README ("Integración continua"), este cambio en OpenSpec y docstrings en `test_inicio_e2e.py`; el catálogo de rutas no cambia |
+
+## 6.6 Pendientes de documentación del design
+
+Ninguno se editó en EN-08. Siguen **pendientes** de que el equipo los apruebe y se propongan aparte, con subida de versión:
+
+- Documento 07, RNF-018, frente al documento 02/01, DoD 2 ("0 hallazgos críticos" frente a "sin vulnerabilidades críticas ni altas").
+- Documento 02/01, DoD 1 y 2 y escenario 4 de EN-08, frente a la puerta Sonar way.
+- Documento 02/01, sección 7: registrar que CodeQL usa la configuración por defecto, sin workflow en el repositorio.
