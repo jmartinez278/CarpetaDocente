@@ -1,0 +1,2 @@
+# Los hooks los ejecuta sh (también el de Git para Windows): siempre con fin de línea LF.
+.githooks/* text eol=lf

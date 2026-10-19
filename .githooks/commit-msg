@@ -1,0 +1,4 @@
+#!/bin/sh
+# Rechaza mensajes con Co-Authored-By, "Generated with Claude Code" o Claude-Session.
+# Se activa una vez por laptop: git config core.hooksPath .githooks
+exec uv run --quiet python "$(dirname "$0")/../scripts/hooks.py" commit-msg "$1"

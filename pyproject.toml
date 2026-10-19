@@ -24,8 +24,8 @@ dev = [
 
 [tool.pytest]
 DJANGO_SETTINGS_MODULE = "config.settings"
-pythonpath = ["src/backend"]
-testpaths = ["src/backend"]
+pythonpath = ["src/backend", "scripts"]
+testpaths = ["src/backend", "scripts"]
 python_files = ["test_*.py"]
 # Las pruebas de punta a punta necesitan Chromium y el CSS compilado: se piden con
 # `pytest -m e2e` (el último -m manda) y el `pytest` de siempre no las ejecuta.
@@ -35,8 +35,8 @@ addopts = ["-m", "not e2e"]
 [tool.ruff]
 target-version = "py313"
 line-length = 100
-# Las apps viven en src/backend: así Ruff las reconoce como código propio
-src = ["src/backend"]
+# Las apps viven en src/backend y los scripts en scripts/: así Ruff los reconoce como código propio
+src = ["src/backend", "scripts"]
 extend-exclude = ["**/migrations/**"]
 
 [tool.ruff.lint]
@@ -46,10 +46,12 @@ select = ["E", "W", "F", "I", "B", "UP", "DJ", "S"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S101"]
+# Los scripts de verificación llaman a git, uv y gh con argumentos fijos, sin shell.
+"scripts/**" = ["S603", "S607"]
 
 [tool.coverage.run]
-# Código propio de src/backend; no cuentan las migraciones generadas ni las pruebas.
-source = ["src/backend"]
+# Código propio de src/backend y scripts/; no cuentan las migraciones generadas ni las pruebas.
+source = ["src/backend", "scripts"]
 omit = ["*/migrations/*", "*/tests/*"]
 # Rutas relativas en coverage.xml: SonarQube Cloud no encuentra las rutas absolutas del ejecutor.
 relative_files = true
