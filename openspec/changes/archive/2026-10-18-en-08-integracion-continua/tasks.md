@@ -33,16 +33,30 @@ Ejecución con pruebas primero (TDD) donde hay comportamiento: la prueba se escr
 
 ## 5. Commit (con aprobación)
 
-- [ ] 5.1 Mostrar al usuario los archivos que entran y el mensaje propuesto. Tras su aprobación explícita, hacer el commit con el correo noreply del autor y sin `Co-Authored-By`. Sin push. Verificar: `git log -1 --stat` coincide con lo aprobado y `git status` queda limpio
+- [x] 5.1 Mostrar al usuario los archivos que entran y el mensaje propuesto. Tras su aprobación explícita, hacer el commit con el correo noreply del autor y sin `Co-Authored-By`. Sin push. Verificar: `git log -1 --stat` coincide con lo aprobado y `git status` queda limpio
+  - Evidencia: commits `afe0f63`, `28fba2c`, `2c0ee5c` y `2d1bba1` en `feature/EN-08-integracion-continua`, fusionados en `main` con el PR #52 (merge `de0c5b0`).
 
 ## 6. Puesta en marcha y evidencia de los escenarios
 
-- [ ] 6.1 Cuando EN-01 esté fusionado en `main`, y con aprobación del usuario, integrar `main` en esta rama con `git merge main` (sin rebase ni force push) y repetir 4.6. Verificar: `git log --oneline main..HEAD` solo muestra commits de EN-08
-- [ ] 6.2 **(equipo)** Hacer push y abrir el PR de EN-08 hacia `main`. Verificar: el PR muestra `Ruff`, `Pruebas y cobertura`, `Playwright`, `SonarQube Cloud`, `SonarCloud Code Analysis` y CodeQL en verde, y SonarQube Cloud muestra la cobertura del código nuevo (no 0 %). Escenario "Pull Request que cumple", en `verificacion.md`
-- [ ] 6.3 **(equipo, paso B10)** Crear el *ruleset* de `main` con la guía del README (D12), ahora que las verificaciones ya corrieron una vez. No se convierte en código. Verificar: GitHub muestra las verificaciones de EN-08 como obligatorias y la fusión bloqueada mientras falte una (se confirma en rojo en 6.5). Captura en `verificacion.md`
+- [x] 6.1 Cuando EN-01 esté fusionado en `main`, y con aprobación del usuario, integrar `main` en esta rama con `git merge main` (sin rebase ni force push) y repetir 4.6. Verificar: `git log --oneline main..HEAD` solo muestra commits de EN-08
+  - Hecho: merge de `main` en la rama (`4518e0b`), sin rebase ni force push.
+  - Repetición de 4.6 el 17/10/2026: `ruff check`, `ruff format --check`, `pytest --cov` (87,10 %) y `pytest -m e2e --browser chromium` en verde. Salidas en `verificacion.md`, 6.1.
+- [x] 6.2 **(equipo)** Hacer push y abrir el PR de EN-08 hacia `main`. Verificar: el PR muestra `Ruff`, `Pruebas y cobertura`, `Playwright`, `SonarQube Cloud`, `SonarCloud Code Analysis` y CodeQL en verde, y SonarQube Cloud muestra la cobertura del código nuevo (no 0 %). Escenario "Pull Request que cumple", en `verificacion.md`
+  - Evidencia: PR #52 de EN-08 fusionado (merge `de0c5b0`); en ese PR, las 8 verificaciones en verde: `CodeQL / Analyze (javascript-typescript)`, `CodeQL / Analyze (python)`, `CodeQL`, `CI / Playwright`, `CI / Pruebas y cobertura`, `CI / Ruff`, `SonarCloud Code Analysis` y `CI / SonarQube Cloud`. Análisis de SonarQube Cloud en `main` sobre `de0c5b0` con cobertura de 83,3 %. Detalle en `verificacion.md`, 6.2.
+- [x] 6.3 **(equipo, paso B10)** Crear el *ruleset* de `main` con la guía del README (D12), ahora que las verificaciones ya corrieron una vez. No se convierte en código. Verificar: GitHub muestra las verificaciones de EN-08 como obligatorias y la fusión bloqueada mientras falte una (se confirma en rojo en 6.5). Captura en `verificacion.md`
+  - Evidencia: *ruleset* "proteger-main" activo, con 1 aprobación, fusión por *merge commit*, verificaciones requeridas y *code scanning*. La fusión bloqueada se confirmó en el PR de demostración (6.5).
+  - Captura: consta en el documento de pruebas del equipo; no se copia al repositorio (`verificacion.md`, 6.3).
 - [ ] 6.4 Preparar en local, con aprobación del usuario, la rama `demo/EN-08-rojo` desde esta rama (D14): una prueba que falla, código sin pruebas que baja la cobertura de 80 % y una vista con SQL armado con texto del usuario, todo con datos ficticios. Verificar: en local, `uv run pytest --cov` falla por la prueba y por la cobertura
-- [ ] 6.5 **(equipo)** Hacer push de `demo/EN-08-rojo` y abrir su PR hacia `main`. Verificar: `Pruebas y cobertura` en rojo, alerta de CodeQL alta o crítica, puerta de SonarQube Cloud fallida y fusión bloqueada. Guardar las capturas en `verificacion.md`, cerrar el PR sin fusionar y borrar la rama
-- [ ] 6.6 Completar `verificacion.md`: evidencia de los cinco escenarios de EN-08 (incluido "Canal sin claves reales": `ci.yml` y el registro de la ejecución), el estado de la DoD 1 a 9 según D15 y los pendientes de documentación del design. Verificar: cada escenario de `specs/integracion-continua/spec.md` tiene su evidencia o una nota de por qué no aplica
+  - La salida local de `uv run pytest --cov` con la prueba fallando no se guardó; consta el PR #53 (6.5).
+  - **Pendiente:** evidencia local de la falla.
+- [x] 6.5 **(equipo)** Hacer push de `demo/EN-08-rojo` y abrir su PR hacia `main`. Verificar: `Pruebas y cobertura` en rojo, alerta de CodeQL alta o crítica, puerta de SonarQube Cloud fallida y fusión bloqueada. Guardar las capturas en `verificacion.md`, cerrar el PR sin fusionar y borrar la rama
+  - Evidencia: PR #53, cerrado sin fusionar, con la rama borrada. Tres verificaciones en rojo, entre ellas `Code scanning results / CodeQL`, con 1 alerta de seguridad alta. Fusión bloqueada porque falta 1 aprobación y por la alerta de CodeQL. Capturas en `merge_fallido.docx` (documento del equipo, 17/10/2026). Detalle en `verificacion.md`, 6.5.
+  - Diferencia con lo pedido: `CI / SonarQube Cloud` se omitió porque falló `Pruebas y cobertura`, así que la puerta de calidad fallida no quedó demostrada.
+  - En rojo: `Code scanning results / CodeQL`, `CI / Pruebas y cobertura` y `CI / Ruff`. Alerta de CodeQL: "SQL query built from user-controlled sources", *High*, `src/backend/cuentas/demo_vista_sql.py:15`.
+- [x] 6.6 Completar `verificacion.md`: evidencia de los cinco escenarios de EN-08 (incluido "Canal sin claves reales": `ci.yml` y el registro de la ejecución), el estado de la DoD 1 a 9 según D15 y los pendientes de documentación del design. Verificar: cada escenario de `specs/integracion-continua/spec.md` tiene su evidencia o una nota de por qué no aplica
+  - Hecho: `verificacion.md` tiene los cinco escenarios, la DoD 1 a 9 según D15 y los pendientes de documentación.
+  - Escenario "Puerta de calidad no superada": sin demostrar, con la nota del motivo (D9) en `verificacion.md`, 6.6. DoD 4: no aplica hasta EN-02; el cuerpo del PR #52 no menciona Vercel.
+  - DoD 6: no aplica; EN-08 no implementa reglas de negocio del documento 09 ni agrega código de servicios (decisión del equipo, 18/10/2026).
 
 ## Workflow follow-up
 
