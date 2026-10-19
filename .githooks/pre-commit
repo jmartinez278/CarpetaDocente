@@ -1,5 +1,6 @@
 #!/bin/sh
 # Rechaza .env, insumos/, node_modules/, static/dist/ y coverage.xml en el índice,
-# y corre `uv run ruff check` y `uv run ruff format --check`.
+# y las líneas agregadas con patrones de claves (scripts/reglas.py). Después corre
+# `uv run ruff check` y `uv run ruff format --check`.
 # Se activa una vez por laptop: git config core.hooksPath .githooks
 exec uv run --quiet python "$(dirname "$0")/../scripts/hooks.py" pre-commit

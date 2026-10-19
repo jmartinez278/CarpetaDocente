@@ -55,3 +55,46 @@ def motivo_prohibido(ruta: str) -> str | None:
 def archivos_prohibidos(rutas: list[str]) -> list[tuple[str, str]]:
     """Pares (ruta, motivo) de las rutas prohibidas, en el orden recibido."""
     return [(ruta, motivo) for ruta in rutas if (motivo := motivo_prohibido(ruta))]
+
+
+# Patrones de claves en las líneas agregadas (pre-commit). Cada expresión está escrita de
+# forma que no se detecta a sí misma: este archivo pasa por el mismo hook.
+PATRONES_CLAVE = (
+    ("clave de Django", re.compile(r"django-insecure[-]")),
+    (
+        "SECRET_KEY con valor literal",
+        re.compile(r"SECRET_KEY['\"]?\s*[:=]\s*['\"][^'\"]+['\"]"),
+    ),
+    ("token de SonarQube", re.compile(r"\bsq[pau]_[0-9a-f]{40}\b")),
+    (
+        "token de GitHub",
+        re.compile(r"\b(?:gh[po]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,})"),
+    ),
+    ("clave de acceso de AWS", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
+    ("llave privada", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    # usuario:contraseña@ en una URL. Los marcadores <usuario>:<contraseña> no cuentan.
+    ("cadena de conexión", re.compile(r"\b[a-z][a-z0-9+.-]*://[^\s:/@<>'\"]+:[^\s@/<>'\"]+@")),
+)
+ARCHIVOS_EXENTOS_DE_CLAVES = {".env.example"}
+# Las pruebas pueden usar valores falsos si la línea lo dice: "clave_ficticia", "ficticio"...
+_MARCA_FICTICIA = re.compile(r"fictici[oa]", re.IGNORECASE)
+
+
+def _es_prueba(partes: tuple[str, ...]) -> bool:
+    return "tests" in partes[:-1] or (bool(partes) and partes[-1].startswith("test_"))
+
+
+def claves_en_linea(ruta: str, linea: str) -> list[tuple[str, str]]:
+    """(tipo, fragmento) de la primera clave que aparece en la línea, o [] si no hay.
+
+    El fragmento son los primeros caracteres seguidos de "…": nunca el valor completo.
+    """
+    partes = PurePosixPath(ruta.replace("\\", "/")).parts
+    if partes and partes[-1] in ARCHIVOS_EXENTOS_DE_CLAVES:
+        return []
+    if _es_prueba(partes) and _MARCA_FICTICIA.search(linea):
+        return []
+    for nombre, patron in PATRONES_CLAVE:
+        if encontrada := patron.search(linea):
+            return [(nombre, encontrada.group(0)[:4] + "…")]
+    return []

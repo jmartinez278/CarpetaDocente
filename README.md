@@ -168,7 +168,7 @@ git config core.hooksPath .githooks
 ```
 
 - `commit-msg` rechaza el commit si el mensaje trae líneas de atribución a Claude (la lista está en `scripts/reglas.py`).
-- `pre-commit` rechaza el commit si en el índice hay `.env`, `insumos/`, `node_modules/`, `static/dist/` o `coverage.xml`, y corre `uv run ruff check` y `uv run ruff format --check`.
+- `pre-commit` rechaza el commit si en el índice hay `.env`, `insumos/`, `node_modules/`, `static/dist/` o `coverage.xml`, o si una línea agregada parece una clave: clave de Django, `SECRET_KEY` con un valor escrito, tokens de SonarQube, GitHub o AWS, llaves privadas o una URL con `usuario:contraseña@` (los patrones están en `scripts/reglas.py`). Dice el archivo y la línea sin mostrar el valor. `.env.example` queda fuera, y en las pruebas se aceptan valores falsos si la misma línea dice "ficticio" o "ficticia". Al final corre `uv run ruff check` y `uv run ruff format --check`.
 
 Git para Windows ejecuta los hooks con su propio `sh`, así que no hace falta instalar nada más; solo que `uv` esté en el `PATH`. Si un hook rechaza el commit, se corrige lo que indica y se vuelve a hacer el commit. No se usa `git commit --no-verify`.
 
