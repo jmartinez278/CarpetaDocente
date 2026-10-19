@@ -72,4 +72,6 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    # Git muestra el stderr del hook: en Windows, sin esto los acentos salen rotos.
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     sys.exit(main(sys.argv[1:]))
