@@ -400,3 +400,75 @@ def test_base_remota_no_se_compara_consigo_misma(ejecutor):
 
 def test_comando_atraso_compara_con_la_referencia_local_sin_fetch():
     assert verificar.comando_atraso("main") == ("git", "rev-list", "--count", "main..origin/main")
+
+
+# --- Modo --antes-del-commit ---
+
+NOMBRE_INDICE = "Todo lo del commit está en el índice"
+
+
+def test_antes_del_commit_acepta_cambios_solo_en_el_indice(ejecutor):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(
+        0, "M  README.md\nA  scripts/nuevo.py\nD  viejo.py\n"
+    )
+    informe = verificar.verificar(ejecutor, antes_del_commit=True)
+    assert informe.pasa
+    nombres = [r.nombre for r in informe.resultados]
+    assert NOMBRE_INDICE in nombres
+    assert "git status limpio" not in nombres
+
+
+@pytest.mark.parametrize(
+    "linea",
+    [" M README.md", "MM README.md", "AM scripts/nuevo.py", " D viejo.py", "?? suelto.py"],
+)
+def test_antes_del_commit_falla_con_cambios_fuera_del_indice(ejecutor, linea):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(0, f"M  CLAUDE.md\n{linea}\n")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True)
+    assert nombres_fallidos(informe) == [NOMBRE_INDICE]
+    assert informe.fallas == [f"{NOMBRE_INDICE}: {linea}"]
+
+
+def test_antes_del_commit_revisa_prohibidos_en_el_indice(ejecutor):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(0, "A  .env\n")
+    ejecutor.respuestas[verificar.ARCHIVOS] = Salida(0, "README.md\0.env\0")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True)
+    assert "Sin archivos prohibidos en el índice" in nombres_fallidos(informe)
+
+
+def test_antes_del_commit_mantiene_commits_ruff_y_pytest(ejecutor):
+    ejecutor.respuestas[verificar.comando_log("main")] = Salida(
+        0, registro("e" * 40, "persona@gmail.com", "chore: algo")
+    )
+    ejecutor.respuestas[verificar.RUFF_CHECK] = Salida(1, "E501\n")
+    ejecutor.respuestas[verificar.PYTEST] = Salida(1, "=== 1 failed ===\n")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True)
+    assert nombres_fallidos(informe) == [
+        "Correo noreply en los commits",
+        "ruff check",
+        "pytest --cov (mínimo 80 %)",
+    ]
+
+
+def test_antes_del_commit_con_git_status_que_falla(ejecutor):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(128, "")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True)
+    assert NOMBRE_INDICE in nombres_fallidos(informe)
+
+
+def test_texto_indica_el_modo_antes_del_commit(ejecutor):
+    texto = verificar.formatear_texto(verificar.verificar(ejecutor, antes_del_commit=True))
+    assert "Modo: antes del commit" in texto
+
+
+def test_modo_normal_no_cambia_con_cambios_en_el_indice(ejecutor):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(0, "M  README.md\n")
+    informe = verificar.verificar(ejecutor)
+    assert "git status limpio" in nombres_fallidos(informe)
+    assert "Modo:" not in verificar.formatear_texto(informe)
+
+
+def test_main_con_antes_del_commit(ejecutor, capsys):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(0, "M  README.md\n")
+    assert verificar.main(["--antes-del-commit"], ejecutar=ejecutor, gh=lambda _: None) == 0
+    assert capsys.readouterr().out.rstrip().endswith("PASA")

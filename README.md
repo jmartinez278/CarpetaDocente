@@ -115,7 +115,7 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-`uv run pytest --cov` falla si la cobertura total baja de **80 %** (DoD 1), aunque todas las pruebas pasen. El umbral está en `pyproject.toml` (`fail_under`) y es el mismo que aplica el canal de integración continua. La cobertura no cuenta las migraciones ni las pruebas.
+`uv run pytest --cov` falla si la cobertura total baja de **80 %** (DoD 1), aunque todas las pruebas pasen. El umbral está en `pyproject.toml` (`fail_under`) y es el mismo que aplica el canal de integración continua. La cobertura mide `src/backend` y `scripts/`, sin contar las migraciones ni las pruebas.
 
 Para generar el informe que lee SonarQube Cloud: `uv run pytest --cov --cov-report=xml`. El archivo `coverage.xml` es local y no se versiona (está en `.gitignore`).
 
@@ -154,6 +154,47 @@ Las pruebas marcadas `e2e` abren la aplicación en Chromium. `uv run pytest` no 
 | Compose dice `required variable ... is missing a value` | Falta esa variable en `.env` (ver el paso 1) |
 | El puerto 5432 ya está en uso | Poner otro puerto en `POSTGRES_PORT` (por ejemplo `5433`) y el mismo en `DATABASE_URL` |
 | Se quiere empezar con la base vacía | `docker compose down -v` (borra la base local y sus datos) y luego `docker compose up` |
+
+## Verificación antes de un commit o PR
+
+Las revisiones que antes se hacían a mano están en dos hooks de git y un script. Todo corre con `uv run` y funciona igual en Git Bash y en PowerShell.
+
+### Hooks de git (una vez por laptop)
+
+Los hooks viven versionados en `.githooks/`. Cada integrante los activa una sola vez, desde la raíz del repositorio:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+- `commit-msg` rechaza el commit si el mensaje trae líneas de atribución a Claude (la lista está en `scripts/reglas.py`).
+- `pre-commit` rechaza el commit si en el índice hay `.env`, `insumos/`, `node_modules/`, `static/dist/` o `coverage.xml`, y corre `uv run ruff check` y `uv run ruff format --check`.
+
+Git para Windows ejecuta los hooks con su propio `sh`, así que no hace falta instalar nada más; solo que `uv` esté en el `PATH`. Si un hook rechaza el commit, se corrige lo que indica y se vuelve a hacer el commit. No se usa `git commit --no-verify`.
+
+### Script de verificación
+
+Se corre con `db` levantado (`docker compose up -d db`), en la rama del cambio. Revisa los commits sobre `main` (correo noreply y sin atribuciones), los archivos prohibidos, Ruff y `pytest --cov` con el mínimo de 80 %. Termina con **PASA** o **NO PASA** y la lista de fallas. Si `main` local está detrás de `origin/main`, avisa que falta `git pull` sin cambiar el veredicto.
+
+Se usa en dos momentos:
+
+| Momento | Quién | Comando | Qué cambia |
+|---|---|---|---|
+| Antes de cada commit | Claude Code, antes de proponer el commit | `uv run python scripts/verificar.py --antes-del-commit` | Lo que va a entrar debe estar en el índice (`git add`). Falla solo si quedan archivos modificados fuera del índice o sin seguimiento. Los archivos prohibidos se buscan en el índice |
+| Antes de pedir revisión | Quien abre el PR | `uv run python scripts/verificar.py --pr 53` | Todo debe estar en commits: `git status` limpio. Con `--pr` y `gh` instalado, revisa además los checks del PR y que tenga una aprobación. La plantilla del PR lo pide |
+
+Para dejar constancia en `verificacion.md`: `uv run python scripts/verificar.py --markdown` imprime un bloque con fecha, resultados, salidas resumidas y cobertura.
+
+### Copia para el Proyecto de claude.ai
+
+```bash
+uv run python scripts/copiar_para_proyecto.py                      # en ../CarpetaDocente_para_Proyecto
+uv run python scripts/copiar_para_proyecto.py --destino D:/copia   # en otra carpeta
+```
+
+Copia el repositorio a una carpeta fuera de él, sin `.git`, `.venv`, `.claude/`, dependencias, archivos generados, `insumos/` ni `.env`, y muestra cuántos archivos copió, el tamaño total y los 5 más pesados. Si la carpeta ya existe, pregunta antes de reemplazarla.
+
+> Genera la copia desde main actualizada (git switch main y git pull); desde otra rama la copia lleva esa versión de los documentos.
 
 ## Integración continua
 

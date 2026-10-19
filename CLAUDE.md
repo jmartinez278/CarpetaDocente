@@ -51,6 +51,7 @@ Reglas de diseño: las reglas de negocio van en una capa de servicios (las vista
 - Cada PR lo aprueba **otra integrante**, no quien lo abre (DoD, criterio 3).
 - Commits con el correo noreply de GitHub del autor y **sin** `Co-Authored-By`.
 - Sin force push. Commit y push solo con aprobación explícita; antes, mostrar qué archivos entran y el mensaje propuesto.
+- Antes de proponer un commit, deja en el índice lo que va a entrar, corre `uv run python scripts/verificar.py --antes-del-commit` y muestra su veredicto.
 - Nunca subir `.env`, `insumos/`, datos reales de estudiantes ni archivos de terceros. Solo `.env.example` sin valores.
 
 ## Datos

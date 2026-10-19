@@ -1,6 +1,7 @@
 """Verificación antes de un commit o PR: las comprobaciones que antes se hacían a mano.
 
 Uso:
+    uv run python scripts/verificar.py --antes-del-commit  # con lo del commit en el índice
     uv run python scripts/verificar.py                  # veredicto en la terminal
     uv run python scripts/verificar.py --pr 53          # además, checks y aprobación del PR (gh)
     uv run python scripts/verificar.py --markdown       # bloque listo para verificacion.md
@@ -96,6 +97,7 @@ class Informe:
     cobertura: float | None
     omitidas: list[str] = field(default_factory=list)
     avisos: list[str] = field(default_factory=list)
+    antes_del_commit: bool = False
 
     @property
     def pasa(self) -> bool:
@@ -171,16 +173,30 @@ def _revisar_commits(ejecutar: Ejecutor, base: str) -> tuple[list[Commit], list[
     ]
 
 
-def _revisar_arbol(ejecutar: Ejecutor) -> list[Resultado]:
+def _fuera_del_indice(linea: str) -> bool:
+    # git status --porcelain: XY ruta. X es el índice e Y la carpeta de trabajo.
+    return linea.startswith("??") or linea[1:2] != " "
+
+
+def _revisar_arbol(ejecutar: Ejecutor, antes_del_commit: bool) -> list[Resultado]:
     estado = ejecutar(ESTADO)
     cambios = [linea for linea in estado.texto.splitlines() if linea.strip()]
+    if antes_del_commit:
+        # Antes del commit lo que va a entrar está en el índice: solo sobra lo que no.
+        nombre_estado = "Todo lo del commit está en el índice"
+        cambios = [linea for linea in cambios if _fuera_del_indice(linea)]
+        nombre_prohibidos = "Sin archivos prohibidos en el índice"
+    else:
+        nombre_estado = "git status limpio"
+        nombre_prohibidos = "Sin archivos prohibidos"
     if estado.codigo != 0:
         cambios = cambios or ["git status falló"]
+    # git ls-files lista el índice: incluye lo agregado que todavía no tiene commit.
     archivos = [ruta for ruta in ejecutar(ARCHIVOS).texto.split("\0") if ruta]
     prohibidos = [f"{ruta} ({motivo})" for ruta, motivo in reglas.archivos_prohibidos(archivos)]
     return [
-        Resultado("git status limpio", not cambios, cambios, ESTADO, _ultimas_lineas(estado.texto)),
-        Resultado("Sin archivos prohibidos", not prohibidos, prohibidos),
+        Resultado(nombre_estado, not cambios, cambios, ESTADO, _ultimas_lineas(estado.texto)),
+        Resultado(nombre_prohibidos, not prohibidos, prohibidos),
     ]
 
 
@@ -264,10 +280,11 @@ def verificar(
     base: str = "main",
     pr: str | None = None,
     gh_disponible: bool = False,
+    antes_del_commit: bool = False,
 ) -> Informe:
     rama = ejecutar(RAMA).texto.strip()
     commits, resultados = _revisar_commits(ejecutar, base)
-    resultados += _revisar_arbol(ejecutar)
+    resultados += _revisar_arbol(ejecutar, antes_del_commit)
     calidad, cobertura = _revisar_calidad(ejecutar)
     resultados += calidad
     omitidas = []
@@ -277,7 +294,7 @@ def verificar(
         else:
             omitidas.append(f"PR #{pr}: gh no está disponible")
     avisos = _revisar_atraso(ejecutar, base)
-    return Informe(rama, base, commits, resultados, cobertura, omitidas, avisos)
+    return Informe(rama, base, commits, resultados, cobertura, omitidas, avisos, antes_del_commit)
 
 
 def _cobertura_texto(cobertura: float | None) -> str:
@@ -286,6 +303,8 @@ def _cobertura_texto(cobertura: float | None) -> str:
 
 def formatear_texto(informe: Informe) -> str:
     lineas = [f"Rama: {informe.rama}", f"Commits sobre {informe.base}: {len(informe.commits)}"]
+    if informe.antes_del_commit:
+        lineas.insert(0, "Modo: antes del commit (lo que va a entrar, en el índice)")
     lineas += [f"  {c.corto} {c.correo} {c.asunto}" for c in informe.commits]
     if not informe.commits:
         lineas.append(f"  (sin commits sobre {informe.base})")
@@ -357,9 +376,20 @@ def main(
     parser.add_argument(
         "--markdown", action="store_true", help="imprime un bloque para verificacion.md"
     )
+    parser.add_argument(
+        "--antes-del-commit",
+        action="store_true",
+        help="acepta cambios en el índice; falla con cambios fuera de él o sin seguimiento",
+    )
     args = parser.parse_args(argv)
 
-    informe = verificar(ejecutar, args.base, args.pr, gh_disponible=gh("gh") is not None)
+    informe = verificar(
+        ejecutar,
+        args.base,
+        args.pr,
+        gh_disponible=gh("gh") is not None,
+        antes_del_commit=args.antes_del_commit,
+    )
     if args.markdown:
         print(formatear_markdown(informe, ahora()), end="")
     else:
