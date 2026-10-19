@@ -483,13 +483,24 @@ exit=0
 - PR #52, fusionado en `main` (merge `de0c5b0`), con las 8 verificaciones en verde.
 - Análisis de SonarQube Cloud en `main` sobre `de0c5b0`: cobertura de 83,3 %.
 
-**Pendiente:** los nombres de las 8 verificaciones del PR #52.
+Verificaciones del PR #52, todas en verde:
+
+| Origen | Verificación |
+|---|---|
+| CodeQL | `CodeQL / Analyze (javascript-typescript)` |
+| CodeQL | `CodeQL / Analyze (python)` |
+| CodeQL | `CodeQL` |
+| CI | `CI / Playwright` |
+| CI | `CI / Pruebas y cobertura` |
+| CI | `CI / Ruff` |
+| SonarQube Cloud | `SonarCloud Code Analysis` |
+| CI | `CI / SonarQube Cloud` |
 
 ### 6.3 *Ruleset* de `main`
 
 *Ruleset* "proteger-main" activo: 1 aprobación, fusión por *merge commit*, verificaciones requeridas y *code scanning*. La fusión bloqueada se confirmó en el PR #53 (6.5).
 
-**Pendiente:** captura del *ruleset*.
+La captura del *ruleset* consta en el documento de pruebas del equipo; no se copia al repositorio.
 
 ### 6.4 Rama `demo/EN-08-rojo`
 
@@ -527,9 +538,9 @@ PR #53, cerrado sin fusionar; la rama se borró.
 | 1 | Cumple | Umbral de 80 % en el canal; 87,10 % en local (4.6); PR #52 en verde; 83,3 % en SonarQube Cloud sobre `de0c5b0` |
 | 2 | Cumple | Ruff, CodeQL y SonarQube Cloud entre las 8 verificaciones en verde del PR #52 |
 | 3 | Cumple | El PR #52 tiene una aprobación (*APPROVED*) de otra integrante del equipo |
-| 4 | No aplica | Vista previa de Vercel hasta EN-02. **Pendiente:** confirmar que se indicó en el PR #52 |
+| 4 | No aplica | Vista previa de Vercel hasta EN-02. El cuerpo del PR #52 no menciona Vercel |
 | 5 | Cumple | Prueba de punta a punta de la página inicial (`Playwright`) en verde en el PR #52; 4 pasan en local (4.6) |
-| 6 | **Pendiente** | D15 no lo trata; el equipo debe indicar si aplica a EN-08 |
+| 6 | No aplica | EN-08 no implementa reglas de negocio del documento 09 ni agrega código de servicios (decisión del equipo, 18/10/2026) |
 | 7 | No aplica | No hay pantallas nuevas |
 | 8 | Cumple | Revisión del diff de EN-08 sin datos reales (4.6) |
 | 9 | Cumple | README ("Integración continua"), este cambio en OpenSpec y docstrings en `test_inicio_e2e.py`; el catálogo de rutas no cambia |
