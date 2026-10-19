@@ -9,14 +9,50 @@ import copiar_para_proyecto as copia
 INCLUIDOS = [
     "README.md",
     "CLAUDE.md",
-    ".env.example",
     "pyproject.toml",
     "docs/02 Planificación/01 Transformando a ágil V_1_2_0.md",
-    "src/backend/manage.py",
-    "src/backend/static/img/logo.svg",
-    "src/frontend/package.json",
+    "docs/03 Implementación/verificacion.md",
+    "openspec/config.yaml",
+    "openspec/specs/cuentas/spec.md",
+    "openspec/changes/archive/2026-10-01-en-01/tasks.md",
+    "src/backend/cuentas/models.py",
+    "src/backend/notas/services.py",
+    "src/backend/config/settings.py",
+    "src/backend/config/urls.py",
 ]
 EXCLUIDOS = [
+    # Fuera de lo útil para el chat del Proyecto.
+    ".env.example",
+    ".gitignore",
+    ".gitattributes",
+    ".dockerignore",
+    ".python-version",
+    "Dockerfile",
+    "docker-compose.yml",
+    "sonar-project.properties",
+    ".github/workflows/ci.yml",
+    ".githooks/pre-commit",
+    "scripts/verificar.py",
+    "scripts/tests/test_verificar.py",
+    "src/backend/manage.py",
+    "src/backend/cuentas/__init__.py",
+    "src/backend/cuentas/apps.py",
+    "src/backend/cuentas/admin.py",
+    "src/backend/cuentas/views.py",
+    "src/backend/cuentas/migrations/0001_initial.py",
+    "src/backend/cuentas/migrations/__init__.py",
+    "src/backend/cuentas/tests/test_modelos.py",
+    "src/backend/cuentas/tests/models.py",
+    "src/backend/cuentas/migrations/services.py",
+    "src/backend/config/asgi.py",
+    "src/backend/config/wsgi.py",
+    "src/backend/config/tests/test_settings.py",
+    "src/backend/templates/base.html",
+    "src/backend/static/img/logo.svg",
+    "src/frontend/package.json",
+    "src/frontend/css/app.css",
+    "otra/models.py",
+    # Prohibidos o generados.
     ".git/HEAD",
     ".venv/Lib/site.py",
     "node_modules/x/index.js",
@@ -28,6 +64,7 @@ EXCLUIDOS = [
     "insumos/stitch/pantalla.html",
     ".env",
     ".env.local",
+    "docs/.env",
     ".claude/settings.local.json",
     ".claude/skills/tesis/SKILL.md",
     ".claude/commands/opsx/apply.md",
@@ -91,9 +128,11 @@ def test_cinco_archivos_mas_pesados(repo, tmp_path):
     assert resumen.mas_pesados[0][1] == len(INCLUIDOS) * 100
 
 
-def test_destino_por_defecto_junto_al_repo():
+def test_destino_por_defecto_se_llama_carpetadocente_junto_al_repo():
     origen = Path("C:/Proyectos/CarpetaDocente")
-    assert copia.destino_por_defecto(origen) == Path("C:/Proyectos/CarpetaDocente_para_Proyecto")
+    destino = copia.destino_por_defecto(origen)
+    assert destino == Path("C:/Proyectos/_para_Proyecto/CarpetaDocente")
+    assert destino.name == "CarpetaDocente"
 
 
 # --- Destino que ya existe ---
@@ -204,7 +243,8 @@ def test_main_copia_al_destino_indicado(repo, tmp_path, capsys):
 
 def test_main_usa_el_destino_por_defecto(repo, capsys):
     assert copia.main([], origen=repo, preguntar=no_preguntar) == 0
-    assert archivos_de(copia.destino_por_defecto(repo)) == set(INCLUIDOS)
+    destino = repo.parent / "_para_Proyecto" / "CarpetaDocente"
+    assert archivos_de(destino) == set(INCLUIDOS)
 
 
 def test_main_cancelado_devuelve_1(repo, tmp_path, capsys):

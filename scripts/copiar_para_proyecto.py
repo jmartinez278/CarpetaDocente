@@ -1,11 +1,14 @@
 """Prepara la copia del repo que se sube al Proyecto de claude.ai.
 
 Uso:
-    uv run python scripts/copiar_para_proyecto.py                # junto al repo
+    uv run python scripts/copiar_para_proyecto.py                # ../_para_Proyecto/CarpetaDocente
     uv run python scripts/copiar_para_proyecto.py --destino D:\\copia
 
-Copia el repo sin historial de git, entornos, dependencias, archivos generados,
-material local ni la carpeta .claude/. Si el destino ya existe, pregunta antes de
+Copia solo lo útil para el chat del Proyecto: docs/, openspec/, README.md,
+CLAUDE.md, pyproject.toml y, de src/, los models.py y services.py más
+config/settings.py y config/urls.py. Quedan fuera las pruebas, las migraciones,
+el resto del código, las plantillas, el frontend, scripts/, Docker y la
+configuración de herramientas. Si el destino ya existe, pregunta antes de
 reemplazarlo, y solo borra esa carpeta: rechaza un destino dentro del repo, que
 contenga al repo o que sea otro repositorio de git.
 """
@@ -22,24 +25,16 @@ from pathlib import Path, PurePosixPath
 import reglas
 
 RAIZ = Path(__file__).resolve().parents[1]
-NOMBRE_DESTINO = "CarpetaDocente_para_Proyecto"
+# El Proyecto toma el nombre de la carpeta subida: debe llamarse CarpetaDocente.
+NOMBRE_DESTINO = "CarpetaDocente"
+CARPETA_CONTENEDORA = "_para_Proyecto"
 
-# Además de lo que reglas.py prohíbe subir al repo (.env, insumos/, node_modules/,
-# static/dist/, coverage.xml).
-CARPETAS_EXCLUIDAS = {
-    ".git",
-    ".venv",
-    "node_modules",
-    "insumos",
-    # Configuración, comandos y skills de Claude Code: no sirven en el Proyecto.
-    ".claude",
-    "__pycache__",
-    ".pytest_cache",
-    ".ruff_cache",
-    "htmlcov",
-    "test-results",
-}
-ARCHIVOS_EXCLUIDOS = {"uv.lock", "package-lock.json", "coverage.xml", ".coverage"}
+ARCHIVOS_RAIZ = {"README.md", "CLAUDE.md", "pyproject.toml"}
+CARPETAS_COMPLETAS = {"docs", "openspec"}
+# De src/: los modelos y servicios de cada app, más la configuración de Django.
+NOMBRES_EN_SRC = {"models.py", "services.py"}
+RUTAS_EN_SRC = {"src/backend/config/settings.py", "src/backend/config/urls.py"}
+CARPETAS_EXCLUIDAS = {"tests", "migrations", "__pycache__", "node_modules"}
 RESPUESTAS_SI = {"s", "si", "sí"}
 
 
@@ -59,18 +54,32 @@ class Resumen:
     mas_pesados: list[tuple[str, int]]
 
 
+def _util(partes: tuple[str, ...]) -> bool:
+    if len(partes) == 1:
+        return partes[0] in ARCHIVOS_RAIZ
+    if partes[0] in CARPETAS_COMPLETAS:
+        return True
+    if partes[0] == "src" and not any(p in CARPETAS_EXCLUIDAS for p in partes):
+        return partes[-1] in NOMBRES_EN_SRC or "/".join(partes) in RUTAS_EN_SRC
+    return False
+
+
 def excluido(ruta: str) -> bool:
     """True si la ruta (relativa al repo, con /) no va en la copia."""
     partes = PurePosixPath(ruta).parts
-    return (
-        any(parte in CARPETAS_EXCLUIDAS for parte in partes)
-        or (bool(partes) and partes[-1] in ARCHIVOS_EXCLUIDOS)
-        or reglas.motivo_prohibido(ruta) is not None
+    return not partes or not _util(partes) or reglas.motivo_prohibido(ruta) is not None
+
+
+def _carpeta_descartada(ruta: str) -> bool:
+    """True si en la carpeta no puede haber nada que vaya en la copia."""
+    partes = PurePosixPath(ruta).parts
+    return partes[0] not in CARPETAS_COMPLETAS | {"src"} or any(
+        p in CARPETAS_EXCLUIDAS for p in partes
     )
 
 
 def destino_por_defecto(origen: Path) -> Path:
-    return origen.parent / NOMBRE_DESTINO
+    return origen.parent / CARPETA_CONTENEDORA / NOMBRE_DESTINO
 
 
 def _quitar_solo_lectura(funcion, ruta, _excepcion):
@@ -105,8 +114,8 @@ def copiar(origen: Path, destino: Path, preguntar: Callable[[str], str] = input)
     copiados: list[tuple[str, int]] = []
     for carpeta, subcarpetas, archivos in os.walk(origen):
         base = Path(carpeta).relative_to(origen)
-        # Podar aquí evita recorrer .git, .venv o node_modules.
-        subcarpetas[:] = [s for s in subcarpetas if not excluido((base / s).as_posix())]
+        # Podar aquí evita recorrer .git, .venv, node_modules o las pruebas.
+        subcarpetas[:] = [s for s in subcarpetas if not _carpeta_descartada((base / s).as_posix())]
         for nombre in archivos:
             relativa = (base / nombre).as_posix()
             if excluido(relativa):
@@ -147,7 +156,7 @@ def main(
     parser.add_argument(
         "--destino",
         type=Path,
-        help=f"carpeta de la copia (por defecto, {NOMBRE_DESTINO} junto al repo)",
+        help="carpeta de la copia (por defecto, ../_para_Proyecto/CarpetaDocente)",
     )
     args = parser.parse_args(argv)
     destino = args.destino or destino_por_defecto(origen)
