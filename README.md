@@ -40,7 +40,7 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 13. [Restricciones](<docs/01 Inicio/13. Restricciones V_1_1_0.md>)
 
 ### Fase 02: Planificación
-1. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_2_0.md>)
+1. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_3_0.md>)
 2. Tablero GitHub Projects *(en elaboración)*
 3. [Registro de riesgos](<docs/02 Planificación/03 Registro de riesgos V_1_1_0.md>)
 4. [Presupuesto del proyecto](<docs/02 Planificación/04 Presupuesto del proyecto V_1_0_0.md>)
