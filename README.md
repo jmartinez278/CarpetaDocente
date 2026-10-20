@@ -196,6 +196,15 @@ Copia el repositorio a una carpeta fuera de él, sin `.git`, `.venv`, `.claude/`
 
 > Genera la copia desde main actualizada (git switch main y git pull); desde otra rama la copia lleva esa versión de los documentos.
 
+### Subir la versión de un documento
+
+```bash
+uv run python scripts/subir_version.py "docs/01 Inicio/07. Requisitos no funcionales V_1_0_0.md" --descripcion "Qué cambió."
+uv run python scripts/subir_version.py "<ruta>" --descripcion "Qué cambió." --mayor   # V_2_0_0
+```
+
+Por defecto sube la versión menor (V_1_0_0 → V_1_1_0). Renombra el archivo con `git mv`, actualiza los campos Versión y Fecha del encabezado, agrega la fila al final del historial de cambios y cambia el enlace del README. Si falta algo (el enlace, el encabezado o el historial), no cambia nada. El contenido se edita aparte y el commit lo hace quien lo corre.
+
 ## Integración continua
 
 Cada Pull Request hacia `main`, y cada push a `main`, pasa por el workflow `CI` (`.github/workflows/ci.yml`, EN-08). Con eso se comprueban los criterios 1, 2 y 5 de la DoD. CodeQL corre aparte, con la configuración por defecto de GitHub. Un commit nuevo en el PR vuelve a ejecutar todo.
