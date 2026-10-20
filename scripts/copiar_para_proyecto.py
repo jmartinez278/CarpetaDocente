@@ -5,8 +5,8 @@ Uso:
     uv run python scripts/copiar_para_proyecto.py --destino D:\\copia
 
 Copia solo lo útil para el chat del Proyecto: docs/, openspec/, README.md,
-CLAUDE.md, pyproject.toml y, de src/, los models.py y services.py más
-config/settings.py y config/urls.py. Quedan fuera las pruebas, las migraciones,
+CLAUDE.md, pyproject.toml y, de src/, los models.py que definen modelos, los
+services.py, config/settings.py y config/urls.py. Quedan fuera las pruebas, las migraciones,
 el resto del código, las plantillas, el frontend, scripts/, Docker y la
 configuración de herramientas. Si el destino ya existe, pregunta antes de
 reemplazarlo, y solo borra esa carpeta: rechaza un destino dentro del repo, que
@@ -14,6 +14,7 @@ contenga al repo o que sea otro repositorio de git.
 """
 
 import argparse
+import ast
 import os
 import shutil
 import stat
@@ -70,6 +71,17 @@ def excluido(ruta: str) -> bool:
     return not partes or not _util(partes) or reglas.motivo_prohibido(ruta) is not None
 
 
+def sin_modelos(archivo: Path) -> bool:
+    """True si es un models.py que no define ninguna clase (el que crea Django)."""
+    if archivo.name != "models.py":
+        return False
+    try:
+        arbol = ast.parse(archivo.read_text(encoding="utf-8"))
+    except (SyntaxError, UnicodeDecodeError):
+        return False
+    return not any(isinstance(nodo, ast.ClassDef) for nodo in arbol.body)
+
+
 def _carpeta_descartada(ruta: str) -> bool:
     """True si en la carpeta no puede haber nada que vaya en la copia."""
     partes = PurePosixPath(ruta).parts
@@ -118,7 +130,7 @@ def copiar(origen: Path, destino: Path, preguntar: Callable[[str], str] = input)
         subcarpetas[:] = [s for s in subcarpetas if not _carpeta_descartada((base / s).as_posix())]
         for nombre in archivos:
             relativa = (base / nombre).as_posix()
-            if excluido(relativa):
+            if excluido(relativa) or sin_modelos(origen / relativa):
                 continue
             objetivo = destino / relativa
             objetivo.parent.mkdir(parents=True, exist_ok=True)
