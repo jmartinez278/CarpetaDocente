@@ -31,7 +31,7 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 4. [Registro de supuestos y restricciones](<docs/01 Inicio/04. Registro de supuestos y restricciones V_1_2_0.md>)
 5. [Registro de interesados](<docs/01 Inicio/05. Registro de interesados V_1_0_0.md>)
 6. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_3_0.md>)
-7. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_0_0.md>)
+7. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_1_0.md>)
 8. [Usuarios](<docs/01 Inicio/08. Usuarios V_1_1_0.md>)
 9. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_0_0.md>)
 10. [Stack tecnológico](<docs/01 Inicio/10. Stack tecnológico V_1_2_0.md>)
