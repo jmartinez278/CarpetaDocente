@@ -33,7 +33,7 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 6. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_4_0.md>)
 7. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_1_0.md>)
 8. [Usuarios](<docs/01 Inicio/08. Usuarios V_1_1_0.md>)
-9. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_0_0.md>)
+9. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_1_0.md>)
 10. [Stack tecnológico](<docs/01 Inicio/10. Stack tecnológico V_1_2_0.md>)
 11. [Base de datos](<docs/01 Inicio/11. Base de datos V_1_2_0.md>)
 12. [Modelo C4](<docs/01 Inicio/12. Modelo C4 V_1_1_0.md>)
