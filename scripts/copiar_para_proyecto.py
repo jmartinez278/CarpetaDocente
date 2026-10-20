@@ -5,7 +5,7 @@ Uso:
     uv run python scripts/copiar_para_proyecto.py --destino D:\\copia
 
 Copia solo lo útil para el chat del Proyecto: docs/, openspec/, README.md,
-CLAUDE.md, pyproject.toml y, de src/, los models.py que definen modelos, los
+CLAUDE.md, DESIGN.md, pyproject.toml y, de src/, los models.py que definen modelos, los
 services.py, config/settings.py y config/urls.py. Quedan fuera las pruebas, las migraciones,
 el resto del código, las plantillas, el frontend, scripts/, Docker y la
 configuración de herramientas. Si el destino ya existe, pregunta antes de
@@ -30,7 +30,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 NOMBRE_DESTINO = "CarpetaDocente"
 CARPETA_CONTENEDORA = "_para_Proyecto"
 
-ARCHIVOS_RAIZ = {"README.md", "CLAUDE.md", "pyproject.toml"}
+ARCHIVOS_RAIZ = {"README.md", "CLAUDE.md", "DESIGN.md", "pyproject.toml"}
 CARPETAS_COMPLETAS = {"docs", "openspec"}
 # De src/: los modelos y servicios de cada app, más la configuración de Django.
 NOMBRES_EN_SRC = {"models.py", "services.py"}

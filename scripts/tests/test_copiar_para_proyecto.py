@@ -9,8 +9,11 @@ import copiar_para_proyecto as copia
 INCLUIDOS = [
     "README.md",
     "CLAUDE.md",
+    "DESIGN.md",
     "pyproject.toml",
     "docs/02 Planificación/01 Transformando a ágil V_1_2_0.md",
+    # Local (en .gitignore), pero sí va al Proyecto.
+    "docs/PENDIENTES_TESIS.md",
     "docs/03 Implementación/verificacion.md",
     "openspec/config.yaml",
     "openspec/specs/cuentas/spec.md",
