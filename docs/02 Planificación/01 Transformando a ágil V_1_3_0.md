@@ -8,8 +8,8 @@
 | **Producto** | CarpetaDocente (nombre temporal) |
 | **Integrantes** | Cuicapuza Remigio Nayely Nilda · Martinez Llanos Marco Jhair · Vera Zea Jhoanna Hade |
 | **Asesor** | Ing. Elvis Wilfredo Carmen Delgadillo |
-| **Fecha** | 15/10/2026 |
-| **Versión** | 1.2.0 |
+| **Fecha** | 19/10/2026 |
+| **Versión** | 1.3.0 |
 
 ---
 
@@ -130,6 +130,11 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Dado un usuario que ingresa una contraseña incorrecta o tiene la cuenta desactivada
     Cuando intenta iniciar sesión
     Entonces el sistema niega el acceso y muestra el mensaje "Usuario o contraseña incorrectos, o cuenta inactiva", sin indicar cuál de los datos falló
+
+  Escenario: Cuenta bloqueada
+    Dado una cuenta bloqueada tras 5 intentos fallidos consecutivos de inicio de sesión (RN-024)
+    Cuando su usuario ingresa incluso la contraseña correcta antes de que pasen 15 minutos
+    Entonces el sistema niega el acceso y muestra el mismo mensaje "Usuario o contraseña incorrectos, o cuenta inactiva", sin indicar que la cuenta está bloqueada
 ```
 
 #### US-002: Cerrar sesión
@@ -899,7 +904,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 ```gherkin
   Escenario: Camino ideal
     Dado el administrador
-    Cuando configura el año escolar en bimestres o en trimestres, con sus fechas [DATO I.E. PENDIENTE: organización del año escolar]
+    Cuando configura el año escolar en bimestres (RN-006), con sus fechas
     Entonces el sistema crea los periodos y el registro de notas usa el periodo vigente según la fecha
 
   Escenario: Flujo alternativo válido
@@ -995,18 +1000,18 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 ```gherkin
   Escenario: Camino ideal
     Dado un docente con su lista de estudiantes importada
-    Cuando registra la asistencia de la jornada de hoy marcando un estado para cada estudiante y guarda
-    Entonces el sistema guarda la asistencia de la jornada y muestra el resumen "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1"
+    Cuando abre la asistencia de la jornada de hoy y toca el círculo de cada estudiante hasta llegar a su estado
+    Entonces el sistema guarda cada toque en ese momento, sin botón Guardar, y con todos los estudiantes marcados muestra el resumen "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1"
 
   Escenario: Flujo alternativo válido
     Dado un docente que registra la asistencia
-    Cuando marca a todos los estudiantes como "Asistió" en un solo paso y luego cambia solo las excepciones
+    Cuando usa "Marcar todos como Asistió" y luego toca solo a las excepciones
     Entonces el sistema guarda los estados resultantes
 
   Escenario: Caso de error
-    Dado un docente que registra la asistencia
-    Cuando deja a uno o más estudiantes sin estado e intenta guardar
-    Entonces el sistema no guarda la jornada y señala a los estudiantes sin estado
+    Dado un docente que registra la asistencia de hoy
+    Cuando deja a uno o más estudiantes sin estado
+    Entonces la jornada queda guardada como incompleta y el sistema muestra "N de M marcados", por ejemplo "18 de 25 marcados"
 ```
 
 #### US-031: Corregir la asistencia de una jornada
@@ -1026,8 +1031,8 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 ```gherkin
   Escenario: Camino ideal
     Dado un estudiante registrado como "Faltó" que presenta su justificación
-    Cuando el docente cambia su estado a "Justificado"
-    Entonces el sistema actualiza el estado y guarda la corrección en el registro de actividad (RF-008)
+    Cuando el docente toca su círculo hasta "Justificado" y escribe la nota opcional "Constancia entregada a la docente"
+    Entonces el sistema actualiza el estado y la nota, y guarda la corrección en el registro de actividad (RF-008)
 
   Escenario: Flujo alternativo válido
     Dado una jornada anterior registrada con un error
@@ -1037,7 +1042,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
   Escenario: Caso de error
     Dado una jornada perteneciente a un periodo cuyas notas ya se marcaron como entregadas
     Cuando el docente intenta corregir la asistencia
-    Entonces el sistema no permite el cambio y muestra el mensaje "El periodo está cerrado. Solicite a la dirección que habilite la corrección"
+    Entonces el sistema no permite el cambio y muestra el mensaje "El periodo está cerrado. Solicita a la dirección que habilite la corrección"
 ```
 
 #### US-032: Impedir el registro duplicado de una jornada
@@ -1259,7 +1264,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 | Campo | Detalle |
 |---|---|
 | **ID** | EN-02 |
-| **Título** | Despliegue en Vercel, Neon y R2 |
+| **Título** | Despliegue en Vercel y Neon |
 | **Épica relacionada** | Transversal (todas) |
 | **Origen** | RNF-009; documento 10, sección 5 |
 
@@ -1323,6 +1328,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 
 ```gherkin
   Escenario: Bloqueo por intentos fallidos
+    # Ya se cubre en US-001 (escenario "Cuenta bloqueada"), con el mismo mensaje genérico.
     Dado una cuenta activa
     Cuando se ingresa una contraseña incorrecta 5 veces seguidas
     Entonces la cuenta queda bloqueada durante 15 minutos
@@ -1417,7 +1423,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces el tiempo de respuesta del servidor es de 2 segundos o menos en el percentil 95
 
   Escenario: Carga inicial en conexión lenta
-    Dado un navegador con un perfil 3G simulado
+    Dado un navegador con el perfil Slow 4G simulado de Chrome DevTools (RNF-002)
     Cuando abre la pantalla de inicio de sesión
     Entonces se transfieren 2 MB o menos y la pantalla es usable en 5 segundos o menos
 
@@ -1455,7 +1461,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces registra una alerta de severidad alta o crítica y GitHub impide fusionar el Pull Request
 
   Escenario: Puerta de calidad de SonarQube no superada
-    Dado un Pull Request cuyo código nuevo tiene cobertura menor a 80 % o un problema crítico o alto
+    Dado un Pull Request cuyo código nuevo no supera la puerta de calidad Sonar way, por ejemplo por una cobertura menor a 80 % o un error o una vulnerabilidad nuevos
     Cuando SonarQube Cloud analiza el Pull Request
     Entonces la puerta de calidad aparece como fallida en el Pull Request y GitHub impide fusionarlo
 
@@ -1471,8 +1477,8 @@ Una historia de usuario o un enabler está **terminado** solo si cumple los 9 cr
 
 | N.° | Criterio | Cómo se verifica |
 |---|---|---|
-| 1 | Cobertura de pruebas unitarias **≥ 80 %** del código del cambio | Informe de cobertura en GitHub Actions y puerta de calidad de SonarQube Cloud |
-| 2 | Análisis estático **sin vulnerabilidades críticas ni altas** | Ruff (calidad del código, con sus reglas de seguridad derivadas de Bandit), CodeQL (seguridad: sigue el dato desde la entrada del usuario hasta la consulta o la pantalla) y SonarQube Cloud (puerta de calidad del código nuevo: errores, vulnerabilidades, duplicación y mantenibilidad), en GitHub Actions (EN-08) |
+| 1 | Cobertura de pruebas unitarias **≥ 80 %** del código del cambio | Informe de cobertura en GitHub Actions y puerta de calidad Sonar way de SonarQube Cloud |
+| 2 | Análisis estático **sin vulnerabilidades críticas ni altas** | Ruff (calidad del código, con sus reglas de seguridad derivadas de Bandit), CodeQL (seguridad: sigue el dato desde la entrada del usuario hasta la consulta o la pantalla) y SonarQube Cloud (puerta de calidad Sonar way sobre el código nuevo: cobertura de 80 % o más, duplicación de 3 % o menos, calificación A en fiabilidad, seguridad y mantenibilidad, y *security hotspots* revisados), en GitHub Actions (EN-08) |
 | 3 | Revisión aprobada por **otra integrante del equipo** mediante Pull Request; quien abre el Pull Request no lo aprueba | Aprobación registrada en GitHub |
 | 4 | Despliegue automático en un ambiente de pruebas | Vista previa de Vercel del Pull Request funcionando (EN-02) |
 | 5 | Todos los escenarios Gherkin de la historia **pasan**, incluida al menos una prueba de punta a punta con Playwright de la ruta ideal | Resultado de las pruebas en GitHub Actions (EN-08) |
@@ -1481,7 +1487,7 @@ Una historia de usuario o un enabler está **terminado** solo si cumple los 9 cr
 | 8 | Sin datos reales de estudiantes en el código, las pruebas ni los datos de ejemplo (RN-018) | Revisión del Pull Request |
 | 9 | Documentación actualizada: especificación del cambio en OpenSpec, docstrings del código, catálogo de rutas de la aplicación y, si cambió un requisito, nueva versión del documento 06 | Revisión del Pull Request |
 
-**Sobre los criterios 1 y 2:** el repositorio es público, así que CodeQL y el plan gratuito de SonarQube Cloud no tienen costo. Cada herramienta cumple un papel: Ruff revisa el estilo mientras se programa, CodeQL busca vulnerabilidades siguiendo el recorrido de los datos y SonarQube Cloud reúne en un panel la cobertura, los problemas y la duplicación del código nuevo, que sirve de evidencia de la DoD. Bandit no se usa por separado porque Ruff incluye sus reglas. En el plan gratuito, SonarQube Cloud analiza solo la rama principal y los Pull Requests dirigidos a ella, así que todo Pull Request se abre hacia la rama principal.
+**Sobre los criterios 1 y 2:** el repositorio es público, así que CodeQL y el plan gratuito de SonarQube Cloud no tienen costo. Cada herramienta cumple un papel: Ruff revisa el estilo mientras se programa, CodeQL busca vulnerabilidades siguiendo el recorrido de los datos y SonarQube Cloud reúne en un panel la cobertura, los problemas y la duplicación del código nuevo, que sirve de evidencia de la DoD. Bandit no se usa por separado porque Ruff incluye sus reglas. CodeQL usa la configuración por defecto de GitHub, que se activa en *Settings*, sin workflow en el repositorio; el *ruleset* de la rama principal exige su resultado. En el plan gratuito, SonarQube Cloud analiza solo la rama principal y los Pull Requests dirigidos a ella, así que todo Pull Request se abre hacia la rama principal. Su única puerta de calidad es **Sonar way**, que es más estricta que el criterio 2: también bloquea errores o vulnerabilidades nuevos de menor severidad, la duplicación mayor a 3 % y los *security hotspots* sin revisar.
 
 **Manejo de claves (repositorio público):**
 
@@ -1506,5 +1512,6 @@ Una historia de usuario o un enabler está **terminado** solo si cumple los 9 cr
 | 1.0.0 | 15/10/2026 | Equipo del proyecto | Versión inicial: 5 épicas, 36 historias de usuario, 7 enablers y DoD global. |
 | 1.1.0 | 15/10/2026 | Equipo del proyecto | Repositorio público: CodeQL reemplaza a Bandit en el criterio 2 de la DoD; manejo de claves; EN-04 suma permisos por sección, token CSRF y bloqueo de secretos; nuevo EN-08 (canal de integración continua con Playwright). |
 | 1.2.0 | 15/10/2026 | Equipo del proyecto | Se suma SonarQube Cloud (plan gratuito) a los criterios 1 y 2 de la DoD y a EN-08; su token entra en el manejo de claves; todo Pull Request se dirige a la rama principal. |
+| 1.3.0 | 19/10/2026 | Equipo del proyecto | US-001: escenario de cuenta bloqueada tras 5 intentos (RN-024), con el mismo mensaje genérico; EN-04 remite a él. US-030 y US-031 según RF-030 y RF-031 del documento 06 (V_1_4_0); mensaje de US-031 en tuteo. US-028: la I.E. organiza el año en bimestres (RN-006). EN-02 sin R2 en el título (R2 es EN-03). EN-07: perfil Slow 4G (RNF-002). EN-08, escenario 4, y DoD 1 y 2: puerta de calidad Sonar way. Sección 7: CodeQL con la configuración por defecto de GitHub. |
 
 [← Volver al README Principal](../../README.md)

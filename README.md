@@ -30,17 +30,17 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 3. [Declaración de la visión](<docs/01 Inicio/03. Declaración de la visión V_1_1_0.md>)
 4. [Registro de supuestos y restricciones](<docs/01 Inicio/04. Registro de supuestos y restricciones V_1_2_0.md>)
 5. [Registro de interesados](<docs/01 Inicio/05. Registro de interesados V_1_0_0.md>)
-6. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_3_0.md>)
-7. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_0_0.md>)
+6. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_4_0.md>)
+7. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_1_0.md>)
 8. [Usuarios](<docs/01 Inicio/08. Usuarios V_1_1_0.md>)
-9. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_0_0.md>)
+9. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_1_0.md>)
 10. [Stack tecnológico](<docs/01 Inicio/10. Stack tecnológico V_1_2_0.md>)
-11. [Base de datos](<docs/01 Inicio/11. Base de datos V_1_2_0.md>)
+11. [Base de datos](<docs/01 Inicio/11. Base de datos V_1_3_0.md>)
 12. [Modelo C4](<docs/01 Inicio/12. Modelo C4 V_1_1_0.md>)
 13. [Restricciones](<docs/01 Inicio/13. Restricciones V_1_1_0.md>)
 
 ### Fase 02: Planificación
-1. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_2_0.md>)
+1. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_3_0.md>)
 2. Tablero GitHub Projects *(en elaboración)*
 3. [Registro de riesgos](<docs/02 Planificación/03 Registro de riesgos V_1_1_0.md>)
 4. [Presupuesto del proyecto](<docs/02 Planificación/04 Presupuesto del proyecto V_1_0_0.md>)
@@ -195,6 +195,15 @@ uv run python scripts/copiar_para_proyecto.py --destino D:/copia   # en otra car
 Copia el repositorio a una carpeta fuera de él, sin `.git`, `.venv`, `.claude/`, dependencias, archivos generados, `insumos/` ni `.env`, y muestra cuántos archivos copió, el tamaño total y los 5 más pesados. Si la carpeta ya existe, pregunta antes de reemplazarla.
 
 > Genera la copia desde main actualizada (git switch main y git pull); desde otra rama la copia lleva esa versión de los documentos.
+
+### Subir la versión de un documento
+
+```bash
+uv run python scripts/subir_version.py "<ruta>" --descripcion "Qué cambió."
+uv run python scripts/subir_version.py "<ruta>" --descripcion "Qué cambió." --mayor   # V_2_0_0
+```
+
+Por defecto sube la versión menor (V_1_0_0 → V_1_1_0). Renombra el archivo con `git mv`, actualiza los campos Versión y Fecha del encabezado, agrega la fila al final del historial de cambios y cambia el enlace del README. Si falta algo (el enlace, el encabezado o el historial), no cambia nada. El contenido se edita aparte y el commit lo hace quien lo corre.
 
 ## Integración continua
 

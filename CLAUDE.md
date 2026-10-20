@@ -36,13 +36,13 @@ Reglas de diseño: las reglas de negocio van en una capa de servicios (las vista
 
 ## Interfaz
 
-- Las pantallas se diseñan con **Google Stitch desde US-001**; los exports van a `insumos/stitch/` (local, no se sube) y se convierten en plantillas de Django.
-- **Impeccable** (pulido de la interfaz) y **Playwright MCP** (navegador manejado por el asistente) se usan solo al final, en el pulido; no durante la construcción de cada historia.
-- **Identidad visual (propuesta del equipo, por ratificar).** No se aplica en EN-01; es instrucción para Stitch y Tailwind desde US-001:
-  - Primario café `#6c4f3d`: barra superior, navegación activa y botones principales.
-  - Fondos crema `#fcf9f3` y `#f6f3ed`.
-  - Acentos dorado/ocre para insignias y sellos: **hex por definir; no inventarlo**.
-  - Texto con contraste de 4,5:1 o más (RNF-008).
+- **Referencia visual:** `DESIGN.md` de la raíz (propuesta 0.2), ratificada por el equipo al aprobar otra integrante el PR que la incorporó (cierra C7).
+- **Flujo de diseño:** Impeccable (instalación global, con `--no-hooks` y la telemetría apagada) → prototipo estático en `insumos/prototipo/` (local, no se sube) → el diseño ganador se pasa a plantillas de Django. Google Stitch queda descartado por ahora.
+- **Playwright MCP** (navegador manejado por el asistente) se usa solo al final, en el pulido; no durante la construcción de cada historia.
+- En las plantillas **no se escriben colores hex**: solo clases de los tokens de `DESIGN.md`.
+- **Prohibido el desplazamiento horizontal** en páginas y componentes (RNF-005).
+- Sin logo ni escudo de la I.E. hasta tener su autorización; el nombre va en texto.
+- El `PRODUCT.md` que genere Impeccable remite a los documentos 03 y 08 y no entra al repo hasta que el equipo lo revise.
 
 ## Git y Pull Requests
 
