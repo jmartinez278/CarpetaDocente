@@ -199,7 +199,7 @@ Copia el repositorio a una carpeta fuera de él, sin `.git`, `.venv`, `.claude/`
 ### Subir la versión de un documento
 
 ```bash
-uv run python scripts/subir_version.py "docs/01 Inicio/07. Requisitos no funcionales V_1_0_0.md" --descripcion "Qué cambió."
+uv run python scripts/subir_version.py "<ruta>" --descripcion "Qué cambió."
 uv run python scripts/subir_version.py "<ruta>" --descripcion "Qué cambió." --mayor   # V_2_0_0
 ```
 
