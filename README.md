@@ -188,11 +188,11 @@ Para dejar constancia en `verificacion.md`: `uv run python scripts/verificar.py 
 ### Copia para el Proyecto de claude.ai
 
 ```bash
-uv run python scripts/copiar_para_proyecto.py                      # en ../CarpetaDocente_para_Proyecto
+uv run python scripts/copiar_para_proyecto.py                      # en ../_para_Proyecto/CarpetaDocente
 uv run python scripts/copiar_para_proyecto.py --destino D:/copia   # en otra carpeta
 ```
 
-Copia el repositorio a una carpeta fuera de él, sin `.git`, `.venv`, `.claude/`, dependencias, archivos generados, `insumos/` ni `.env`, y muestra cuántos archivos copió, el tamaño total y los 5 más pesados. Si la carpeta ya existe, pregunta antes de reemplazarla.
+Copia a una carpeta fuera del repositorio solo lo útil para el chat del Proyecto: `docs/`, `openspec/`, `README.md`, `CLAUDE.md`, `DESIGN.md`, `pyproject.toml` y, de `src/`, los `models.py` que definen modelos (no el vacío que crea Django), los `services.py`, `config/settings.py` y `config/urls.py`. Quedan fuera las pruebas, las migraciones, el resto del código, las plantillas, el frontend, `scripts/`, Docker y la configuración de herramientas. La carpeta por defecto se llama `CarpetaDocente`, el nombre con que se sube al Proyecto. Muestra cuántos archivos copió, el tamaño total y los 5 más pesados. Si la carpeta ya existe, pregunta antes de reemplazarla.
 
 > Genera la copia desde main actualizada (git switch main y git pull); desde otra rama la copia lleva esa versión de los documentos.
 
