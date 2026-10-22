@@ -17,6 +17,8 @@ env/
 .coverage
 coverage.xml
 htmlcov/
+# Salida completa de pytest que guarda scripts/verificar.py cuando falla
+.verificar/
 
 # Node (compilación de Tailwind)
 node_modules/

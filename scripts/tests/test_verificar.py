@@ -1,6 +1,7 @@
 """Pruebas del script de verificación antes de un commit o PR (scripts/verificar.py)."""
 
 import json
+import os
 import subprocess
 from datetime import datetime
 
@@ -52,10 +53,13 @@ class EjecutorFalso:
             ),
         }
         self.ejecutados = []
+        self.entornos = {}
 
-    def __call__(self, comando):
+    def __call__(self, comando, entorno=None):
         comando = tuple(comando)
         self.ejecutados.append(comando)
+        if entorno is not None:
+            self.entornos[comando] = entorno
         return self.respuestas[comando]
 
 
@@ -472,3 +476,112 @@ def test_main_con_antes_del_commit(ejecutor, capsys):
     ejecutor.respuestas[verificar.ESTADO] = Salida(0, "M  README.md\n")
     assert verificar.main(["--antes-del-commit"], ejecutar=ejecutor, gh=lambda _: None) == 0
     assert capsys.readouterr().out.rstrip().endswith("PASA")
+
+
+# --- Registro de la salida de pytest cuando falla (D13 de US-001) ---
+
+SALIDA_PYTEST_FALLIDA = (
+    "collected 284 items\n"
+    "E   psycopg.errors.UniqueViolation: duplicate key value\n"
+    "FAIL Required test coverage of 80.0% not reached. Total coverage: 75.10%\n"
+    "========== 1 failed, 283 passed in 11.02s ==========\n"
+)
+MOMENTO = datetime(2026, 10, 22, 9, 5, 7)
+
+
+def test_pytest_que_falla_guarda_la_salida_completa(ejecutor, tmp_path):
+    ejecutor.respuestas[verificar.PYTEST] = Salida(1, SALIDA_PYTEST_FALLIDA)
+    carpeta = tmp_path / ".verificar"
+
+    informe = verificar.verificar(ejecutor, registros=carpeta, ahora=lambda: MOMENTO)
+
+    archivo = carpeta / "pytest-20261022-090507.txt"
+    assert archivo.read_text(encoding="utf-8") == SALIDA_PYTEST_FALLIDA
+    assert any(str(archivo) in falla for falla in informe.fallas)
+
+
+def test_pytest_que_pasa_no_guarda_nada(ejecutor, tmp_path):
+    carpeta = tmp_path / ".verificar"
+
+    informe = verificar.verificar(ejecutor, registros=carpeta, ahora=lambda: MOMENTO)
+
+    assert informe.pasa
+    assert not carpeta.exists()
+
+
+def test_sin_carpeta_de_registros_no_guarda_nada(ejecutor, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    ejecutor.respuestas[verificar.PYTEST] = Salida(1, SALIDA_PYTEST_FALLIDA)
+
+    verificar.verificar(ejecutor)
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_main_guarda_la_salida_y_el_resumen_muestra_la_ruta(ejecutor, tmp_path, capsys):
+    ejecutor.respuestas[verificar.PYTEST] = Salida(1, SALIDA_PYTEST_FALLIDA)
+
+    codigo = verificar.main(
+        [], ejecutar=ejecutor, gh=lambda _: None, ahora=lambda: MOMENTO, registros=tmp_path
+    )
+
+    archivo = tmp_path / "pytest-20261022-090507.txt"
+    assert codigo == 1
+    assert archivo.exists()
+    assert f"salida completa en {archivo}" in capsys.readouterr().out
+
+
+def test_la_ruta_dentro_del_repo_se_muestra_relativa(ejecutor):
+    archivo = verificar.RAIZ / ".verificar" / "pytest-20261022-090507.txt"
+
+    assert verificar.ruta_legible(archivo) == ".verificar/pytest-20261022-090507.txt"
+
+
+def test_main_guarda_por_defecto_en_la_carpeta_ignorada_del_repo():
+    assert verificar.REGISTROS == verificar.RAIZ / ".verificar"
+    assert ".verificar/" in (verificar.RAIZ / ".gitignore").read_text(encoding="utf-8").splitlines()
+
+
+# --- Cobertura propia de cada ejecución (D13 de US-001) ---
+
+
+def test_pytest_usa_un_archivo_de_cobertura_propio(ejecutor):
+    """Con el .coverage compartido, otro pytest al mismo tiempo rompe el de verificar.py."""
+    verificar.verificar(ejecutor)
+
+    archivo = verificar.RAIZ / ".verificar" / f".coverage-{os.getpid()}"
+    assert ejecutor.entornos == {verificar.PYTEST: {"COVERAGE_FILE": str(archivo)}}
+
+
+def test_ejecutar_agrega_el_entorno_pedido(monkeypatch):
+    def falso_run(comando, **kwargs):
+        assert kwargs["env"]["COVERAGE_FILE"] == "propio"
+        assert kwargs["env"]["PATH"] == os.environ["PATH"]
+        return subprocess.CompletedProcess(comando, 0, stdout="")
+
+    monkeypatch.setattr(verificar.subprocess, "run", falso_run)
+    assert verificar.ejecutar(("uv",), {"COVERAGE_FILE": "propio"}) == Salida(0, "")
+
+
+def test_ejecutar_sin_entorno_hereda_el_de_la_terminal(monkeypatch):
+    def falso_run(comando, **kwargs):
+        assert kwargs["env"] is None
+        return subprocess.CompletedProcess(comando, 0, stdout="")
+
+    monkeypatch.setattr(verificar.subprocess, "run", falso_run)
+    verificar.ejecutar(("git", "status"))
+
+
+def test_borra_su_archivo_de_cobertura_al_terminar(ejecutor, monkeypatch, tmp_path):
+    monkeypatch.setattr(verificar, "RAIZ", tmp_path)
+    datos = tmp_path / ".verificar" / f".coverage-{os.getpid()}"
+
+    def pytest_que_deja_datos(comando, entorno=None):
+        if comando == verificar.PYTEST:
+            datos.parent.mkdir(parents=True, exist_ok=True)
+            datos.write_text("datos", encoding="utf-8")
+        return ejecutor(comando, entorno)
+
+    verificar.verificar(pytest_que_deja_datos)
+
+    assert not datos.exists()

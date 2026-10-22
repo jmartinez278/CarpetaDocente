@@ -11,6 +11,7 @@ Sale con 0 si el veredicto es PASA y con 1 si es NO PASA.
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -18,10 +19,14 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 
 import reglas
 
 UMBRAL_COBERTURA = 80
+RAIZ = Path(__file__).resolve().parent.parent
+# Salida completa de pytest cuando falla, para no perder el detalle (D13 de US-001).
+REGISTROS = RAIZ / ".verificar"
 DOMINIO_NOREPLY = "@users.noreply.github.com"
 
 RAMA = ("git", "rev-parse", "--abbrev-ref", "HEAD")
@@ -113,11 +118,14 @@ class Informe:
         return lista
 
 
-Ejecutor = Callable[[tuple[str, ...]], Salida]
+Ejecutor = Callable[..., Salida]
 
 
-def ejecutar(comando: tuple[str, ...]) -> Salida:
-    """Corre el comando sin shell y junta stdout y stderr, como se ven en la terminal."""
+def ejecutar(comando: tuple[str, ...], entorno: dict[str, str] | None = None) -> Salida:
+    """Corre el comando sin shell y junta stdout y stderr, como se ven en la terminal.
+
+    ``entorno`` agrega variables a las de la terminal solo para ese comando.
+    """
     try:
         proceso = subprocess.run(
             list(comando),
@@ -126,6 +134,7 @@ def ejecutar(comando: tuple[str, ...]) -> Salida:
             text=True,
             encoding="utf-8",
             errors="replace",
+            env={**os.environ, **entorno} if entorno else None,
             check=False,
         )
     except FileNotFoundError:
@@ -200,7 +209,33 @@ def _revisar_arbol(ejecutar: Ejecutor, antes_del_commit: bool) -> list[Resultado
     ]
 
 
-def _revisar_calidad(ejecutar: Ejecutor) -> tuple[list[Resultado], float | None]:
+def ruta_legible(archivo: Path) -> str:
+    """Ruta relativa a la raíz del repo si está dentro de él; si no, la ruta completa."""
+    try:
+        return archivo.relative_to(RAIZ).as_posix()
+    except ValueError:
+        return str(archivo)
+
+
+def _guardar_salida(registros: Path, momento: datetime, texto: str) -> Path:
+    registros.mkdir(parents=True, exist_ok=True)
+    archivo = registros / f"pytest-{momento:%Y%m%d-%H%M%S}.txt"
+    archivo.write_text(texto, encoding="utf-8")
+    return archivo
+
+
+def _datos_de_cobertura() -> Path:
+    """Archivo de cobertura propio de esta ejecución (D13 de US-001).
+
+    Con el ``.coverage`` de la raíz, otro pytest corriendo al mismo tiempo le borra
+    o le mezcla los datos y la corrida termina en INTERNALERROR.
+    """
+    return RAIZ / ".verificar" / f".coverage-{os.getpid()}"
+
+
+def _revisar_calidad(
+    ejecutar: Ejecutor, registros: Path | None, ahora: Callable[[], datetime]
+) -> tuple[list[Resultado], float | None]:
     resultados = []
     for nombre, comando in (("ruff check", RUFF_CHECK), ("ruff format --check", RUFF_FORMAT)):
         salida = ejecutar(comando)
@@ -208,7 +243,10 @@ def _revisar_calidad(ejecutar: Ejecutor) -> tuple[list[Resultado], float | None]
         fallas = [] if salida.codigo == 0 else [resumen or f"salió con código {salida.codigo}"]
         resultados.append(Resultado(nombre, salida.codigo == 0, fallas, comando, resumen))
 
-    salida = ejecutar(PYTEST)
+    datos = _datos_de_cobertura()
+    datos.parent.mkdir(parents=True, exist_ok=True)
+    salida = ejecutar(PYTEST, {"COVERAGE_FILE": str(datos)})
+    datos.unlink(missing_ok=True)
     encontrada = _COBERTURA.search(salida.texto)
     cobertura = float(encontrada.group(1)) if encontrada else None
     resumen = _resumen_pytest(salida.texto)
@@ -218,6 +256,9 @@ def _revisar_calidad(ejecutar: Ejecutor) -> tuple[list[Resultado], float | None]
         fallas = [FALLA_SIN_BASE]
     else:
         fallas = [_ultimas_lineas(resumen, 1)]
+    if salida.codigo != 0 and registros is not None:
+        archivo = _guardar_salida(registros, ahora(), salida.texto)
+        fallas.append(f"salida completa en {ruta_legible(archivo)}")
     nombre = f"pytest --cov (mínimo {UMBRAL_COBERTURA} %)"
     resultados.append(Resultado(nombre, salida.codigo == 0, fallas, PYTEST, resumen))
     return resultados, cobertura
@@ -281,11 +322,14 @@ def verificar(
     pr: str | None = None,
     gh_disponible: bool = False,
     antes_del_commit: bool = False,
+    registros: Path | None = None,
+    ahora: Callable[[], datetime] = datetime.now,
 ) -> Informe:
+    """Corre las verificaciones; si pytest falla y hay ``registros``, guarda ahí su salida."""
     rama = ejecutar(RAMA).texto.strip()
     commits, resultados = _revisar_commits(ejecutar, base)
     resultados += _revisar_arbol(ejecutar, antes_del_commit)
-    calidad, cobertura = _revisar_calidad(ejecutar)
+    calidad, cobertura = _revisar_calidad(ejecutar, registros, ahora)
     resultados += calidad
     omitidas = []
     if pr is not None:
@@ -369,6 +413,7 @@ def main(
     ejecutar: Ejecutor = ejecutar,
     gh: Callable[[str], str | None] = shutil.which,
     ahora: Callable[[], datetime] = datetime.now,
+    registros: Path = REGISTROS,
 ) -> int:
     parser = argparse.ArgumentParser(description="Verificación antes de un commit o PR.")
     parser.add_argument("--pr", help="número del PR: revisa sus checks y su aprobación con gh")
@@ -389,6 +434,8 @@ def main(
         args.pr,
         gh_disponible=gh("gh") is not None,
         antes_del_commit=args.antes_del_commit,
+        registros=registros,
+        ahora=ahora,
     )
     if args.markdown:
         print(formatear_markdown(informe, ahora()), end="")
