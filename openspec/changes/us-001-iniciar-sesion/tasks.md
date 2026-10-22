@@ -156,7 +156,7 @@
 ## Workflow follow-up
 
 - **(equipo)** Push de `feature/US-001-iniciar-sesion` y PR hacia `main`. Las verificaciones de EN-08 (Ruff, Pruebas y cobertura, Playwright, SonarQube Cloud y CodeQL) deben quedar en verde.
-- **(equipo)** Aprobación del PR por otra integrante (DoD 3). Esa aprobación también ratifica DESIGN.md 0.3.
+- **(equipo)** Aprobación del PR por otra integrante (DoD 3). Esa aprobación también ratifica DESIGN.md 0.3.1.
 - Después de la fusión, archivar el cambio (`/opsx:archive`) para que `inicio-sesion` y `pantallas-de-inicio` pasen a `openspec/specs/` y se apliquen los deltas de `entorno-desarrollo` e `integracion-continua`.
 - Proponer al equipo, aparte y con subida de versión, los pendientes de documentación del design (Open Questions).
 - Safari de iPhone: probar el carrusel en un equipo real (EN-07).

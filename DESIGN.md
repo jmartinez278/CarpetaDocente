@@ -3,10 +3,10 @@
 > Un aula cálida y ordenada: el café del uniforme, con sus franjas arena, y el dorado del escudo enmarcan la pantalla; el trabajo diario ocurre sobre papel casi blanco, tranquilo y legible.
 
 **Theme:** claro y oscuro. El tema sigue la preferencia del sistema (`prefers-color-scheme`); no hay selector en la interfaz (el selector será un RF aparte, después del Sprint 1).
-**Estado:** propuesta 0.3 · 21-10-2026 · insumo para Impeccable (ruta B) y para el prototipo en `insumos/prototipo/`. Los colores salen de fotos y afiches de la I.E. (aproximados) y pasaron filtros WCAG 2.x, APCA y simulación de daltonismo. Este archivo es la referencia visual del proyecto (CLAUDE.md, sección Interfaz); la ratifica la aprobación, por otra integrante, del PR que lo incorpora (cierra C7).
+**Estado:** propuesta 0.3.1 · 22-10-2026 · insumo para Impeccable (ruta B) y para el prototipo (evidencia local, fuera del repositorio). Los colores salen de fotos y afiches de la I.E. (aproximados) y pasaron filtros WCAG 2.x, APCA y simulación de daltonismo. Este archivo es la referencia visual del proyecto (CLAUDE.md, sección Interfaz); la ratifica la aprobación, por otra integrante, del PR que lo incorpora (cierra C7).
 **Cambios 0.2:** tarjetas café con franjas del uniforme y miniatura que desborda; botón principal en píldora; fuente de títulos por definir con `/impeccable typeset`; tuteo; títulos cortos con subtítulo formal; una sola librería de íconos; movimiento solo funcional; asistencia de 5 columnas en computadora; criterio de "listo para docentes".
 **Cambios 0.3** (revisión del prototipo de US-001, tramo 4, variante G4e):
-- Fuente de títulos Besley 600, definitiva (alojada, subconjunto latino, 17 KB). Íconos Lucide 1.52.0 (trazo 1,75 px). Radios sin cambios.
+- Fuente de títulos Besley 600, definitiva (alojada, subconjunto latino, 17 KB; en 0.3.1 llega por npm, ver Títulos). Íconos Lucide 1.52.0 (trazo 1,75 px). Radios sin cambios.
 - Tema oscuro por preferencia del sistema: cada token de color tiene valor claro y oscuro. Regla de roles: en claro, café sobre arena; en oscuro, arena sobre café.
 - `--color-fondo` cambia de crema afiche `#fcf4e1` a neutro cálido `#f3eee3`. El crema afiche sale del sistema y se retira su segundo rol ("texto sobre café"): en claro ya no hay superficies café con texto.
 - `--color-primario` deja de ser fondo de barra y de tarjetas: queda como color de acción y acento (botón principal, enlaces, foco, títulos del marco, franjas de la tarjeta disponible). En oscuro vale arena.
@@ -17,6 +17,13 @@
 - Componentes nuevos o rehechos: tarjeta de dimensión G4e, carrusel de dimensiones (única excepción al desplazamiento horizontal), barra con el nombre de la I.E., inicio de sesión centrado y pie.
 - Revisión del prototipo (tramo 5): miniatura esquemática, sin datos que parezcan de la docente; botón "Mostrar contraseña"; mensaje de error con qué hacer (texto de US-001); barra sin menú hasta US-002; insignia "Próximamente" callada; la tarjeta "Próximamente" responde al toque con "Disponible pronto".
 - Revisión del prototipo, ronda 2 (tramo 5): la insignia "Próximamente" va siempre en su propia línea, arriba a la derecha, y nunca tapa el título; el chip seleccionado va sin relleno y los chips no agregan entradas al historial; toda la tarjeta disponible responde, también lo que sobresale de la miniatura, y dice qué hace ("Registrar asistencia", al pie de la cabecera); el anillo de foco rodea solo la tarjeta; miniatura de asistencia sin día y casi sin marcar; tintes apagados en "Próximamente"; estado vacío fijo de la dirección en el Sprint 1; "Ingresando…" más visible, con los campos de solo lectura; renglón propio para el aviso de "Próximamente", que pasa a "Llegará en una próxima versión."; mensaje de error en dos pesos; la tarjeta que asoma en el carrusel no responde.
+**Cambios 0.3.1** (22-10-2026, aplicación de US-001, antes de construir las plantillas):
+- Besley llega por npm desde `@fontsource/besley`, como HTMX y Alpine, en lugar del subconjunto propio del prototipo (design de US-001, D9).
+- Botón principal mientras envía: `aria-disabled` y campos de solo lectura, no `disabled` (design de US-001, D6).
+- El inicio de sesión carga el JavaScript propio de "Mostrar contraseña" y del estado de envío.
+- Tratamiento ("Prof.") y grado en los ejemplos: se muestran cuando el sistema guarde esos datos (design de US-001, D8; US-005).
+- Disponibilidad de las tarjetas: al cerrar US-001, las tres en "Próximamente"; con US-030, solo Asistencia.
+- Las referencias a rutas locales del prototipo pasan a "evidencia local".
 
 CarpetaDocente (nombre provisional) es una aplicación web para docentes de primaria de la I.E. Virgen del Carmen (Huayucachi, Junín, Perú). Se usa sobre todo desde el celular, con datos móviles (referencia: 4G lento), dentro del aula o en el patio con sol; la dirección la usa en computadora. Debe sentirse institucional, cálida y confiable: ni plantilla genérica de SaaS ni sistema estatal antiguo.
 
@@ -107,7 +114,7 @@ En la tarjeta "Próximamente" van **apagados**, mezclados con `--color-superfici
 ## Tokens — Typography
 
 ### Títulos — `--font-display`
-- **Besley, peso 600, definitiva** (Owen Earl, SIL OFL 1.1), elegida con `/impeccable typeset`. Un solo archivo `besley-600-latin.woff2` (≈17 KB) alojado por nosotros, sin CDN. Subconjunto: U+0020–007E, U+00A0–00FF (tildes, ñ, ü, ¿, ¡, °), U+2013–2014, U+2018–2019, U+201C–201D, U+2026. `font-display: swap`. Se incluye el archivo OFL.txt junto a la fuente.
+- **Besley, peso 600, definitiva** (Owen Earl, SIL OFL 1.1), elegida con `/impeccable typeset`. Llega por npm desde `@fontsource/besley`, como HTMX y Alpine: el build copia `besley-latin-600-normal.woff2` (≈19 KB en la 5.3.0) y su licencia a los estáticos, alojados por nosotros, sin CDN, y la versión queda fijada en `package-lock.json`. Rango `latin` de Fontsource (U+0000–00FF, U+2000–206F y otros): cubre tildes, ñ, ü, ¿, ¡, °, comillas, rayas y puntos suspensivos. `font-display: swap`. El prototipo usó un subconjunto propio de ≈17 KB.
 - Requisitos que cumple: una sola familia, un solo peso, cálida e institucional (clarendon de letrero escolar), no infantil, no Inter.
 - Solo para títulos de 20px o más (portada, inicio de sesión, barra, encabezados de pantalla).
 
@@ -125,7 +132,7 @@ En la tarjeta "Próximamente" van **apagados**, mezclados con `--color-superfici
 | heading | display | 600 | 24px | 30px | `--text-heading` |
 | display | display | 600 | 27px móvil / 40px PC | 1.15 | `--text-display` |
 
-El display es para el nombre de la I.E. en el inicio de sesión y para el saludo de la portada: a 27px, "I.E. Virgen del Carmen" y "Hola, Prof. Ana Quispe" caben en una línea a 360px (325 y 323 de 328px). Un nombre de docente más largo baja a dos líneas (`text-wrap: balance`). Mínimo absoluto 14px. Nunca texto en mayúsculas sostenidas.
+El display es para el nombre de la I.E. en el inicio de sesión y para el saludo de la portada: a 27px, "I.E. Virgen del Carmen" y "Hola, Prof. Ana Quispe" caben en una línea a 360px (325 y 323 de 328px). Mientras el sistema no guarde el tratamiento, el saludo es "Hola, Ana Quispe", más corto (design de US-001, D8). Un nombre de docente más largo baja a dos líneas (`text-wrap: balance`). Mínimo absoluto 14px. Nunca texto en mayúsculas sostenidas.
 
 ## Tokens — Spacing & Shapes
 
@@ -171,7 +178,7 @@ Mismo fondo que la página (`--color-fondo`) con una línea fina de 1px `--color
 - Formulario en tarjeta `--color-superficie`, borde 1px `--color-linea`, radio 20px, padding 24px (32px en PC): Usuario, Contraseña (con el botón "Mostrar contraseña"), botón "Ingresar" a ancho completo y la ayuda "Si olvidaste tu contraseña, pide al administrador que la restablezca."
 - Error: el mensaje va sobre la tarjeta del formulario, no dentro, en dos líneas: qué pasó ("Usuario o contraseña incorrectos, o cuenta inactiva") y qué hacer ("Revisa tus datos. Si el problema sigue, pide ayuda al administrador."). Es el mismo mensaje para la cuenta bloqueada (US-001).
 - Enviando: el botón dice "Ingresando…" con el fondo de envío (ver Botón principal) y los dos campos quedan de solo lectura, sobre `--color-fondo`.
-- Sin Alpine: el inicio de sesión solo carga el JavaScript propio del botón "Mostrar contraseña".
+- Sin Alpine: el inicio de sesión solo carga el JavaScript propio del botón "Mostrar contraseña" y del estado de envío.
 - **Celular:** el contenido empieza en el tercio superior de la pantalla, no centrado en vertical; el botón "Ingresar" queda dentro de la primera pantalla (360 × 800).
 - **PC:** columna centrada en horizontal y en vertical.
 - Pie al final de la página.
@@ -180,7 +187,7 @@ Mismo fondo que la página (`--color-fondo`) con una línea fina de 1px `--color
 "CarpetaDocente · 2026" en 14px `--color-texto-suave`, centrado, al final del inicio de sesión y de la portada. Sin ©. En la PC entra en la primera pantalla.
 
 ### Botón principal (píldora)
-Fondo `--color-primario` (café en claro, arena en oscuro), texto `--color-sobre-primario` 16px/600, alto 48px, radio 999px. Ancho completo en el celular y en el formulario de acceso; ancho de contenido en el resto de la PC. Un solo botón principal por pantalla. Presionado: un tono más intenso y escala 0,98. Foco: anillo de 2px `--color-primario` con 2px de separación. Mientras envía (deshabilitado): fondo `--color-dimension` (arena en claro, café en oscuro) y texto `--color-texto`, para que el cambio no dependa solo del texto.
+Fondo `--color-primario` (café en claro, arena en oscuro), texto `--color-sobre-primario` 16px/600, alto 48px, radio 999px. Ancho completo en el celular y en el formulario de acceso; ancho de contenido en el resto de la PC. Un solo botón principal por pantalla. Presionado: un tono más intenso y escala 0,98. Foco: anillo de 2px `--color-primario` con 2px de separación. Mientras envía (`aria-disabled`, no `disabled`, porque un botón deshabilitado no envía el formulario): fondo `--color-dimension` (arena en claro, café en oscuro) y texto `--color-texto`, para que el cambio no dependa solo del texto.
 
 ### Botón secundario
 Píldora transparente, borde 1px `--color-primario`, texto `--color-primario` 16px/600, alto 48px.
@@ -208,7 +215,7 @@ Caja con fondo `--color-superficie`, borde completo de 1px en el color del estad
 - **"Próximamente":** fondo `--color-superficie` (papel en claro, `#322d26` en oscuro), borde de 1px (`--color-borde` en claro, `--color-linea` en oscuro), insignia "Próximamente" callada en su propia línea, arriba a la derecha, y menos énfasis: título en `--color-texto`, ícono y subtítulo en `--color-texto-suave`, franjas en `--color-arena` (claro) o `--color-linea` (oscuro), miniatura sin sombra, con borde 1px `--color-linea` y tintes apagados (ver Acentos). Nunca se oculta.
   - Insignia callada: fondo transparente, borde 1px y texto 14px/600 en `--color-dorado-texto` (`#976700` en claro, 4,8:1 sobre papel; `#e9b70b` en oscuro, 7,3:1), radio píldora.
   - No navega, pero responde: toda la tarjeta es un botón con `aria-disabled="true"` (se estira como el enlace de la disponible, también sobre lo que sobresale, y lo describe la insignia). Al tocarlo aparece "Llegará en una próxima versión." en el renglón al pie de la cabecera (el del verbo en la disponible), 14px `--color-texto-suave`, durante 3 s, en una región `aria-live="polite"` que ya está en la página y ya ocupa el alto de dos líneas: no mueve la miniatura, y el texto se apoya abajo, a 24px de ella (32px en PC). Sin JavaScript no hace nada.
-- **Sprint 1:** solo Asistencia disponible; Sesiones y Notas en "Próximamente". **Estado final:** las tres disponibles.
+- **Al cerrar US-001:** las tres en "Próximamente". **Con US-030 (Sprint 1):** solo Asistencia disponible; Sesiones y Notas en "Próximamente". **Estado final:** las tres disponibles.
 - **Celular:** carrusel de dimensiones (abajo). **PC:** las tres tarjetas en fila, centradas, ocupando el ancho útil (máx. 1120px), bajo el saludo; las tres fichas empiezan a la misma altura aunque solo las "Próximamente" lleven la línea de la insignia (las tarjetas comparten las filas de la grilla con `subgrid`).
 
 ### Carrusel de dimensiones (celular)
@@ -219,7 +226,7 @@ Caja con fondo `--color-superficie`, borde completo de 1px en el color del estad
 - Tarjetas casi a ancho completo, con ajuste por tarjeta (`scroll-snap`); la siguiente asoma 24px para que se note que hay más. La tarjeta que asoma no responde al toque ni anuncia nada (con JavaScript); el teclado y el lector de pantalla llegan a todas.
 - Puntos de paginación visibles debajo; el de la tarjeta visible, alargado y en `--color-primario`.
 - Solo CSS donde el navegador lo permite (líneas de tiempo de desplazamiento). Donde no, el chip y el punto activos se marcan con Alpine.js, sin ocultar los puntos.
-- Sprint 1: abre en Asistencia, la única disponible. Estado final: abre en Sesiones.
+- Abre en la primera tarjeta disponible, en el orden de las tarjetas, o en la primera si no hay ninguna: al cerrar US-001, en Sesiones; con US-030, en Asistencia; en el estado final, en Sesiones.
 - Desde 960px no hay carrusel: las tres tarjetas en fila.
 
 ### Fila de asistencia (celular)
@@ -256,7 +263,7 @@ Solo funcional: pulso breve del círculo de asistencia al cambiar de estado (≤
 - Acompañar todo estado con ícono y texto
 - Diseñar a 360px primero; en PC, centrar con ancho máximo de 1120px
 - Verificar cada pantalla en tema claro y en tema oscuro
-- Usar datos ficticios en español del Perú ("Prof. Ana Quispe", "3.° grado, sección A")
+- Usar datos ficticios en español del Perú ("Prof. Ana Quispe", "3.° grado, sección A"); el tratamiento y el grado se muestran cuando el sistema guarde esos datos (design de US-001, D8; US-005)
 
 ### Don't
 - **Nunca desplazamiento horizontal**, en ninguna página ni componente, salvo el carrusel de dimensiones de la portada en el celular. Las tablas de dos dimensiones se transforman: se elige una dimensión y la otra se muestra como lista
@@ -286,7 +293,7 @@ Solo funcional: pulso breve del círculo de asistencia al cambiar de estado (≤
 | Boceto de líneas del edificio de la I.E. | Pendiente de autorización de la I.E. | Hasta entonces no se dibuja |
 | Selector de tema claro/oscuro | Pendiente: RF aparte, después del Sprint 1 | Mientras tanto, el tema sigue la preferencia del sistema |
 | Menú de la barra superior | Pendiente: entra con US-002 | En US-001 no hay menú |
-| Tarjeta sin miniatura o con la miniatura que asoma recortada por el borde inferior | Descartadas (tramo 5): queda la miniatura que desborda | Con ella, `impeccable detect` marca `nested-cards` en la portada; se acepta con una excepción del detector solo para la portada (`.impeccable/config.json`, local). Capturas de la comparación en `insumos/prototipo/US-001/capturas/comparacion/` |
+| Tarjeta sin miniatura o con la miniatura que asoma recortada por el borde inferior | Descartadas (tramo 5): queda la miniatura que desborda | Con ella, `impeccable detect` marca `nested-cards` en la portada; se acepta con una excepción del detector solo para la portada (configuración local del detector). Capturas de la comparación: evidencia local |
 | Miniatura con datos reales de la docente | Pendiente: se evalúa en la historia que los provea | Hasta entonces, esquemática |
 | Aviso de privacidad (Ley 29733) | Pendiente de evaluar en `docs/` | Sin enlace hasta que exista el documento |
 | Alternativa documentada | Respaldo | Fondo arena −2 `#ece2c8` con la tarjeta disponible en café suave `#6d402c` (G4c), por si G4e no funciona en la prueba con docentes |
@@ -309,7 +316,7 @@ Celular primero (360px), margen lateral 16px, una sola columna, barra superior f
 Prototipo de US-001 (variante G4e), en tema claro y oscuro:
 
 1. Inicio de sesión — celular y PC. Espacio del escudo, "I.E. Virgen del Carmen", "Huayucachi", "Sesiones · Notas · Asistencia", formulario y pie. Estados: normal con foco, contraseña visible, error ("Usuario o contraseña incorrectos, o cuenta inactiva" / "Revisa tus datos. Si el problema sigue, pide ayuda al administrador.", con el usuario conservado), enviando y campos vacíos.
-2. Portada del docente — celular (carrusel) y PC (tres en fila). "Hola, Prof. Ana Quispe" y las tres tarjetas, en Sprint 1 (solo Asistencia disponible, con "Llegará en una próxima versión." al tocar una "Próximamente") y en el estado final (las tres disponibles).
+2. Portada del docente — celular (carrusel) y PC (tres en fila). "Hola, Prof. Ana Quispe" y las tres tarjetas, con solo Asistencia disponible (estado con US-030, con "Llegará en una próxima versión." al tocar una "Próximamente") y en el estado final (las tres disponibles). Al cerrar US-001, las tres en "Próximamente" y el saludo sin tratamiento.
 3. Inicio de la dirección — PC. Mismo marco y, en el Sprint 1, un estado vacío fijo: "Los consolidados de notas y asistencia estarán aquí en una próxima versión." El panel de consolidados es US-040.
 4. Asistencia de hoy — celular (un día con selector) y PC (5 columnas). 3.° grado, sección A, 25 estudiantes ficticios. Se prototipa con su historia.
 
