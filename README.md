@@ -60,6 +60,8 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 
 uv descarga por sí mismo Python 3.13 (fijado en `.python-version`); no hace falta instalarlo aparte.
 
+Cada integrante corre una vez en su equipo `npx -y impeccable@4.7.0 telemetry off`, que apaga la telemetría de Impeccable (flujo de diseño, `CLAUDE.md`, sección Interfaz).
+
 ### 1. Variables de entorno
 
 Copiar `.env.example` como `.env` y completar los valores. **Nunca subir `.env`**: el repositorio es público.

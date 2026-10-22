@@ -38,5 +38,9 @@ desktop.ini
 # Pendientes para la tesis: se llevan en local
 docs/PENDIENTES_TESIS.md
 
+# Impeccable: estado local de diseño. PRODUCT.md entra solo cuando el equipo lo revise
+**/.impeccable/
+/PRODUCT.md
+
 # Configuración personal de Claude Code (la skill sí se sube)
 .claude/settings.local.json
