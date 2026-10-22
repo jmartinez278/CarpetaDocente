@@ -44,5 +44,8 @@ docs/PENDIENTES_TESIS.md
 **/.impeccable/
 /PRODUCT.md
 
-# Configuración personal de Claude Code (la skill sí se sube)
+# Configuración personal de Claude Code
 .claude/settings.local.json
+# Comandos y skills de OpenSpec para Claude Code: los genera `openspec init` en cada equipo
+.claude/commands/opsx/
+.claude/skills/openspec-*/
