@@ -36,11 +36,12 @@ Reglas de diseño: las reglas de negocio van en una capa de servicios (las vista
 
 ## Interfaz
 
-- **Referencia visual:** `DESIGN.md` de la raíz (propuesta 0.2), ratificada por el equipo al aprobar otra integrante el PR que la incorporó (cierra C7).
+- **Referencia visual:** `DESIGN.md` de la raíz (propuesta 0.3, pendiente de su PR). La 0.2 la ratificó el equipo al aprobar otra integrante el PR que la incorporó (cierra C7).
 - **Flujo de diseño:** Impeccable (instalación global, con `--no-hooks` y la telemetría apagada) → prototipo estático en `insumos/prototipo/` (local, no se sube) → el diseño ganador se pasa a plantillas de Django. Google Stitch queda descartado por ahora.
 - **Playwright MCP** (navegador manejado por el asistente) se usa solo al final, en el pulido; no durante la construcción de cada historia.
 - En las plantillas **no se escriben colores hex**: solo clases de los tokens de `DESIGN.md`.
-- **Prohibido el desplazamiento horizontal** en páginas y componentes (RNF-005).
+- **Prohibido el desplazamiento horizontal** en páginas y componentes (RNF-005). Única excepción: el carrusel de dimensiones de la portada en el celular (chips tocables de 44 px como mínimo y paginación visible); la página no se desplaza.
+- **Temas claro y oscuro** según la preferencia del sistema (`prefers-color-scheme`): mismos tokens con un segundo juego de valores (`DESIGN.md`). Cada pantalla se verifica en ambos temas. El selector de tema es un RF futuro, después del Sprint 1: no se agrega antes.
 - Sin logo ni escudo de la I.E. hasta tener su autorización; el nombre va en texto.
 - El `PRODUCT.md` que genere Impeccable remite a los documentos 03 y 08 y no entra al repo hasta que el equipo lo revise.
 
