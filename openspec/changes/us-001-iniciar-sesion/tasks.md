@@ -11,19 +11,19 @@
 
 ## 1. Falla intermitente de pytest (D13)
 
-- [ ] 1.1 Con `db` levantado, correr `uv run pytest --cov --cov-fail-under=80 -rfE --junitxml=<scratchpad>/corrida-N.xml` 30 veces seguidas, guardando la salida de cada corrida fuera del repositorio. Verificar: cantidad de corridas, fallas y cobertura de cada una anotadas en `verificacion.md`, en la sección 1
-- [ ] 1.2 Probar las hipótesis de D13 por separado:
+- [x] 1.1 Con `db` levantado, correr `uv run pytest --cov --cov-fail-under=80 -rfE --junitxml=<scratchpad>/corrida-N.xml` 30 veces seguidas, guardando la salida de cada corrida fuera del repositorio. Verificar: cantidad de corridas, fallas y cobertura de cada una anotadas en `verificacion.md`, en la sección 1
+- [x] 1.2 Probar las hipótesis de D13 por separado:
   - dos corridas de pytest en paralelo, para la base de pruebas compartida;
   - `test_hook_real_*` 50 veces en un bucle;
   - `test_reemplaza_destino_con_archivos_de_solo_lectura` 50 veces en un bucle.
 
   Verificar: el resultado de cada hipótesis anotado en `verificacion.md`, con la salida de la falla si la hubo
 - [ ] 1.3 Si alguna hipótesis reproduce la falla: escribir primero una prueba que la muestre y corregir la causa como indica D13. Verificar: la prueba nueva pasa, y repetir 1.2 para esa hipótesis da 0 fallas en 50 corridas
-- [ ] 1.4 Prueba primero en `scripts/tests/test_verificar.py`: cuando pytest falla, `verificar.py` guarda la salida completa en `.verificar/pytest-<fecha y hora>.txt` y el resumen muestra esa ruta; cuando pasa, no guarda nada. Agregar `.verificar/` a `.gitignore`. Verificar: las pruebas nuevas pasan, `git status` no lista `.verificar/` y `uv run pytest --cov` sigue en verde
+- [x] 1.4 Prueba primero en `scripts/tests/test_verificar.py`: cuando pytest falla, `verificar.py` guarda la salida completa en `.verificar/pytest-<fecha y hora>.txt` y el resumen muestra esa ruta; cuando pasa, no guarda nada. Agregar `.verificar/` a `.gitignore`. Verificar: las pruebas nuevas pasan, `git status` no lista `.verificar/` y `uv run pytest --cov` sigue en verde
 
 ## 2. Servicio de bloqueo y backend de autenticación (D1)
 
-- [ ] 2.1 Prueba primero, `cuentas/tests/test_servicios_bloqueo.py`, con la hora pasada como argumento. Casos:
+- [x] 2.1 Prueba primero, `cuentas/tests/test_servicios_bloqueo.py`, con la hora pasada como argumento. Casos:
   - 4 fallos no bloquean y el quinto bloquea 15 minutos;
   - durante el bloqueo, ni la contraseña correcta ni las incorrectas cambian el conteo o el fin del bloqueo;
   - a los 14:59 sigue bloqueada y a los 15:00 entra;
@@ -33,8 +33,8 @@
   - `desbloquear` devuelve si cambió algo.
 
   Verificar en rojo: falla porque `cuentas.servicios` no existe
-- [ ] 2.2 Implementar `cuentas/servicios.py` (`INTENTOS_MAXIMOS`, `DURACION_BLOQUEO`, `esta_bloqueado`, `intentar_ingreso` con `transaction.atomic` y `select_for_update`, `desbloquear`), con docstrings que citen RN-024 y RNF-012. Verificar en verde: `uv run pytest src/backend/cuentas/tests/test_servicios_bloqueo.py`
-- [ ] 2.3 Prueba primero, `cuentas/tests/test_backend.py`. Casos:
+- [x] 2.2 Implementar `cuentas/servicios.py` (`INTENTOS_MAXIMOS`, `DURACION_BLOQUEO`, `esta_bloqueado`, `intentar_ingreso` con `transaction.atomic` y `select_for_update`, `desbloquear`), con docstrings que citen RN-024 y RNF-012. Verificar en verde: `uv run pytest src/backend/cuentas/tests/test_servicios_bloqueo.py`
+- [x] 2.3 Prueba primero, `cuentas/tests/test_backend.py`. Casos:
   - `authenticate()` con un usuario inexistente devuelve `None` y ejecuta el hasher;
   - con una cuenta bloqueada y la contraseña correcta, `None`;
   - con una cuenta inactiva, `None`;
@@ -42,17 +42,17 @@
   - `settings.AUTHENTICATION_BACKENDS == ["cuentas.backends.BackendConBloqueo"]`.
 
   Verificar en rojo
-- [ ] 2.4 Implementar `cuentas/backends.py` (`BackendConBloqueo(ModelBackend)`) y configurar `AUTHENTICATION_BACKENDS` en `settings.py`. Verificar en verde: 2.3 y toda la suite (`uv run pytest --cov`); las pruebas de `test_admin.py` existentes siguen pasando
+- [x] 2.4 Implementar `cuentas/backends.py` (`BackendConBloqueo(ModelBackend)`) y configurar `AUTHENTICATION_BACKENDS` en `settings.py`. Verificar en verde: 2.3 y toda la suite (`uv run pytest --cov`); las pruebas de `test_admin.py` existentes siguen pasando
 
 ## 3. Ingreso, pantalla de inicio por rol y redirecciones (D2, D3)
 
-- [ ] 3.1 Prueba primero, `cuentas/tests/test_acceso.py`. Casos:
+- [x] 3.1 Prueba primero, `cuentas/tests/test_acceso.py`. Casos:
   - `pantalla_de_inicio` para los tres roles;
   - `RolRequeridoMixin` en una vista de prueba: sin sesión, a `/ingresar/?next=…`; con el rol correcto, 200; con otro rol, a la pantalla de su rol.
 
   Verificar en rojo
-- [ ] 3.2 Implementar `cuentas/acceso.py`. Verificar en verde: 3.1
-- [ ] 3.3 Prueba primero, `cuentas/tests/test_ingresar.py`, con el cliente de Django, uno por escenario de `specs/inicio-sesion`:
+- [x] 3.2 Implementar `cuentas/acceso.py`. Verificar en verde: 3.1
+- [x] 3.3 Prueba primero, `cuentas/tests/test_ingresar.py`, con el cliente de Django, uno por escenario de `specs/inicio-sesion`:
   - ingreso de los tres roles y su destino;
   - el mensaje genérico idéntico (mismo HTML) en contraseña incorrecta, usuario inexistente, cuenta inactiva y cuenta bloqueada;
   - el usuario conservado y la contraseña no;
@@ -66,14 +66,14 @@
   - el ADMINISTRADOR sin `is_staff`, con 403 y sin ciclo (`follow=True` con un límite de saltos).
 
   Verificar en rojo
-- [ ] 3.4 Implementar `FormularioIngreso`, `IngresarView`, `RaizView` y la vista de `/admin/login/`. Agregar `LOGIN_URL = "ingresar"` y las rutas en `config/urls.py` (`/admin/login/` antes de `admin.site.urls`), con una plantilla mínima de `ingresar.html` que el grupo 5 completa. Quitar `InicioView`, `inicio.html` y `test_inicio.py`. Verificar en verde: 3.3 y toda la suite
-- [ ] 3.5 Prueba primero: `/docente/` y `/direccion/` responden 200 a su rol y redirigen a los demás (spec "Pantalla de inicio reservada a su rol"). Implementar `PortadaDocenteView` (namespace `docente`) e `InicioDireccionView` (app `direccion`, namespace `direccion`) con `RolRequeridoMixin` y plantillas mínimas. Verificar: las pruebas pasan en verde después de verlas en rojo
-- [ ] 3.6 Actualizar `docs/03 Implementación/Catálogo de rutas.md` a la versión 1.1.0, según D14: rutas, acceso por rol y fila del historial. Verificar: cada ruta de `config/urls.py` y de los `urls.py` de las apps tiene su fila, y ninguna fila apunta a una ruta que no existe
+- [x] 3.4 Implementar `FormularioIngreso`, `IngresarView`, `RaizView` y la vista de `/admin/login/`. Agregar `LOGIN_URL = "ingresar"` y las rutas en `config/urls.py` (`/admin/login/` antes de `admin.site.urls`), con una plantilla mínima de `ingresar.html` que el grupo 5 completa. Quitar `InicioView`, `inicio.html` y `test_inicio.py`. Verificar en verde: 3.3 y toda la suite
+- [x] 3.5 Prueba primero: `/docente/` y `/direccion/` responden 200 a su rol y redirigen a los demás (spec "Pantalla de inicio reservada a su rol"). Implementar `PortadaDocenteView` (namespace `docente`) e `InicioDireccionView` (app `direccion`, namespace `direccion`) con `RolRequeridoMixin` y plantillas mínimas. Verificar: las pruebas pasan en verde después de verlas en rojo
+- [x] 3.6 Actualizar `docs/03 Implementación/Catálogo de rutas.md` a la versión 1.1.0, según D14: rutas, acceso por rol y fila del historial. Verificar: cada ruta de `config/urls.py` y de los `urls.py` de las apps tiene su fila, y ninguna fila apunta a una ruta que no existe
 
 ## 4. Acción "Desbloquear cuenta" en el panel (D4)
 
-- [ ] 4.1 Confirmar en el código de Django 5.2 instalado (`.venv`) que existe `ModelAdmin.log_change(request, obj, message)` y cómo muestra el historial un mensaje de texto. Si no existe, usar `LogEntry.objects.log_actions`. Verificar: lo encontrado anotado en `verificacion.md`
-- [ ] 4.2 Prueba primero, en `cuentas/tests/test_admin.py`. Casos:
+- [x] 4.1 Confirmar en el código de Django 5.2 instalado (`.venv`) que existe `ModelAdmin.log_change(request, obj, message)` y cómo muestra el historial un mensaje de texto. Si no existe, usar `LogEntry.objects.log_actions`. Verificar: lo encontrado anotado en `verificacion.md`
+- [x] 4.2 Prueba primero, en `cuentas/tests/test_admin.py`. Casos:
   - la acción sobre una cuenta bloqueada la desbloquea y crea un `LogEntry` de cambio con "Cuenta desbloqueada.", el autor y la fecha;
   - sobre una cuenta sin bloqueo no crea nada e informa que no había nada que desbloquear;
   - sobre varias, el mensaje cuenta cada caso;
@@ -81,7 +81,7 @@
   - después de desbloquear, `/ingresar/` acepta la contraseña.
 
   Verificar en rojo
-- [ ] 4.3 Implementar la acción, `readonly_fields` y la columna `bloqueado_hasta` en `UsuarioAdmin`, llamando a `servicios.desbloquear`. Verificar en verde: 4.2 y toda la suite
+- [x] 4.3 Implementar la acción, `readonly_fields` y la columna `bloqueado_hasta` en `UsuarioAdmin`, llamando a `servicios.desbloquear`. Verificar en verde: 4.2 y toda la suite
 
 ## 5. Estilos, fuente, íconos y plantillas (D5, D6, D8, D9)
 

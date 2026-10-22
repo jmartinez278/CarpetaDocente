@@ -240,6 +240,15 @@ Ejecución con pruebas primero: cada prueba se ve fallar antes del código.
   - Hipótesis 3: reintento acotado en el borrado.
 - **Haya o no causa:** `verificar.py` guarda la salida completa de pytest en `.verificar/pytest-<fecha>.txt` (ignorado por git) cuando falla, y su resumen dice dónde quedó. Así una próxima falla no se pierde.
 - Si no se reproduce, se anota en `verificacion.md` con el número de corridas y queda solo el registro de la salida.
+- **Resultado de la implementación (22/10/2026, `verificacion.md`, sección 1):**
+  - La causa es la hipótesis 1. Se reprodujo en 5 de 5 pares; las hipótesis 2 y 3 dieron 50 de 50 en verde.
+  - Cada ejecución de pytest usa su propia base, `test_<nombre>_<pid>` (`src/backend/conftest.py`, con `django_db_modify_db_settings`).
+  - Las ejecuciones simultáneas también comparten el archivo `.coverage` de la raíz. `verificar.py` corre pytest con su propio `COVERAGE_FILE` en `.verificar/`.
+  - En 50 pares de `verificar.py` junto a un `pytest --cov` común, `verificar.py` pasó 50 de 50.
+- **Limitación conocida:** dos `pytest --cov` comunes lanzados a la vez en la misma máquina todavía pueden chocar al combinar el `.coverage` de la raíz.
+  - Pasa fuera de `verificar.py`, por ejemplo con dos terminales. En los 50 pares, el pytest común de al lado falló 3 veces, siempre en un `INTERNALERROR` de coverage y con todas sus pruebas en verde.
+  - No ocurre en CI: cada trabajo corre en su propio ejecutor, con su propio PostgreSQL, y lanza un solo pytest.
+  - Aislar el `.coverage` de cualquier pytest cambia la configuración de pruebas de todo el equipo. Queda como un chore aparte, fuera de US-001. La tarea 1.3 queda sin marcar, porque su criterio literal (0 fallas en 50 para la hipótesis 1) no se cumple para ese caso.
 
 ### D14. Catálogo de rutas y documentación
 
