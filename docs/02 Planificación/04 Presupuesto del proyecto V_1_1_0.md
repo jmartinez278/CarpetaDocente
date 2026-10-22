@@ -8,8 +8,8 @@
 | **Producto** | CarpetaDocente (nombre temporal) |
 | **Integrantes** | Cuicapuza Remigio Nayely Nilda · Martinez Llanos Marco Jhair · Vera Zea Jhoanna Hade |
 | **Asesor** | Ing. Elvis Wilfredo Carmen Delgadillo |
-| **Fecha** | 15/10/2026 |
-| **Versión** | 1.0.0 |
+| **Fecha** | 22/10/2026 |
+| **Versión** | 1.1.0 |
 
 ---
 
@@ -66,7 +66,7 @@ Cálculo: Costo = Horas asignadas × Tarifa por hora. Horas de desarrollo = 11 s
 | CodeQL | Análisis de seguridad del código | Gratuito para repositorios públicos [GH-CODEQL] | 0.00 |
 | SonarQube Cloud | Puerta de calidad | Plan gratuito [SONAR-PLANS] | 0.00 |
 | Django, HTMX, Tailwind CSS, Alpine.js, pytest, Playwright, Ruff, Docker Compose | Stack y pruebas | Código abierto | 0.00 |
-| Google Stitch | Diseño de pantallas | Sin costo en el uso actual [por confirmar el plan vigente] | 0.00 |
+| Impeccable | Diseño de pantallas y pulido de la interfaz | Código abierto (licencia Apache 2.0) | 0.00 |
 | **Total** | | | **140.00** |
 
 El tablero ágil se lleva en GitHub Projects en lugar de Jira Software, por lo que no hay costo de licencias de Atlassian.
@@ -163,7 +163,6 @@ Notas:
 | Fecha de la posprueba (marzo y abril de 2027) | Cambia las semanas de mantenimiento, las horas valorizadas y los meses de herramientas |
 | Número real de visitas a la I.E. | Cambia pasajes y refrigerios |
 | Meses reales de internet y datos móviles | Cambia el rubro de servicios |
-| Plan vigente de Google Stitch | Podría agregar un costo de licencia |
 | Segundo tramo de la remuneración mínima vital | Cambia la tarifa del mantenimiento (sección 3) |
 
 ## Referencias
@@ -179,5 +178,6 @@ Notas:
 | Versión | Fecha | Autor | Descripción |
 |---|---|---|---|
 | 1.0.0 | 15/10/2026 | Equipo del proyecto | Versión inicial: presupuesto valorizado en USD, desembolso real frente a la Tabla 1 de la tesis y proyección de operación con VPS. |
+| 1.1.0 | 22/10/2026 | Equipo del proyecto | Se quitan Google Stitch y su riesgo de costo de licencia; se agrega Impeccable (código abierto, US$ 0). El total no cambia. |
 
 [← Volver al README Principal](../../README.md)

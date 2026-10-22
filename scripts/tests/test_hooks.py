@@ -54,7 +54,7 @@ def test_marcas_en_mensaje_ignora_comentarios_del_editor():
         ".env",
         ".env.local",
         "src/.env",
-        "insumos/stitch/pantalla.html",
+        "insumos/prototipo/pantalla.html",
         "node_modules/x/index.js",
         "src/frontend/node_modules/x/index.js",
         "src/backend/static/dist/app.css",
