@@ -8,8 +8,8 @@
 | **Producto** | CarpetaDocente (nombre temporal) |
 | **Integrantes** | Cuicapuza Remigio Nayely Nilda · Martinez Llanos Marco Jhair · Vera Zea Jhoanna Hade |
 | **Asesor** | Ing. Elvis Wilfredo Carmen Delgadillo |
-| **Fecha** | 19/10/2026 |
-| **Versión** | 1.3.0 |
+| **Fecha** | 21/10/2026 |
+| **Versión** | 1.4.0 |
 
 ---
 
@@ -129,12 +129,12 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
   Escenario: Caso de error
     Dado un usuario que ingresa una contraseña incorrecta o tiene la cuenta desactivada
     Cuando intenta iniciar sesión
-    Entonces el sistema niega el acceso y muestra el mensaje "Usuario o contraseña incorrectos, o cuenta inactiva", sin indicar cuál de los datos falló
+    Entonces el sistema niega el acceso y muestra el mensaje "Usuario o contraseña incorrectos, o cuenta inactiva" con la indicación "Revisa tus datos. Si el problema sigue, pide ayuda al administrador.", sin indicar cuál de los datos falló
 
   Escenario: Cuenta bloqueada
     Dado una cuenta bloqueada tras 5 intentos fallidos consecutivos de inicio de sesión (RN-024)
     Cuando su usuario ingresa incluso la contraseña correcta antes de que pasen 15 minutos
-    Entonces el sistema niega el acceso y muestra el mismo mensaje "Usuario o contraseña incorrectos, o cuenta inactiva", sin indicar que la cuenta está bloqueada
+    Entonces el sistema niega el acceso y muestra el mismo mensaje "Usuario o contraseña incorrectos, o cuenta inactiva" con la misma indicación "Revisa tus datos. Si el problema sigue, pide ayuda al administrador.", sin indicar que la cuenta está bloqueada
 ```
 
 #### US-002: Cerrar sesión
@@ -1513,5 +1513,6 @@ Una historia de usuario o un enabler está **terminado** solo si cumple los 9 cr
 | 1.1.0 | 15/10/2026 | Equipo del proyecto | Repositorio público: CodeQL reemplaza a Bandit en el criterio 2 de la DoD; manejo de claves; EN-04 suma permisos por sección, token CSRF y bloqueo de secretos; nuevo EN-08 (canal de integración continua con Playwright). |
 | 1.2.0 | 15/10/2026 | Equipo del proyecto | Se suma SonarQube Cloud (plan gratuito) a los criterios 1 y 2 de la DoD y a EN-08; su token entra en el manejo de claves; todo Pull Request se dirige a la rama principal. |
 | 1.3.0 | 19/10/2026 | Equipo del proyecto | US-001: escenario de cuenta bloqueada tras 5 intentos (RN-024), con el mismo mensaje genérico; EN-04 remite a él. US-030 y US-031 según RF-030 y RF-031 del documento 06 (V_1_4_0); mensaje de US-031 en tuteo. US-028: la I.E. organiza el año en bimestres (RN-006). EN-02 sin R2 en el título (R2 es EN-03). EN-07: perfil Slow 4G (RNF-002). EN-08, escenario 4, y DoD 1 y 2: puerta de calidad Sonar way. Sección 7: CodeQL con la configuración por defecto de GitHub. |
+| 1.4.0 | 21/10/2026 | Equipo del proyecto | US-001: en los escenarios Caso de error y Cuenta bloqueada, el mensaje suma la indicación "Revisa tus datos. Si el problema sigue, pide ayuda al administrador." (revisión del prototipo de US-001, heurística 9 de Nielsen). |
 
 [← Volver al README Principal](../../README.md)

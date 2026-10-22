@@ -30,7 +30,7 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 3. [Declaración de la visión](<docs/01 Inicio/03. Declaración de la visión V_1_1_0.md>)
 4. [Registro de supuestos y restricciones](<docs/01 Inicio/04. Registro de supuestos y restricciones V_1_2_0.md>)
 5. [Registro de interesados](<docs/01 Inicio/05. Registro de interesados V_1_0_0.md>)
-6. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_4_0.md>)
+6. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_5_0.md>)
 7. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_2_0.md>)
 8. [Usuarios](<docs/01 Inicio/08. Usuarios V_1_1_0.md>)
 9. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_1_0.md>)
@@ -40,7 +40,7 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 13. [Restricciones](<docs/01 Inicio/13. Restricciones V_1_1_0.md>)
 
 ### Fase 02: Planificación
-1. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_3_0.md>)
+1. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_4_0.md>)
 2. Tablero GitHub Projects *(en elaboración)*
 3. [Registro de riesgos](<docs/02 Planificación/03 Registro de riesgos V_1_1_0.md>)
 4. [Presupuesto del proyecto](<docs/02 Planificación/04 Presupuesto del proyecto V_1_0_0.md>)
