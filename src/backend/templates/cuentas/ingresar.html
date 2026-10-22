@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% comment %}
+PLANTILLA PROVISIONAL (US-001, tarea 3.4): lo mínimo para probar las vistas del
+grupo 3. La reemplaza la tarea 5.5, construida desde el prototipo G4e.
+{% endcomment %}
+
+{% block titulo %}Ingresar · CarpetaDocente{% endblock %}
+
+{% block contenido %}
+<main>
+  <h1>I.E. Virgen del Carmen</h1>
+  {% if form.non_field_errors %}
+  <div role="alert">
+    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    <p>Revisa tus datos. Si el problema sigue, pide ayuda al administrador.</p>
+  </div>
+  {% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% for campo in form %}
+    <p>{{ campo.label_tag }} {{ campo }} {{ campo.errors }}</p>
+    {% endfor %}
+    <button type="submit">Ingresar</button>
+  </form>
+</main>
+{% endblock %}
