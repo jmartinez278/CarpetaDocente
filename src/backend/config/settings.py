@@ -98,6 +98,10 @@ DATABASES["default"].setdefault("OPTIONS", {}).setdefault("connect_timeout", 10)
 # Modelo de usuario propio (documento 11, sección 3.2)
 AUTH_USER_MODEL = "cuentas.Usuario"
 
+# Único backend: aplica el bloqueo por intentos de RN-024. Si ModelBackend siguiera en
+# la lista, Django lo probaría después y el bloqueo se podría saltar (US-001, D1).
+AUTHENTICATION_BACKENDS = ["cuentas.backends.BackendConBloqueo"]
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
