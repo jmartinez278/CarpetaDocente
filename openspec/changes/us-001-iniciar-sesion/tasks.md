@@ -131,9 +131,9 @@
 
 ## 7. Revisión local completa
 
-- [ ] 7.1 Correr `uv run ruff check .`, `uv run ruff format --check .`, `uv run pytest --cov` y `uv run pytest -m e2e --browser chromium`. Verificar: todo en verde, cobertura ≥ 80 % y salida resumida en `verificacion.md`
-- [ ] 7.2 Probar el carrusel a mano en Firefox, en local, a 360: chips, punto, aviso "Próximamente", historial sin cambios. Verificar: resultado anotado en `verificacion.md`; Safari de iPhone queda como pendiente
-- [ ] 7.3 Revisión del diff:
+- [x] 7.1 Correr `uv run ruff check .`, `uv run ruff format --check .`, `uv run pytest --cov` y `uv run pytest -m e2e --browser chromium`. Verificar: todo en verde, cobertura ≥ 80 % y salida resumida en `verificacion.md`
+- [x] 7.2 Probar el carrusel a mano en Firefox, en local, a 360: chips, punto, aviso "Próximamente", historial sin cambios. Verificar: resultado anotado en `verificacion.md`; Safari de iPhone queda como pendiente
+- [x] 7.3 Revisión del diff:
   - sin datos reales (DoD 8);
   - sin claves;
   - sin hex en las plantillas;

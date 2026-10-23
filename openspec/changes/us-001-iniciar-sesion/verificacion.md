@@ -215,3 +215,29 @@ Required test coverage of 80.0% reached. Total coverage: 96.67%
 
 - `test_rendimiento_e2e.py`, Chromium, sin caché, `/ingresar/` (servidor de pruebas sin compresión): **48,7 KB** en 4 respuestas y usable en **1,52 s** (umbrales: 2 MB y 5 s). El prototipo dio 50 KB.
 - Pasó en la primera corrida: el umbral no se vio fallar.
+
+
+## 7. Revisión local completa
+
+Partida: rama `feature/US-001-iniciar-sesion`, último commit `e0b24db` (6.4 a 6.6), `git status` limpio. El único `node.exe` abierto era el de otra herramienta, no un `npm run dev`; el CSS se recompiló con `npm run build` sin errores.
+
+### 7.1 Ruff, pytest y Playwright
+
+- `ruff check .`: sin hallazgos. `ruff format --check .`: 131 archivos con el formato correcto.
+- `pytest --cov`: **452 pasadas**, 46 `e2e` excluidas; cobertura total **96,88 %** (mínimo 80 %).
+- `pytest -m e2e --browser chromium` (con `DJANGO_ALLOW_ASYNC_UNSAFE=true` y el CSS compilado): **46 pasadas**.
+- `git status` quedó limpio después de las tres corridas.
+
+### 7.2 Firefox a 360 px
+
+Prueba manual de Marco en Firefox a 360 px (chips, punto, aviso "Próximamente" e historial sin cambios): todo bien. Safari de iPhone queda como pendiente.
+
+### 7.3 Revisión del diff
+
+- `verificar.py`: **PASA** (noreply, sin atribuciones, `git status` limpio, sin archivos prohibidos, Ruff, pytest ≥ 80 %).
+- Hex en plantillas (`git grep` sobre los `.html` versionados): 0 coincidencias.
+- `style=` en plantillas: 0 coincidencias.
+- Claves (`secret`, `password`, `api_key`, `token` asignados a un literal): 2 coincidencias, ambas en `scripts/tests/test_hooks.py` y falsas: son pruebas del hook que arman un valor ficticio con un f-string.
+- `insumos/`, `PRODUCT.md`, `PENDIENTES_TESIS.md` y `.env` en `git ls-files`: ninguno.
+- Datos reales (DoD 8): solo hay datos ficticios en pruebas y plantillas; los correos de los commits son noreply de GitHub.
+- La revisión completa del diff contra `main` la hace Codex al final; no se lanzó agente ni revisor.
