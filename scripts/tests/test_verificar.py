@@ -2,8 +2,11 @@
 
 import json
 import os
+import shutil
 import subprocess
+import sys
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -54,18 +57,40 @@ class EjecutorFalso:
         }
         self.ejecutados = []
         self.entornos = {}
+        self.carpetas = {}
+        # git checkout-index lleva la ruta temporal: se responde aparte.
+        self.copia = Salida(0, "")
+        self.copias = []
+        self.al_copiar = None
+        self.al_correr_pytest = None
 
-    def __call__(self, comando, entorno=None):
+    def __call__(self, comando, entorno=None, carpeta=None):
         comando = tuple(comando)
         self.ejecutados.append(comando)
         if entorno is not None:
             self.entornos[comando] = entorno
+        if carpeta is not None:
+            self.carpetas[comando] = carpeta
+        if comando[:2] == ("git", "checkout-index"):
+            destino = Path(comando[-1].removeprefix("--prefix="))
+            self.copias.append(destino)
+            if self.al_copiar:
+                self.al_copiar(destino)
+            return self.copia
+        if comando == verificar.PYTEST and self.al_correr_pytest:
+            self.al_correr_pytest(carpeta)
         return self.respuestas[comando]
 
 
 @pytest.fixture
 def ejecutor():
     return EjecutorFalso()
+
+
+@pytest.fixture(autouse=True)
+def sin_env_de_la_laptop(tmp_path, monkeypatch):
+    """Las pruebas no leen el .env real: cada una arma el suyo si lo necesita."""
+    monkeypatch.setattr(verificar, "ARCHIVO_ENV", tmp_path / "sin-env" / ".env")
 
 
 def nombres_fallidos(informe):
@@ -408,7 +433,7 @@ def test_comando_atraso_compara_con_la_referencia_local_sin_fetch():
 
 # --- Modo --antes-del-commit ---
 
-NOMBRE_INDICE = "Todo lo del commit está en el índice"
+NOMBRE_ESTADO = "git status sin errores"
 
 
 def test_antes_del_commit_acepta_cambios_solo_en_el_indice(ejecutor):
@@ -417,8 +442,9 @@ def test_antes_del_commit_acepta_cambios_solo_en_el_indice(ejecutor):
     )
     informe = verificar.verificar(ejecutor, antes_del_commit=True)
     assert informe.pasa
+    assert informe.avisos == []
     nombres = [r.nombre for r in informe.resultados]
-    assert NOMBRE_INDICE in nombres
+    assert NOMBRE_ESTADO in nombres
     assert "git status limpio" not in nombres
 
 
@@ -426,11 +452,52 @@ def test_antes_del_commit_acepta_cambios_solo_en_el_indice(ejecutor):
     "linea",
     [" M README.md", "MM README.md", "AM scripts/nuevo.py", " D viejo.py", "?? suelto.py"],
 )
-def test_antes_del_commit_falla_con_cambios_fuera_del_indice(ejecutor, linea):
+def test_antes_del_commit_avisa_sin_fallar_lo_que_queda_fuera_del_indice(ejecutor, linea):
     ejecutor.respuestas[verificar.ESTADO] = Salida(0, f"M  CLAUDE.md\n{linea}\n")
     informe = verificar.verificar(ejecutor, antes_del_commit=True)
-    assert nombres_fallidos(informe) == [NOMBRE_INDICE]
-    assert informe.fallas == [f"{NOMBRE_INDICE}: {linea}"]
+    assert informe.pasa
+    assert informe.avisos == [f"Fuera de este commit (no se verifica):\n- {linea}"]
+
+
+def test_aviso_fuera_del_commit_en_texto_y_markdown(ejecutor):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(0, " M README.md\n?? suelto.py\n")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True)
+
+    texto = verificar.formatear_texto(informe)
+    assert (
+        "[AVISO] Fuera de este commit (no se verifica):\n"
+        "        -  M README.md\n"
+        "        - ?? suelto.py\n"
+    ) in texto
+    assert texto.rstrip().endswith("PASA")
+    bloque = verificar.formatear_markdown(informe, datetime(2026, 10, 22))
+    assert "- Fuera de este commit (no se verifica):\n  -  M README.md\n  - ?? suelto.py" in bloque
+
+
+@pytest.mark.parametrize("linea", ["M  uv.lock", "M  pyproject.toml", "MM uv.lock"])
+def test_antes_del_commit_avisa_si_cambian_dependencias_en_el_indice(ejecutor, linea):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(0, f"{linea}\n")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True)
+    assert informe.pasa
+    ruta = linea[3:]
+    assert (
+        f"Cambia {ruta} en el índice: el .venv no se sincroniza en la copia, corre uv sync"
+        in informe.avisos
+    )
+
+
+@pytest.mark.parametrize("linea", [" M uv.lock", "?? pyproject.toml", "M  src/pyproject.toml"])
+def test_sin_aviso_de_dependencias_si_no_cambian_en_el_indice(ejecutor, linea):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(0, f"{linea}\n")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True)
+    assert not any("uv sync" in aviso for aviso in informe.avisos)
+
+
+def test_modo_normal_no_avisa_lo_de_fuera_del_indice(ejecutor):
+    ejecutor.respuestas[verificar.ESTADO] = Salida(0, "M  uv.lock\n?? suelto.py\n")
+    informe = verificar.verificar(ejecutor)
+    assert informe.avisos == []
+    assert "git status limpio" in nombres_fallidos(informe)
 
 
 def test_antes_del_commit_revisa_prohibidos_en_el_indice(ejecutor):
@@ -457,7 +524,7 @@ def test_antes_del_commit_mantiene_commits_ruff_y_pytest(ejecutor):
 def test_antes_del_commit_con_git_status_que_falla(ejecutor):
     ejecutor.respuestas[verificar.ESTADO] = Salida(128, "")
     informe = verificar.verificar(ejecutor, antes_del_commit=True)
-    assert NOMBRE_INDICE in nombres_fallidos(informe)
+    assert NOMBRE_ESTADO in nombres_fallidos(informe)
 
 
 def test_texto_indica_el_modo_antes_del_commit(ejecutor):
@@ -476,6 +543,342 @@ def test_main_con_antes_del_commit(ejecutor, capsys):
     ejecutor.respuestas[verificar.ESTADO] = Salida(0, "M  README.md\n")
     assert verificar.main(["--antes-del-commit"], ejecutar=ejecutor, gh=lambda _: None) == 0
     assert capsys.readouterr().out.rstrip().endswith("PASA")
+
+
+# --- Antes del commit: Ruff y pytest sobre una copia del índice ---
+
+UV_SIN_SINCRONIZAR = {"UV_PROJECT_ENVIRONMENT": str(verificar.ENTORNO_VIRTUAL), "UV_NO_SYNC": "1"}
+
+
+def test_antes_del_commit_copia_el_indice_fuera_del_repo(ejecutor, tmp_path):
+    verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    [copia] = ejecutor.copias
+    assert copia.parent == tmp_path
+    assert not copia.is_relative_to(verificar.RAIZ)
+    assert ("git", "checkout-index", "--all", f"--prefix={copia.as_posix()}/") in (
+        ejecutor.ejecutados
+    )
+
+
+def test_antes_del_commit_corre_ruff_y_pytest_en_la_copia(ejecutor, tmp_path):
+    verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    [copia] = ejecutor.copias
+    for comando in (verificar.RUFF_CHECK, verificar.RUFF_FORMAT, verificar.PYTEST):
+        assert ejecutor.carpetas[comando] == copia
+    assert ejecutor.entornos[verificar.RUFF_CHECK] == UV_SIN_SINCRONIZAR
+    assert ejecutor.entornos[verificar.RUFF_FORMAT] == UV_SIN_SINCRONIZAR
+    assert ejecutor.entornos[verificar.PYTEST] == {
+        **UV_SIN_SINCRONIZAR,
+        "COVERAGE_FILE": str(copia / ".coverage"),
+    }
+
+
+def test_el_entorno_virtual_es_el_del_script():
+    """uv run corre verificar.py con el .venv del repo: la copia usa ese mismo."""
+    assert Path(sys.prefix) == verificar.ENTORNO_VIRTUAL
+
+
+def test_modo_normal_corre_en_la_carpeta_de_trabajo(ejecutor):
+    verificar.verificar(ejecutor)
+    assert ejecutor.copias == []
+    assert ejecutor.carpetas == {}
+
+
+def test_si_falla_la_copia_del_indice_no_corre_ruff_ni_pytest(ejecutor, tmp_path):
+    ejecutor.copia = Salida(128, "fatal: unable to write new index file\n")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    assert nombres_fallidos(informe) == ["Copia del índice"]
+    assert informe.fallas == ["Copia del índice: fatal: unable to write new index file"]
+    assert verificar.RUFF_CHECK not in ejecutor.ejecutados
+    assert verificar.PYTEST not in ejecutor.ejecutados
+    assert list(tmp_path.iterdir()) == []
+
+
+# --- Variables del .env sin escribir archivos ---
+
+
+def test_pytest_recibe_las_variables_del_env_sin_copiar_el_archivo(ejecutor, tmp_path, monkeypatch):
+    archivo = tmp_path / ".env"
+    archivo.write_text("VARIABLE_DE_PRUEBA=valor-ficticio\n", encoding="utf-8")
+    monkeypatch.setattr(verificar, "ARCHIVO_ENV", archivo)
+    monkeypatch.delenv("VARIABLE_DE_PRUEBA", raising=False)
+    archivos_en_la_copia = []
+    ejecutor.al_correr_pytest = lambda copia: archivos_en_la_copia.extend(copia.iterdir())
+    temporal = tmp_path / "temporal"
+    temporal.mkdir()
+
+    verificar.verificar(ejecutor, antes_del_commit=True, temporal=temporal)
+
+    assert ejecutor.entornos[verificar.PYTEST]["VARIABLE_DE_PRUEBA"] == "valor-ficticio"
+    assert "VARIABLE_DE_PRUEBA" not in ejecutor.entornos[verificar.RUFF_CHECK]
+    assert archivos_en_la_copia == []
+
+
+def test_las_variables_de_la_terminal_tienen_prioridad_sobre_el_env(
+    ejecutor, tmp_path, monkeypatch
+):
+    """Igual que settings.py: django-environ no pisa lo que ya está en el entorno."""
+    archivo = tmp_path / ".env"
+    archivo.write_text("YA_DEFINIDA=del-archivo\n", encoding="utf-8")
+    monkeypatch.setattr(verificar, "ARCHIVO_ENV", archivo)
+    monkeypatch.setenv("YA_DEFINIDA", "de-la-terminal")
+
+    verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    assert "YA_DEFINIDA" not in ejecutor.entornos[verificar.PYTEST]
+
+
+def test_leer_env_como_django_environ(tmp_path):
+    archivo = tmp_path / ".env"
+    archivo.write_text(
+        "# comentario\n"
+        "\n"
+        "SIMPLE=valor-ficticio\n"
+        "VACIA=\n"
+        "export EXPORTADA=uno\n"
+        'COMILLAS_DOBLES="dos tres"\n'
+        "COMILLAS_SIMPLES='cuatro'\n"
+        "CON_IGUAL=a=b\n"
+        "linea sin igual\n",
+        encoding="utf-8",
+    )
+    assert verificar.leer_env(archivo) == {
+        "SIMPLE": "valor-ficticio",
+        "VACIA": "",
+        "EXPORTADA": "uno",
+        "COMILLAS_DOBLES": "dos tres",
+        "COMILLAS_SIMPLES": "cuatro",
+        "CON_IGUAL": "a=b",
+    }
+
+
+def test_leer_env_sin_archivo(tmp_path):
+    assert verificar.leer_env(tmp_path / "no-existe") == {}
+
+
+# --- La copia temporal se borra siempre ---
+
+
+def _con_un_archivo(copia):
+    (copia / "modulo.py").write_text("VALOR = 1\n", encoding="utf-8")
+
+
+@pytest.mark.parametrize("pytest_pasa", [True, False])
+def test_la_copia_temporal_ya_no_existe_al_terminar(ejecutor, tmp_path, pytest_pasa):
+    ejecutor.al_copiar = _con_un_archivo
+    if not pytest_pasa:
+        ejecutor.respuestas[verificar.PYTEST] = Salida(1, "=== 1 failed ===\n")
+
+    informe = verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    assert informe.pasa is pytest_pasa
+    [copia] = ejecutor.copias
+    assert not copia.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_la_copia_se_borra_tambien_con_ctrl_c(ejecutor, tmp_path):
+    ejecutor.al_copiar = _con_un_archivo
+
+    def interrumpir(_copia):
+        raise KeyboardInterrupt
+
+    ejecutor.al_correr_pytest = interrumpir
+
+    with pytest.raises(KeyboardInterrupt):
+        verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.fixture
+def archivo_bloqueado(monkeypatch):
+    """Simula el bloqueo de Windows: bloqueado.txt no se puede borrar."""
+    unlink = os.unlink
+
+    def falso_unlink(ruta, *args, **kwargs):
+        if os.path.basename(ruta) == "bloqueado.txt":
+            raise PermissionError(13, "El proceso no tiene acceso al archivo", str(ruta))
+        return unlink(ruta, *args, **kwargs)
+
+    monkeypatch.setattr(os, "unlink", falso_unlink)
+    monkeypatch.setattr(verificar.time, "sleep", lambda _segundos: None)
+
+
+def _con_un_archivo_bloqueado(copia):
+    _con_un_archivo(copia)
+    (copia / "bloqueado.txt").write_text("x", encoding="utf-8")
+
+
+def test_archivo_bloqueado_al_borrar_avisa_con_la_ruta(ejecutor, tmp_path, archivo_bloqueado):
+    ejecutor.al_copiar = _con_un_archivo_bloqueado
+
+    informe = verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    [copia] = ejecutor.copias
+    assert informe.pasa
+    assert f"No se pudo borrar la copia temporal del índice: {copia} (bórrala a mano)" in (
+        informe.avisos
+    )
+    assert [p.name for p in copia.iterdir()] == ["bloqueado.txt"]
+
+
+def test_archivo_bloqueado_con_ctrl_c_avisa_en_stderr(
+    ejecutor, tmp_path, archivo_bloqueado, capsys
+):
+    ejecutor.al_copiar = _con_un_archivo_bloqueado
+
+    def interrumpir(_copia):
+        raise KeyboardInterrupt
+
+    ejecutor.al_correr_pytest = interrumpir
+
+    with pytest.raises(KeyboardInterrupt):
+        verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    [copia] = ejecutor.copias
+    assert f"No se pudo borrar la copia temporal del índice: {copia}" in capsys.readouterr().err
+
+
+def test_borrar_copia_reintenta_los_archivos_de_solo_lectura(tmp_path):
+    copia = tmp_path / "copia"
+    copia.mkdir()
+    solo_lectura = copia / "solo-lectura.txt"
+    solo_lectura.write_text("x", encoding="utf-8")
+    solo_lectura.chmod(0o444)
+
+    assert verificar.borrar_copia(copia) == []
+    assert not copia.exists()
+
+
+# --- Integración: git y Ruff de verdad en un repo temporal ---
+
+requiere_uv = pytest.mark.skipif(shutil.which("uv") is None, reason="uv no está en el PATH")
+
+PYPROJECT_MINIMO = '[project]\nname = "prueba"\nversion = "0"\nrequires-python = ">=3.13"\n'
+CON_ERROR_DE_RUFF = "import os\n"  # F401: importado y sin usar
+
+
+class EjecutorMixto:
+    """git y Ruff de verdad; pytest falso, para no correr la suite dentro de sí misma."""
+
+    def __init__(self):
+        self.pytest = []
+
+    def __call__(self, comando, entorno=None, carpeta=None):
+        if comando == verificar.PYTEST:
+            archivos = {p.name: p.read_text(encoding="utf-8") for p in carpeta.glob("*.py")}
+            self.pytest.append({"carpeta": carpeta, "archivos": archivos})
+            return Salida(0, SALIDA_PYTEST)
+        return verificar.ejecutar(comando, entorno, carpeta)
+
+
+@pytest.fixture
+def repo(tmp_path, monkeypatch):
+    raiz = tmp_path / "repo"
+    raiz.mkdir()
+
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=raiz, capture_output=True, text=True, check=True
+        ).stdout
+
+    def escribir(nombre, texto):
+        (raiz / nombre).write_text(texto, encoding="utf-8")
+
+    git("init", "-q", "-b", "main")
+    git("config", "user.name", "Prueba")
+    git("config", "user.email", "prueba@users.noreply.github.com")
+    escribir("pyproject.toml", PYPROJECT_MINIMO)
+    escribir("bien.py", "VALOR = 1\n")
+    git("add", ".")
+    git("commit", "-q", "-m", "chore: base")
+    monkeypatch.chdir(raiz)
+    temporal = tmp_path / "temporal"
+    temporal.mkdir()
+    return git, escribir, temporal
+
+
+def verificar_indice(temporal, ejecutor=None):
+    return verificar.verificar(
+        ejecutor or EjecutorMixto(), antes_del_commit=True, temporal=temporal
+    )
+
+
+@requiere_uv
+def test_indice_correcto_y_error_de_ruff_fuera_del_indice_pasa_con_aviso(repo):
+    git, escribir, temporal = repo
+    escribir("nuevo.py", "OTRO = 2\n")
+    git("add", "nuevo.py")
+    escribir("bien.py", CON_ERROR_DE_RUFF)  # fuera del índice
+
+    ejecutor = EjecutorMixto()
+    informe = verificar_indice(temporal, ejecutor)
+
+    assert informe.pasa, informe.fallas
+    assert "Fuera de este commit (no se verifica):\n-  M bien.py" in informe.avisos
+    [corrida] = ejecutor.pytest
+    assert corrida["archivos"]["bien.py"].strip() == "VALOR = 1"
+    assert corrida["archivos"]["nuevo.py"].strip() == "OTRO = 2"
+
+
+@requiere_uv
+def test_indice_con_error_y_correccion_fuera_del_indice_no_pasa(repo):
+    git, escribir, temporal = repo
+    escribir("bien.py", CON_ERROR_DE_RUFF)
+    git("add", "bien.py")
+    escribir("bien.py", "VALOR = 2\n")  # la corrección no está en el índice
+
+    informe = verificar_indice(temporal)
+
+    assert not informe.pasa
+    assert nombres_fallidos(informe) == ["ruff check"]
+
+
+@requiere_uv
+def test_archivo_sin_seguimiento_avisa_y_no_falla(repo):
+    _, escribir, temporal = repo
+    escribir("suelto.py", CON_ERROR_DE_RUFF)
+
+    ejecutor = EjecutorMixto()
+    informe = verificar_indice(temporal, ejecutor)
+
+    assert informe.pasa, informe.fallas
+    assert "Fuera de este commit (no se verifica):\n- ?? suelto.py" in informe.avisos
+    assert "suelto.py" not in ejecutor.pytest[0]["archivos"]
+
+
+@requiere_uv
+@pytest.mark.parametrize("con_error", [False, True])
+def test_no_cambia_carpeta_indice_head_ni_stash(repo, con_error):
+    git, escribir, temporal = repo
+    escribir("guardado.py", "GUARDADO = 1\n")
+    git("add", "guardado.py")
+    git("stash", "push", "-q", "-m", "trabajo guardado")
+    escribir("indexado.py", CON_ERROR_DE_RUFF if con_error else "INDEXADO = 1\n")
+    git("add", "indexado.py")
+    escribir("bien.py", "VALOR = 3\n")
+    escribir("suelto.py", "SUELTO = 1\n")
+
+    def estado():
+        return (
+            git("status", "--porcelain"),
+            git("stash", "list"),
+            git("rev-parse", "HEAD"),
+            git("ls-files", "--stage"),
+            Path(".git/index").read_bytes(),
+            {p.name: p.read_bytes() for p in Path().iterdir() if p.is_file()},
+        )
+
+    antes = estado()
+    informe = verificar_indice(temporal)
+
+    assert informe.pasa is not con_error
+    assert estado() == antes
+    assert list(temporal.iterdir()) == []
 
 
 # --- Registro de la salida de pytest cuando falla (D13 de US-001) ---
@@ -576,11 +979,11 @@ def test_borra_su_archivo_de_cobertura_al_terminar(ejecutor, monkeypatch, tmp_pa
     monkeypatch.setattr(verificar, "RAIZ", tmp_path)
     datos = tmp_path / ".verificar" / f".coverage-{os.getpid()}"
 
-    def pytest_que_deja_datos(comando, entorno=None):
+    def pytest_que_deja_datos(comando, entorno=None, carpeta=None):
         if comando == verificar.PYTEST:
             datos.parent.mkdir(parents=True, exist_ok=True)
             datos.write_text("datos", encoding="utf-8")
-        return ejecutor(comando, entorno)
+        return ejecutor(comando, entorno, carpeta)
 
     verificar.verificar(pytest_que_deja_datos)
 

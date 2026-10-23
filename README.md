@@ -182,7 +182,7 @@ Se usa en dos momentos:
 
 | Momento | Quién | Comando | Qué cambia |
 |---|---|---|---|
-| Antes de cada commit | Claude Code, antes de proponer el commit | `uv run python scripts/verificar.py --antes-del-commit` | Lo que va a entrar debe estar en el índice (`git add`). Falla solo si quedan archivos modificados fuera del índice o sin seguimiento. Los archivos prohibidos se buscan en el índice |
+| Antes de cada commit | Claude Code, antes de proponer el commit | `uv run python scripts/verificar.py --antes-del-commit` | Lo que va a entrar debe estar en el índice (`git add`). Ruff y `pytest --cov` corren sobre una copia del índice en la carpeta temporal del sistema, que se borra al terminar (si algo no se puede borrar, avisa con la ruta). Usan el `.venv` del repo sin sincronizarlo, así que avisa si en el índice cambian `pyproject.toml` o `uv.lock` (correr `uv sync` antes). Las variables de `.env` pasan en el entorno, sin copiar el archivo. Los cambios fuera del índice y los archivos sin seguimiento no hacen fallar: salen como aviso ("Fuera de este commit"). No toca la carpeta de trabajo, el índice, `HEAD` ni el stash. Los archivos prohibidos se buscan en el índice |
 | Antes de pedir revisión | Quien abre el PR | `uv run python scripts/verificar.py --pr 53` | Todo debe estar en commits: `git status` limpio. Con `--pr` y `gh` instalado, revisa además los checks del PR y que tenga una aprobación. La plantilla del PR lo pide |
 
 Para dejar constancia en `verificacion.md`: `uv run python scripts/verificar.py --markdown` imprime un bloque con fecha, resultados, salidas resumidas y cobertura.
