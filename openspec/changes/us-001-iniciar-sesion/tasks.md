@@ -117,9 +117,9 @@
 
 ## 6. Pruebas de punta a punta, accesibilidad y Slow 4G (D10, D11)
 
-- [ ] 6.1 Consultar Context7 (axe-core `axe.run`, Playwright `add_script_tag` y `emulate_media`) y agregar `axe-core` como `devDependencies` en `src/frontend` con `npm install --save-dev axe-core`. Verificar: `package-lock.json` actualizado, `npm ci` sin errores y `node_modules/axe-core/axe.min.js` presente
-- [ ] 6.2 Prueba primero, `cuentas/tests/test_ingresar_e2e.py`, que reemplaza a `test_inicio_e2e.py`. Recorre el escenario "Página inicial en el navegador" (de `/` a `/ingresar/`, CSS 200, sin Alpine, ingreso del docente, `/docente/` con Alpine), "Mostrar contraseña" con y sin JavaScript y "Ingresando…" con los campos de solo lectura. Verificar: en rojo antes de terminar 5.5 o con el CSS sin compilar; en verde con `uv run pytest -m e2e --browser chromium`
-- [ ] 6.3 Prueba primero, `cuentas/tests/test_portada_e2e.py`. Casos:
+- [x] 6.1 Consultar Context7 (axe-core `axe.run`, Playwright `add_script_tag` y `emulate_media`) y agregar `axe-core` como `devDependencies` en `src/frontend` con `npm install --save-dev axe-core`. Verificar: `package-lock.json` actualizado, `npm ci` sin errores y `node_modules/axe-core/axe.min.js` presente
+- [x] 6.2 Prueba primero, `cuentas/tests/test_ingresar_e2e.py`, que reemplaza a `test_inicio_e2e.py`. Recorre el escenario "Página inicial en el navegador" (de `/` a `/ingresar/`, CSS 200, sin Alpine, ingreso del docente, `/docente/` con Alpine), "Mostrar contraseña" con y sin JavaScript y "Ingresando…" con los campos de solo lectura. Verificar: en rojo antes de terminar 5.5 o con el CSS sin compilar; en verde con `uv run pytest -m e2e --browser chromium`
+- [x] 6.3 Prueba primero, `cuentas/tests/test_portada_e2e.py`. Casos:
   - a 360, tocar el chip "Notas" muestra Notas, marca el chip y el punto y no cambia `history.length` ni la dirección;
   - tocar una tarjeta "Próximamente" muestra "Llegará en una próxima versión." y no mueve la miniatura;
   - en las tres pantallas, a 320, 360 y 1280 y en ambos temas, `scrollWidth ≤ clientWidth` del documento.

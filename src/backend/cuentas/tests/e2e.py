@@ -1,0 +1,40 @@
+"""Ayudas comunes de las pruebas de punta a punta de US-001 (no es un módulo de pruebas).
+
+Los usuarios son los ficticios de ``conftest.py`` (``docente``, ``direccion``) y la contraseña es la
+de la fixture ``clave``, generada en cada prueba (DoD 8).
+"""
+
+TEMAS = ("light", "dark")
+ANCHOS = (360, 1280)
+ALTO = 800
+
+
+def abrir_ingresar(page, live_server):
+    page.goto(f"{live_server.url}/ingresar/")
+
+
+def campo_usuario(page):
+    return page.get_by_label("Usuario")
+
+
+def campo_clave(page):
+    # exact: el botón "Mostrar contraseña" también contiene la palabra.
+    return page.get_by_label("Contraseña", exact=True)
+
+
+def boton_ingresar(page):
+    return page.get_by_role("button", name="Ingresar", exact=True)
+
+
+def ingresar(page, live_server, usuario, clave):
+    """Recorre el inicio de sesión como lo haría la persona, hasta enviar el formulario."""
+    abrir_ingresar(page, live_server)
+    campo_usuario(page).fill(usuario.username)
+    campo_clave(page).fill(clave)
+    boton_ingresar(page).click()
+
+
+def con_pantalla(page, ancho, tema):
+    """Ancho de la ventana y preferencia de tema del sistema (``prefers-color-scheme``)."""
+    page.set_viewport_size({"width": ancho, "height": ALTO})
+    page.emulate_media(color_scheme=tema)
