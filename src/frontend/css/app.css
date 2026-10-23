@@ -90,3 +90,222 @@
     --text-display: 40px;
   }
 }
+
+/* Reglas base del prototipo que Tailwind no trae: cursor y selección con los tokens, y cortes de palabras largas. */
+@layer base {
+  body {
+    caret-color: var(--color-primario);
+    overflow-wrap: break-word;
+  }
+
+  ::selection {
+    background: var(--color-arena);
+    color: var(--color-sobre-claro);
+  }
+}
+
+/* Componentes del inicio de sesión (US-001, 5.5): campo, mensaje y botón principal, de DESIGN.md 0.3.1.
+   Solo usan tokens. El Quick Start no declara --spacing-*, así que el espaciado sale de --spacing(n), de
+   4 px por unidad: 1 = 4, 2 = 8, 4 = 16, 6 = 24, 8 = 32. */
+@layer components {
+  .icono {
+    width: 24px;
+    height: 24px;
+    flex: none;
+    display: block;
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(1);
+  }
+
+  .campo__etiqueta {
+    font-size: var(--text-caption);
+    line-height: 20px;
+    font-weight: 600;
+  }
+
+  .campo__control {
+    width: 100%;
+    height: 48px;
+    padding: 0 --spacing(4);
+    background: var(--color-superficie);
+    color: var(--color-texto);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-campo);
+    font: inherit;
+    font-size: var(--text-body);
+  }
+
+  .campo__control:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 2px;
+  }
+
+  .campo__control[aria-invalid="true"] {
+    border-color: var(--color-error);
+  }
+
+  /* Mientras envía: de solo lectura, sobre el fondo y no sobre el papel. */
+  .campo__control[readonly] {
+    background: var(--color-fondo);
+  }
+
+  /* "Mostrar contraseña": 44 × 44 px dentro del campo de 48 px, a la derecha. Oculto sin JavaScript. */
+  .campo__grupo {
+    position: relative;
+  }
+
+  .campo__grupo .campo__control {
+    padding-right: calc(44px + --spacing(1));
+  }
+
+  .campo__boton {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    background: transparent;
+    color: var(--color-texto-suave);
+    border: 0;
+    border-radius: var(--radius-campo);
+    cursor: pointer;
+  }
+
+  .campo__boton[hidden] {
+    display: none;
+  }
+
+  .campo__boton .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .campo__boton:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: -2px;
+  }
+
+  /* Contraseña oculta: ojo; visible: ojo tachado. */
+  .campo__boton[aria-pressed="true"] .clave__ver,
+  .campo__boton[aria-pressed="false"] .clave__ocultar {
+    display: none;
+  }
+
+  .campo__error {
+    display: flex;
+    align-items: flex-start;
+    gap: --spacing(1);
+    color: var(--color-error);
+    font-size: var(--text-caption);
+    line-height: 20px;
+  }
+
+  .campo__error .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mensaje {
+    display: flex;
+    align-items: flex-start;
+    gap: --spacing(2);
+    padding: --spacing(4);
+    background: var(--color-superficie);
+    border: 1px solid currentColor;
+    border-radius: var(--radius-tarjeta);
+    font-size: var(--text-body);
+    line-height: 24px;
+    animation: aparecer 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mensaje--error {
+    color: var(--color-error);
+  }
+
+  .mensaje__texto {
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(1);
+  }
+
+  .mensaje p {
+    text-wrap: pretty;
+  }
+
+  /* Dos pesos: qué pasó, en 600 y en el color del estado; qué hacer, en el color del texto. */
+  .mensaje__texto p:first-child {
+    font-weight: 600;
+  }
+
+  .mensaje__texto p + p {
+    color: var(--color-texto);
+  }
+
+  .boton-principal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: --spacing(2);
+    width: 100%;
+    min-height: 48px;
+    padding: 0 --spacing(8);
+    background: var(--color-primario);
+    color: var(--color-sobre-primario);
+    border: 0;
+    border-radius: var(--radius-pill);
+    font: inherit;
+    font-size: var(--text-body);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      transform 100ms ease-out,
+      background-color 100ms ease-out;
+  }
+
+  .boton-principal:active {
+    background: color-mix(in srgb, var(--color-primario) 85%, var(--color-texto));
+    transform: scale(0.98);
+  }
+
+  .boton-principal:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 2px;
+  }
+
+  /* Enviando (aria-disabled, no disabled): cambia el fondo y no solo el texto. */
+  .boton-principal--enviando,
+  .boton-principal--enviando:active {
+    background: var(--color-dimension);
+    color: var(--color-texto);
+    cursor: progress;
+    transform: none;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mensaje {
+    animation: none;
+  }
+
+  .boton-principal {
+    transition: none;
+  }
+
+  .boton-principal:active {
+    transform: none;
+  }
+}

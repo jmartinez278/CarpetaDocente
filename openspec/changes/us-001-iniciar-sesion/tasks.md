@@ -91,14 +91,14 @@
   - `app.css` compilado contiene las clases `bg-fondo` y `text-primario`;
   - comparar con un script los tokens de `app.css` con el Quick Start de DESIGN.md: 0 diferencias
 - [x] 5.3 Crear `templates/iconos/` con los SVG de Lucide usados por el prototipo (trazo 1,75, `currentColor`, `aria-hidden`) y `LICENSE-lucide.txt`. Verificar: cada `{% include "iconos/…" %}` de las plantillas resuelve un archivo, y el aviso ISC está junto a ellos
-- [ ] 5.4 Prueba primero, `cuentas/tests/test_pantallas.py`, inicio de sesión. Casos:
+- [x] 5.4 Prueba primero, `cuentas/tests/test_pantallas.py`, inicio de sesión. Casos:
   - textos y orden de `/ingresar/` según el spec "Pantalla de inicio de sesión", sin escudo, sin menú y sin enlace de recuperación;
   - el mensaje de error sobre el formulario con `role="alert"` y sus dos líneas;
   - el botón "Mostrar contraseña" con `hidden` y `aria-pressed="false"`;
   - carga `ingresar.js`, pero no Alpine ni HTMX.
 
   Verificar en rojo
-- [ ] 5.5 Construir `base.html` y `cuentas/ingresar.html` desde `login.html`, `login-error.html` y `login-vacios.html` del prototipo. Agregar los componentes de campo, mensaje y botón principal en `@layer components` y `static/js/ingresar.js` (`clave.js` más el estado de envío, D6). Verificar en verde: 5.4, 5.1 y la página vista en el navegador a 360 y 1280 en claro y oscuro frente a `capturas/final/`
+- [x] 5.5 Construir `base.html` y `cuentas/ingresar.html` desde `login.html`, `login-error.html` y `login-vacios.html` del prototipo. Agregar los componentes de campo, mensaje y botón principal en `@layer components` y `static/js/ingresar.js` (`clave.js` más el estado de envío, D6). Verificar en verde: 5.4, 5.1 y la página vista en el navegador a 360 y 1280 en claro y oscuro frente a `capturas/final/`
 - [ ] 5.6 Prueba primero: `test_dimensiones.py` (toda dimensión disponible resuelve su `url_name`; hoy ninguna está disponible) y los casos de la portada y la dirección en `test_pantallas.py`. Casos de la portada y la dirección:
   - saludo con el nombre completo, o con el usuario si no hay nombre;
   - tres tarjetas en orden, con sus subtítulos e insignia "Próximamente";
