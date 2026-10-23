@@ -143,8 +143,8 @@
 
 ## 8. Crítica de Impeccable con Codex sobre las plantillas (tramo 8, D15)
 
-- [ ] 8.1 Leer el `SKILL.md` de Impeccable vigente (`critique` y `detect`) antes de usarlo. Levantar la aplicación en local con usuarios ficticios de los tres roles y capturar las 5 vistas en claro y oscuro, a 360 y 1280, en `insumos/prototipo/US-001/tramo8/capturas/`. Verificar: capturas presentes y comparadas con `capturas/final/`; diferencias anotadas
-- [ ] 8.2 Correr `impeccable detect` sobre las URL locales en ambos temas (`--viewport`; oscuro con `--cdp`) con la configuración local. Verificar: el resultado JSON está en `tramo8/detector/` y el conteo de hallazgos queda anotado en `verificacion.md`
+- [x] 8.1 Leer el `SKILL.md` de Impeccable vigente (`critique` y `detect`) antes de usarlo. Levantar la aplicación en local con usuarios ficticios de los tres roles y capturar las 5 vistas en claro y oscuro, a 360 y 1280, en `insumos/prototipo/US-001/tramo8/capturas/`. Verificar: capturas presentes y comparadas con `capturas/final/`; diferencias anotadas
+- [x] 8.2 Correr `impeccable detect` sobre las URL locales en ambos temas (`--viewport`; oscuro con `--cdp`) con la configuración local. Verificar: el resultado JSON está en `tramo8/detector/` y el conteo de hallazgos queda anotado en `verificacion.md`
 - [ ] 8.3 La crítica de Impeccable la hace **Codex en solo lectura** con el prompt A, que corre el usuario. Codex lee las plantillas, las capturas de 8.1 y el JSON de 8.2, y deja su informe en `insumos/prototipo/US-001/tramo8/critique/`. Claude Code no lanza agentes en 8.1 ni en 8.2. Verificar: informe de Codex en `tramo8/critique/` y la tabla de las 10 heurísticas comparada con el recálculo de 30/40
 - [ ] 8.4 Presentar al usuario los hallazgos de gravedad 2 o mayor con una corrección propuesta. Aplicar solo lo aprobado, con su prueba primero cuando cambie el comportamiento. Si algo toca DESIGN.md, mostrar el diff y esperar la aprobación. Verificar: cada hallazgo con su estado en `tramo8/revision.md` y las pruebas de los grupos 5 y 6 en verde
 

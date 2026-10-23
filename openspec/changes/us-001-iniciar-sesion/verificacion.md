@@ -245,3 +245,22 @@ Prueba manual de Marco en Firefox a 360 px (chips, punto, aviso "Próximamente" 
 ### Nota de plan (2026-10-23)
 
 La crítica del tramo 8 pasó a Codex en solo lectura (prompt A, lo corre el usuario) en lugar de dos subagentes de Claude Code, y la tarea 9.2 se redujo a un solo commit (9.1), porque ya se hace un commit por grupo.
+
+## 8. Crítica del tramo 8 (8.1 y 8.2; la crítica 8.3 la hace Codex)
+
+### 8.1 Capturas de la aplicación local
+
+- Aplicación local con `runserver`, base `tramo8` aparte de la de pruebas, CSS compilado y tres usuarios ficticios (docente, dirección y administrador; clave generada, fuera del repositorio). El administrador entra al panel de Django, que no es una de las 5 vistas.
+- 20 capturas (5 vistas × claro y oscuro × 360 y 1280) en `insumos/prototipo/US-001/tramo8/capturas/`; láminas y porcentaje de píxeles distintos frente a `capturas/final/` en `tramo8/capturas/comparacion/`.
+- Inicio de sesión: normal y con campos vacíos, 0 % distinto en los dos temas y anchos. Con error: 0,15 % a 360 y 1,41 % a 1280 (el usuario escrito, `ana.quispe` en vez de `aquispe`).
+- Portada (36 a 46 % distinto) y dirección a 360 (11 %): el contenido es el de US-001, no el del prototipo. Sin "Prof." ni grado y sección (no hay dónde guardarlos, D8); las tres tarjetas en "Próximamente" y sin enlaces (ninguna disponible); la tarjeta ya no tiene fondo propio ni sombra en la ficha, ahora es blanca con borde; en el celular aparecen los chips de dimensión y los puntos del carrusel; dirección dice "Hola, Rosa Huamán" y no "Hola, Lic. Rosa Huamán", y el estado vacío tiene su recuadro. Las capturas no muestran nada que contradiga DESIGN.md. La altura de la página cambia en la portada (834 a 800 a 360; 800 a 809 a 1280).
+
+### 8.2 Detector
+
+- `impeccable detect --json` con `.impeccable/config.json`. JSON en `tramo8/detector/detector.json`.
+- URL pública `/ingresar/` en claro con `--viewport` (360 y 1280): 0 hallazgos. Las vistas con sesión y los estados de error solo se alcanzan por `--cdp`, que se usó en las 20 combinaciones (el tema oscuro, con `color_scheme=dark` verificado).
+- **Total con `--cdp`: 18 hallazgos principales, 0 avisos.**
+  - `cream-palette` (`body`, `#f3eee3`): 10, uno por vista en claro. Es `--color-fondo` de DESIGN.md 0.3 (R-30, aceptada en el tramo 5). En oscuro, 0.
+  - `nested-cards` (`.ficha`): 8 en la portada (3 a 1280 y 1 a 360, en claro y en oscuro). Es la "miniatura que desborda" de DESIGN.md (R-10). La exención de `.impeccable/config.json` solo cubre `final/portada-*.html`, así que no alcanza a la plantilla de Django. D15 suponía que la ficha no aparecía en US-001; sí aparece.
+- Sin hallazgos en inicio de sesión (normal, con error y vacío) ni en dirección en oscuro.
+- No se cambió la configuración ni el código: queda para decisión de Marco si se amplía la exención.
