@@ -262,18 +262,18 @@ Ejecución con pruebas primero: cada prueba se ve fallar antes del código.
   - Cómo correr solo accesibilidad o solo rendimiento.
   - La fila `Playwright` de la tabla del canal.
 
-### D15. Cierre: DoD y crítica aislada
+### D15. Cierre: DoD y crítica de Codex
 
 - **`verificacion.md`** del cambio, con el mismo formato que EN-08: evidencia de cada escenario y estado de la DoD 1 a 9.
   - **DoD 4:** no aplica hasta EN-02.
   - **DoD 6:** cubierta por las pruebas de RN-024 (D10).
   - **DoD 7:** el informe de axe en ambos temas (D10).
   - **DoD 9:** OpenSpec, docstrings y catálogo de rutas (D14). El documento 06 ya subió a V_1_5_0 en esta rama.
-- **Tramo 8, crítica aislada de Impeccable sobre las plantillas construidas:**
-  - `critique` con dos subagentes aislados (A, revisión de diseño; B, detector y navegador), contra la aplicación levantada en local, en claro y en oscuro, a 360 y a 1280.
+- **Tramo 8, crítica de Impeccable sobre las plantillas construidas:**
+  - La crítica la hace Codex en solo lectura con el prompt A, que corre el usuario. Codex lee las plantillas, las capturas de 8.1 (aplicación levantada en local, en claro y en oscuro, a 360 y a 1280) y el JSON de 8.2. Claude Code hace 8.1 y 8.2 sin lanzar agentes.
   - Se corre también `impeccable detect` sobre las URL, con la exención R-10 de `.impeccable/config.json`. En US-001 puede no hacer falta, porque ninguna tarjeta está disponible y la sombra de la ficha no aparece.
-  - Los informes quedan en `insumos/prototipo/US-001/tramo8/`, que es local.
-  - **Antes de lanzar los subagentes se avisa al usuario.** No se lanza `impeccable-documenter` ni `impeccable-finish-reviewer` sin su aviso.
+  - Los informes quedan en `insumos/prototipo/US-001/tramo8/` (el de Codex, en `critique/`), que es local.
+  - No se lanza `impeccable-documenter` ni `impeccable-finish-reviewer` sin aviso del usuario.
   - DESIGN.md no se reescribe: si la crítica pide cambiarlo, se muestra el diff y se espera la aprobación.
 
 ## Risks / Trade-offs
@@ -286,7 +286,7 @@ Ejecución con pruebas primero: cada prueba se ve fallar antes del código.
 - **[La medición de Slow 4G en el canal varía con la carga del ejecutor]** de GitHub. → La red simulada domina el tiempo. El umbral de 5 s tiene margen frente a los 1,5 s del prototipo. Si falla en el canal y no en local, se investiga antes de tocar el umbral.
 - **[El carrusel no se prueba en Safari ni en Firefox en el canal].** → Chromium en el canal. Firefox se prueba a mano en local antes del PR y se anota en `verificacion.md`. Safari de iPhone queda pendiente de un equipo real (revisión del tramo 5, pendiente 2; EN-07).
 - **[`@layer components` crece con cada pantalla].** → Una clase por componente de DESIGN.md, con el mismo nombre. Los componentes nuevos se agregan con su historia.
-- **[Las plantillas se apartan del prototipo sin que nadie lo note].** → Las capturas del tramo 8 se comparan con `capturas/final/`, y la crítica aislada revisa las plantillas.
+- **[Las plantillas se apartan del prototipo sin que nadie lo note].** → Las capturas del tramo 8 se comparan con `capturas/final/`, y la crítica de Codex (solo lectura) revisa las plantillas.
 
 ## Migration Plan
 

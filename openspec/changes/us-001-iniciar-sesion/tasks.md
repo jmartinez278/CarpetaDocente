@@ -141,17 +141,17 @@
 
   Verificar: `uv run python scripts/verificar.py` sin fallas, salvo "git status limpio" antes del commit
 
-## 8. Crítica aislada de Impeccable sobre las plantillas (tramo 8, D15)
+## 8. Crítica de Impeccable con Codex sobre las plantillas (tramo 8, D15)
 
 - [ ] 8.1 Leer el `SKILL.md` de Impeccable vigente (`critique` y `detect`) antes de usarlo. Levantar la aplicación en local con usuarios ficticios de los tres roles y capturar las 5 vistas en claro y oscuro, a 360 y 1280, en `insumos/prototipo/US-001/tramo8/capturas/`. Verificar: capturas presentes y comparadas con `capturas/final/`; diferencias anotadas
 - [ ] 8.2 Correr `impeccable detect` sobre las URL locales en ambos temas (`--viewport`; oscuro con `--cdp`) con la configuración local. Verificar: el resultado JSON está en `tramo8/detector/` y el conteo de hallazgos queda anotado en `verificacion.md`
-- [ ] 8.3 **Avisar al usuario antes de lanzar** los dos subagentes de `critique` (A, revisión de diseño; B, detector y navegador), aislados y en paralelo, sobre las plantillas construidas. Tras su visto bueno, lanzarlos. Verificar: informes en `tramo8/critique/A/`, `B/` y la síntesis, con la tabla de las 10 heurísticas comparada con el recálculo de 30/40
+- [ ] 8.3 La crítica de Impeccable la hace **Codex en solo lectura** con el prompt A, que corre el usuario. Codex lee las plantillas, las capturas de 8.1 y el JSON de 8.2, y deja su informe en `insumos/prototipo/US-001/tramo8/critique/`. Claude Code no lanza agentes en 8.1 ni en 8.2. Verificar: informe de Codex en `tramo8/critique/` y la tabla de las 10 heurísticas comparada con el recálculo de 30/40
 - [ ] 8.4 Presentar al usuario los hallazgos de gravedad 2 o mayor con una corrección propuesta. Aplicar solo lo aprobado, con su prueba primero cuando cambie el comportamiento. Si algo toca DESIGN.md, mostrar el diff y esperar la aprobación. Verificar: cada hallazgo con su estado en `tramo8/revision.md` y las pruebas de los grupos 5 y 6 en verde
 
 ## 9. Evidencia y commits
 
 - [ ] 9.1 Completar `verificacion.md`: evidencia de cada escenario de los cuatro specs del cambio y el estado de la DoD 1 a 9 según D15 (DoD 4 no aplica hasta EN-02). Agregar los pendientes de documentación del design. Verificar: cada escenario tiene su evidencia o una nota de por qué no aplica
-- [ ] 9.2 Proponer al usuario commits separados por tema (por ejemplo: falla de pytest; bloqueo y backend; ingreso y redirecciones; panel; interfaz; punta a punta y accesibilidad; documentación). Para cada uno: dejarlo en el índice, correr `uv run python scripts/verificar.py --antes-del-commit` y mostrar archivos, mensaje y veredicto. Hacer el commit solo tras la aprobación explícita, con el correo noreply y sin `Co-Authored-By`; sin push. Verificar: `git log main..HEAD` coincide con lo aprobado y `git status` queda limpio
+- [ ] 9.2 Ya se hizo un commit por grupo o parte. Queda un solo commit, para 9.1 (`verificacion.md`): dejar los archivos en el índice, correr `uv run python scripts/verificar.py --antes-del-commit` y mostrar archivos, mensaje y veredicto. Hacerlo solo tras la aprobación explícita, con el correo noreply y sin `Co-Authored-By`; sin push. Antes del PR, el usuario corre en Codex la revisión final del diff completo contra `main` (prompt A) y se corrigen Critical e Important. Verificar: `git log main..HEAD` coincide con un commit por grupo o parte más este, y `git status` queda limpio
 
 ## Workflow follow-up
 

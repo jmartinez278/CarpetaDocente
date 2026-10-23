@@ -241,3 +241,7 @@ Prueba manual de Marco en Firefox a 360 px (chips, punto, aviso "Próximamente" 
 - `insumos/`, `PRODUCT.md`, `PENDIENTES_TESIS.md` y `.env` en `git ls-files`: ninguno.
 - Datos reales (DoD 8): solo hay datos ficticios en pruebas y plantillas; los correos de los commits son noreply de GitHub.
 - La revisión completa del diff contra `main` la hace Codex al final; no se lanzó agente ni revisor.
+
+### Nota de plan (2026-10-23)
+
+La crítica del tramo 8 pasó a Codex en solo lectura (prompt A, lo corre el usuario) en lugar de dos subagentes de Claude Code, y la tarea 9.2 se redujo a un solo commit (9.1), porque ya se hace un commit por grupo.
