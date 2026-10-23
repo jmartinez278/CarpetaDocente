@@ -94,8 +94,12 @@ def test_envio_en_curso_cambia_el_boton_y_deja_los_campos_de_solo_lectura(
     )
     campo_usuario(page).fill(docente.username)
     campo_clave(page).fill(clave)
+    page.get_by_role("button", name="Mostrar contraseña").click()
+    expect(campo_clave(page)).to_have_attribute("type", "text")
     boton_ingresar(page).click()
 
+    # Al enviar, la contraseña vuelve a ocultarse.
+    expect(campo_clave(page)).to_have_attribute("type", "password")
     boton = page.get_by_role("button", name="Ingresando…")
     expect(boton).to_be_visible()
     expect(boton).to_have_class(re.compile(r"boton-principal--enviando"))

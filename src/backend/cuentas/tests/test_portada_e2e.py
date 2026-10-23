@@ -15,8 +15,12 @@ pytestmark = pytest.mark.e2e
 AVISO = "Llegará en una próxima versión."
 
 
+def chip_de(page, titulo):
+    return page.get_by_role("navigation", name="Accesos").get_by_role("link", name=titulo)
+
+
 def chip_notas(page):
-    return page.get_by_role("navigation", name="Accesos").get_by_role("link", name="Notas")
+    return chip_de(page, "Notas")
 
 
 def esperar_reposo(page):
@@ -45,10 +49,17 @@ def test_chip_notas_muestra_la_tarjeta_sin_tocar_el_historial(live_server, page,
     chip.click()
 
     expect(page.locator("#c-notas")).to_be_in_viewport(ratio=0.9)
+    esperar_reposo(page)
     expect(chip).to_have_attribute("aria-current", "true")
-    # El punto activo es el ancho (24 px frente a 8 px) y es el segundo.
-    expect(page.locator(".punto").nth(1)).to_have_css("width", "24px")
-    expect(page.locator(".punto").nth(0)).to_have_css("width", "8px")
+    for otro in ("Sesiones", "Asistencia"):
+        expect(chip_de(page, otro)).to_have_attribute("aria-current", "false")
+    # El punto de Notas es el ancho (24 px) y los otros dos el angosto (8 px). El ancho lo da una
+    # animación ligada al desplazamiento: se compara con tolerancia, no con un valor exacto.
+    anchos = page.evaluate(
+        "[...document.querySelectorAll('.punto')].map((p) => parseFloat(getComputedStyle(p).width))"
+    )
+    assert anchos[1] >= 23.5, anchos
+    assert anchos[0] <= 8.5 and anchos[2] <= 8.5, anchos
     expect(page).to_have_url(f"{live_server.url}/docente/")
     assert page.evaluate("history.length") == historial
 
