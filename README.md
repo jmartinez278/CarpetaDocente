@@ -146,6 +146,18 @@ Las pruebas marcadas `e2e` abren la aplicación en Chromium. `uv run pytest` no 
    $env:DJANGO_ALLOW_ASYNC_UNSAFE = "true"; uv run pytest -m e2e --browser chromium
    ```
 
+Las pruebas `e2e` de US-001 incluyen la revisión de accesibilidad con axe-core (`test_accesibilidad_e2e.py`) y la medición de carga con Slow 4G (`test_rendimiento_e2e.py`). axe-core llega con `npm ci` del paso 2. Para correr solo una de las dos, con el mismo `DJANGO_ALLOW_ASYNC_UNSAFE` del paso 3 (Git Bash):
+
+```bash
+# Solo accesibilidad: falla ante infracciones critical o serious y guarda el informe en test-results/
+DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium src/backend/cuentas/tests/test_accesibilidad_e2e.py
+
+# Solo rendimiento (Slow 4G, sin caché): -s imprime los KB transferidos y los segundos hasta que es usable
+DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium src/backend/cuentas/tests/test_rendimiento_e2e.py -s
+```
+
+En PowerShell, definir antes `$env:DJANGO_ALLOW_ASYNC_UNSAFE = "true"` y quitar el prefijo del comando. `test-results/` no se versiona.
+
 `DJANGO_ALLOW_ASYNC_UNSAFE` hace falta porque Playwright deja abierto un bucle asíncrono en el hilo de la prueba y Django rechaza el acceso a la base desde ahí (`SynchronousOnlyOperation`). Va solo en este comando y en el canal, nunca en `.env` ni en `settings.py` (en PowerShell queda definida hasta cerrar esa terminal).
 
 ### Problemas frecuentes
@@ -206,7 +218,7 @@ Cada Pull Request hacia `main`, y cada push a `main`, pasa por el workflow `CI` 
 |---|---|---|
 | `Ruff` | Estilo, formato y reglas de seguridad `S` (Bandit), con las reglas de `pyproject.toml`. Los problemas aparecen como anotaciones en las líneas del PR | `uv run ruff check .` y `uv run ruff format --check .` |
 | `Pruebas y cobertura` | Todas las pruebas, menos las `e2e`, contra un PostgreSQL 17 temporal. Falla si una prueba falla o si la cobertura total baja de 80 % | Con `db` levantado: `uv run pytest --cov` |
-| `Playwright` | Compila el CSS y abre la página inicial en Chromium (pruebas `e2e`) | Los tres pasos de [Pruebas de punta a punta](#pruebas-de-punta-a-punta-playwright) |
+| `Playwright` | Compila el CSS (`npm ci` incluye axe-core) y corre en Chromium las pruebas `e2e`: inicio de sesión hasta la pantalla del rol, portada, accesibilidad (axe-core, ambos temas) y carga con Slow 4G | Los tres pasos de [Pruebas de punta a punta](#pruebas-de-punta-a-punta-playwright) |
 | `SonarQube Cloud` | Sube el análisis y la cobertura (`coverage.xml`) a SonarQube Cloud. Solo falla si el análisis no se pudo subir | No se reproduce: necesita el token. El informe que sube se genera con `uv run pytest --cov --cov-report=xml` |
 | `SonarCloud Code Analysis` | Puerta de calidad **Sonar way** sobre el código nuevo del PR: cobertura de 80 % o más, duplicación de 3 % o menos, calificación A en fiabilidad, seguridad y mantenibilidad, y *hotspots* revisados. La publica la aplicación de SonarQube Cloud | No se reproduce: se ve en SonarQube Cloud, en el PR |
 | CodeQL | Análisis de seguridad de Python, JavaScript y los workflows. Se bloquea la fusión con alertas de severidad alta o crítica | No se reproduce: las alertas aparecen en el PR y en *Security → Code scanning*. Ruff con las reglas `S` cubre una parte en la laptop |

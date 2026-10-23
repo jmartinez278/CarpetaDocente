@@ -28,6 +28,8 @@ staticfiles/
 # CSS y JS compilados desde src/frontend
 src/backend/static/dist/
 media/
+# Informes de las pruebas de punta a punta (axe, trazas de Playwright)
+test-results/
 *.sqlite3
 
 # Editor y sistema operativo

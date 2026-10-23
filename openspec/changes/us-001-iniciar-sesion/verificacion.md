@@ -195,3 +195,23 @@ Required test coverage of 80.0% reached. Total coverage: 96.67%
 - La misma comprobación queda automatizada en `test_pantallas.py` (`test_una_dimension_disponible_enlaza_a_su_pantalla`).
 - En esas capturas, portada y dirección a 320, 360 y 1280 en ambos temas: `scrollWidth` igual a `clientWidth` del documento. La prueba definitiva es la 6.3.
 
+
+## 6. Pruebas de punta a punta, accesibilidad y Slow 4G (D10, D11)
+
+### 6.1 a 6.3 Pruebas de punta a punta
+
+- `axe-core ^4.14.0` en `devDependencies`; `npm ci` sin errores y `node_modules/axe-core/axe.min.js` presente. Un primer `npm ci` falló con `EPERM` porque un `npm run dev` (Tailwind en modo `--watch`) tenía abierto `lightningcss`; al cerrarlo, pasó.
+- `test_ingresar_e2e.py` (5) y `test_portada_e2e.py` (20): en rojo sin `app.css` compilado y en verde con él (`pytest -m e2e`: 25 pasadas). Las 18 pruebas de desborde horizontal pasaron desde la primera corrida (el CSS ya cumplía); su rojo no se demostró.
+- La prueba de "Ingresando…" detiene la navegación con un `preventDefault` registrado después del de `ingresar.js`, porque un POST retenido hace que Playwright espere la navegación sin terminar. Comprueba el estado en pantalla, no el envío al servidor.
+
+### 6.4 Accesibilidad (axe-core)
+
+- `test_accesibilidad_e2e.py`: 5 vistas × claro y oscuro × 360 y 1280 = 20 pruebas, con `wcag2a`, `wcag2aa`, `wcag21a` y `wcag21aa`.
+- En rojo: con la etiqueta del campo quitada de `componentes/campo.html` (revertido con una copia, `git status` limpio), las 20 fallaron. Las del inicio de sesión dejaron su informe en `test-results/accesibilidad-<vista>-<tema>-<ancho>.json`; las de la portada y la dirección fallaron antes, porque no se podía iniciar sesión sin la etiqueta.
+- En verde con la plantilla restaurada: 20 pasadas, sin infracciones `critical` ni `serious`.
+- `test-results/` se agregó a `.gitignore`.
+
+### 6.5 Slow 4G (RNF-002)
+
+- `test_rendimiento_e2e.py`, Chromium, sin caché, `/ingresar/` (servidor de pruebas sin compresión): **48,7 KB** en 4 respuestas y usable en **1,52 s** (umbrales: 2 MB y 5 s). El prototipo dio 50 KB.
+- Pasó en la primera corrida: el umbral no se vio fallar.

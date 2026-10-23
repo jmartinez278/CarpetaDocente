@@ -125,9 +125,9 @@
   - en las tres pantallas, a 320, 360 y 1280 y en ambos temas, `scrollWidth ≤ clientWidth` del documento.
 
   Verificar en verde después de verla en rojo
-- [ ] 6.4 Prueba primero, `cuentas/tests/test_accesibilidad_e2e.py`: axe-core en las 5 vistas de D10 × claro y oscuro × 360 y 1280, que falla ante `impact` "critical" o "serious" y guarda el informe en `test-results/` al fallar. Verificar en rojo con una plantilla temporal sin la etiqueta de un campo (que se revierte) y en verde después
-- [ ] 6.5 Prueba primero, `cuentas/tests/test_rendimiento_e2e.py`: Slow 4G por CDP, sin caché, en `/ingresar/`. Bytes ≤ 2 MB y usable ≤ 5 s según D11. Imprime las cifras. Verificar: pasa en local y las cifras quedan anotadas en `verificacion.md`
-- [ ] 6.6 Actualizar el README según D14: comando para correr solo accesibilidad o rendimiento, y la fila `Playwright` de la tabla del canal. Verificar: los comandos del README, ejecutados tal cual, dan el resultado de 6.2 a 6.5
+- [x] 6.4 Prueba primero, `cuentas/tests/test_accesibilidad_e2e.py`: axe-core en las 5 vistas de D10 × claro y oscuro × 360 y 1280, que falla ante `impact` "critical" o "serious" y guarda el informe en `test-results/` al fallar. Verificar en rojo con una plantilla temporal sin la etiqueta de un campo (que se revierte) y en verde después
+- [x] 6.5 Prueba primero, `cuentas/tests/test_rendimiento_e2e.py`: Slow 4G por CDP, sin caché, en `/ingresar/`. Bytes ≤ 2 MB y usable ≤ 5 s según D11. Imprime las cifras. Verificar: pasa en local y las cifras quedan anotadas en `verificacion.md`
+- [x] 6.6 Actualizar el README según D14: comando para correr solo accesibilidad o rendimiento, y la fila `Playwright` de la tabla del canal. Verificar: los comandos del README, ejecutados tal cual, dan el resultado de 6.2 a 6.5
 
 ## 7. Revisión local completa
 
