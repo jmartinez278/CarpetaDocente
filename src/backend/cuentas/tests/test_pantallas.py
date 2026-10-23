@@ -1,12 +1,17 @@
-"""Pantalla de inicio de sesión (spec pantallas-de-inicio; design.md de US-001, D5, D6 y D8).
+"""Pantallas de US-001 (spec pantallas-de-inicio; design.md de US-001, D5 a D8).
 
-Comprueba el contenido y la estructura de ``/ingresar/``. El aspecto (tokens, temas, anchos)
-se revisa en el navegador y con axe en el grupo 8.
+Comprueba el contenido y la estructura de ``/ingresar/``, de la portada del docente y del
+inicio de la dirección. El aspecto (tokens, temas, anchos) se revisa en el navegador y con
+axe en los grupos 6 y 8.
 """
 
 import re
+from dataclasses import replace
 
 import pytest
+
+from cuentas import dimensiones
+from cuentas.models import Usuario
 
 pytestmark = pytest.mark.django_db
 
@@ -168,3 +173,197 @@ def test_carga_ingresar_js_pero_no_alpine_ni_htmx(pagina):
     assert "defer" in scripts[0]
     assert "alpine" not in pagina.lower()
     assert "htmx" not in pagina.lower()
+
+
+# --- Marco común: barra sin menú y pie (portada y dirección) ---
+
+PORTADA = "/docente/"
+INICIO_DIRECCION = "/direccion/"
+SUBTITULOS = [
+    "Planificación de sesiones de aprendizaje",
+    "Registro y control de notas",
+    "Control de asistencia",
+]
+VACIO_DIRECCION = "Los consolidados de notas y asistencia estarán aquí en una próxima versión."
+
+
+@pytest.fixture
+def portada(client, docente):
+    client.force_login(docente)
+    return client.get(PORTADA).content.decode()
+
+
+@pytest.fixture
+def inicio_direccion(client, direccion):
+    client.force_login(direccion)
+    return client.get(INICIO_DIRECCION).content.decode()
+
+
+def tarjetas(html):
+    encontradas = re.findall(r"<article\b.*?</article>", html, re.DOTALL)
+    assert len(encontradas) == 3, "la portada lleva tres tarjetas"
+    return encontradas
+
+
+def saludos(html):
+    return re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL)
+
+
+def barra(html):
+    encontrada = re.search(r"<header\b.*?</header>", html, re.DOTALL)
+    assert encontrada, "no hay barra superior"
+    return encontrada.group(0)
+
+
+@pytest.mark.parametrize("pantalla", ["portada", "inicio_direccion"])
+def test_barra_con_el_nombre_de_la_ie_y_sin_menu(pantalla, request):
+    html = request.getfixturevalue(pantalla)
+    cabecera = barra(html)
+
+    assert "I.E. Virgen del Carmen" in cabecera
+    for control in ("<nav", "<a ", "<button"):
+        assert control not in cabecera
+    assert html.index(cabecera) < html.index("<main")
+
+
+@pytest.mark.parametrize("pantalla", ["portada", "inicio_direccion"])
+def test_pie_al_final_y_titulo_de_la_pagina(pantalla, request):
+    html = request.getfixturevalue(pantalla)
+    pie = re.search(r"<footer\b.*?</footer>", html, re.DOTALL)
+
+    assert pie and "CarpetaDocente · 2026" in pie.group(0)
+    assert pie.start() > html.index("</main>")
+    assert "<title>Inicio · CarpetaDocente</title>" in html
+
+
+# --- Portada del docente ---
+
+
+def test_la_portada_saluda_con_el_nombre_completo(portada):
+    assert saludos(portada) == ["Hola, Ana Quispe"]
+
+
+def test_sin_nombre_la_portada_saluda_con_el_usuario(client, crear_usuario):
+    client.force_login(crear_usuario("docente.sin.nombre", Usuario.Rol.DOCENTE))
+
+    assert saludos(client.get(PORTADA).content.decode()) == ["Hola, docente.sin.nombre"]
+
+
+def test_la_portada_no_inventa_grado_ni_tratamiento(portada):
+    """D8: sin "Prof." ni "3.° grado, sección A" hasta que exista el dato."""
+    assert "Prof." not in portada
+    assert "grado" not in portada
+
+
+def test_tres_tarjetas_en_orden_con_subtitulo_e_insignia(portada):
+    for tarjeta, titulo, subtitulo in zip(
+        tarjetas(portada), ["Sesiones", "Notas", "Asistencia"], SUBTITULOS, strict=True
+    ):
+        assert re.search(rf"<h2\b[^>]*>.*?>{titulo}</button></h2>", tarjeta, re.DOTALL)
+        assert f'<p class="dimension__subtitulo">{subtitulo}</p>' in tarjeta
+        assert re.search(r'<p class="insignia" id="[^"]+">Próximamente</p>', tarjeta)
+        assert "dimension--proxima" in tarjeta
+
+
+def test_las_tarjetas_proximamente_son_botones_sin_enlace(portada):
+    for tarjeta in tarjetas(portada):
+        assert "href" not in tarjeta
+        assert "<a " not in tarjeta
+        boton = etiqueta(tarjeta, 'class="dimension__boton"')
+        assert 'type="button"' in boton
+        assert 'aria-disabled="true"' in boton
+        insignia = re.search(r'<p class="insignia" id="([^"]+)"', tarjeta).group(1)
+        assert f'aria-describedby="{insignia}"' in boton
+
+
+def test_cada_tarjeta_proximamente_tiene_su_region_aria_live_vacia(portada):
+    for tarjeta in tarjetas(portada):
+        assert re.search(r'<p class="dimension__aviso" aria-live="polite"[^>]*></p>', tarjeta)
+
+
+def test_la_miniatura_es_esquematica_y_oculta_al_lector(portada):
+    for tarjeta, clave in zip(tarjetas(portada), ["sesiones", "notas", "asistencia"], strict=True):
+        ficha = etiqueta(tarjeta, f'class="ficha ficha--{clave}"')
+        assert 'aria-hidden="true"' in ficha
+
+
+def test_chips_accesos_y_carrusel_tus_accesos(portada):
+    nav = re.search(r'<nav class="chips" aria-label="Accesos">.*?</nav>', portada, re.DOTALL)
+    assert nav, "no hay una fila de chips llamada Accesos"
+    chips = re.findall(r'<a class="chip" href="#([^"]+)"[^>]*>(.*?)</a>', nav.group(0), re.DOTALL)
+
+    assert [destino for destino, _ in chips] == ["c-sesiones", "c-notas", "c-asistencia"]
+    for _, texto in chips:
+        assert '<span class="sr-only">: ver tarjeta</span>' in texto
+    carrusel = etiqueta(portada, 'aria-label="Tus accesos"')
+    assert 'role="region"' in carrusel
+    assert 'tabindex="0"' in carrusel
+    assert [re.search(r'id="([^"]+)"', t).group(1) for t in tarjetas(portada)] == [
+        "c-sesiones",
+        "c-notas",
+        "c-asistencia",
+    ]
+
+
+def test_los_puntos_son_tres_y_decorativos(portada):
+    puntos = re.search(r'<div class="puntos" aria-hidden="true">.*?</div>', portada, re.DOTALL)
+
+    assert puntos
+    assert puntos.group(0).count('class="punto"') == 3
+
+
+def test_sin_ninguna_disponible_la_tarjeta_inicial_es_sesiones(portada):
+    iniciales = [t for t in tarjetas(portada) if "carrusel__item--inicial" in t]
+
+    assert len(iniciales) == 1
+    assert 'id="c-sesiones"' in iniciales[0]
+
+
+def test_la_portada_carga_portada_js_antes_de_alpine(portada):
+    scripts = re.findall(r"<script\b[^>]*>", portada)
+
+    assert len(scripts) == 2
+    assert "js/portada.js" in scripts[0]
+    assert "dist/vendor/alpine.min.js" in scripts[1]
+    assert all("defer" in script for script in scripts)
+    assert "htmx" not in portada.lower()
+
+
+def test_una_dimension_disponible_enlaza_a_su_pantalla(client, docente, monkeypatch):
+    """Escenario "Dimensión activada por su historia", con una ruta que existe en vez de la suya."""
+    sesiones, notas, asistencia = dimensiones.DIMENSIONES
+    activa = replace(asistencia, disponible=True, url_name="docente:portada")
+    monkeypatch.setattr(dimensiones, "DIMENSIONES", (sesiones, notas, activa))
+    client.force_login(docente)
+
+    html = client.get(PORTADA).content.decode()
+    tarjeta = tarjetas(html)[2]
+
+    enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
+    assert 'href="/docente/"' in enlace
+    assert 'aria-describedby="acc-asistencia"' in enlace
+    assert '<p class="dimension__accion" id="acc-asistencia">Registrar asistencia' in tarjeta
+    assert "Próximamente" not in tarjeta
+    assert "dimension--proxima" not in tarjeta
+    assert "aria-live" not in tarjeta
+    assert "carrusel__item--inicial" in tarjeta
+    assert len(re.findall(r'<a class="dimension__enlace"', html)) == 1
+
+
+# --- Inicio de la dirección ---
+
+
+def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
+    assert saludos(inicio_direccion) == ["Hola, Rosa Huamán"]
+    assert re.search(r'<p class="[^"]*">Dirección</p>', inicio_direccion)
+    seccion = re.search(r"<section\b.*?</section>", inicio_direccion, re.DOTALL)
+    assert seccion, "no hay sección de consolidados"
+    assert re.search(r"<h2\b[^>]*>Consolidados</h2>", seccion.group(0))
+    assert VACIO_DIRECCION in seccion.group(0)
+    assert "<svg" in seccion.group(0)
+
+
+def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_scripts(inicio_direccion):
+    assert "<table" not in inicio_direccion
+    assert "<article" not in inicio_direccion
+    assert "<script" not in inicio_direccion

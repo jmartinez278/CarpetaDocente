@@ -52,6 +52,10 @@ def test_los_iconos_de_d9_estan_y_llevan_el_aviso_isc():
         "clipboard-list",
         "calendar-check",
         "inbox",
+        # Miniaturas de la portada (DESIGN.md, Iconografía): archivos Word y PDF, Asistió y Faltó.
+        "file-text",
+        "check",
+        "x",
     }
     assert "ISC License" in (CARPETA_ICONOS / "LICENSE-lucide.txt").read_text(encoding="utf-8")
 

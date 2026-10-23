@@ -9,6 +9,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import RedirectView, TemplateView
 
+from cuentas import dimensiones
 from cuentas.acceso import RolRequeridoMixin, pantalla_de_inicio
 from cuentas.forms import FormularioIngreso
 from cuentas.models import Usuario
@@ -71,7 +72,17 @@ class IngresoPanelView(View):
 
 
 class PortadaDocenteView(RolRequeridoMixin, TemplateView):
-    """Portada del docente, con las tres dimensiones (spec pantallas-de-inicio)."""
+    """Portada del docente, con las tres dimensiones (spec pantallas-de-inicio).
+
+    Cada tarjeta enlaza a su pantalla o queda en "Próximamente" según su bandera (D7), y el
+    carrusel del celular abre en la tarjeta inicial.
+    """
 
     rol_requerido = Usuario.Rol.DOCENTE
     template_name = "cuentas/portada_docente.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["dimensiones"] = dimensiones.DIMENSIONES
+        contexto["inicial"] = dimensiones.tarjeta_inicial(dimensiones.DIMENSIONES)
+        return contexto

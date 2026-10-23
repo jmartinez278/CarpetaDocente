@@ -99,7 +99,7 @@
 
   Verificar en rojo
 - [x] 5.5 Construir `base.html` y `cuentas/ingresar.html` desde `login.html`, `login-error.html` y `login-vacios.html` del prototipo. Agregar los componentes de campo, mensaje y botón principal en `@layer components` y `static/js/ingresar.js` (`clave.js` más el estado de envío, D6). Verificar en verde: 5.4, 5.1 y la página vista en el navegador a 360 y 1280 en claro y oscuro frente a `capturas/final/`
-- [ ] 5.6 Prueba primero: `test_dimensiones.py` (toda dimensión disponible resuelve su `url_name`; hoy ninguna está disponible) y los casos de la portada y la dirección en `test_pantallas.py`. Casos de la portada y la dirección:
+- [x] 5.6 Prueba primero: `test_dimensiones.py` (toda dimensión disponible resuelve su `url_name`; hoy ninguna está disponible) y los casos de la portada y la dirección en `test_pantallas.py`. Casos de la portada y la dirección:
   - saludo con el nombre completo, o con el usuario si no hay nombre;
   - tres tarjetas en orden, con sus subtítulos e insignia "Próximamente";
   - ningún `href` dentro de las tarjetas;
@@ -110,10 +110,10 @@
   - barra sin menú y pie en las dos.
 
   Verificar en rojo
-- [ ] 5.7 Implementar `cuentas/dimensiones.py` (D7) y construir `marco.html`, `cuentas/portada_docente.html`, `componentes/tarjeta_dimension.html`, las tres miniaturas y `direccion/inicio.html` desde `portada-sprint1.html`, `portada-final.html` e `inicio-direccion.html`. Copiar `portada.js` a `static/js/`, agregar la tarjeta G4e, el carrusel, los chips, los puntos y el estado vacío en `@layer components`, y marcar la tarjeta inicial según D7. Verificar:
+- [x] 5.7 Implementar `cuentas/dimensiones.py` (D7) y construir `marco.html`, `cuentas/portada_docente.html`, `componentes/tarjeta_dimension.html`, las tres miniaturas y `direccion/inicio.html` desde `portada-sprint1.html`, `portada-final.html` e `inicio-direccion.html`. Copiar `portada.js` a `static/js/`, agregar la tarjeta G4e, el carrusel, los chips, los puntos y el estado vacío en `@layer components`, y marcar la tarjeta inicial según D7. Verificar:
   - en verde: 5.6 y 5.1;
   - con `disponible=True` de forma temporal en Asistencia y una ruta de prueba, la tarjeta se dibuja como en `portada-sprint1.html`. Se revierte después y queda anotado en `verificacion.md`
-- [ ] 5.8 Agregar `sonar.coverage.exclusions=**/static/js/**` a `sonar-project.properties`, con un comentario que remita a D12. Verificar: `git diff` solo agrega esa línea y su comentario
+- [x] 5.8 Agregar `sonar.coverage.exclusions=**/static/js/**` a `sonar-project.properties`, con un comentario que remita a D12. Verificar: `git diff` solo agrega esa línea y su comentario
 
 ## 6. Pruebas de punta a punta, accesibilidad y Slow 4G (D10, D11)
 

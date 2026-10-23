@@ -186,3 +186,12 @@ Required test coverage of 80.0% reached. Total coverage: 96.67%
 358 passed
 ```
 
+## 5. Plantillas e interfaz (D5 a D9)
+
+### 5.7 Tarjeta disponible (verificación temporal)
+
+- Asistencia con `disponible=True` y una ruta existente (`docente:portada`) solo durante la prueba, con `monkeypatch` sobre `cuentas.dimensiones.DIMENSIONES`, sin tocar el código: nada que revertir.
+- Capturas con Playwright (Chromium, fuera del repo) a 360 y 1280, en claro y oscuro: la tarjeta se dibuja como en `portada-sprint1.html` (fondo `--color-dimension`, verbo "Registrar asistencia" con flecha, sin insignia) y el carrusel abre en Asistencia.
+- La misma comprobación queda automatizada en `test_pantallas.py` (`test_una_dimension_disponible_enlaza_a_su_pantalla`).
+- En esas capturas, portada y dirección a 320, 360 y 1280 en ambos temas: `scrollWidth` igual a `clientWidth` del documento. La prueba definitiva es la 6.3.
+

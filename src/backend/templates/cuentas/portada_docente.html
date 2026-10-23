@@ -1,13 +1,21 @@
-{% extends "base.html" %}
-{% comment %}
-PLANTILLA PROVISIONAL (US-001, tarea 3.5): lo mínimo para probar la vista. La
-reemplaza la tarea 5.7, construida desde el prototipo G4e.
-{% endcomment %}
+{% extends "marco.html" %}
+{% load static %}
 
-{% block titulo %}Inicio · CarpetaDocente{% endblock %}
+{% block scripts %}<script src="{% static 'js/portada.js' %}" defer></script>
+<script src="{% static 'dist/vendor/alpine.min.js' %}" defer></script>{% endblock %}
 
-{% block contenido %}
-<main>
-  <h1>Hola, {{ user.get_full_name|default:user.username }}</h1>
+{% block principal %}
+<main class="portada" x-data="carrusel">
+  <div class="mx-auto w-full max-w-280 px-4 pt-8 min-[960px]:px-6 min-[960px]:pt-0">
+    <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">Hola, {{ user.get_full_name|default:user.username }}</h1>
+    <nav class="chips" aria-label="Accesos">
+      {% for d in dimensiones %}<a class="chip" href="#c-{{ d.clave }}" :class="{ 'es-activo': controla && activa === 'c-{{ d.clave }}' }" @click.prevent="ir('c-{{ d.clave }}')" :aria-current="activa === 'c-{{ d.clave }}' ? 'true' : 'false'">{{ d.titulo }}<span class="sr-only">: ver tarjeta</span></a>
+      {% endfor %}
+    </nav>
+  </div>
+  <div class="dimensiones carrusel" x-ref="pista" data-carrusel tabindex="0" role="region" aria-label="Tus accesos">
+    {% for d in dimensiones %}{% include "componentes/tarjeta_dimension.html" %}{% endfor %}
+  </div>
+  <div class="puntos" aria-hidden="true">{% for d in dimensiones %}<span class="punto" :class="{ 'es-activo': controla && activa === 'c-{{ d.clave }}' }"></span>{% endfor %}</div>
 </main>
 {% endblock %}
