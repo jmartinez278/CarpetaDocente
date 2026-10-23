@@ -4,3 +4,89 @@
 /* Plantillas de Django donde Tailwind busca clases (rutas relativas a este archivo). */
 @source "../../backend/templates";
 @source "../../backend/*/templates";
+
+/* Besley 600 latina, de @fontsource/besley (copiada por copiar-vendor.mjs; design.md, D9). */
+@font-face {
+  font-family: "Besley";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fuentes/besley-latin-600-normal.woff2") format("woff2");
+}
+
+/* Tokens: Quick Start de DESIGN.md 0.3.1, copiado tal cual. Es el único lugar con hex (D5). */
+@theme {
+  --color-fondo: #f3eee3;
+  --color-fondo-trabajo: #faf6ef;
+  --color-superficie: #fefcf9;
+  --color-dimension: #e3d4ad;
+  --color-linea: #c2b290;
+  --color-texto: #2c150c;
+  --color-texto-suave: #7b422d;
+  --color-primario: #5b2610;
+  --color-sobre-primario: #fefcf9;
+  --color-sobre-claro: #2c150c;
+  --color-arena: #e3d4ad;
+  --color-borde: #9f916a;
+  --color-dorado: #e9b70b;
+  --color-dorado-texto: #976700;
+  --color-error: #c10007;
+  --color-exito: #016630;
+  --color-aviso: #976700;
+  --color-asistio: #016630;
+  --color-falto: #c10007;
+  --color-tarde: #3275b4;
+  --color-justificado: #7b6f66;
+  --color-tinte-sesiones: #fdd4c6;
+  --color-tinte-notas: #fbe3a3;
+  --color-tinte-asistencia: #d0eacf;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-display: "Besley", Georgia, serif;
+
+  --text-caption: 14px;
+  --text-body: 16px;
+  --text-subheading: 18px;
+  --text-heading: 24px;
+  --text-display: 27px;
+
+  --radius-pill: 999px;
+  --radius-campo: 10px;
+  --radius-tarjeta: 12px;
+  --radius-dimension: 20px;
+
+  --shadow-ficha: 0 6px 20px rgba(44, 21, 12, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-fondo: #27221c;
+    --color-fondo-trabajo: #27221c;
+    --color-superficie: #322d26;
+    --color-dimension: #4c3024;
+    --color-linea: #544e46;
+    --color-texto: #f3ead9;
+    --color-texto-suave: #cbbba1;
+    --color-primario: #e3d4ad;
+    --color-sobre-primario: #27221c;
+    --color-sobre-claro: #27221c;
+    --color-borde: #8c7f6c;
+    --color-dorado-texto: #e9b70b;
+    --color-error: #ea7a6d;
+    --color-exito: #68ba7e;
+    --color-aviso: #e9b70b;
+    --color-asistio: #68ba7e;
+    --color-falto: #e66f61;
+    --color-tarde: #67aaec;
+    --color-justificado: #afa298;
+
+    --shadow-ficha: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@media (min-width: 960px) {
+  :root {
+    --text-display: 40px;
+  }
+}

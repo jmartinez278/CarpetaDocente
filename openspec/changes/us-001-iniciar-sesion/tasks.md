@@ -85,12 +85,12 @@
 
 ## 5. Estilos, fuente, íconos y plantillas (D5, D6, D8, D9)
 
-- [ ] 5.1 Prueba primero, `cuentas/tests/test_plantillas.py`: ninguna plantilla de `src/backend/**/templates/` tiene un color hex ni `style=`. Verificar en verde con las plantillas actuales y en rojo con una plantilla temporal que lleve `#5b2610`, que se borra después
-- [ ] 5.2 Pasar el bloque `@theme` y la redefinición oscura del Quick Start de DESIGN.md a `src/frontend/css/app.css`, tal cual, más el `@font-face` de Besley. Agregar `@fontsource/besley` con `npm install` y copiar en `copiar-vendor.mjs` `besley-latin-600-normal.woff2` y su `LICENSE` a `static/dist/fuentes/` (D9). Verificar:
+- [x] 5.1 Prueba primero, `cuentas/tests/test_plantillas.py`: ninguna plantilla de `src/backend/**/templates/` tiene un color hex ni `style=`. Verificar en verde con las plantillas actuales y en rojo con una plantilla temporal que lleve `#5b2610`, que se borra después
+- [x] 5.2 Pasar el bloque `@theme` y la redefinición oscura del Quick Start de DESIGN.md a `src/frontend/css/app.css`, tal cual, más el `@font-face` de Besley. Agregar `@fontsource/besley` con `npm install` y copiar en `copiar-vendor.mjs` `besley-latin-600-normal.woff2` y su `LICENSE` a `static/dist/fuentes/` (D9). Verificar:
   - `npm run build` termina sin errores;
   - `app.css` compilado contiene las clases `bg-fondo` y `text-primario`;
   - comparar con un script los tokens de `app.css` con el Quick Start de DESIGN.md: 0 diferencias
-- [ ] 5.3 Crear `templates/iconos/` con los SVG de Lucide usados por el prototipo (trazo 1,75, `currentColor`, `aria-hidden`) y `LICENSE-lucide.txt`. Verificar: cada `{% include "iconos/…" %}` de las plantillas resuelve un archivo, y el aviso ISC está junto a ellos
+- [x] 5.3 Crear `templates/iconos/` con los SVG de Lucide usados por el prototipo (trazo 1,75, `currentColor`, `aria-hidden`) y `LICENSE-lucide.txt`. Verificar: cada `{% include "iconos/…" %}` de las plantillas resuelve un archivo, y el aviso ISC está junto a ellos
 - [ ] 5.4 Prueba primero, `cuentas/tests/test_pantallas.py`, inicio de sesión. Casos:
   - textos y orden de `/ingresar/` según el spec "Pantalla de inicio de sesión", sin escudo, sin menú y sin enlace de recuperación;
   - el mensaje de error sobre el formulario con `role="alert"` y sus dos líneas;
