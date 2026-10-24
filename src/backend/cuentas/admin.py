@@ -3,6 +3,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import AdminUserCreationForm, UserChangeForm
+from django.db import transaction
 
 from cuentas import servicios
 from cuentas.models import Usuario
@@ -61,13 +62,20 @@ class UsuarioAdmin(UserAdmin):
     readonly_fields = ("intentos_fallidos", "bloqueado_hasta")
     actions = ["desbloquear_cuenta"]
 
-    @admin.action(description="Desbloquear cuenta")
+    @admin.action(description="Desbloquear cuenta", permissions=["change"])
     def desbloquear_cuenta(self, request, queryset):
-        """Quita el bloqueo y los intentos (RN-024) y lo registra en el historial de cada cuenta."""
+        """Quita el bloqueo y los intentos (RN-024) y lo registra en el historial de cada cuenta.
+
+        El desbloqueo y su registro van en una transacción por cuenta: sin registro, no hay
+        desbloqueo.
+        """
         desbloqueadas = sin_cambios = 0
         for usuario in queryset:
-            if servicios.desbloquear(usuario):
-                self.log_change(request, usuario, "Cuenta desbloqueada.")
+            with transaction.atomic():
+                desbloqueada = servicios.desbloquear(usuario)
+                if desbloqueada:
+                    self.log_change(request, usuario, "Cuenta desbloqueada.")
+            if desbloqueada:
                 desbloqueadas += 1
             else:
                 sin_cambios += 1

@@ -3,12 +3,14 @@
 import pytest
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.urls import reverse
 from django.utils import timezone
 
 from cuentas import servicios
+from cuentas.admin import UsuarioAdmin
 from cuentas.models import Usuario
 from institucion.models import Institucion
 
@@ -159,6 +161,52 @@ def test_la_lista_muestra_bloqueado_hasta(panel, docente):
     respuesta = panel.get(reverse(URL_LISTA))
 
     assert "bloqueado_hasta" in respuesta.context["cl"].list_display
+
+
+def acciones_de(respuesta):
+    formulario = respuesta.context["action_form"]
+    return [] if formulario is None else [valor for valor, _ in formulario.fields["action"].choices]
+
+
+@pytest.fixture
+def panel_de_solo_lectura(client, crear_usuario):
+    """Staff con solo ``view_usuario``: ve las cuentas, pero no las cambia."""
+    visor = crear_usuario("visor.ficticio", Usuario.Rol.ADMINISTRADOR, is_staff=True)
+    visor.user_permissions.add(Permission.objects.get(codename="view_usuario"))
+    client.force_login(visor)
+    return client
+
+
+def test_sin_permiso_de_cambio_no_aparece_la_accion(panel_de_solo_lectura, docente):
+    respuesta = panel_de_solo_lectura.get(reverse(URL_LISTA))
+
+    assert respuesta.status_code == 200
+    assert "desbloquear_cuenta" not in acciones_de(respuesta)
+
+
+def test_sin_permiso_de_cambio_un_post_no_desbloquea(panel_de_solo_lectura, docente):
+    bloquear(docente)
+
+    desbloquear(panel_de_solo_lectura, docente)
+
+    docente.refresh_from_db()
+    assert servicios.esta_bloqueado(docente)
+    assert not registros_de(docente).exists()
+
+
+def test_si_el_historial_falla_el_desbloqueo_se_revierte(panel, docente, monkeypatch):
+    bloquear(docente)
+
+    def historial_caido(*args, **kwargs):
+        raise RuntimeError("historial no disponible")
+
+    monkeypatch.setattr(UsuarioAdmin, "log_change", historial_caido)
+
+    with pytest.raises(RuntimeError):
+        desbloquear(panel, docente)
+
+    docente.refresh_from_db()
+    assert servicios.esta_bloqueado(docente)
 
 
 def test_despues_de_desbloquear_ingresar_acepta_la_contrasena(client, panel, docente, clave):

@@ -4,8 +4,12 @@ La hora se pasa como argumento: ninguna prueba espera 15 minutos ni depende del 
 """
 
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
+from django.contrib.auth import hashers
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from cuentas import servicios
 from cuentas.models import Usuario
@@ -115,6 +119,72 @@ def test_el_conteo_se_lee_de_la_base_y_no_de_una_copia_vieja(docente):
     assert leer(docente).bloqueado_hasta == FIN_DEL_BLOQUEO
 
 
+@pytest.fixture
+def comprobaciones(monkeypatch):
+    """Espía del hasher: anota, en cada comprobación, si la fila ya estaba bloqueada.
+
+    ``al_comprobar`` corre después de la primera comprobación, en el hueco entre esta y
+    el bloqueo de la fila, para simular un cambio de contraseña simultáneo.
+    """
+    consultas = CaptureQueriesContext(connection)
+    real = hashers.verify_password
+    espia = SimpleNamespace(con_la_fila_bloqueada=[], al_comprobar=None)
+
+    def verificar(*args, **kwargs):
+        espia.con_la_fila_bloqueada.append(
+            any("FOR UPDATE" in consulta["sql"] for consulta in consultas.captured_queries)
+        )
+        resultado = real(*args, **kwargs)
+        if espia.al_comprobar and len(espia.con_la_fila_bloqueada) == 1:
+            espia.al_comprobar()
+        return resultado
+
+    monkeypatch.setattr(hashers, "verify_password", verificar)
+    with consultas:
+        yield espia
+
+
+def cambiar_clave(usuario, nueva):
+    Usuario.objects.filter(pk=usuario.pk).update(password=hashers.make_password(nueva))
+
+
+def test_el_hash_se_calcula_antes_de_bloquear_la_fila(docente, clave, comprobaciones):
+    """Sin el cálculo costoso dentro del bloqueo, una cuenta existente no se delata (hallazgo 2)."""
+    assert servicios.intentar_ingreso(docente, clave, AHORA) is True
+
+    assert comprobaciones.con_la_fila_bloqueada == [False]
+
+
+def test_si_la_clave_cambia_al_comprobarla_la_vieja_no_entra(docente, clave, comprobaciones):
+    comprobaciones.al_comprobar = lambda: cambiar_clave(docente, "Clave-Nueva-Ficticia")
+
+    assert servicios.intentar_ingreso(docente, clave, AHORA) is False
+
+    assert leer(docente).intentos_fallidos == 1
+
+
+def test_si_la_clave_cambia_al_comprobarla_decide_la_vigente(docente, comprobaciones):
+    comprobaciones.al_comprobar = lambda: cambiar_clave(docente, "Clave-Nueva-Ficticia")
+
+    assert servicios.intentar_ingreso(docente, "Clave-Nueva-Ficticia", AHORA) is True
+
+
+def test_un_ingreso_correcto_actualiza_un_hash_antiguo(docente, clave, settings):
+    """Como ModelBackend: el hash de un hasher anterior se recalcula con el preferido."""
+    settings.PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+        "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    ]
+    antiguo = hashers.PBKDF2SHA1PasswordHasher().encode(clave, "salficticia", iterations=1)
+    Usuario.objects.filter(pk=docente.pk).update(password=antiguo)
+
+    assert servicios.intentar_ingreso(docente, clave, AHORA) is True
+
+    cuenta = leer(docente)
+    assert cuenta.password.startswith("md5$")
+    assert cuenta.check_password(clave)
+
+
 def test_sin_hora_usa_la_hora_actual(docente):
     fallar(docente, 4)
     antes = datetime.now(UTC)
@@ -147,3 +217,21 @@ def test_desbloquear_borra_los_intentos_acumulados(docente):
 
 def test_desbloquear_una_cuenta_sin_bloqueo_devuelve_false(docente):
     assert servicios.desbloquear(leer(docente)) is False
+
+
+def test_desbloquear_usa_el_estado_vigente_y_no_una_copia_obsoleta(docente):
+    """La copia se leyó antes del bloqueo: desbloquear decide con lo que dice la base."""
+    copia_obsoleta = leer(docente)
+    fallar(docente, 5)
+
+    assert servicios.desbloquear(copia_obsoleta) is True
+
+    assert leer(docente).bloqueado_hasta is None
+
+
+def test_dos_copias_del_mismo_desbloqueo_dan_un_solo_exito(docente):
+    fallar(docente, 5)
+    primera, segunda = leer(docente), leer(docente)
+
+    assert servicios.desbloquear(primera) is True
+    assert servicios.desbloquear(segunda) is False

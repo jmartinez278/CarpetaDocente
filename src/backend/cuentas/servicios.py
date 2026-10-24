@@ -7,6 +7,7 @@ probar el bloqueo sin esperar (design.md de US-001, D1).
 
 from datetime import datetime, timedelta
 
+from django.contrib.auth import hashers
 from django.db import transaction
 from django.utils import timezone
 
@@ -36,15 +37,21 @@ def intentar_ingreso(usuario: Usuario, contrasena: str, ahora: datetime | None =
       reinicia el conteo.
     - Un ingreso correcto deja la cuenta sin intentos ni bloqueo.
 
-    La fila de la cuenta se bloquea con ``select_for_update`` mientras dura el
-    intento, para que dos intentos simultáneos no se pisen el conteo.
+    La fila de la cuenta se bloquea con ``select_for_update`` mientras se decide,
+    para que dos intentos simultáneos no se pisen el conteo. El hash se calcula
+    antes, fuera del bloqueo: si no, los intentos sobre una cuenta existente se
+    harían en fila y el tiempo delataría que existe. Si la contraseña cambió entre
+    el cálculo y el bloqueo, se vuelve a comprobar contra la vigente.
     """
     ahora = ahora or timezone.now()
+    hash_comprobado = Usuario.objects.values_list("password", flat=True).get(pk=usuario.pk)
+    correcta, actualizar_hash = hashers.verify_password(contrasena, hash_comprobado)
     with transaction.atomic():
         Usuario.objects.select_for_update().only("pk").get(pk=usuario.pk)
         usuario.refresh_from_db(fields=[*_CAMPOS_DE_CONTROL, "is_active", "password"])
+        if usuario.password != hash_comprobado:
+            correcta, actualizar_hash = hashers.verify_password(contrasena, usuario.password)
 
-        correcta = usuario.check_password(contrasena)
         if esta_bloqueado(usuario, ahora):
             return False
         if not correcta:
@@ -58,7 +65,12 @@ def intentar_ingreso(usuario: Usuario, contrasena: str, ahora: datetime | None =
             return False
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
-        usuario.save(update_fields=_CAMPOS_DE_CONTROL)
+        campos = list(_CAMPOS_DE_CONTROL)
+        if actualizar_hash:
+            # Como ModelBackend: un hash de un hasher anterior pasa al preferido.
+            usuario.password = hashers.make_password(contrasena)
+            campos.append("password")
+        usuario.save(update_fields=campos)
         return True
 
 
@@ -66,10 +78,15 @@ def desbloquear(usuario: Usuario) -> bool:
     """Quita el bloqueo y los intentos acumulados de la cuenta (RN-024, panel del Administrador).
 
     Devuelve si cambió algo, para que el panel registre el desbloqueo solo cuando lo hubo.
+    Decide con el estado vigente de la cuenta, con su fila bloqueada: una copia leída
+    antes del bloqueo o dos desbloqueos simultáneos no dan un resultado equivocado.
     """
-    if usuario.intentos_fallidos == 0 and usuario.bloqueado_hasta is None:
-        return False
-    usuario.intentos_fallidos = 0
-    usuario.bloqueado_hasta = None
-    usuario.save(update_fields=_CAMPOS_DE_CONTROL)
-    return True
+    with transaction.atomic():
+        Usuario.objects.select_for_update().only("pk").get(pk=usuario.pk)
+        usuario.refresh_from_db(fields=_CAMPOS_DE_CONTROL)
+        if usuario.intentos_fallidos == 0 and usuario.bloqueado_hasta is None:
+            return False
+        usuario.intentos_fallidos = 0
+        usuario.bloqueado_hasta = None
+        usuario.save(update_fields=_CAMPOS_DE_CONTROL)
+        return True

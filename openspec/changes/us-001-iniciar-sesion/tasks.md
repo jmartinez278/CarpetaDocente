@@ -151,7 +151,19 @@
 ## 9. Evidencia y commits
 
 - [x] 9.1 Completar `verificacion.md`: evidencia de cada escenario de los cuatro specs del cambio y el estado de la DoD 1 a 9 según D15 (DoD 4 no aplica hasta EN-02). Agregar los pendientes de documentación del design. Verificar: cada escenario tiene su evidencia o una nota de por qué no aplica
-- [ ] 9.2 Ya se hizo un commit por grupo o parte. Queda un solo commit, para 9.1 (`verificacion.md`): dejar los archivos en el índice, correr `uv run python scripts/verificar.py --antes-del-commit` y mostrar archivos, mensaje y veredicto. Hacerlo solo tras la aprobación explícita, con el correo noreply y sin `Co-Authored-By`; sin push. Antes del PR, el usuario corre en Codex la revisión final del diff completo contra `main` (prompt A) y se corrigen Critical e Important. Verificar: `git log main..HEAD` coincide con un commit por grupo o parte más este, y `git status` queda limpio
+- [ ] 9.2 Ya se hizo un commit por grupo o parte. Queda un solo commit, para 9.1 (`verificacion.md`): dejar los archivos en el índice, correr `uv run python scripts/verificar.py --antes-del-commit` y mostrar archivos, mensaje y veredicto. Hacerlo solo tras la aprobación explícita, con el correo noreply y sin `Co-Authored-By`; sin push. Antes del PR, el usuario corre en Codex la revisión final del diff completo contra `main` (prompt A) y se corrigen Critical e Important. Verificar: `git log main..HEAD` coincide con un commit por grupo o parte, este y los commits del grupo 10, y `git status` queda limpio
+
+## 10. Correcciones de la revisión final
+
+Hallazgos de la revisión final de Codex (`insumos/prototipo/US-001/tramo8/revision-final-codex.md`: 0 Critical, 6 Important, 2 Minor). Los Minor 7 y 8 van a la descripción del PR.
+
+- [x] 10.1 Seguridad del desbloqueo y del ingreso (hallazgos 1 a 4), con la prueba primero en cada caso:
+  - hallazgo 1: la acción "Desbloquear cuenta" exige el permiso de cambio. Prueba: un staff con solo `view_usuario` no ve la acción y un POST suyo no modifica la cuenta;
+  - hallazgos 3 y 4: `desbloquear` lee el estado vigente con la fila bloqueada (`select_for_update`), y el desbloqueo y su `log_change` ocurren en la misma transacción, por cuenta. Pruebas: una copia obsoleta de una cuenta bloqueada se desbloquea igual; dos copias del mismo desbloqueo dan un solo éxito; si `log_change` falla, el desbloqueo se revierte;
+  - hallazgo 2: el cálculo del hash de `intentar_ingreso` queda fuera del tramo con la fila bloqueada; si la contraseña cambia entre la comprobación y el bloqueo, decide la vigente y la vieja no entra. Pruebas deterministas, sin medir tiempos.
+
+  Verificar: cada prueba en rojo antes del código; en verde las pruebas de RN-024 existentes, `uv run pytest --cov` y `uv run python scripts/verificar.py --antes-del-commit`
+- [ ] 10.2 Pruebas y evidencia (hallazgos 5 y 6): pruebas de comportamiento del carrusel sin JavaScript, de la disposición a 1280 px y de los valores oscuros de los tokens; evidencia faltante de 5.1, 5.2 y 6.6 en `verificacion.md`, casillas ajustadas a lo verificado y excepciones documentadas. Verificar: los escenarios y la DoD 5 actualizados en `verificacion.md`
 
 ## Workflow follow-up
 
