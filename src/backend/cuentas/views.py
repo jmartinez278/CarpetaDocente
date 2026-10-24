@@ -61,10 +61,11 @@ class IngresoPanelView(View):
                 return redirect_to_login(siguiente, reverse("ingresar"))
             return redirect("ingresar")
         if request.user.is_staff:
-            seguro = url_has_allowed_host_and_scheme(
+            if url_has_allowed_host_and_scheme(
                 siguiente, allowed_hosts={request.get_host()}, require_https=request.is_secure()
-            )
-            return redirect(siguiente if seguro else reverse("admin:index"))
+            ):
+                return redirect(siguiente)
+            return redirect(reverse("admin:index"))
         destino = pantalla_de_inicio(request.user)
         if destino == reverse("admin:index"):
             raise PermissionDenied

@@ -180,7 +180,7 @@ def test_el_anuncio_del_envio_es_una_region_status_vacia_oculta_y_fuera_del_form
 
 
 def test_carga_ingresar_js_pero_no_alpine_ni_htmx(pagina):
-    scripts = re.findall(r"<script\b[^>]*>", pagina)
+    scripts = re.findall(r"<script\b[^>]*>", pagina, re.IGNORECASE)
 
     assert len(scripts) == 1
     assert "js/ingresar.js" in scripts[0]
@@ -334,7 +334,7 @@ def test_sin_ninguna_disponible_la_tarjeta_inicial_es_sesiones(portada):
 
 
 def test_la_portada_carga_portada_js_antes_de_alpine(portada):
-    scripts = re.findall(r"<script\b[^>]*>", portada)
+    scripts = re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE)
 
     assert len(scripts) == 2
     assert "js/portada.js" in scripts[0]
