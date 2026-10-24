@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 from datetime import datetime
@@ -741,6 +742,26 @@ def test_archivo_bloqueado_con_ctrl_c_avisa_en_stderr(
 
     [copia] = ejecutor.copias
     assert f"No se pudo borrar la copia temporal del índice: {copia}" in capsys.readouterr().err
+
+
+def test_borrar_copia_no_quita_el_acceso_al_directorio_que_no_pudo_borrar(
+    ejecutor, tmp_path, archivo_bloqueado, monkeypatch
+):
+    """En Linux, fijar S_IWRITE deja el directorio sin lectura ni acceso: hay que sumarlo."""
+    modos = {}
+    chmod = os.chmod
+
+    def espia(ruta, modo, *args, **kwargs):
+        modos[Path(ruta)] = modo
+        return chmod(ruta, modo, *args, **kwargs)
+
+    monkeypatch.setattr(os, "chmod", espia)
+    ejecutor.al_copiar = _con_un_archivo_bloqueado
+
+    verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    [copia] = ejecutor.copias
+    assert modos[copia] & stat.S_IRWXU == stat.S_IRWXU, oct(modos[copia])
 
 
 def test_borrar_copia_reintenta_los_archivos_de_solo_lectura(tmp_path):

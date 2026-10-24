@@ -345,7 +345,8 @@ def borrar_copia(copia: Path) -> list[str]:
     def reintentar(funcion: Callable[[str], object], ruta: str, _error: BaseException) -> None:
         for _intento in range(3):
             try:
-                os.chmod(ruta, stat.S_IWRITE)
+                # Se suma la escritura: fijarla dejaría un directorio sin acceso en Linux.
+                os.chmod(ruta, os.stat(ruta).st_mode | stat.S_IWRITE)
                 funcion(ruta)
                 return
             except FileNotFoundError:
