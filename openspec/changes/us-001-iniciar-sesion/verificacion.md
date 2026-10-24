@@ -277,3 +277,108 @@ La crítica del tramo 8 pasó a Codex en solo lectura (prompt A, lo corre el usu
 - Corrección: `<p class="sr-only" role="status" data-estado-ingreso>` vacía, después del formulario, y `marcarEnvio()` de `ingresar.js` la escribe y la vacía. Envío nativo y bloqueo del doble envío sin cambios; `DESIGN.md` sin tocar.
 - Estado de cada punto en `insumos/prototipo/US-001/tramo8/revision.md` (local: `insumos/` está fuera del repositorio).
 - Suite completa: 453 pasan (cobertura 96,88 %); `pytest -m e2e --browser chromium`: 51 pasan.
+
+## 9. Evidencia por escenario y DoD (9.1, D15)
+
+Fecha: 23/10/2026. Partida: rama `feature/US-001-iniciar-sesion` en `4052ab8`, sin push ni PR. Estado de las pruebas: `pytest --cov` **453 pasadas** (cobertura 96,81 % en `verificar.py --antes-del-commit`, mínimo 80 %) y `pytest -m e2e --browser chromium` **51 pasadas**. Las pruebas están en `src/backend/cuentas/tests/`; en las tablas, `ingresar` es `test_ingresar.py`, `pantallas` es `test_pantallas.py` y e2e es `test_ingresar_e2e.py`, salvo que se nombre otro archivo.
+
+Estados: **Verificado** (prueba automática o inspección que cubre el escenario); **Verificado, sin prueba automática** (solo marcado, CSS o capturas; se dice cuál); **Pendiente del PR** (solo el canal de GitHub puede darlo).
+
+### 9.1 Escenarios de `inicio-sesion` (23)
+
+| Escenario | Evidencia | Estado |
+| --- | --- | --- |
+| Camino ideal del docente | `ingresar::test_cada_rol_llega_a_su_pantalla`; e2e `test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada` | Verificado |
+| Ingreso de la dirección | `ingresar::test_cada_rol_llega_a_su_pantalla`; e2e `test_la_direccion_llega_a_su_inicio` | Verificado |
+| Ingreso del administrador | `ingresar::test_cada_rol_llega_a_su_pantalla` (rol ADMINISTRADOR a `/admin/`) | Verificado |
+| Campos vacíos | `ingresar::test_campos_vacios_muestran_su_mensaje_sin_contar_un_intento`; `pantallas::test_campos_vacios_marcan_cada_campo_y_lo_enlazan_a_su_mensaje` | Verificado |
+| Contraseña incorrecta | `ingresar::test_los_cuatro_rechazos_dan_el_mismo_mensaje_en_dos_lineas`, `test_conserva_el_usuario_pero_no_la_contrasena`; `pantallas::test_el_error_conserva_el_usuario_y_no_la_contrasena` | Verificado |
+| Cuenta desactivada | `ingresar::test_los_cuatro_rechazos_dan_el_mismo_mensaje_en_dos_lineas`; `test_backend::test_cuenta_inactiva_devuelve_none` | Verificado |
+| Usuario inexistente | `ingresar::test_la_pagina_no_distingue_un_rechazo_de_otro`; `test_backend::test_usuario_inexistente_devuelve_none_y_calcula_el_hash` | Verificado |
+| Quinto intento fallido | `test_servicios_bloqueo::test_quinto_fallo_bloquea_15_minutos_y_reinicia_el_conteo`, `test_cuatro_fallos_no_bloquean` | Verificado |
+| Contraseña correcta durante el bloqueo | `ingresar::test_cuenta_bloqueada_rechaza_la_contrasena_correcta_con_el_mismo_mensaje`; `test_backend::test_cuenta_bloqueada_con_la_clave_correcta_devuelve_none` | Verificado |
+| Intentos durante el bloqueo | `test_servicios_bloqueo::test_durante_el_bloqueo_nada_entra_ni_cuenta` | Verificado |
+| Fin del bloqueo | `test_servicios_bloqueo::test_a_los_14_59_sigue_bloqueada_y_a_los_15_00_entra` | Verificado |
+| Primer fallo después del bloqueo | `test_servicios_bloqueo::test_primer_fallo_despues_del_bloqueo_no_vuelve_a_bloquear` | Verificado |
+| Fallos con un ingreso correcto en medio | `test_servicios_bloqueo::test_un_ingreso_correcto_entre_fallos_reinicia_el_conteo` | Verificado |
+| Desbloqueo de una cuenta bloqueada | `test_admin::test_desbloquea_la_cuenta_y_lo_registra_en_su_historial`, `test_el_historial_del_panel_muestra_el_desbloqueo`, `test_despues_de_desbloquear_ingresar_acepta_la_contrasena`; historial confirmado en 4.1 | Verificado |
+| Cuenta que no estaba bloqueada | `test_admin::test_una_cuenta_sin_bloqueo_no_cambia_ni_se_registra` | Verificado |
+| Ingreso al panel sin sesión | `ingresar::test_panel_sin_sesion_termina_en_ingresar_y_vuelve_al_panel`, `test_login_del_panel_sin_sesion_lleva_a_ingresar_con_next` | Verificado |
+| Raíz sin sesión | `ingresar::test_raiz_sin_sesion_lleva_a_ingresar` | Verificado |
+| Raíz con sesión | `ingresar::test_raiz_con_sesion_lleva_a_su_pantalla` | Verificado |
+| Ingresar con la sesión ya iniciada | `ingresar::test_ingresar_con_la_sesion_iniciada_lleva_a_su_pantalla` | Verificado |
+| Pantalla de rol sin sesión | `test_acceso::test_sin_sesion_lleva_a_ingresar_con_next`, `test_cada_pantalla_sin_sesion_lleva_a_ingresar`; `ingresar::test_next_seguro_lleva_a_la_pagina_pedida` (vuelve a `/docente/`) | Verificado |
+| Docente en la pantalla de la dirección | `test_acceso::test_cada_pantalla_lleva_a_otro_rol_a_la_suya`, `test_con_otro_rol_lleva_a_su_pantalla_sin_mostrar_la_vista` | Verificado |
+| Dirección en la pantalla del docente | Las mismas de la fila anterior (parametrizadas por rol) | Verificado |
+| Usuario sin acceso al panel | `ingresar::test_docente_en_el_panel_termina_en_su_portada_sin_ciclo`, `test_administrador_sin_is_staff_recibe_403_sin_ciclo` | Verificado |
+
+### 9.2 Escenarios de `pantallas-de-inicio` (21)
+
+| Escenario | Evidencia | Estado |
+| --- | --- | --- |
+| Contenido de la pantalla | `pantallas::test_los_textos_aparecen_en_el_orden_del_spec`, `test_sin_escudo_ni_menu_ni_enlaces`, `test_el_nombre_de_la_ie_es_el_unico_h1` | Verificado |
+| Mensaje de error sobre el formulario | `pantallas::test_el_error_va_sobre_la_tarjeta_con_role_alert_y_dos_lineas` (`role="alert"`, ícono, dos líneas, sobre el formulario) | Verificado |
+| Ver la contraseña | e2e `test_mostrar_contrasena_alterna_la_vista`; `pantallas::test_el_boton_mostrar_contrasena_nace_oculto_y_sin_presionar` | Verificado |
+| Sin JavaScript (contraseña) | e2e `test_sin_javascript_no_hay_boton_y_el_formulario_se_envia` | Verificado |
+| Envío en curso | e2e `test_envio_en_curso_cambia_el_boton_y_deja_los_campos_de_solo_lectura`; anuncio en la región `status` (C8-01): `pantallas::test_el_anuncio_del_envio_es_una_region_status_vacia_oculta_y_fuera_del_formulario` y 5 pruebas e2e (Enter, botón, campo vacío, restablecer y sin la región) | Verificado |
+| Portada al entrar | `pantallas::test_la_portada_saluda_con_el_nombre_completo`, `test_tres_tarjetas_en_orden_con_subtitulo_e_insignia`, `test_la_portada_no_inventa_grado_ni_tratamiento` | Verificado |
+| Tres dimensiones en "Próximamente" | `pantallas::test_las_tarjetas_proximamente_son_botones_sin_enlace`; `test_dimensiones::test_al_cerrar_us_001_ninguna_esta_disponible` | Verificado |
+| Toque en una tarjeta "Próximamente" | `test_portada_e2e::test_tarjeta_proximamente_avisa_sin_mover_la_miniatura` (texto, misma dirección, miniatura quieta); `pantallas::test_cada_tarjeta_proximamente_tiene_su_region_aria_live_vacia` | Verificado |
+| Dimensión activada por su historia | `pantallas::test_una_dimension_disponible_enlaza_a_su_pantalla` (con `monkeypatch`; ver 5.7) | Verificado |
+| Bandera activa sin pantalla | `test_dimensiones::test_toda_dimension_disponible_resuelve_su_pantalla`, `test_la_revision_detecta_una_bandera_activa_sin_pantalla` | Verificado |
+| Chip de una tarjeta | `test_portada_e2e::test_chip_notas_muestra_la_tarjeta_sin_tocar_el_historial` | Verificado |
+| Carrusel sin JavaScript | `pantallas::test_chips_accesos_y_carrusel_tus_accesos`: los chips son enlaces `href="#c-…"` y el carrusel es una región con `tabindex="0"` | Verificado, sin prueba automática en un navegador sin JavaScript (solo el marcado) |
+| Tarjeta inicial | `test_dimensiones::test_sin_ninguna_disponible_abre_en_la_primera`, `test_abre_en_la_primera_disponible_en_el_orden_de_las_tarjetas`; `pantallas::test_sin_ninguna_disponible_la_tarjeta_inicial_es_sesiones` | Verificado |
+| Computadora | CSS: desde 960 px `.dimensiones` es una grilla de 3 columnas y `.chips` y `.puntos` van en `display: none` (`app.css`); capturas de 1280 de 8.1 (claro y oscuro), donde Codex confirma las tres tarjetas en fila | Verificado, sin prueba automática (CSS y capturas) |
+| Inicio de la dirección en el Sprint 1 | `pantallas::test_la_direccion_saluda_y_muestra_el_estado_vacio`, `test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_scripts` | Verificado |
+| Barra y pie | `pantallas::test_barra_con_el_nombre_de_la_ie_y_sin_menu`, `test_pie_al_final_y_titulo_de_la_pagina` | Verificado |
+| Preferencia oscura | `@media (prefers-color-scheme: dark)` redefine los tokens en `app.css`; las 20 pruebas de axe y las 18 de desborde corren también con la preferencia oscura; capturas oscuras de 8.1 frente a `capturas/final/` | Verificado; el aspecto en oscuro lo juzgan las capturas y la crítica, no una prueba de valores |
+| Plantillas sin colores escritos | `test_plantillas::test_plantilla_sin_colores_ni_estilos_en_linea`; `git grep` de hex y `style=` en 7.3: 0 coincidencias | Verificado |
+| Revisión de cada pantalla (axe) | `test_accesibilidad_e2e::test_sin_infracciones_graves_de_accesibilidad`: 5 vistas × 2 temas × 2 anchos = 20, sin `critical` ni `serious` (6.4); corridas de nuevo con C8-01 dentro de los 51 e2e | Verificado |
+| Pantallas a 320 px | `test_portada_e2e::test_el_documento_no_se_desplaza_en_horizontal`: 3 pantallas × 3 anchos × 2 temas = 18 | Verificado |
+| Primera visita con Slow 4G | `test_rendimiento_e2e::test_inicio_de_sesion_con_slow_4g`: 48,7 KB y 1,52 s (6.5) | Verificado; el rojo del umbral no se vio |
+
+### 9.3 Escenarios de los deltas `entorno-desarrollo` e `integracion-continua` (5)
+
+| Escenario | Evidencia | Estado |
+| --- | --- | --- |
+| Visita a la página inicial (`entorno-desarrollo`) | `ingresar::test_raiz_sin_sesion_lleva_a_ingresar`; e2e `test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada` (la raíz lleva a `/ingresar/`, en español, con el nombre y las tres dimensiones en orden) | Verificado |
+| Recursos de interfaz cargados (`entorno-desarrollo`) | e2e `test_de_la_raiz_…` (`app.css` con 200; `typeof Alpine` indefinido en `/ingresar/` y objeto en `/docente/`); `pantallas::test_carga_ingresar_js_pero_no_alpine_ni_htmx`, `test_la_portada_carga_portada_js_antes_de_alpine` | Verificado |
+| Página inicial en el navegador (`integracion-continua`) | La misma e2e `test_de_la_raiz_…` | Verificado en local; **pendiente del PR** en el trabajo `Playwright` |
+| Accesibilidad y carga en el canal (`integracion-continua`) | Las 20 pruebas de axe y la de Slow 4G corren dentro de `pytest -m e2e` (README, "Pruebas de punta a punta") | Verificado en local; **pendiente del PR** en el canal |
+| Prueba de punta a punta fallida (`integracion-continua`) | Sin cambio respecto de EN-08, cuyo PR #53 lo demostró. US-001 no toca el canal | No aplica a este cambio; se comprueba al abrir el PR |
+
+Total: 23 + 21 + 5 = 49 escenarios, ninguno sin evidencia. Dos quedan "sin prueba automática" (Carrusel sin JavaScript y Computadora) y dos del canal dependen del PR.
+
+### 9.4 DoD 1 a 9 (D15)
+
+| N.° | Estado | Evidencia |
+| --- | --- | --- |
+| 1 | Cumple en local; **pendiente del PR** | 96,81 % en `verificar.py` (mínimo 80 %). La puerta Sonar way (cobertura del código nuevo ≥ 80 % y duplicación ≤ 3 %) solo se ve en el PR. `ingresar.js` y `portada.js` quedan fuera de la cobertura por D12 |
+| 2 | Cumple en local; **pendiente del PR** | Ruff sin hallazgos (7.1 y `verificar.py`). CodeQL y SonarQube Cloud solo corren en el PR |
+| 3 | **Pendiente (equipo)** | Aprobación de otra integrante en el PR; también ratifica DESIGN.md 0.3.1 |
+| 4 | No aplica | Vista previa de Vercel hasta EN-02 |
+| 5 | Cumple en local; **pendiente del PR** | Los escenarios de 9.1 a 9.3 pasan; ruta ideal de punta a punta: `test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada`; 51 e2e en verde. El resultado del canal se ve en el PR |
+| 6 | Cumple | RN-024 con pruebas propias en la capa de servicios: `test_servicios_bloqueo.py` (13 pruebas), `test_backend.py` (9) y las del panel en `test_admin.py` (D10, secciones 2 y 4) |
+| 7 | Cumple | Informe de axe: 20 combinaciones (5 vistas × claro y oscuro × 360 y 1280) sin `critical` ni `serious` (6.4), vuelto a correr tras C8-01 |
+| 8 | Cumple | Revisión del diff (7.3): solo datos ficticios ("Ana Quispe", "Rosa Huamán") y contraseñas generadas por cada prueba; ninguna coincidencia de `insumos/`, `PRODUCT.md`, `PENDIENTES_TESIS.md` ni `.env` en `git ls-files`; ningún dato de la I.E. inventado |
+| 9 | Cumple | Este cambio en OpenSpec, docstrings de los módulos y de las pruebas, catálogo de rutas 1.1.0 (3.6), README (pruebas e2e, accesibilidad, Slow 4G y fila `Playwright`) y documento 06 en V_1_5_0 (con 02/01 en V_1_4_0 y 07 en V_1_2_0, ya en la rama) |
+
+### 9.5 Crítica del tramo 8 y deuda
+
+- **C8-01** (gravedad 2, nuevo): aplicada en `4052ab8`, con su prueba primero (8.4).
+- **R-29 / T-07** (gravedad 2, heredado): **queda para el equipo.** La ayuda remite a "el administrador" sin una referencia verificable; depende de T-07 (dato de la I.E. pendiente). No se aplicó y no se inventó ningún contacto.
+- **Minor 2 a 5 de la revisión de cierre del grupo 8:** van a la descripción del PR, no se corrigen ahora. (2) La consulta de la región de estado en `ingresar.js` está dentro del bucle por formulario pero con alcance de `document`. (3) `test_con_un_campo_vacio_no_se_anuncia_nada` podría comprobar también que el botón sigue en "Ingresar" y que no hay `aria-busy`. (4) `spec.md` de `pantallas-de-inicio` y `design.md` D6 no mencionan la región de estado: una línea en `design.md` al archivar. (5) La prueba de marcado supone un `<p>` y un solo `</form>`. El Minor 1 (guarda contra `null`) se corrigió antes del commit.
+- **Detalles menores de Codex** (títulos de página distintos, orientación ante intentos repetidos, pista bajo Usuario, espacio vacío de las miniaturas, `scrollWidth` no medido por Codex): deuda, a la descripción del PR.
+- **Detector:** las 18 entradas son R-10 y R-30, ya aceptadas. La exención de `.impeccable/config.json` no cubre `/docente/`: deuda Minor, sin cambiar la configuración.
+- **Limitación conocida de D13:** dos `pytest --cov` comunes a la vez en la misma máquina pueden chocar en `.coverage`; no pasa en CI. La tarea 1.3 sigue sin marcar.
+
+### 9.6 Pendientes de documentación del design
+
+Ninguno se editó en US-001. Siguen **pendientes** de que el equipo los apruebe y se propongan aparte, con subida de versión (`scripts/subir_version.py`):
+
+- **Documento 06 (RF-001) y documento 02/01 (US-001), escenario "Flujo alternativo válido":** dicen "panel de consolidados"; US-001 lleva a la dirección a su inicio con un estado vacío hasta US-040 (D8).
+- **Documento 10 o README:** HTMX no se carga en las pantallas que no lo usan (D6).
+- **Tratamiento en el saludo ("Prof.", "Lic."):** hoy no hay dónde guardarlo (D8); si el equipo lo quiere, es un campo nuevo en otra historia.
+- **T-07 / R-29:** la forma de ubicar al administrador y la orientación ante intentos repetidos son decisión del equipo (`docs/PENDIENTES_TESIS.md`, fuera del repositorio).
+- **Fuera del alcance de US-001, para después:** página propia de CSRF y de sesión vencida (US-002); Safari de iPhone y WebKit en un equipo real (EN-07); límite por IP si el piloto lo muestra (EN-04); ampliar la exención del detector a `/docente/`.
