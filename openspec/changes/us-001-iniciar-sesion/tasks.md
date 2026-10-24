@@ -151,7 +151,7 @@
 ## 9. Evidencia y commits
 
 - [x] 9.1 Completar `verificacion.md`: evidencia de cada escenario de los cuatro specs del cambio y el estado de la DoD 1 a 9 según D15 (DoD 4 no aplica hasta EN-02). Agregar los pendientes de documentación del design. Verificar: cada escenario tiene su evidencia o una nota de por qué no aplica
-- [ ] 9.2 Ya se hizo un commit por grupo o parte. Queda un solo commit, para 9.1 (`verificacion.md`): dejar los archivos en el índice, correr `uv run python scripts/verificar.py --antes-del-commit` y mostrar archivos, mensaje y veredicto. Hacerlo solo tras la aprobación explícita, con el correo noreply y sin `Co-Authored-By`; sin push. Antes del PR, el usuario corre en Codex la revisión final del diff completo contra `main` (prompt A) y se corrigen Critical e Important. Verificar: `git log main..HEAD` coincide con un commit por grupo o parte, este y los commits del grupo 10, y `git status` queda limpio
+- [x] 9.2 Ya se hizo un commit por grupo o parte. Queda un solo commit, para 9.1 (`verificacion.md`): dejar los archivos en el índice, correr `uv run python scripts/verificar.py --antes-del-commit` y mostrar archivos, mensaje y veredicto. Hacerlo solo tras la aprobación explícita, con el correo noreply y sin `Co-Authored-By`; sin push. Antes del PR, el usuario corre en Codex la revisión final del diff completo contra `main` (prompt A) y se corrigen Critical e Important. Verificar: `git log main..HEAD` coincide con un commit por grupo o parte, este y los commits del grupo 10, y `git status` queda limpio
 
 ## 10. Correcciones de la revisión final
 
