@@ -3,7 +3,7 @@
 .env.*
 !.env.example
 
-# Material del docente y exports de Stitch (carpeta local)
+# Material del docente y prototipos de diseño (carpeta local)
 insumos/
 
 # Python / entornos virtuales
@@ -17,6 +17,8 @@ env/
 .coverage
 coverage.xml
 htmlcov/
+# Salida completa de pytest que guarda scripts/verificar.py cuando falla
+.verificar/
 
 # Node (compilación de Tailwind)
 node_modules/
@@ -26,6 +28,8 @@ staticfiles/
 # CSS y JS compilados desde src/frontend
 src/backend/static/dist/
 media/
+# Informes de las pruebas de punta a punta (axe, trazas de Playwright)
+test-results/
 *.sqlite3
 
 # Editor y sistema operativo
@@ -38,5 +42,12 @@ desktop.ini
 # Pendientes para la tesis: se llevan en local
 docs/PENDIENTES_TESIS.md
 
-# Configuración personal de Claude Code (la skill sí se sube)
+# Impeccable: estado local de diseño. PRODUCT.md entra solo cuando el equipo lo revise
+**/.impeccable/
+/PRODUCT.md
+
+# Configuración personal de Claude Code
 .claude/settings.local.json
+# Comandos y skills de OpenSpec para Claude Code: los genera `openspec init` en cada equipo
+.claude/commands/opsx/
+.claude/skills/openspec-*/

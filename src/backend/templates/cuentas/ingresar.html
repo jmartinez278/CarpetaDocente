@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}Ingresar · I.E. Virgen del Carmen{% endblock %}
+
+{% block scripts %}<script src="{% static 'js/ingresar.js' %}" defer></script>{% endblock %}
+
+{% block contenido %}
+<main class="mx-auto flex w-full max-w-110 flex-1 flex-col px-4 pt-8 min-[960px]:max-w-140 min-[960px]:justify-center min-[960px]:px-6 min-[960px]:pt-12">
+  <header class="text-center">
+    <div class="mx-auto mb-4 size-14 min-[960px]:mb-6 min-[960px]:size-20" aria-hidden="true"></div>
+    <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">I.E. Virgen del Carmen</h1>
+    <p class="mt-1 text-subheading leading-[26px] min-[960px]:mt-2 min-[960px]:text-xl min-[960px]:leading-7">Huayucachi</p>
+    <p class="mt-2 text-caption leading-5 text-texto-suave">Sesiones · Notas · Asistencia</p>
+  </header>
+  {% if form.non_field_errors %}
+  <div class="mensaje mensaje--error mt-6 min-[960px]:mx-auto min-[960px]:w-full min-[960px]:max-w-110" role="alert">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}<p>Revisa tus datos. Si el problema sigue, pide ayuda al administrador.</p></div></div>
+  {% endif %}
+  <form class="flex flex-col gap-4 rounded-dimension border border-linea bg-superficie p-6 {% if form.non_field_errors %}mt-4{% else %}mt-8{% endif %} min-[960px]:mx-auto min-[960px]:w-full min-[960px]:max-w-110 min-[960px]:p-8" method="post" novalidate aria-label="Iniciar sesión" data-formulario-ingreso>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% include "componentes/campo.html" with campo=form.username autocompletar="username" %}
+    {% include "componentes/campo.html" with campo=form.password autocompletar="current-password" es_clave=True %}
+    <button class="boton-principal" type="submit" data-boton-ingresar>Ingresar</button>
+    <p class="text-pretty text-caption leading-5 text-texto-suave">Si olvidaste tu contraseña, pide al administrador que la restablezca.</p>
+  </form>
+  <p class="sr-only" role="status" data-estado-ingreso></p>
+</main>
+{% include "componentes/pie.html" %}
+{% endblock %}

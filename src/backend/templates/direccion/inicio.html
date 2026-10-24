@@ -1,0 +1,17 @@
+{% extends "marco.html" %}
+
+{% block principal %}
+<main class="w-full min-w-0 flex-1 min-[960px]:py-8">
+  <div class="mx-auto w-full max-w-280 px-4 pt-8 min-[960px]:px-6 min-[960px]:pt-0">
+    <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">Hola, {{ user.get_full_name|default:user.username }}</h1>
+    <p class="mt-2 text-subheading leading-[26px] text-texto-suave">Dirección</p>
+  </div>
+  <section class="mx-auto mt-8 w-full max-w-280 px-4 pb-12 min-[960px]:mt-12 min-[960px]:px-6 min-[960px]:pb-8" aria-labelledby="consolidados-titulo">
+    <h2 class="font-display text-heading leading-[30px] font-semibold" id="consolidados-titulo">Consolidados</h2>
+    <div class="vacio">
+      {% include "iconos/inbox.svg" %}
+      <p class="vacio__texto">Los consolidados de notas y asistencia estarán aquí en una próxima versión.</p>
+    </div>
+  </section>
+</main>
+{% endblock %}

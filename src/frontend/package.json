@@ -11,9 +11,11 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
+    "axe-core": "^4.14.0",
     "tailwindcss": "^4.3.3"
   },
   "dependencies": {
+    "@fontsource/besley": "^5.3.0",
     "alpinejs": "^3.17.4",
     "htmx.org": "~2.0.11"
   }

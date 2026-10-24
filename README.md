@@ -9,7 +9,7 @@ El sistema cubre tres dimensiones de la gestión pedagógica del docente de prim
 
 Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de diseño y alcance las toma el equipo.
 
-**Stack:** Django · PostgreSQL · HTMX · Tailwind CSS · Alpine.js ([ver justificación](<docs/01 Inicio/10. Stack tecnológico V_1_2_0.md>))
+**Stack:** Django · PostgreSQL · HTMX · Tailwind CSS · Alpine.js ([ver justificación](<docs/01 Inicio/10. Stack tecnológico V_1_3_0.md>))
 
 **Equipo:** Martinez Llanos Marco Jhair (Director de Proyecto) · Cuicapuza Remigio Nayely Nilda · Vera Zea Jhoanna Hade
 **Asesor:** Ing. Elvis Wilfredo Carmen Delgadillo
@@ -30,20 +30,20 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 3. [Declaración de la visión](<docs/01 Inicio/03. Declaración de la visión V_1_1_0.md>)
 4. [Registro de supuestos y restricciones](<docs/01 Inicio/04. Registro de supuestos y restricciones V_1_2_0.md>)
 5. [Registro de interesados](<docs/01 Inicio/05. Registro de interesados V_1_0_0.md>)
-6. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_4_0.md>)
-7. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_1_0.md>)
+6. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_5_0.md>)
+7. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_2_0.md>)
 8. [Usuarios](<docs/01 Inicio/08. Usuarios V_1_1_0.md>)
 9. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_1_0.md>)
-10. [Stack tecnológico](<docs/01 Inicio/10. Stack tecnológico V_1_2_0.md>)
+10. [Stack tecnológico](<docs/01 Inicio/10. Stack tecnológico V_1_3_0.md>)
 11. [Base de datos](<docs/01 Inicio/11. Base de datos V_1_3_0.md>)
 12. [Modelo C4](<docs/01 Inicio/12. Modelo C4 V_1_1_0.md>)
 13. [Restricciones](<docs/01 Inicio/13. Restricciones V_1_1_0.md>)
 
 ### Fase 02: Planificación
-1. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_3_0.md>)
+1. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_4_0.md>)
 2. Tablero GitHub Projects *(en elaboración)*
 3. [Registro de riesgos](<docs/02 Planificación/03 Registro de riesgos V_1_1_0.md>)
-4. [Presupuesto del proyecto](<docs/02 Planificación/04 Presupuesto del proyecto V_1_0_0.md>)
+4. [Presupuesto del proyecto](<docs/02 Planificación/04 Presupuesto del proyecto V_1_1_0.md>)
 
 ### Fase 03: Implementación
 - [Catálogo de rutas de la aplicación](<docs/03 Implementación/Catálogo de rutas.md>)
@@ -59,6 +59,8 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 | [Node.js](https://nodejs.org/) 24 | Compilar Tailwind CSS en la laptop | No | Sí |
 
 uv descarga por sí mismo Python 3.13 (fijado en `.python-version`); no hace falta instalarlo aparte.
+
+Cada integrante corre una vez en su equipo `npx -y impeccable@4.7.0 telemetry off`, que apaga la telemetría de Impeccable (flujo de diseño, `CLAUDE.md`, sección Interfaz).
 
 ### 1. Variables de entorno
 
@@ -144,6 +146,18 @@ Las pruebas marcadas `e2e` abren la aplicación en Chromium. `uv run pytest` no 
    $env:DJANGO_ALLOW_ASYNC_UNSAFE = "true"; uv run pytest -m e2e --browser chromium
    ```
 
+Las pruebas `e2e` de US-001 incluyen la revisión de accesibilidad con axe-core (`test_accesibilidad_e2e.py`) y la medición de carga con Slow 4G (`test_rendimiento_e2e.py`). axe-core llega con `npm ci` del paso 2. Para correr solo una de las dos, con el mismo `DJANGO_ALLOW_ASYNC_UNSAFE` del paso 3 (Git Bash):
+
+```bash
+# Solo accesibilidad: falla ante infracciones critical o serious y guarda el informe en test-results/
+DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium src/backend/cuentas/tests/test_accesibilidad_e2e.py
+
+# Solo rendimiento (Slow 4G, sin caché): -s imprime los KB transferidos y los segundos hasta que es usable
+DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium src/backend/cuentas/tests/test_rendimiento_e2e.py -s
+```
+
+En PowerShell, definir antes `$env:DJANGO_ALLOW_ASYNC_UNSAFE = "true"` y quitar el prefijo del comando. `test-results/` no se versiona.
+
 `DJANGO_ALLOW_ASYNC_UNSAFE` hace falta porque Playwright deja abierto un bucle asíncrono en el hilo de la prueba y Django rechaza el acceso a la base desde ahí (`SynchronousOnlyOperation`). Va solo en este comando y en el canal, nunca en `.env` ni en `settings.py` (en PowerShell queda definida hasta cerrar esa terminal).
 
 ### Problemas frecuentes
@@ -180,21 +194,10 @@ Se usa en dos momentos:
 
 | Momento | Quién | Comando | Qué cambia |
 |---|---|---|---|
-| Antes de cada commit | Claude Code, antes de proponer el commit | `uv run python scripts/verificar.py --antes-del-commit` | Lo que va a entrar debe estar en el índice (`git add`). Falla solo si quedan archivos modificados fuera del índice o sin seguimiento. Los archivos prohibidos se buscan en el índice |
+| Antes de cada commit | Claude Code, antes de proponer el commit | `uv run python scripts/verificar.py --antes-del-commit` | Lo que va a entrar debe estar en el índice (`git add`). Ruff y `pytest --cov` corren sobre una copia del índice en la carpeta temporal del sistema, que se borra al terminar (si algo no se puede borrar, avisa con la ruta). Usan el `.venv` del repo sin sincronizarlo, así que avisa si en el índice cambian `pyproject.toml` o `uv.lock` (correr `uv sync` antes). Las variables de `.env` pasan en el entorno, sin copiar el archivo. Los cambios fuera del índice y los archivos sin seguimiento no hacen fallar: salen como aviso ("Fuera de este commit"). No toca la carpeta de trabajo, el índice, `HEAD` ni el stash. Los archivos prohibidos se buscan en el índice |
 | Antes de pedir revisión | Quien abre el PR | `uv run python scripts/verificar.py --pr 53` | Todo debe estar en commits: `git status` limpio. Con `--pr` y `gh` instalado, revisa además los checks del PR y que tenga una aprobación. La plantilla del PR lo pide |
 
 Para dejar constancia en `verificacion.md`: `uv run python scripts/verificar.py --markdown` imprime un bloque con fecha, resultados, salidas resumidas y cobertura.
-
-### Copia para el Proyecto de claude.ai
-
-```bash
-uv run python scripts/copiar_para_proyecto.py                      # en ../_para_Proyecto/CarpetaDocente
-uv run python scripts/copiar_para_proyecto.py --destino D:/copia   # en otra carpeta
-```
-
-Copia a una carpeta fuera del repositorio solo lo útil para el chat del Proyecto: `docs/`, `openspec/`, `README.md`, `CLAUDE.md`, `DESIGN.md`, `pyproject.toml` y, de `src/`, los `models.py` que definen modelos (no el vacío que crea Django), los `services.py`, `config/settings.py` y `config/urls.py`. Quedan fuera las pruebas, las migraciones, el resto del código, las plantillas, el frontend, `scripts/`, Docker y la configuración de herramientas. La carpeta por defecto se llama `CarpetaDocente`, el nombre con que se sube al Proyecto. Muestra cuántos archivos copió, el tamaño total y los 5 más pesados. Si la carpeta ya existe, pregunta antes de reemplazarla.
-
-> Genera la copia desde main actualizada (git switch main y git pull); desde otra rama la copia lleva esa versión de los documentos.
 
 ### Subir la versión de un documento
 
@@ -215,7 +218,7 @@ Cada Pull Request hacia `main`, y cada push a `main`, pasa por el workflow `CI` 
 |---|---|---|
 | `Ruff` | Estilo, formato y reglas de seguridad `S` (Bandit), con las reglas de `pyproject.toml`. Los problemas aparecen como anotaciones en las líneas del PR | `uv run ruff check .` y `uv run ruff format --check .` |
 | `Pruebas y cobertura` | Todas las pruebas, menos las `e2e`, contra un PostgreSQL 17 temporal. Falla si una prueba falla o si la cobertura total baja de 80 % | Con `db` levantado: `uv run pytest --cov` |
-| `Playwright` | Compila el CSS y abre la página inicial en Chromium (pruebas `e2e`) | Los tres pasos de [Pruebas de punta a punta](#pruebas-de-punta-a-punta-playwright) |
+| `Playwright` | Compila el CSS (`npm ci` incluye axe-core) y corre en Chromium las pruebas `e2e`: inicio de sesión hasta la pantalla del rol, portada, accesibilidad (axe-core, ambos temas) y carga con Slow 4G | Los tres pasos de [Pruebas de punta a punta](#pruebas-de-punta-a-punta-playwright) |
 | `SonarQube Cloud` | Sube el análisis y la cobertura (`coverage.xml`) a SonarQube Cloud. Solo falla si el análisis no se pudo subir | No se reproduce: necesita el token. El informe que sube se genera con `uv run pytest --cov --cov-report=xml` |
 | `SonarCloud Code Analysis` | Puerta de calidad **Sonar way** sobre el código nuevo del PR: cobertura de 80 % o más, duplicación de 3 % o menos, calificación A en fiabilidad, seguridad y mantenibilidad, y *hotspots* revisados. La publica la aplicación de SonarQube Cloud | No se reproduce: se ve en SonarQube Cloud, en el PR |
 | CodeQL | Análisis de seguridad de Python, JavaScript y los workflows. Se bloquea la fusión con alertas de severidad alta o crítica | No se reproduce: las alertas aparecen en el PR y en *Security → Code scanning*. Ruff con las reglas `S` cubre una parte en la laptop |

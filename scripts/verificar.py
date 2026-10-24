@@ -1,7 +1,7 @@
 """Verificación antes de un commit o PR: las comprobaciones que antes se hacían a mano.
 
 Uso:
-    uv run python scripts/verificar.py --antes-del-commit  # con lo del commit en el índice
+    uv run python scripts/verificar.py --antes-del-commit  # Ruff y pytest sobre el índice
     uv run python scripts/verificar.py                  # veredicto en la terminal
     uv run python scripts/verificar.py --pr 53          # además, checks y aprobación del PR (gh)
     uv run python scripts/verificar.py --markdown       # bloque listo para verificacion.md
@@ -11,18 +11,32 @@ Sale con 0 si el veredicto es PASA y con 1 si es NO PASA.
 
 import argparse
 import json
+import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
+import tempfile
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 
 import reglas
 
 UMBRAL_COBERTURA = 80
+RAIZ = Path(__file__).resolve().parent.parent
+# Salida completa de pytest cuando falla, para no perder el detalle (D13 de US-001).
+REGISTROS = RAIZ / ".verificar"
 DOMINIO_NOREPLY = "@users.noreply.github.com"
+# Antes del commit, Ruff y pytest corren en una copia del índice fuera del repo, con el
+# .venv de este script (uv run) sin sincronizar y las variables de .env en el entorno.
+ENTORNO_VIRTUAL = Path(sys.prefix)
+ARCHIVO_ENV = RAIZ / ".env"
+DEPENDENCIAS = ("pyproject.toml", "uv.lock")
+_LINEA_ENV = re.compile(r"\A(?:export )?([A-Za-z_0-9]+)=(.*)\Z")
 
 RAMA = ("git", "rev-parse", "--abbrev-ref", "HEAD")
 ESTADO = ("git", "status", "--porcelain")
@@ -51,6 +65,11 @@ def comando_log(base: str) -> tuple[str, ...]:
 def comando_atraso(base: str) -> tuple[str, ...]:
     # Solo la referencia local origin/<base>: no hace fetch ni usa la red.
     return ("git", "rev-list", "--count", f"{base}..origin/{base}")
+
+
+def comando_copia(carpeta: Path) -> tuple[str, ...]:
+    # Con --prefix, git escribe los archivos del índice en esa carpeta y no toca el índice.
+    return ("git", "checkout-index", "--all", f"--prefix={carpeta.as_posix()}/")
 
 
 def comando_checks(pr: str) -> tuple[str, ...]:
@@ -113,19 +132,27 @@ class Informe:
         return lista
 
 
-Ejecutor = Callable[[tuple[str, ...]], Salida]
+Ejecutor = Callable[..., Salida]
 
 
-def ejecutar(comando: tuple[str, ...]) -> Salida:
-    """Corre el comando sin shell y junta stdout y stderr, como se ven en la terminal."""
+def ejecutar(
+    comando: tuple[str, ...], entorno: dict[str, str] | None = None, carpeta: Path | None = None
+) -> Salida:
+    """Corre el comando sin shell y junta stdout y stderr, como se ven en la terminal.
+
+    ``entorno`` agrega variables a las de la terminal solo para ese comando, y
+    ``carpeta`` lo corre en otra carpeta.
+    """
     try:
         proceso = subprocess.run(
             list(comando),
+            cwd=carpeta,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             encoding="utf-8",
             errors="replace",
+            env={**os.environ, **entorno} if entorno else None,
             check=False,
         )
     except FileNotFoundError:
@@ -178,13 +205,30 @@ def _fuera_del_indice(linea: str) -> bool:
     return linea.startswith("??") or linea[1:2] != " "
 
 
-def _revisar_arbol(ejecutar: Ejecutor, antes_del_commit: bool) -> list[Resultado]:
+def _avisos_del_indice(cambios: list[str]) -> list[str]:
+    """Lo que queda fuera del commit y las dependencias que cambian en el índice."""
+    avisos = []
+    fuera = [f"- {linea}" for linea in cambios if _fuera_del_indice(linea)]
+    if fuera:
+        avisos.append("\n".join(["Fuera de este commit (no se verifica):", *fuera]))
+    for linea in cambios:
+        if linea[0] not in " ?" and linea[3:] in DEPENDENCIAS:
+            avisos.append(
+                f"Cambia {linea[3:]} en el índice: el .venv no se sincroniza en la copia, "
+                "corre uv sync"
+            )
+    return avisos
+
+
+def _revisar_arbol(ejecutar: Ejecutor, antes_del_commit: bool) -> tuple[list[Resultado], list[str]]:
     estado = ejecutar(ESTADO)
     cambios = [linea for linea in estado.texto.splitlines() if linea.strip()]
+    avisos = []
     if antes_del_commit:
-        # Antes del commit lo que va a entrar está en el índice: solo sobra lo que no.
-        nombre_estado = "Todo lo del commit está en el índice"
-        cambios = [linea for linea in cambios if _fuera_del_indice(linea)]
+        # Solo cuenta el índice: lo que está fuera de él se avisa y no hace fallar.
+        nombre_estado = "git status sin errores"
+        avisos = _avisos_del_indice(cambios)
+        cambios = []
         nombre_prohibidos = "Sin archivos prohibidos en el índice"
     else:
         nombre_estado = "git status limpio"
@@ -197,18 +241,83 @@ def _revisar_arbol(ejecutar: Ejecutor, antes_del_commit: bool) -> list[Resultado
     return [
         Resultado(nombre_estado, not cambios, cambios, ESTADO, _ultimas_lineas(estado.texto)),
         Resultado(nombre_prohibidos, not prohibidos, prohibidos),
-    ]
+    ], avisos
 
 
-def _revisar_calidad(ejecutar: Ejecutor) -> tuple[list[Resultado], float | None]:
+def ruta_legible(archivo: Path) -> str:
+    """Ruta relativa a la raíz del repo si está dentro de él; si no, la ruta completa."""
+    try:
+        return archivo.relative_to(RAIZ).as_posix()
+    except ValueError:
+        return str(archivo)
+
+
+def _guardar_salida(registros: Path, momento: datetime, texto: str) -> Path:
+    registros.mkdir(parents=True, exist_ok=True)
+    archivo = registros / f"pytest-{momento:%Y%m%d-%H%M%S}.txt"
+    archivo.write_text(texto, encoding="utf-8")
+    return archivo
+
+
+def _datos_de_cobertura() -> Path:
+    """Archivo de cobertura propio de esta ejecución (D13 de US-001).
+
+    Con el ``.coverage`` de la raíz, otro pytest corriendo al mismo tiempo le borra
+    o le mezcla los datos y la corrida termina en INTERNALERROR.
+    """
+    return RAIZ / ".verificar" / f".coverage-{os.getpid()}"
+
+
+def leer_env(archivo: Path) -> dict[str, str]:
+    """Variables de ``.env`` como las lee django-environ, sin escribirlas en ningún archivo."""
+    try:
+        texto = archivo.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return {}
+    variables = {}
+    for linea in texto.splitlines():
+        if encontrada := _LINEA_ENV.match(linea.strip()):
+            clave, valor = encontrada.groups()
+            if len(valor) >= 2 and valor[0] == valor[-1] and valor[0] in "'\"":
+                valor = valor[1:-1]
+            variables[clave] = valor
+    return variables
+
+
+def _entornos_de_la_copia(copia: Path) -> tuple[dict[str, str], dict[str, str]]:
+    """Entorno de Ruff y de pytest en la copia del índice."""
+    uv = {"UV_PROJECT_ENVIRONMENT": str(ENTORNO_VIRTUAL), "UV_NO_SYNC": "1"}
+    # Como en settings.py, lo que ya está en la terminal tiene prioridad sobre .env.
+    env = {
+        clave: valor for clave, valor in leer_env(ARCHIVO_ENV).items() if clave not in os.environ
+    }
+    return uv, {**env, **uv, "COVERAGE_FILE": str(copia / ".coverage")}
+
+
+def _revisar_calidad(
+    ejecutar: Ejecutor,
+    registros: Path | None,
+    ahora: Callable[[], datetime],
+    copia: Path | None = None,
+) -> tuple[list[Resultado], float | None]:
+    if copia is None:
+        datos = _datos_de_cobertura()
+        datos.parent.mkdir(parents=True, exist_ok=True)
+        entorno_ruff, entorno_pytest = None, {"COVERAGE_FILE": str(datos)}
+    else:
+        datos = None  # queda dentro de la copia y se borra con ella
+        entorno_ruff, entorno_pytest = _entornos_de_la_copia(copia)
+
     resultados = []
     for nombre, comando in (("ruff check", RUFF_CHECK), ("ruff format --check", RUFF_FORMAT)):
-        salida = ejecutar(comando)
+        salida = ejecutar(comando, entorno_ruff, copia)
         resumen = _ultimas_lineas(salida.texto)
         fallas = [] if salida.codigo == 0 else [resumen or f"salió con código {salida.codigo}"]
         resultados.append(Resultado(nombre, salida.codigo == 0, fallas, comando, resumen))
 
-    salida = ejecutar(PYTEST)
+    salida = ejecutar(PYTEST, entorno_pytest, copia)
+    if datos is not None:
+        datos.unlink(missing_ok=True)
     encontrada = _COBERTURA.search(salida.texto)
     cobertura = float(encontrada.group(1)) if encontrada else None
     resumen = _resumen_pytest(salida.texto)
@@ -218,9 +327,62 @@ def _revisar_calidad(ejecutar: Ejecutor) -> tuple[list[Resultado], float | None]
         fallas = [FALLA_SIN_BASE]
     else:
         fallas = [_ultimas_lineas(resumen, 1)]
+    if salida.codigo != 0 and registros is not None:
+        archivo = _guardar_salida(registros, ahora(), salida.texto)
+        fallas.append(f"salida completa en {ruta_legible(archivo)}")
     nombre = f"pytest --cov (mínimo {UMBRAL_COBERTURA} %)"
     resultados.append(Resultado(nombre, salida.codigo == 0, fallas, PYTEST, resumen))
     return resultados, cobertura
+
+
+def borrar_copia(copia: Path) -> list[str]:
+    """Borra la copia del índice; devuelve un aviso con su ruta si algo no se pudo borrar.
+
+    En Windows, un archivo de solo lectura o bloqueado un momento (antivirus, indexador)
+    hace fallar el borrado: se le quita el solo lectura y se reintenta.
+    """
+
+    def reintentar(funcion: Callable[[str], object], ruta: str, _error: BaseException) -> None:
+        for _intento in range(3):
+            try:
+                # Se suma la escritura: fijarla dejaría un directorio sin acceso en Linux.
+                os.chmod(ruta, os.stat(ruta).st_mode | stat.S_IWRITE)
+                funcion(ruta)
+                return
+            except FileNotFoundError:
+                return
+            except OSError:
+                time.sleep(0.1)
+
+    shutil.rmtree(copia, onexc=reintentar)
+    if copia.exists():
+        return [f"No se pudo borrar la copia temporal del índice: {copia} (bórrala a mano)"]
+    return []
+
+
+def _revisar_calidad_del_indice(
+    ejecutar: Ejecutor,
+    registros: Path | None,
+    ahora: Callable[[], datetime],
+    temporal: Path | None,
+) -> tuple[list[Resultado], float | None, list[str]]:
+    """Ruff y pytest sobre una copia del índice fuera del repo, que se borra al terminar."""
+    copia = Path(tempfile.mkdtemp(prefix="verificar-indice-", dir=temporal))
+    terminado = False
+    try:
+        salida = ejecutar(comando_copia(copia))
+        if salida.codigo == 0:
+            resultados, cobertura = _revisar_calidad(ejecutar, registros, ahora, copia)
+        else:
+            falla = _ultimas_lineas(salida.texto, 1) or f"salió con código {salida.codigo}"
+            resultados, cobertura = [Resultado("Copia del índice", False, [falla])], None
+        terminado = True
+    finally:
+        restos = borrar_copia(copia)
+        if restos and not terminado:
+            # Con Ctrl+C o un error no hay informe: el aviso va directo a la terminal.
+            print("\n".join(f"[AVISO] {resto}" for resto in restos), file=sys.stderr)
+    return resultados, cobertura, restos
 
 
 def _revisar_atraso(ejecutar: Ejecutor, base: str) -> list[str]:
@@ -281,11 +443,26 @@ def verificar(
     pr: str | None = None,
     gh_disponible: bool = False,
     antes_del_commit: bool = False,
+    registros: Path | None = None,
+    ahora: Callable[[], datetime] = datetime.now,
+    temporal: Path | None = None,
 ) -> Informe:
+    """Corre las verificaciones; si pytest falla y hay ``registros``, guarda ahí su salida.
+
+    Con ``antes_del_commit``, Ruff y pytest corren en una copia del índice dentro de
+    ``temporal`` (la carpeta temporal del sistema si no se indica).
+    """
     rama = ejecutar(RAMA).texto.strip()
     commits, resultados = _revisar_commits(ejecutar, base)
-    resultados += _revisar_arbol(ejecutar, antes_del_commit)
-    calidad, cobertura = _revisar_calidad(ejecutar)
+    arbol, avisos = _revisar_arbol(ejecutar, antes_del_commit)
+    resultados += arbol
+    if antes_del_commit:
+        calidad, cobertura, restos = _revisar_calidad_del_indice(
+            ejecutar, registros, ahora, temporal
+        )
+        avisos += restos
+    else:
+        calidad, cobertura = _revisar_calidad(ejecutar, registros, ahora)
     resultados += calidad
     omitidas = []
     if pr is not None:
@@ -293,7 +470,7 @@ def verificar(
             resultados += _revisar_pr(ejecutar, pr)
         else:
             omitidas.append(f"PR #{pr}: gh no está disponible")
-    avisos = _revisar_atraso(ejecutar, base)
+    avisos += _revisar_atraso(ejecutar, base)
     return Informe(rama, base, commits, resultados, cobertura, omitidas, avisos, antes_del_commit)
 
 
@@ -304,7 +481,7 @@ def _cobertura_texto(cobertura: float | None) -> str:
 def formatear_texto(informe: Informe) -> str:
     lineas = [f"Rama: {informe.rama}", f"Commits sobre {informe.base}: {len(informe.commits)}"]
     if informe.antes_del_commit:
-        lineas.insert(0, "Modo: antes del commit (lo que va a entrar, en el índice)")
+        lineas.insert(0, "Modo: antes del commit (Ruff y pytest sobre una copia del índice)")
     lineas += [f"  {c.corto} {c.correo} {c.asunto}" for c in informe.commits]
     if not informe.commits:
         lineas.append(f"  (sin commits sobre {informe.base})")
@@ -313,7 +490,7 @@ def formatear_texto(informe: Informe) -> str:
         lineas.append(f"[{'OK' if resultado.ok else 'FALLA'}] {resultado.nombre}")
         lineas += [f"        - {falla}" for falla in resultado.fallas]
     lineas += [f"[OMITIDA] {omitida}" for omitida in informe.omitidas]
-    lineas += [f"[AVISO] {aviso}" for aviso in informe.avisos]
+    lineas += [f"[AVISO] {aviso}".replace("\n", "\n        ") for aviso in informe.avisos]
     lineas += ["", f"Cobertura total: {_cobertura_texto(informe.cobertura)}", ""]
     if informe.pasa:
         lineas.append("PASA")
@@ -351,7 +528,7 @@ def formatear_markdown(informe: Informe, fecha: datetime) -> str:
         lineas += ["", "Fallas:", ""] + [f"- {falla}" for falla in informe.fallas]
     if informe.avisos:
         lineas += ["", "Avisos (no cambian el veredicto):", ""]
-        lineas += [f"- {aviso}" for aviso in informe.avisos]
+        lineas += [f"- {aviso}".replace("\n", "\n  ") for aviso in informe.avisos]
 
     lineas += ["", "```text", f"$ git log {informe.base}..HEAD"]
     lineas += [f"{c.corto} {c.correo} {c.asunto}" for c in informe.commits]
@@ -369,6 +546,7 @@ def main(
     ejecutar: Ejecutor = ejecutar,
     gh: Callable[[str], str | None] = shutil.which,
     ahora: Callable[[], datetime] = datetime.now,
+    registros: Path = REGISTROS,
 ) -> int:
     parser = argparse.ArgumentParser(description="Verificación antes de un commit o PR.")
     parser.add_argument("--pr", help="número del PR: revisa sus checks y su aprobación con gh")
@@ -379,7 +557,7 @@ def main(
     parser.add_argument(
         "--antes-del-commit",
         action="store_true",
-        help="acepta cambios en el índice; falla con cambios fuera de él o sin seguimiento",
+        help="Ruff y pytest sobre una copia del índice; lo de fuera de él solo se avisa",
     )
     args = parser.parse_args(argv)
 
@@ -389,6 +567,8 @@ def main(
         args.pr,
         gh_disponible=gh("gh") is not None,
         antes_del_commit=args.antes_del_commit,
+        registros=registros,
+        ahora=ahora,
     )
     if args.markdown:
         print(formatear_markdown(informe, ahora()), end="")
