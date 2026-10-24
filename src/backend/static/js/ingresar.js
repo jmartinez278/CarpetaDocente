@@ -18,13 +18,17 @@ for (const boton of document.querySelectorAll("[data-mostrar-clave]")) {
 // Estado de envío: con los dos campos llenos, el botón dice "Ingresando…" con otro fondo, los campos quedan de
 // solo lectura y un segundo envío se descarta. No se usa disabled: un botón deshabilitado antes del envío no se
 // envía. Con un campo vacío no se cambia nada: el servidor responde con el mensaje de ese campo.
+// "Ingresando…" también se anuncia en una región role="status" ya presente y vacía, fuera del formulario que lleva
+// aria-busy, porque con Enter desde Contraseña el foco no está en el botón cuyo nombre cambia (como el aviso de portada.js).
 for (const formulario of document.querySelectorAll("[data-formulario-ingreso]")) {
   const boton = formulario.querySelector("[data-boton-ingresar]");
   const campos = [...formulario.querySelectorAll("input[type=text], input[type=password]")];
+  const estado = document.querySelector("[data-estado-ingreso]");
   const textoInicial = boton.textContent;
 
   const marcarEnvio = (enviando) => {
     boton.textContent = enviando ? "Ingresando…" : textoInicial;
+    if (estado) estado.textContent = enviando ? "Ingresando…" : "";
     boton.classList.toggle("boton-principal--enviando", enviando);
     for (const [elemento, atributo] of [[boton, "aria-disabled"], [formulario, "aria-busy"]]) {
       if (enviando) elemento.setAttribute(atributo, "true");

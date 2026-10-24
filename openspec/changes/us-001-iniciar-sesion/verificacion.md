@@ -264,3 +264,16 @@ La crítica del tramo 8 pasó a Codex en solo lectura (prompt A, lo corre el usu
   - `nested-cards` (`.ficha`): 8 en la portada (3 a 1280 y 1 a 360, en claro y en oscuro). Es la "miniatura que desborda" de DESIGN.md (R-10). La exención de `.impeccable/config.json` solo cubre `final/portada-*.html`, así que no alcanza a la plantilla de Django. D15 suponía que la ficha no aparecía en US-001; sí aparece.
 - Sin hallazgos en inicio de sesión (normal, con error y vacío) ni en dirección en oscuro.
 - No se cambió la configuración ni el código: queda para decisión de Marco si se amplía la exención.
+
+### 8.3 Crítica de Codex
+
+- Informe en `insumos/prototipo/US-001/tramo8/critique/codex.md.md`. Puntaje: **29/40** (Bueno), −1 frente al recálculo de 30/40: la heurística 1 (visibilidad del estado) baja de 4 a 3.
+- Hallazgos de gravedad 2 o mayor: **2 en total** (1 nuevo, C8-01; 1 heredado, R-29). Gravedad 3: 0. Gravedad 4: 0.
+- Las 18 entradas del detector no se suman: corresponden a R-10 (`nested-cards`) y R-30 (`cream-palette`), ya aceptadas.
+
+### 8.4 Corrección de C8-01
+
+- Prueba primero: una de marcado (`test_pantallas.py`) y cinco de navegador (`test_ingresar_e2e.py`: Enter desde Contraseña, botón, campo vacío sin anuncio y restablecer con `pageshow` persistido, y la guarda cuando falta la región, escrita tras la revisión). Las cinco primeras fallaban porque la región no existía.
+- Corrección: `<p class="sr-only" role="status" data-estado-ingreso>` vacía, después del formulario, y `marcarEnvio()` de `ingresar.js` la escribe y la vacía. Envío nativo y bloqueo del doble envío sin cambios; `DESIGN.md` sin tocar.
+- Estado de cada punto en `insumos/prototipo/US-001/tramo8/revision.md` (local: `insumos/` está fuera del repositorio).
+- Suite completa: 453 pasan (cobertura 96,88 %); `pytest -m e2e --browser chromium`: 51 pasan.

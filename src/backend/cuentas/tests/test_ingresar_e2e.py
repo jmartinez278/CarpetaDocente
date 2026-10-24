@@ -106,3 +106,93 @@ def test_envio_en_curso_cambia_el_boton_y_deja_los_campos_de_solo_lectura(
     expect(campo_usuario(page)).to_have_attribute("readonly", "")
     expect(campo_clave(page)).to_have_attribute("readonly", "")
     expect(page).to_have_url(f"{live_server.url}/ingresar/")
+
+
+def estado_ingreso(page):
+    return page.locator("[data-estado-ingreso]")
+
+
+def detener_navegacion_tras_marcar_envio(page):
+    # Igual que arriba: el envío queda en pantalla, sin navegar, para revisar el estado.
+    page.evaluate(
+        "document.querySelector('[data-formulario-ingreso]')"
+        ".addEventListener('submit', (evento) => evento.preventDefault())"
+    )
+
+
+def test_enviar_con_enter_desde_contrasena_anuncia_ingresando_en_la_region_status(
+    live_server, page, docente, clave
+):
+    abrir_ingresar(page, live_server)
+    detener_navegacion_tras_marcar_envio(page)
+    expect(estado_ingreso(page)).to_have_attribute("role", "status")
+    expect(estado_ingreso(page)).to_be_empty()
+    campo_usuario(page).fill(docente.username)
+    campo_clave(page).fill(clave)
+
+    campo_clave(page).press("Enter")
+
+    expect(estado_ingreso(page)).to_have_text("Ingresando…")
+    # La región no está dentro del formulario que lleva aria-busy.
+    expect(page.locator("[data-formulario-ingreso] [data-estado-ingreso]")).to_have_count(0)
+    expect(page.locator("[data-formulario-ingreso]")).to_have_attribute("aria-busy", "true")
+
+
+def test_enviar_con_el_boton_anuncia_ingresando_en_la_region_status(
+    live_server, page, docente, clave
+):
+    abrir_ingresar(page, live_server)
+    detener_navegacion_tras_marcar_envio(page)
+    campo_usuario(page).fill(docente.username)
+    campo_clave(page).fill(clave)
+
+    boton_ingresar(page).click()
+
+    expect(estado_ingreso(page)).to_have_text("Ingresando…")
+
+
+def test_con_un_campo_vacio_no_se_anuncia_nada(live_server, page, docente):
+    abrir_ingresar(page, live_server)
+    detener_navegacion_tras_marcar_envio(page)
+    campo_usuario(page).fill(docente.username)
+
+    boton_ingresar(page).click()
+
+    expect(estado_ingreso(page)).to_be_empty()
+
+
+def test_sin_la_region_de_estado_el_envio_sigue_bloqueando_el_doble_envio(
+    live_server, page, docente, clave
+):
+    def sin_region(ruta):
+        respuesta = ruta.fetch()
+        html = re.sub(r"<p\b[^>]*data-estado-ingreso[^>]*></p>", "", respuesta.text())
+        ruta.fulfill(response=respuesta, body=html)
+
+    page.route("**/ingresar/", sin_region)
+    abrir_ingresar(page, live_server)
+    expect(estado_ingreso(page)).to_have_count(0)
+    detener_navegacion_tras_marcar_envio(page)
+    campo_usuario(page).fill(docente.username)
+    campo_clave(page).fill(clave)
+
+    boton_ingresar(page).click()
+
+    expect(page.get_by_role("button", name="Ingresando…")).to_be_visible()
+    expect(page.locator("[data-formulario-ingreso]")).to_have_attribute("aria-busy", "true")
+    expect(campo_usuario(page)).to_have_attribute("readonly", "")
+
+
+def test_al_restablecer_el_estado_la_region_queda_vacia(live_server, page, docente, clave):
+    abrir_ingresar(page, live_server)
+    detener_navegacion_tras_marcar_envio(page)
+    campo_usuario(page).fill(docente.username)
+    campo_clave(page).fill(clave)
+    boton_ingresar(page).click()
+    expect(estado_ingreso(page)).to_have_text("Ingresando…")
+
+    # Lo que el navegador dispara al volver con "Atrás" a una página restaurada.
+    page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))")
+
+    expect(estado_ingreso(page)).to_be_empty()
+    expect(page.get_by_role("button", name="Ingresar", exact=True)).to_be_visible()

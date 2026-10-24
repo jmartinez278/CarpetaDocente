@@ -162,6 +162,20 @@ def test_el_boton_mostrar_contrasena_nace_oculto_y_sin_presionar(pagina):
     assert 'type="button"' in boton
 
 
+# --- Anuncio del envío (C8-01) ---
+
+
+def test_el_anuncio_del_envio_es_una_region_status_vacia_oculta_y_fuera_del_formulario(pagina):
+    region = re.search(r'<p\b[^>]*role="status"[^>]*>(.*?)</p>', pagina, re.DOTALL)
+    assert region, "no hay una región role=status"
+
+    assert region.group(1) == "", "la región nace vacía: el texto lo escribe ingresar.js al enviar"
+    assert "data-estado-ingreso" in region.group(0)
+    assert "sr-only" in region.group(0)
+    assert region.start() > pagina.index("</form>"), "fuera del formulario que lleva aria-busy"
+    assert "Ingresando" not in pagina
+
+
 # --- Scripts (D6) ---
 
 
