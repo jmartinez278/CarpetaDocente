@@ -163,7 +163,7 @@ Hallazgos de la revisión final de Codex (`insumos/prototipo/US-001/tramo8/revis
   - hallazgo 2: el cálculo del hash de `intentar_ingreso` queda fuera del tramo con la fila bloqueada; si la contraseña cambia entre la comprobación y el bloqueo, decide la vigente y la vieja no entra. Pruebas deterministas, sin medir tiempos.
 
   Verificar: cada prueba en rojo antes del código; en verde las pruebas de RN-024 existentes, `uv run pytest --cov` y `uv run python scripts/verificar.py --antes-del-commit`
-- [ ] 10.2 Pruebas y evidencia (hallazgos 5 y 6): pruebas de comportamiento del carrusel sin JavaScript, de la disposición a 1280 px y de los valores oscuros de los tokens; evidencia faltante de 5.1, 5.2 y 6.6 en `verificacion.md`, casillas ajustadas a lo verificado y excepciones documentadas. Verificar: los escenarios y la DoD 5 actualizados en `verificacion.md`
+- [x] 10.2 Pruebas y evidencia (hallazgos 5 y 6): pruebas de comportamiento del carrusel sin JavaScript, de la disposición a 1280 px y de los valores oscuros de los tokens; evidencia faltante de 5.1, 5.2 y 6.6 en `verificacion.md`, casillas ajustadas a lo verificado y excepciones documentadas. Verificar: los escenarios y la DoD 5 actualizados en `verificacion.md`
 
 ## Workflow follow-up
 

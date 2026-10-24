@@ -327,16 +327,16 @@ Estados: **Verificado** (prueba automática o inspección que cubre el escenario
 | Dimensión activada por su historia | `pantallas::test_una_dimension_disponible_enlaza_a_su_pantalla` (con `monkeypatch`; ver 5.7) | Verificado |
 | Bandera activa sin pantalla | `test_dimensiones::test_toda_dimension_disponible_resuelve_su_pantalla`, `test_la_revision_detecta_una_bandera_activa_sin_pantalla` | Verificado |
 | Chip de una tarjeta | `test_portada_e2e::test_chip_notas_muestra_la_tarjeta_sin_tocar_el_historial` | Verificado |
-| Carrusel sin JavaScript | `pantallas::test_chips_accesos_y_carrusel_tus_accesos`: los chips son enlaces `href="#c-…"` y el carrusel es una región con `tabindex="0"` | Verificado, sin prueba automática en un navegador sin JavaScript (solo el marcado) |
+| Carrusel sin JavaScript | `pantallas::test_chips_accesos_y_carrusel_tus_accesos` (marcado) y `test_portada_e2e::test_sin_javascript_los_chips_llevan_a_las_tres_tarjetas`: con JavaScript apagado, cada chip cambia la dirección a `#c-…` y deja la tarjeta en la ventana (10.2) | Verificado |
 | Tarjeta inicial | `test_dimensiones::test_sin_ninguna_disponible_abre_en_la_primera`, `test_abre_en_la_primera_disponible_en_el_orden_de_las_tarjetas`; `pantallas::test_sin_ninguna_disponible_la_tarjeta_inicial_es_sesiones` | Verificado |
-| Computadora | CSS: desde 960 px `.dimensiones` es una grilla de 3 columnas y `.chips` y `.puntos` van en `display: none` (`app.css`); capturas de 1280 de 8.1 (claro y oscuro), donde Codex confirma las tres tarjetas en fila | Verificado, sin prueba automática (CSS y capturas) |
+| Computadora | `test_portada_e2e::test_a_1280_las_tres_tarjetas_van_en_una_fila_sin_chips_ni_puntos`: a 1280 las tres tarjetas comparten la misma altura de inicio, van de izquierda a derecha sin cruzarse y caben en la ventana; los chips y los puntos están ocultos (10.2). Además, capturas de 1280 de 8.1 | Verificado |
 | Inicio de la dirección en el Sprint 1 | `pantallas::test_la_direccion_saluda_y_muestra_el_estado_vacio`, `test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_scripts` | Verificado |
 | Barra y pie | `pantallas::test_barra_con_el_nombre_de_la_ie_y_sin_menu`, `test_pie_al_final_y_titulo_de_la_pagina` | Verificado |
-| Preferencia oscura | `@media (prefers-color-scheme: dark)` redefine los tokens en `app.css`; las 20 pruebas de axe y las 18 de desborde corren también con la preferencia oscura; capturas oscuras de 8.1 frente a `capturas/final/` | Verificado; el aspecto en oscuro lo juzgan las capturas y la crítica, no una prueba de valores |
+| Preferencia oscura | `test_portada_e2e::test_los_tokens_aplicados_toman_su_valor_del_tema` (claro y oscuro): el valor calculado de `body` (fondo y texto) y del `h1` (color primario) en oscuro es el del Quick Start de DESIGN.md, leído del propio archivo en la prueba; en claro, los tres valores están fijos en la prueba (10.2); además axe y desborde corren con la preferencia oscura, y capturas de 8.1 | Verificado; el aspecto lo siguen juzgando las capturas y la crítica |
 | Plantillas sin colores escritos | `test_plantillas::test_plantilla_sin_colores_ni_estilos_en_linea`; `git grep` de hex y `style=` en 7.3: 0 coincidencias | Verificado |
-| Revisión de cada pantalla (axe) | `test_accesibilidad_e2e::test_sin_infracciones_graves_de_accesibilidad`: 5 vistas × 2 temas × 2 anchos = 20, sin `critical` ni `serious` (6.4); corridas de nuevo con C8-01 dentro de los 51 e2e | Verificado |
-| Pantallas a 320 px | `test_portada_e2e::test_el_documento_no_se_desplaza_en_horizontal`: 3 pantallas × 3 anchos × 2 temas = 18 | Verificado |
-| Primera visita con Slow 4G | `test_rendimiento_e2e::test_inicio_de_sesion_con_slow_4g`: 48,7 KB y 1,52 s (6.5) | Verificado; el rojo del umbral no se vio |
+| Revisión de cada pantalla (axe) | `test_accesibilidad_e2e::test_sin_infracciones_graves_de_accesibilidad`: 5 vistas × 2 temas × 2 anchos = 20, sin `critical` ni `serious` (6.4); corridas de nuevo con C8-01 dentro de los 51 e2e de entonces (55 en 10.2) | Verificado |
+| Pantallas a 320 px | `test_portada_e2e::test_el_documento_no_se_desplaza_en_horizontal`: 3 pantallas × 3 anchos × 2 temas = 18 (rojo demostrado después, 10.2) | Verificado |
+| Primera visita con Slow 4G | `test_rendimiento_e2e::test_inicio_de_sesion_con_slow_4g`: 48,7 KB y 1,52 s (6.5) | Verificado; el rojo de los dos umbrales se demostró después (10.2). Cifras de 10.2.3: 49,1 KB y 1,53 s, la misma medición con una variación normal |
 
 ### 9.3 Escenarios de los deltas `entorno-desarrollo` e `integracion-continua` (5)
 
@@ -348,7 +348,7 @@ Estados: **Verificado** (prueba automática o inspección que cubre el escenario
 | Accesibilidad y carga en el canal (`integracion-continua`) | Las 20 pruebas de axe y la de Slow 4G corren dentro de `pytest -m e2e` (README, "Pruebas de punta a punta") | Verificado en local; **pendiente del PR** en el canal |
 | Prueba de punta a punta fallida (`integracion-continua`) | Sin cambio respecto de EN-08, cuyo PR #53 lo demostró. US-001 no toca el canal | No aplica a este cambio; se comprueba al abrir el PR |
 
-Total: 23 + 21 + 5 = 49 escenarios, ninguno sin evidencia. Dos quedan "sin prueba automática" (Carrusel sin JavaScript y Computadora) y dos del canal dependen del PR.
+Total: 23 + 21 + 5 = 49 escenarios, ninguno sin evidencia. Ninguno queda sin prueba automática en local (Carrusel sin JavaScript y Computadora la tienen desde 10.2). Dos del canal dependen del PR.
 
 ### 9.4 DoD 1 a 9 (D15)
 
@@ -358,9 +358,9 @@ Total: 23 + 21 + 5 = 49 escenarios, ninguno sin evidencia. Dos quedan "sin prueb
 | 2 | Cumple en local; **pendiente del PR** | Ruff sin hallazgos (7.1 y `verificar.py`). CodeQL y SonarQube Cloud solo corren en el PR |
 | 3 | **Pendiente (equipo)** | Aprobación de otra integrante en el PR; también ratifica DESIGN.md 0.3.1 |
 | 4 | No aplica | Vista previa de Vercel hasta EN-02 |
-| 5 | Cumple en local; **pendiente del PR** | Los escenarios de 9.1 a 9.3 pasan; ruta ideal de punta a punta: `test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada`; 51 e2e en verde. El resultado del canal se ve en el PR |
+| 5 | Cumple en local; **pendiente del PR** | Los escenarios de 9.1 a 9.3 pasan, ya sin escenarios "sin prueba automática" (10.2); ruta ideal de punta a punta: `test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada`; 55 e2e en verde. Los comandos del README, ejecutados tal cual, dan el resultado esperado (10.2). El resultado del canal se ve en el PR |
 | 6 | Cumple | RN-024 con pruebas propias en la capa de servicios: `test_servicios_bloqueo.py` (13 pruebas), `test_backend.py` (9) y las del panel en `test_admin.py` (D10, secciones 2 y 4) |
-| 7 | Cumple | Informe de axe: 20 combinaciones (5 vistas × claro y oscuro × 360 y 1280) sin `critical` ni `serious` (6.4), vuelto a correr tras C8-01 |
+| 7 | Cumple | Informe de axe: 20 combinaciones (5 vistas × claro y oscuro × 360 y 1280) sin `critical` ni `serious` (6.4), vuelto a correr tras C8-01 y con el comando del README en 10.2 (20 pasadas) |
 | 8 | Cumple | Revisión del diff (7.3): solo datos ficticios ("Ana Quispe", "Rosa Huamán") y contraseñas generadas por cada prueba; ninguna coincidencia de `insumos/`, `PRODUCT.md`, `PENDIENTES_TESIS.md` ni `.env` en `git ls-files`; ningún dato de la I.E. inventado |
 | 9 | Cumple | Este cambio en OpenSpec, docstrings de los módulos y de las pruebas, catálogo de rutas 1.1.0 (3.6), README (pruebas e2e, accesibilidad, Slow 4G y fila `Playwright`) y documento 06 en V_1_5_0 (con 02/01 en V_1_4_0 y 07 en V_1_2_0, ya en la rama) |
 
@@ -369,6 +369,7 @@ Total: 23 + 21 + 5 = 49 escenarios, ninguno sin evidencia. Dos quedan "sin prueb
 - **C8-01** (gravedad 2, nuevo): aplicada en `4052ab8`, con su prueba primero (8.4).
 - **R-29 / T-07** (gravedad 2, heredado): **queda para el equipo.** La ayuda remite a "el administrador" sin una referencia verificable; depende de T-07 (dato de la I.E. pendiente). No se aplicó y no se inventó ningún contacto.
 - **Minor 2 a 5 de la revisión de cierre del grupo 8:** van a la descripción del PR, no se corrigen ahora. (2) La consulta de la región de estado en `ingresar.js` está dentro del bucle por formulario pero con alcance de `document`. (3) `test_con_un_campo_vacio_no_se_anuncia_nada` podría comprobar también que el botón sigue en "Ingresar" y que no hay `aria-busy`. (4) `spec.md` de `pantallas-de-inicio` y `design.md` D6 no mencionan la región de estado: una línea en `design.md` al archivar. (5) La prueba de marcado supone un `<p>` y un solo `</form>`. El Minor 1 (guarda contra `null`) se corrigió antes del commit.
+- **Minor 7 y 8 de la revisión final de Codex:** van a la descripción del PR, no se corrigen ahora. (7) `scripts/verificar.py` (línea 257): el nombre del registro de fallo solo distingue hasta segundos, y dos ejecuciones que fallen en el mismo segundo escriben la misma ruta; corregir con PID y microsegundos o un nombre exclusivo. (8) `test_portada_e2e.py`, `test_tarjeta_proximamente_avisa_sin_mover_la_miniatura`: la variable `miniatura` mide `.franjas` y la ficha es `.ficha`; la prueba puede pasar aunque la ficha se desplace.
 - **Detalles menores de Codex** (títulos de página distintos, orientación ante intentos repetidos, pista bajo Usuario, espacio vacío de las miniaturas, `scrollWidth` no medido por Codex): deuda, a la descripción del PR.
 - **Detector:** las 18 entradas son R-10 y R-30, ya aceptadas. La exención de `.impeccable/config.json` no cubre `/docente/`: deuda Minor, sin cambiar la configuración.
 - **Limitación conocida de D13:** dos `pytest --cov` comunes a la vez en la misma máquina pueden chocar en `.coverage`; no pasa en CI. La tarea 1.3 sigue sin marcar.
@@ -382,3 +383,62 @@ Ninguno se editó en US-001. Siguen **pendientes** de que el equipo los apruebe 
 - **Tratamiento en el saludo ("Prof.", "Lic."):** hoy no hay dónde guardarlo (D8); si el equipo lo quiere, es un campo nuevo en otra historia.
 - **T-07 / R-29:** la forma de ubicar al administrador y la orientación ante intentos repetidos son decisión del equipo (`docs/PENDIENTES_TESIS.md`, fuera del repositorio).
 - **Fuera del alcance de US-001, para después:** página propia de CSRF y de sesión vencida (US-002); Safari de iPhone y WebKit en un equipo real (EN-07); límite por IP si el piloto lo muestra (EN-04); ampliar la exención del detector a `/docente/`.
+
+## 10. Hallazgos 5 y 6 de la revisión final de Codex (10.2)
+
+Fecha: 23/10/2026. Partida: rama `feature/US-001-iniciar-sesion` en `a42269a`, `git status` limpio. Cada demostración en rojo rompió la condición en el archivo indicado, corrió la prueba, revirtió (copia exacta) y confirmó con `git status` que solo quedaba la prueba nueva.
+
+### 10.2.1 Pruebas nuevas (hallazgo 5), en `test_portada_e2e.py`
+
+| Escenario | Prueba | Rojo demostrado | Verde |
+| --- | --- | --- | --- |
+| Carrusel sin JavaScript | `test_sin_javascript_los_chips_llevan_a_las_tres_tarjetas`: contexto con JavaScript apagado, 360 px; cada chip cambia la dirección a `#c-sesiones`, `#c-notas`, `#c-asistencia` y deja esa tarjeta en la ventana | Con el `href` de los chips en `"#"` (`portada_docente.html`): `Page URL expected to be '…/docente/#c-sesiones'`, actual `…/docente/#` | pasa |
+| Computadora | `test_a_1280_las_tres_tarjetas_van_en_una_fila_sin_chips_ni_puntos`: misma altura de inicio, orden de izquierda a derecha sin cruzarse, las tres caben en 1280 px; chips y puntos ocultos | Con el bloque de computadora de `app.css` en `min-width: 99960px` y el CSS recompilado: la tercera tarjeta queda en `x = 2496` (`AssertionError` de «caben en 1280»). Una primera versión sin esa comprobación cayó solo en «chips ocultos», porque en el carrusel las tarjetas también van en fila; por eso se agregó | pasa |
+| Preferencia oscura | `test_los_tokens_aplicados_toman_su_valor_del_tema[light/dark]`: valor **calculado** de `body` (fondo y color de texto) y de `h1` (color); en oscuro, el valor sale del bloque oscuro de DESIGN.md leído en la prueba; en claro, los valores están escritos en la prueba | Con `--color-fondo` oscuro en `#000000` en `app.css`: `('dark', '--color-fondo', 'rgb(0, 0, 0)', 'rgb(39, 34, 28)')`; la variante clara pasó | pasan las dos |
+
+Los rojos de CSS se hicieron con `npm run build` antes y después; al final, `app.css` y el CSS compilado volvieron al original. `test_portada_e2e.py`: 24 pasadas (20 + 4).
+
+### 10.2.2 Script de comparación de tokens (5.2, hallazgo 6)
+
+El script de 5.2 no quedó en el repositorio. Se **reconstruyó** fuera de él (en el directorio temporal de la sesión) y se corrió ahora: compara línea por línea el `@theme`, el bloque oscuro y el `:root` de 960 px de `app.css` con los del Quick Start de DESIGN.md.
+
+- Resultado: `@theme` 36 líneas, oscuro 21, 960 px 1; **0 diferencias** (salida 0).
+- Prueba del script: con `--color-error` cambiado a `#c10008` en `app.css` da 2 diferencias y sale con 1. Se revirtió.
+- Excepción: esta es una verificación nueva, no la salida de 5.2 de aquel día. La salida original no se registró y no se reconstruye.
+
+### 10.2.3 Comandos del README, tal como están escritos (6.6, hallazgo 6)
+
+Con `db` levantado, en Git Bash:
+
+- `uv run playwright install chromium`: salida 0.
+- `cd src/frontend && npm ci` y `npm run build`: `npm ci` salida 0 (con avisos de `install-scripts` de npm, sin error); el build, "Done in 68 ms".
+- `DJANGO_ALLOW_ASYNC_UNSAFE=true uv run pytest -m e2e --browser chromium`: **55 pasadas**, 462 deseleccionadas (51 de antes + 4 nuevas).
+- Solo accesibilidad (`…/test_accesibilidad_e2e.py`): **20 pasadas**.
+- Solo rendimiento (`…/test_rendimiento_e2e.py -s`): **49,1 KB** en 4 respuestas, usable en **1,53 s**. En PowerShell, con `$env:DJANGO_ALLOW_ASYNC_UNSAFE = "true"` y el mismo comando sin prefijo: 49,1 KB y 1,53 s, 1 pasada.
+
+El resultado coincide con 6.2 a 6.5 (6.2 y 6.3 dentro del total de 55).
+
+### 10.2.4 Rojos que no se habían registrado (demostrados después)
+
+| Tarea | Condición rota | Resultado en rojo |
+| --- | --- | --- |
+| 5.1 | Plantilla temporal `cuentas/temporal_rojo.html` con `class="text-[#5b2610]"` | `test_plantillas.py`: `assert ['#5b2610'] == []`, 1 falla y 28 pasan; borrada la plantilla, 28 pasan |
+| 6.3 (desborde) | `@layer base { body { min-width: 500px; } }` al final de `app.css`, con el CSS recompilado | 12 de las 18 pruebas fallan (las de 320 y 360 en las tres pantallas, claro y oscuro); las 6 de 1280 pasan. Revertido y recompilado: 18 pasan |
+| 6.5 (Slow 4G, bytes) | `relleno.css` de 3 MB (en `static/dist/`, ignorado por git) enlazado desde `base.html` | 3121,4 KB en 18,29 s: `AssertionError: 3196312 bytes` |
+| 6.5 (Slow 4G, tiempo) | El mismo relleno, de 1,3 MB (bajo el tope de 2 MB) | 1318,9 KB en 8,54 s: `AssertionError: 8.54 s` |
+
+Revertidos el relleno y `base.html`, la prueba vuelve a 49,1 KB y 1,53 s. Con esto no queda ninguna demostración de rojo sin hacer, salvo la excepción de 10.2.2.
+
+### 10.2.5 Estado
+
+- `ruff check .` y `ruff format --check .`: sin hallazgos (131 archivos con el formato correcto).
+- `pytest --cov`: **462 pasadas**, 55 `e2e` excluidas; cobertura **96,93 %**.
+- `pytest -m e2e --browser chromium`: **55 pasadas**.
+
+### 10.2.6 Minor de la revisión de cierre del grupo 10.2 (a la descripción del PR, no se corrigen ahora)
+
+- La prueba de tokens escribe a mano los valores del tema claro; solo el oscuro sale de DESIGN.md. En oscuro, `--color-fondo` y `--color-fondo-trabajo` valen lo mismo (`#27221c`), así que la prueba no distingue cuál de los dos usa `body`.
+- `test_sin_javascript_los_chips_llevan_a_las_tres_tarjetas`: para la primera tarjeta, `to_be_in_viewport` ya se cumple al abrir; decide la dirección. La comprobación `not_to_have_attribute("data-carrusel-js", re.compile(".*"))` es correcta (el atributo se pone vacío) pero cuesta leer.
+- `DESIGN_MD = Path(__file__).resolve().parents[4] / "DESIGN.md"` depende de la ubicación del archivo.
+- De la prueba de 1280, solo la condición «caben en 1280 px» tiene rojo propio demostrado; las de misma altura y orden no.
+- El revisor no corrió `pytest --cov`; el 96,93 % es el de la corrida de 10.2.5.
