@@ -18,7 +18,7 @@
   - `test_reemplaza_destino_con_archivos_de_solo_lectura` 50 veces en un bucle.
 
   Verificar: el resultado de cada hipótesis anotado en `verificacion.md`, con la salida de la falla si la hubo
-- [ ] 1.3 Si alguna hipótesis reproduce la falla: escribir primero una prueba que la muestre y corregir la causa como indica D13. Verificar: la prueba nueva pasa, y repetir 1.2 para esa hipótesis da 0 fallas en 50 corridas
+- [x] 1.3 Si alguna hipótesis reproduce la falla: escribir primero una prueba que la muestre y corregir la causa como indica D13. Verificar: la prueba nueva pasa, y repetir 1.2 para esa hipótesis da 0 fallas en 50 corridas. Cerrada con una limitación conocida (`verificacion.md`, 1.3 y 9.5): dos `pytest --cov` comunes a la vez en la misma máquina pueden chocar en `.coverage`; no pasa en CI.
 - [x] 1.4 Prueba primero en `scripts/tests/test_verificar.py`: cuando pytest falla, `verificar.py` guarda la salida completa en `.verificar/pytest-<fecha y hora>.txt` y el resumen muestra esa ruta; cuando pasa, no guarda nada. Agregar `.verificar/` a `.gitignore`. Verificar: las pruebas nuevas pasan, `git status` no lista `.verificar/` y `uv run pytest --cov` sigue en verde
 
 ## 2. Servicio de bloqueo y backend de autenticación (D1)
