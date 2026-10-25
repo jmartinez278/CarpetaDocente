@@ -8,8 +8,8 @@
 | **Producto** | CarpetaDocente (nombre temporal) |
 | **Integrantes** | Cuicapuza Remigio Nayely Nilda · Martinez Llanos Marco Jhair · Vera Zea Jhoanna Hade |
 | **Asesor** | Ing. Elvis Wilfredo Carmen Delgadillo |
-| **Fecha** | 21/10/2026 |
-| **Versión** | 1.4.0 |
+| **Fecha** | 25/10/2026 |
+| **Versión** | 1.5.0 |
 
 ---
 
@@ -346,7 +346,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
   Escenario: Flujo alternativo válido
     Dado el administrador
     Cuando consulta la actividad de un periodo
-    Entonces el sistema muestra el número de usuarios activos por semana, de sesiones cargadas, de jornadas registradas y de secciones con notas registradas (KPIs del documento 03)
+    Entonces el sistema muestra el número de docentes activos por semana (con al menos un uso en la semana, KPI-01), de sesiones cargadas, de jornadas registradas y de secciones con notas registradas (KPIs del documento 03)
 
   Escenario: Caso de error
     Dado un docente o un usuario de la dirección
@@ -1256,7 +1256,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
   Escenario: Migraciones aplicadas
     Dado el entorno levantado
     Cuando se ejecutan las migraciones
-    Entonces la base de datos tiene las tablas y restricciones del documento 11
+    Entonces la base de datos tiene las tablas de usuario e institución del documento 11; las demás tablas llegan con su historia
 ```
 
 #### EN-02: Despliegue del plan A con vista previa por Pull Request
@@ -1514,5 +1514,6 @@ Una historia de usuario o un enabler está **terminado** solo si cumple los 9 cr
 | 1.2.0 | 15/10/2026 | Equipo del proyecto | Se suma SonarQube Cloud (plan gratuito) a los criterios 1 y 2 de la DoD y a EN-08; su token entra en el manejo de claves; todo Pull Request se dirige a la rama principal. |
 | 1.3.0 | 19/10/2026 | Equipo del proyecto | US-001: escenario de cuenta bloqueada tras 5 intentos (RN-024), con el mismo mensaje genérico; EN-04 remite a él. US-030 y US-031 según RF-030 y RF-031 del documento 06 (V_1_4_0); mensaje de US-031 en tuteo. US-028: la I.E. organiza el año en bimestres (RN-006). EN-02 sin R2 en el título (R2 es EN-03). EN-07: perfil Slow 4G (RNF-002). EN-08, escenario 4, y DoD 1 y 2: puerta de calidad Sonar way. Sección 7: CodeQL con la configuración por defecto de GitHub. |
 | 1.4.0 | 21/10/2026 | Equipo del proyecto | US-001: en los escenarios Caso de error y Cuenta bloqueada, el mensaje suma la indicación "Revisa tus datos. Si el problema sigue, pide ayuda al administrador." (revisión del prototipo de US-001, heurística 9 de Nielsen). |
+| 1.5.0 | 25/10/2026 | Equipo del proyecto | EN-01, escenario 2: tablas de usuario e institución; las demás con su historia (desviación aprobada). Historia del administrador: docentes activos por semana, como el KPI-01. |
 
 [← Volver al README Principal](../../README.md)
