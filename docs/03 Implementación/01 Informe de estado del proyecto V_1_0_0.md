@@ -14,14 +14,14 @@
 
 ## Historias de Usuario completadas en este Sprint
 
-El candidato al Sprint 1 son las 24 historias de prioridad Alta del documento 02 Planificación/01, más los enablers EN-01 a EN-08 del mismo documento. La selección final y los puntos de historia se fijan en el tablero [DATO PENDIENTE: selección final del Sprint 1 y estimación]. Al corte hay tres elementos completados y fusionados en `main`, y uno terminado en su rama.
+El candidato al Sprint 1 son las 24 historias de prioridad Alta del documento 02 Planificación/01, más los enablers EN-01 a EN-08 del mismo documento. La selección final y los puntos de historia se fijan en el tablero [DATO PENDIENTE: selección final del Sprint 1 y estimación]. Al corte hay cuatro elementos completados y fusionados en `main`.
 
 | ID | Elemento | Estado | Pull Request | Evidencia |
 |---|---|---|---|---|
 | EN-01 | Proyecto base con Docker Compose | Completado y archivado | #50 (fusionado el 16/10/2026) | `openspec/changes/archive/2026-10-16-en-01-proyecto-django-base/verificacion.md` |
 | EN-08 | Canal de integración continua | Completado y archivado | #52 (fusionado el 16/10/2026) | Verificaciones del PR #52 en verde; PR de demostración #53, cerrado sin fusionar, con CodeQL y las pruebas en rojo y la fusión bloqueada. `openspec/changes/archive/2026-10-18-en-08-integracion-continua/verificacion.md` |
-| US-001 | Iniciar sesión (RF-001) | Completado y fusionado | #58 (fusionado el 23/10/2026) | `openspec/changes/archive/2026-10-25-us-001-iniciar-sesion/verificacion.md`: cobertura 96,93 %, 55 pruebas de punta a punta en Chromium y axe sin `critical` ni `serious` en 20 combinaciones (5 vistas × tema claro y oscuro × 360 y 1280 px) |
-| US-002 | Cerrar sesión (RF-002) | Terminada en su rama; **sin fusionar en `main`** al corte | #[DATO PENDIENTE: número del PR]; falta la aprobación de otra integrante (DoD 3) | `openspec/changes/us-002-cerrar-sesion/verificacion.md` en la rama `feature/US-002-cerrar-sesion` |
+| US-001 | Iniciar sesión (RF-001) | Completado y fusionado | #58 (fusionado el 23/10/2026) | `openspec/changes/archive/2026-10-25-us-001-iniciar-sesion/verificacion.md`: cobertura 96,93 % y axe sin `critical` ni `serious` en 20 combinaciones (5 vistas × tema claro y oscuro × 360 y 1280 px) |
+| US-002 | Cerrar sesión (RF-002) | Completado y fusionado (falta archivar el cambio en OpenSpec) | #59 (fusionado el 25/10/2026) | `openspec/changes/us-002-cerrar-sesion/verificacion.md` |
 
 ### Qué entrega cada elemento
 
@@ -30,13 +30,13 @@ El candidato al Sprint 1 son las 24 historias de prioridad Alta del documento 02
 - **US-001:** ingreso en `/ingresar/` con bloqueo de la cuenta tras 5 intentos fallidos durante 15 minutos (RN-024), acción "Desbloquear cuenta" en el panel de administración, redirección según el rol, portada del docente con las tres dimensiones en carrusel y portada de la dirección, con los temas claro y oscuro de `DESIGN.md`.
 - **US-002:** cierre de sesión por POST a `/salir/` desde el menú de la cuenta, cierre automático a los 60 minutos sin actividad con su aviso (RN-025), respuestas sin caché con sesión (RNF-015) y un respaldo para que el botón "atrás" no muestre pantallas de una sesión cerrada.
 
-### Estado de US-002 en su rama
+### Verificación de US-002
 
-- 5 commits sobre `main`: archivo de US-001, propuesta, grupo 1 (backend), grupo 2 (interfaz) y corrección de la revisión final.
-- `uv run pytest --cov`: 411 pruebas pasan, cobertura 97,03 % (mínimo 80 %). `uv run pytest -m e2e --browser chromium`: 83 pasan. Ruff, sin hallazgos.
+- 5 commits: archivo de US-001, propuesta, grupo 1 (backend), grupo 2 (interfaz) y corrección de la revisión final.
+- Cobertura 97,03 % (mínimo 80 %), pruebas de punta a punta en Chromium en verde y Ruff sin hallazgos.
 - 22 escenarios de los dos specs del cambio, todos con prueba. axe: 32 combinaciones sin `critical` ni `serious`.
 - Revisión final: 2 hallazgos *Important*, corregidos con la prueba escrita primero (la sesión recién iniciada no tenía reloj de inactividad y el panel de administración no tenía el respaldo del botón "atrás").
-- DoD 1 y 2 (SonarQube Cloud y CodeQL) y 5 (canal) se ven en el PR; la 3 depende de la aprobación de otra integrante; la 4 no aplica hasta EN-02; la 9 queda parcial hasta la pasada final de documentación.
+- La DoD 4 no aplica hasta EN-02 y la 9 queda parcial hasta la pasada final de documentación. [DATO PENDIENTE: resultado de las verificaciones del PR #59 y quién lo aprobó].
 
 ### Trabajo de soporte fusionado en el Sprint
 
@@ -54,14 +54,14 @@ La demostración a los stakeholders de las funcionalidades implementadas todaví
 
 1. Ingreso de un docente y de la dirección, con su mensaje de error y el bloqueo tras 5 intentos fallidos (US-001).
 2. Portada del docente con las tres dimensiones en tarjetas y carrusel en el celular, y la bandera que deja solo la dimensión disponible activa (US-001).
-3. Menú de la cuenta, cierre de sesión y aviso "Tu sesión se cerró por inactividad." (US-002, desde su rama).
+3. Menú de la cuenta, cierre de sesión y aviso "Tu sesión se cerró por inactividad." (US-002).
 4. Verificaciones del PR: pruebas, cobertura, Ruff, CodeQL, SonarQube Cloud y Playwright (EN-08).
 
 ## Pendientes
 
 **Del Sprint 1**
 
-- Fusionar US-002: abrir o completar el PR hacia `main`, con las verificaciones en verde y la aprobación de otra integrante (DoD 3); después, `/opsx:archive`.
+- Archivar el cambio de US-002 en OpenSpec (`/opsx:archive`) como primer commit de la siguiente historia.
 - Historias de prioridad Alta del candidato todavía sin iniciar: US-003 a US-006, US-010 a US-012, US-014, US-020 a US-024, US-027 a US-029, US-030 a US-034 y US-040, según lo que el tablero fije para el Sprint [DATO PENDIENTE: selección final].
 - Enablers EN-02 a EN-07: despliegue (EN-02), archivos de sesiones en R2 (EN-03), seguridad de acceso (EN-04), respaldo y manual técnico (EN-05), datos iniciales (EN-06) y rendimiento, compatibilidad y accesibilidad (EN-07) [DATO PENDIENTE: cuáles entran en el Sprint 1].
 - Documentos del Sprint 1 que siguen: Revisión del Sprint, Retrospectiva y la actualización del README.
@@ -79,6 +79,6 @@ La demostración a los stakeholders de las funcionalidades implementadas todaví
 
 | Versión | Fecha | Autor | Descripción |
 |---|---|---|---|
-| 1.0.0 | 25/10/2026 | Equipo del proyecto | Versión inicial: estado del Sprint 1 con EN-01, EN-08 y US-001 fusionados, US-002 en su rama y pendientes. |
+| 1.0.0 | 25/10/2026 | Equipo del proyecto | Versión inicial: estado del Sprint 1 con EN-01, EN-08 y US-001 y US-002 fusionados, y pendientes. |
 
 [← Volver al README Principal](../../README.md)
