@@ -27,14 +27,20 @@ def institucion():
 
 def datos_alta(**cambios):
     datos = {
-        "username": "docente_ficticio",
-        "usable_password": "true",
+        "username": "jperez",
+        "first_name": "Juana",
+        "last_name": "Pérez",
         "password1": CLAVE_FICTICIA,
         "password2": CLAVE_FICTICIA,
         "rol": Usuario.Rol.DOCENTE,
     }
     datos.update(cambios)
     return datos
+
+
+def errores_del_alta(respuesta):
+    assert respuesta.status_code == 200
+    return respuesta.context["adminform"].form.errors
 
 
 def test_formulario_de_alta_incluye_rol_e_institucion(admin_client):
@@ -46,23 +52,331 @@ def test_formulario_de_alta_incluye_rol_e_institucion(admin_client):
     assert "institucion" in campos
 
 
-def test_alta_desde_el_panel_crea_docente(admin_client, institucion):
-    respuesta = admin_client.post(reverse(URL_ALTA), datos_alta(institucion=institucion.pk))
+def test_alta_desde_el_panel_crea_docente_activo_y_muestra_cuenta_creada(admin_client, institucion):
+    respuesta = admin_client.post(
+        reverse(URL_ALTA), datos_alta(institucion=institucion.pk), follow=True
+    )
 
-    assert respuesta.status_code == 302
-    usuario = Usuario.objects.get(username="docente_ficticio")
+    usuario = Usuario.objects.get(username="jperez")
     assert usuario.rol == Usuario.Rol.DOCENTE
     assert usuario.institucion == institucion
+    assert (usuario.first_name, usuario.last_name) == ("Juana", "Pérez")
     assert usuario.check_password(CLAVE_FICTICIA)
+    assert usuario.is_active
+    assert not usuario.is_staff
+    assert not usuario.is_superuser
+    assert mensajes(respuesta) == ["Cuenta creada"]
 
 
-def test_alta_desde_el_panel_de_docente_sin_institucion_muestra_error(admin_client):
+@pytest.mark.parametrize(
+    "campo", ["first_name", "last_name", "institucion", "password1", "password2"]
+)
+def test_alta_con_un_obligatorio_vacio_no_crea_la_cuenta(admin_client, institucion, campo):
+    datos = datos_alta(institucion=institucion.pk)
+    datos[campo] = ""
+
+    respuesta = admin_client.post(reverse(URL_ALTA), datos)
+
+    assert campo in errores_del_alta(respuesta)
+    assert not Usuario.objects.filter(username="jperez").exists()
+
+
+def test_alta_de_docente_sin_institucion_senala_el_campo(admin_client):
     respuesta = admin_client.post(reverse(URL_ALTA), datos_alta())
 
+    assert "institucion" in errores_del_alta(respuesta)
+    assert not Usuario.objects.filter(username="jperez").exists()
+
+
+def test_el_alta_no_ofrece_crear_la_cuenta_sin_contrasena(admin_client):
+    respuesta = admin_client.get(reverse(URL_ALTA))
+
+    campos = respuesta.context["adminform"].form.fields
+    assert "usable_password" not in campos
+    assert campos["password1"].required
+    assert campos["password2"].required
+
+
+def test_el_alta_rechaza_el_rol_administrador(admin_client, institucion):
+    respuesta = admin_client.post(
+        reverse(URL_ALTA),
+        datos_alta(institucion=institucion.pk, rol=Usuario.Rol.ADMINISTRADOR),
+    )
+
+    assert "rol" in errores_del_alta(respuesta)
+    assert not Usuario.objects.filter(username="jperez").exists()
+
+
+@pytest.mark.parametrize("repetido", ["jperez", "JPerez"])
+def test_usuario_repetido_dice_que_ya_existe_y_propone_el_siguiente(
+    admin_client, crear_usuario, institucion, repetido
+):
+    crear_usuario("jperez", Usuario.Rol.DOCENTE)
+    crear_usuario("jperez2", Usuario.Rol.DOCENTE)
+
+    respuesta = admin_client.post(
+        reverse(URL_ALTA), datos_alta(username=repetido, institucion=institucion.pk)
+    )
+
+    errores = errores_del_alta(respuesta)["username"]
+    assert errores[0] == "El usuario ya existe"
+    assert "Prueba con jperez3." in errores
+    assert Usuario.objects.filter(username__iexact="jperez").count() == 1
+
+
+def test_la_sugerencia_parte_de_los_nombres_con_tilde_y_enie(
+    admin_client, crear_usuario, institucion
+):
+    crear_usuario("nnunez", Usuario.Rol.DOCENTE)
+
+    respuesta = admin_client.post(
+        reverse(URL_ALTA),
+        datos_alta(
+            username="nnunez",
+            first_name="Ñahui Rosa",
+            last_name="Núñez Ávila",
+            institucion=institucion.pk,
+        ),
+    )
+
+    assert "Prueba con nnunez2." in errores_del_alta(respuesta)["username"]
+
+
+@pytest.mark.parametrize("usuario", ["J.Pérez", "j perez", "JPerez", "jperez1", "jpeñez"])
+def test_formato_invalido_explica_el_ejemplo(admin_client, institucion, usuario):
+    respuesta = admin_client.post(
+        reverse(URL_ALTA), datos_alta(username=usuario, institucion=institucion.pk)
+    )
+
+    errores = errores_del_alta(respuesta)["username"]
+    assert any("jperez" in error for error in errores)
+    assert not Usuario.objects.filter(username=usuario).exists()
+
+
+def test_usuario_con_numero_se_acepta(admin_client, crear_usuario, institucion):
+    crear_usuario("jperez", Usuario.Rol.DOCENTE)
+
+    respuesta = admin_client.post(
+        reverse(URL_ALTA), datos_alta(username="jperez2", institucion=institucion.pk)
+    )
+
+    assert respuesta.status_code == 302
+    assert Usuario.objects.filter(username="jperez2").exists()
+
+
+def test_el_usuario_explica_el_formato(admin_client):
+    respuesta = admin_client.get(reverse(URL_ALTA))
+
+    ayuda = respuesta.context["adminform"].form.fields["username"].help_text
+    assert "jperez" in ayuda
+    assert "jperez2" in ayuda
+
+
+# --- Edición de cuentas (spec gestion-cuentas; design.md de US-003, D4) ---
+
+CAMPOS_OCULTOS = {
+    "is_staff",
+    "is_superuser",
+    "groups",
+    "user_permissions",
+    "debe_cambiar_password",
+}
+
+
+def url_edicion(usuario):
+    return reverse("admin:cuentas_usuario_change", args=[usuario.pk])
+
+
+def campos_visibles(respuesta):
+    """Campos del formulario más los de solo lectura, que son lo que ve el Administrador."""
+    formulario = respuesta.context["adminform"]
+    return set(formulario.form.fields) | set(formulario.readonly_fields)
+
+
+def test_la_edicion_no_muestra_privilegios_ni_cambio_obligatorio(admin_client, docente):
+    respuesta = admin_client.get(url_edicion(docente))
+
     assert respuesta.status_code == 200
-    errores = respuesta.context["adminform"].form.non_field_errors()
-    assert errores == ["Docente y Dirección deben pertenecer a una institución."]
-    assert not Usuario.objects.filter(username="docente_ficticio").exists()
+    assert not CAMPOS_OCULTOS & campos_visibles(respuesta)
+
+
+def test_la_edicion_permite_cambiar_nombres_rol_institucion_y_activo(admin_client, docente):
+    campos = admin_client.get(url_edicion(docente)).context["adminform"].form.fields
+
+    assert {"first_name", "last_name", "rol", "institucion", "is_active"} <= set(campos)
+
+
+def test_el_usuario_es_de_solo_lectura_en_la_edicion(admin_client, docente):
+    respuesta = admin_client.get(url_edicion(docente))
+
+    assert "username" not in respuesta.context["adminform"].form.fields
+    assert "username" in respuesta.context["adminform"].readonly_fields
+
+
+def test_el_rol_de_un_administrador_es_de_solo_lectura(admin_client, administrador):
+    respuesta = admin_client.get(url_edicion(administrador))
+
+    assert "rol" not in respuesta.context["adminform"].form.fields
+    assert "rol" in respuesta.context["adminform"].readonly_fields
+
+
+def test_el_rol_de_un_docente_se_puede_cambiar(admin_client, docente):
+    respuesta = admin_client.get(url_edicion(docente))
+
+    assert "rol" in respuesta.context["adminform"].form.fields
+
+
+def test_el_rol_de_la_edicion_ofrece_solo_docente_y_direccion(admin_client, docente):
+    campo = admin_client.get(url_edicion(docente)).context["adminform"].form.fields["rol"]
+
+    assert {valor for valor, _ in campo.choices if valor} == {"DOCENTE", "DIRECCION"}
+
+
+def test_la_edicion_rechaza_asignar_el_rol_administrador(admin_client, docente):
+    datos = datos_edicion(docente, rol=Usuario.Rol.ADMINISTRADOR)
+
+    respuesta = admin_client.post(url_edicion(docente), datos)
+
+    assert respuesta.status_code == 200
+    assert "rol" in respuesta.context["adminform"].form.errors
+    docente.refresh_from_db()
+    assert docente.rol == Usuario.Rol.DOCENTE
+
+
+def datos_edicion(usuario, **cambios):
+    datos = {
+        "first_name": usuario.first_name,
+        "last_name": usuario.last_name,
+        "email": usuario.email,
+        "rol": usuario.rol,
+        "institucion": usuario.institucion_id,
+        "is_active": "on",
+        "last_login_0": "",
+        "last_login_1": "",
+        "date_joined_0": usuario.date_joined.strftime("%Y-%m-%d"),
+        "date_joined_1": usuario.date_joined.strftime("%H:%M:%S"),
+    }
+    datos.update(cambios)
+    return datos
+
+
+def test_corregir_los_apellidos_conserva_usuario_y_contrasena(admin_client, docente, clave):
+    respuesta = admin_client.post(
+        url_edicion(docente), datos_edicion(docente, last_name="Quispe Mamani")
+    )
+
+    assert respuesta.status_code == 302
+    docente.refresh_from_db()
+    assert docente.last_name == "Quispe Mamani"
+    assert docente.username == "ana.quispe"
+    assert docente.check_password(clave)
+    assert not docente.is_staff
+    assert not docente.is_superuser
+
+
+def test_un_post_no_puede_dar_privilegios_en_la_edicion(admin_client, docente):
+    datos = datos_edicion(docente, is_staff="on", is_superuser="on", username="otro")
+
+    admin_client.post(url_edicion(docente), datos)
+
+    docente.refresh_from_db()
+    assert not docente.is_staff
+    assert not docente.is_superuser
+    assert docente.username == "ana.quispe"
+
+
+def test_la_lista_no_filtra_por_acceso_al_panel(admin_client):
+    respuesta = admin_client.get(reverse("admin:cuentas_usuario_changelist"))
+
+    assert "is_staff" not in {
+        filtro.field_path
+        for filtro in respuesta.context["cl"].filter_specs
+        if hasattr(filtro, "field_path")
+    }
+
+
+# --- Desactivar sin eliminar y acceso al panel (spec gestion-cuentas; design.md de US-003, D5) ---
+
+
+def url_eliminacion(usuario):
+    return reverse("admin:cuentas_usuario_delete", args=[usuario.pk])
+
+
+def test_el_panel_no_ofrece_eliminar_cuentas(admin_client, docente):
+    lista = admin_client.get(reverse(URL_LISTA))
+    edicion = admin_client.get(url_edicion(docente))
+
+    assert "delete_selected" not in acciones_de(lista)
+    assert not edicion.context["has_delete_permission"]
+    assert url_eliminacion(docente) not in edicion.content.decode()
+
+
+def test_una_peticion_directa_de_eliminacion_se_rechaza(admin_client, docente):
+    respuesta = admin_client.post(url_eliminacion(docente), {"post": "yes"})
+
+    assert respuesta.status_code == 403
+    assert Usuario.objects.filter(pk=docente.pk).exists()
+
+
+def test_la_accion_de_eliminar_varias_se_rechaza(admin_client, docente):
+    admin_client.post(
+        reverse(URL_LISTA),
+        {"action": "delete_selected", ACTION_CHECKBOX_NAME: [docente.pk], "post": "yes"},
+    )
+
+    assert Usuario.objects.filter(pk=docente.pk).exists()
+
+
+def test_una_cuenta_desactivada_no_ingresa_y_sigue_en_la_lista(
+    client, admin_client, docente, clave
+):
+    admin_client.post(url_edicion(docente), datos_edicion(docente, is_active=""))
+
+    docente.refresh_from_db()
+    assert not docente.is_active
+    respuesta = client.post("/ingresar/", {"username": "ana.quispe", "password": clave})
+    assert respuesta.status_code == 200
+    assert "Usuario o contraseña incorrectos, o cuenta inactiva" in respuesta.content.decode()
+    lista = admin_client.get(reverse(URL_LISTA))
+    assert docente in lista.context["cl"].result_list
+    assert {"is_active"} <= set(lista.context["cl"].list_display)
+
+
+def test_la_sesion_abierta_de_una_cuenta_desactivada_lleva_a_ingresar(
+    client, admin_client, docente
+):
+    client.force_login(docente)
+    assert client.get("/docente/").status_code == 200
+
+    admin_client.post(url_edicion(docente), datos_edicion(docente, is_active=""))
+
+    respuesta = client.get("/docente/")
+    assert respuesta.status_code == 302
+    assert respuesta.url == "/ingresar/?next=/docente/"
+
+
+def test_la_cuenta_creada_en_el_panel_no_entra_al_panel(admin_client, client, institucion):
+    admin_client.post(reverse(URL_ALTA), datos_alta(institucion=institucion.pk))
+
+    respuesta = client.post("/ingresar/", {"username": "jperez", "password": CLAVE_FICTICIA})
+    assert respuesta.status_code == 302
+    assert respuesta.url == "/docente/"
+    destino = client.get("/admin/", follow=True)
+    assert destino.redirect_chain[-1][0] == "/docente/"
+    assert destino.status_code == 200
+
+
+@pytest.mark.parametrize("fixture", ["docente", "direccion"])
+@pytest.mark.parametrize("ruta", ["admin:cuentas_usuario_changelist", URL_ALTA])
+def test_docente_y_direccion_no_ven_la_gestion_de_cuentas(client, request, fixture, ruta):
+    usuario = request.getfixturevalue(fixture)
+    client.force_login(usuario)
+
+    respuesta = client.get(reverse(ruta), follow=True)
+
+    destino = "/docente/" if fixture == "docente" else "/direccion/"
+    assert respuesta.redirect_chain[-1][0] == destino
+    assert respuesta.status_code == 200
 
 
 # --- Acción "Desbloquear cuenta" (RN-024; spec inicio-sesion; design.md de US-001, D4) ---

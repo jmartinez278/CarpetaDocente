@@ -5,6 +5,8 @@ cuenta: llaman a estas funciones. La hora se puede pasar como argumento para
 probar el bloqueo sin esperar (design.md de US-001, D1).
 """
 
+import re
+import unicodedata
 from datetime import datetime, timedelta
 
 from django.contrib.auth import hashers
@@ -18,6 +20,9 @@ DURACION_BLOQUEO = timedelta(minutes=15)
 INACTIVIDAD_MAXIMA = timedelta(minutes=60)
 
 _CAMPOS_DE_CONTROL = ["intentos_fallidos", "bloqueado_hasta"]
+
+# R-11 / RF-003: letras a-z (al menos dos) y un número final opcional desde el 2.
+FORMATO_USUARIO = re.compile(r"^[a-z]{2,}(?:[2-9]|[1-9][0-9]+)?$")
 
 
 def esta_bloqueado(usuario: Usuario, ahora: datetime | None = None) -> bool:
@@ -113,3 +118,49 @@ def desbloquear(usuario: Usuario) -> bool:
         usuario.bloqueado_hasta = None
         usuario.save(update_fields=_CAMPOS_DE_CONTROL)
         return True
+
+
+def usuario_valido(usuario: str) -> bool:
+    """Indica si el usuario sigue el formato de R-11 (RF-003): jperez, jperez2, jperez10.
+
+    Solo letras a-z en minúsculas (al menos dos) y un número final opcional desde el 2.
+    """
+    return FORMATO_USUARIO.fullmatch(usuario) is not None
+
+
+def _solo_letras(texto: str) -> str:
+    """Minúsculas, sin tildes ni ñ (NFKD) y sin nada que no sea a-z."""
+    sin_marcas = unicodedata.normalize("NFKD", texto.lower())
+    return re.sub(r"[^a-z]", "", sin_marcas)
+
+
+def usuario_base(nombres: str, apellidos: str) -> str:
+    """Usuario de R-11 sin número: inicial del primer nombre más el primer apellido.
+
+    "Ñahui Rosa" / "Núñez Ávila" da "nnunez".
+    """
+    primer_nombre = (nombres.split() or [""])[0]
+    primer_apellido = (apellidos.split() or [""])[0]
+    return _solo_letras(primer_nombre)[:1] + _solo_letras(primer_apellido)
+
+
+def sugerir_usuario(nombres: str, apellidos: str) -> str | None:
+    """Propone el usuario libre de R-11 (RF-003): la base o la base con el primer número libre.
+
+    Compara sin distinguir mayúsculas. Devuelve ``None`` si la base tiene menos de dos letras.
+    """
+    base = usuario_base(nombres, apellidos)
+    if len(base) < 2:
+        return None
+    existentes = set(
+        Usuario.objects.filter(username__iregex=rf"^{base}[0-9]*$").values_list(
+            "username", flat=True
+        )
+    )
+    ocupados = {u.lower() for u in existentes}
+    if base not in ocupados:
+        return base
+    numero = 2
+    while f"{base}{numero}" in ocupados:
+        numero += 1
+    return f"{base}{numero}"

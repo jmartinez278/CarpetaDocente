@@ -285,3 +285,58 @@ def test_administrador_sin_is_staff_recibe_403_sin_ciclo(client, crear_usuario, 
 
     assert respuesta.status_code == 403
     assert len(respuesta.redirect_chain) <= SALTOS_MAXIMOS
+
+
+# --- Usuario sin distinguir mayúsculas (US-003, D7) ---
+
+
+def test_usuario_con_mayusculas_entra_y_llega_a_su_pantalla(client, docente, clave):
+    respuesta = ingresar(client, "Ana.Quispe", clave)
+
+    assert respuesta.status_code == 302
+    assert respuesta.url == "/docente/"
+    assert sesion_iniciada(client)
+
+
+def test_cinco_rechazos_con_distintas_mayusculas_bloquean_la_cuenta(client, docente):
+    for escrito in ["ana.quispe", "Ana.Quispe", "ANA.QUISPE", "ana.quispe", "Ana.Quispe"]:
+        ingresar(client, escrito, CLAVE_INCORRECTA)
+
+    docente.refresh_from_db()
+    assert docente.bloqueado_hasta is not None
+
+
+def test_tras_un_rechazo_el_formulario_conserva_el_usuario_como_se_escribio(client, docente):
+    html = ingresar(client, "Ana.QUISPE", CLAVE_INCORRECTA).content.decode()
+
+    assert 'value="Ana.QUISPE"' in html
+
+
+# --- Pista del campo Usuario (US-003, D6) ---
+
+PISTA = "Ejemplo: jperez (inicial y apellido)"
+
+
+def _entrada(html, nombre):
+    return re.search(rf'<input[^>]*name="{nombre}"[^>]*>', html).group(0)
+
+
+def test_la_pista_va_bajo_el_campo_usuario_y_lo_describe(client):
+    html = client.get(INGRESAR).content.decode()
+
+    assert re.search(rf'<p[^>]*id="id_username_ayuda"[^>]*>\s*{re.escape(PISTA)}\s*</p>', html)
+    assert 'aria-describedby="id_username_ayuda"' in _entrada(html, "username")
+
+
+def test_con_un_error_el_campo_describe_la_pista_y_el_error(client):
+    html = client.post(INGRESAR, {"username": "", "password": "x"}).content.decode()
+
+    assert 'aria-describedby="id_username_ayuda id_username_error"' in _entrada(html, "username")
+    assert 'id="id_username_error"' in html
+
+
+def test_el_campo_contrasena_no_tiene_pista(client):
+    html = client.get(INGRESAR).content.decode()
+
+    assert "aria-describedby" not in _entrada(html, "password")
+    assert "id_password_ayuda" not in html
