@@ -44,15 +44,15 @@ Toda la configuración sensible o dependiente del entorno (clave secreta, modo d
 - **THEN** contiene los nombres de todas las variables que la aplicación lee y ninguna tiene valor de clave
 
 ### Requirement: Página inicial
-El sistema SHALL mostrar en la ruta raíz una página inicial en español que identifica el sistema y sus tres dimensiones, construida sobre la plantilla base que carga los estilos de Tailwind CSS, HTMX y Alpine.js.
+El sistema SHALL responder en la ruta raíz con una redirección según la sesión: a la pantalla de inicio de sesión si no hay sesión y a la pantalla de inicio del rol si la hay (US-001). Todas las pantallas se construyen sobre la plantilla base en español, que carga la hoja de estilos compilada de Tailwind CSS. HTMX y Alpine.js se sirven como archivos estáticos propios y cada pantalla carga solo los scripts que usa.
 
 #### Scenario: Visita a la página inicial
-- **WHEN** un visitante abre la ruta raíz `/`
-- **THEN** recibe una respuesta exitosa con el nombre del sistema y las tres dimensiones en este orden: planificación de sesiones de aprendizaje, registro y control de notas, control de asistencia
+- **WHEN** un visitante sin sesión abre la ruta raíz `/`
+- **THEN** recibe una redirección a `/ingresar/`, que responde con éxito en español, adaptada al celular, con el nombre de la I.E. y las tres dimensiones en este orden: sesiones, notas, asistencia
 
 #### Scenario: Recursos de interfaz cargados
-- **WHEN** se carga la página inicial
-- **THEN** el HTML enlaza la hoja de estilos compilada de Tailwind CSS y los scripts de HTMX y Alpine.js servidos como archivos estáticos propios
+- **WHEN** se carga la pantalla de inicio de sesión o la portada del docente
+- **THEN** el HTML enlaza la hoja de estilos compilada de Tailwind CSS servida como archivo estático propio. La portada carga además Alpine.js; el inicio de sesión no lo carga
 
 ### Requirement: Verificación de calidad local
 El proyecto SHALL incluir una suite de pruebas ejecutable con pytest contra PostgreSQL y una configuración de Ruff que incluya las reglas de seguridad; ambas MUST pasar limpias en la rama.

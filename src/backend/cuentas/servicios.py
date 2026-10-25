@@ -1,4 +1,4 @@
-"""Reglas de negocio de las cuentas: bloqueo temporal por intentos fallidos (RN-024).
+"""Reglas de negocio de las cuentas: bloqueo por intentos fallidos (RN-024) e inactividad (RN-025).
 
 Las vistas y el backend de autenticación no escriben los campos de control de la
 cuenta: llaman a estas funciones. La hora se puede pasar como argumento para
@@ -15,6 +15,7 @@ from cuentas.models import Usuario
 
 INTENTOS_MAXIMOS = 5
 DURACION_BLOQUEO = timedelta(minutes=15)
+INACTIVIDAD_MAXIMA = timedelta(minutes=60)
 
 _CAMPOS_DE_CONTROL = ["intentos_fallidos", "bloqueado_hasta"]
 
@@ -23,6 +24,28 @@ def esta_bloqueado(usuario: Usuario, ahora: datetime | None = None) -> bool:
     """Indica si la cuenta sigue bloqueada por RN-024 en ``ahora``."""
     ahora = ahora or timezone.now()
     return usuario.bloqueado_hasta is not None and usuario.bloqueado_hasta > ahora
+
+
+def sesion_vencida(ultima_actividad: float | None, ahora: datetime | None = None) -> bool:
+    """Indica si la sesión superó la inactividad máxima de RN-025 (RNF-015) en ``ahora``.
+
+    ``ultima_actividad`` es la marca de tiempo (segundos) de la última petición de la
+    sesión. Vence con 60 minutos o más sin peticiones. Una sesión sin marca no vence:
+    es una abierta antes del despliegue y recibe la marca en su siguiente petición.
+    """
+    if ultima_actividad is None:
+        return False
+    ahora = ahora or timezone.now()
+    return ahora.timestamp() - ultima_actividad >= INACTIVIDAD_MAXIMA.total_seconds()
+
+
+def aviso_de_inactividad() -> tuple[str, str]:
+    """Las dos líneas del aviso de cierre por inactividad, con la duración de RN-025."""
+    minutos = int(INACTIVIDAD_MAXIMA.total_seconds() // 60)
+    return (
+        "Tu sesión se cerró por inactividad.",
+        f"Pasaron {minutos} minutos sin uso. Ingresa de nuevo para continuar.",
+    )
 
 
 def intentar_ingreso(usuario: Usuario, contrasena: str, ahora: datetime | None = None) -> bool:

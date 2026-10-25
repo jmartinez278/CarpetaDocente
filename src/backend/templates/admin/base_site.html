@@ -1,0 +1,7 @@
+{% extends "admin/base_site.html" %}{% load static %}{% comment %}
+Panel de administración: suma el respaldo de "atrás" (bfcache) para que, sin sesión, no se muestre la pantalla
+guardada (design.md de US-002, D3). Extiende la plantilla que reemplaza, como indica la documentación de Django.
+{% endcomment %}
+{% block extrahead %}{{ block.super }}
+<script src="{% static 'js/bfcache.js' %}" defer></script>
+{% endblock %}

@@ -230,13 +230,15 @@ def barra(html):
 
 
 @pytest.mark.parametrize("pantalla", ["portada", "inicio_direccion"])
-def test_barra_con_el_nombre_de_la_ie_y_sin_menu(pantalla, request):
+def test_barra_con_el_nombre_de_la_ie_y_solo_el_menu_de_la_cuenta(pantalla, request):
     html = request.getfixturevalue(pantalla)
     cabecera = barra(html)
 
     assert "I.E. Virgen del Carmen" in cabecera
-    for control in ("<nav", "<a ", "<button"):
+    # US-002: el menú de la cuenta es lo único interactivo; no hay navegación ni enlaces.
+    for control in ("<nav", "<a "):
         assert control not in cabecera
+    assert cabecera.count("<details") == 1
     assert html.index(cabecera) < html.index("<main")
 
 
@@ -336,9 +338,13 @@ def test_sin_ninguna_disponible_la_tarjeta_inicial_es_sesiones(portada):
 def test_la_portada_carga_portada_js_antes_de_alpine(portada):
     scripts = re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE)
 
-    assert len(scripts) == 2
+    # menu.js es el del menú de la cuenta y bfcache.js el del respaldo de "atrás" (US-002);
+    # ninguno depende de Alpine.
+    assert len(scripts) == 4
     assert "js/portada.js" in scripts[0]
     assert "dist/vendor/alpine.min.js" in scripts[1]
+    assert "js/menu.js" in scripts[2]
+    assert "js/bfcache.js" in scripts[3]
     assert all("defer" in script for script in scripts)
     assert "htmx" not in portada.lower()
 
@@ -380,4 +386,123 @@ def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
 def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_scripts(inicio_direccion):
     assert "<table" not in inicio_direccion
     assert "<article" not in inicio_direccion
-    assert "<script" not in inicio_direccion
+    # Solo el menú de la cuenta y el respaldo de "atrás" (D5): sin Alpine ni portada.js.
+    assert re.findall(r'<script src="([^"]+)"', inicio_direccion) == [
+        "/static/js/menu.js",
+        "/static/js/bfcache.js",
+    ]
+
+
+# --- Menú de la cuenta (spec cierre-sesion, "Menú de la cuenta"; design.md de US-002, D5) ---
+
+
+def menu(html):
+    encontrado = re.search(r"<details\b[^>]*data-menu-cuenta[^>]*>.*?</details>", html, re.DOTALL)
+    assert encontrado, "la barra no tiene el menú de la cuenta"
+    return encontrado.group(0)
+
+
+@pytest.mark.parametrize(
+    ("ruta", "nombre"), [("/docente/", "Ana Quispe"), ("/direccion/", "Rosa Huamán")]
+)
+def test_la_barra_lleva_el_menu_con_el_nombre_y_cerrar_sesion(
+    client, docente, direccion, ruta, nombre
+):
+    client.force_login(docente if ruta == "/docente/" else direccion)
+    html = client.get(ruta).content.decode()
+
+    assert menu(html) in barra(html)
+    assert re.search(r"<summary\b[^>]*aria-label=\"Menú de la cuenta\"", menu(html))
+    assert nombre in menu(html)
+    formulario = re.search(r"<form\b[^>]*>.*?</form>", menu(html), re.DOTALL).group(0)
+    assert re.search(r'<form\b[^>]*method="post"', formulario)
+    assert 'action="/salir/"' in formulario
+    assert 'name="csrfmiddlewaretoken"' in formulario
+    assert re.search(r"<button\b[^>]*>.*?Cerrar sesión.*?</button>", formulario, re.DOTALL)
+
+
+def test_el_menu_muestra_el_usuario_si_no_tiene_nombre(client, crear_usuario):
+    sin_nombre = crear_usuario("sin.nombre", Usuario.Rol.DOCENTE)
+    client.force_login(sin_nombre)
+
+    html = client.get("/docente/").content.decode()
+
+    assert "sin.nombre" in menu(html)
+
+
+def test_el_menu_carga_menu_js_y_los_iconos_de_la_cuenta(client, docente):
+    client.force_login(docente)
+    html = client.get("/docente/").content.decode()
+
+    assert '<script src="/static/js/menu.js" defer>' in html
+    assert menu(html).count("<svg") == 2
+
+
+def test_ingresar_no_lleva_menu(pagina):
+    assert "data-menu-cuenta" not in pagina
+
+
+# --- Aviso de inactividad (spec cierre-sesion, "Aviso de cierre por inactividad"; D4) ---
+
+AVISO_1 = "Tu sesión se cerró por inactividad."
+AVISO_2 = "Pasaron 60 minutos sin uso. Ingresa de nuevo para continuar."
+
+
+def aviso(html):
+    encontrado = re.search(r"<div\b[^>]*mensaje--aviso[^>]*>.*?</div>\s*</div>", html, re.DOTALL)
+    return encontrado.group(0) if encontrado else None
+
+
+@pytest.fixture
+def pagina_por_inactividad(client, docente):
+    client.force_login(docente)
+    sesion = client.session
+    sesion["ultima_actividad"] = 0
+    sesion.save()
+    return client.get("/docente/", follow=True).content.decode()
+
+
+def test_el_aviso_va_sobre_el_formulario_con_icono_y_dos_lineas(pagina_por_inactividad):
+    html = pagina_por_inactividad
+
+    caja = aviso(html)
+    assert caja, "no hay aviso de inactividad"
+    assert re.findall(r"<p>(.*?)</p>", caja, re.DOTALL) == [AVISO_1, AVISO_2]
+    assert "<svg" in caja
+    assert 'role="status"' in etiqueta(caja, "mensaje--aviso")
+    assert 'role="alert"' not in caja
+    assert html.index("mensaje--aviso") < html.index("<form")
+
+
+def test_el_aviso_no_se_repite_al_recargar(client, pagina_por_inactividad):
+    assert aviso(pagina_por_inactividad)
+
+    assert aviso(client.get(INGRESAR).content.decode()) is None
+
+
+def test_sin_inactividad_no_hay_aviso(pagina, client, docente, clave):
+    assert aviso(pagina) is None
+
+    client.post(INGRESAR, {"username": "ana.quispe", "password": clave})
+    client.post("/salir/")
+    assert aviso(client.get(INGRESAR).content.decode()) is None
+
+
+def test_un_envio_tras_la_inactividad_muestra_el_aviso(client, docente):
+    client.force_login(docente)
+    sesion = client.session
+    sesion["ultima_actividad"] = 0
+    sesion.save()
+
+    html = client.post("/salir/", follow=True).content.decode()
+
+    assert aviso(html)
+
+
+def test_el_panel_carga_el_respaldo_de_atras_sin_el_menu(client, administrador):
+    client.force_login(administrador)
+
+    html = client.get("/admin/").content.decode()
+
+    assert '<script src="/static/js/bfcache.js" defer>' in html
+    assert "js/menu.js" not in html
