@@ -135,7 +135,9 @@ def test_campos_vacios_marcan_cada_campo_y_lo_enlazan_a_su_mensaje(pagina_con_ca
     ]:
         control = etiqueta(pagina_con_campos_vacios, f'name="{campo}"')
         assert 'aria-invalid="true"' in control
-        assert f'aria-describedby="id_{campo}_error"' in control
+        # Desde US-003 el campo Usuario también lleva su pista (spec pantallas-de-inicio).
+        ayuda = "id_username_ayuda " if campo == "username" else ""
+        assert f'aria-describedby="{ayuda}id_{campo}_error"' in control
         assert re.search(
             rf'<p class="campo__error" id="id_{campo}_error">.*?<span>{mensaje}</span>',
             pagina_con_campos_vacios,
@@ -146,7 +148,8 @@ def test_campos_vacios_marcan_cada_campo_y_lo_enlazan_a_su_mensaje(pagina_con_ca
 
 def test_sin_errores_los_campos_no_se_marcan_invalidos(pagina):
     assert "aria-invalid" not in pagina
-    assert "aria-describedby" not in pagina
+    # La única descripción es la pista del campo Usuario (US-003).
+    assert re.findall(r'aria-describedby="([^"]*)"', pagina) == ["id_username_ayuda"]
 
 
 # --- Mostrar contraseña (sin JavaScript no aparece) ---

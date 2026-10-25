@@ -45,6 +45,11 @@ class Usuario(AbstractUser):
 
     objects = GestorUsuarios()
 
+    @classmethod
+    def normalize_username(cls, username):
+        """Además de la normalización Unicode de Django, el usuario va en minúsculas (D7)."""
+        return super().normalize_username(username).lower()
+
     class Meta:
         db_table = "usuario"
         verbose_name = "usuario"

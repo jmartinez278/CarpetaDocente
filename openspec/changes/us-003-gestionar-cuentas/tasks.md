@@ -46,7 +46,7 @@
 
 ## 2. Ingreso: usuario en minúsculas, pista en `/ingresar/` y punta a punta (D6 a D8)
 
-- [ ] 2.1 Prueba primero, en `cuentas/tests/test_backend.py`, `test_ingresar.py` y `test_modelos.py`:
+- [x] 2.1 Prueba primero, en `cuentas/tests/test_backend.py`, `test_ingresar.py` y `test_modelos.py`:
   - "JPerez" con la contraseña correcta entra en la cuenta "jperez" y llega a `/docente/`;
   - 5 contraseñas incorrectas escritas como "jperez", "JPerez" y "JPEREZ" bloquean la cuenta "jperez" (RN-024);
   - tras un rechazo, el formulario conserva el usuario tal como se escribió;
@@ -55,20 +55,20 @@
 
   Luego `BackendConBloqueo.authenticate` pasa el usuario a minúsculas antes de `get_by_natural_key`, y `Usuario.normalize_username` lo pasa a minúsculas (D7). Verificar: rojo y luego verde; las pruebas de bloqueo y de ingreso de US-001 siguen en verde
 
-- [ ] 2.2 Prueba primero, en `test_plantillas.py` o `test_ingresar.py`:
+- [x] 2.2 Prueba primero, en `test_plantillas.py` o `test_ingresar.py`:
   - `/ingresar/` muestra "Ejemplo: jperez (inicial y apellido)" bajo el campo Usuario, con `aria-describedby` hacia la pista;
   - con un error en el campo, `aria-describedby` nombra la pista y el error;
   - el campo Contraseña no tiene pista.
 
   Luego `ayuda` en `componentes/campo.html` y la pista en `ingresar.html`. Verificar: rojo y luego verde; `npm run build` sin errores y ningún color hexadecimal en las plantillas
-- [ ] 2.3 Prueba de punta a punta, `cuentas/tests/test_gestion_cuentas_e2e.py`:
+- [x] 2.3 Prueba de punta a punta, `cuentas/tests/test_gestion_cuentas_e2e.py`:
   - el Administrador crea una docente en el panel y ve "Cuenta creada";
   - la docente ingresa por `/ingresar/` y llega a `/docente/`;
   - el Administrador la desactiva;
   - la docente ya no ingresa y ve el mensaje genérico.
 
   Verificar: `uv run pytest -m e2e --browser chromium` en verde, con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`. Las combinaciones de axe de `/ingresar/` y la prueba de ancho a 320 y 360 px siguen sin `critical` ni `serious`
-- [ ] 2.4 La pantalla vista en claro y oscuro, en celular y escritorio (la marca Marco). Revisión del grupo y commit (reglas de arriba)
+- [x] 2.4 La pantalla vista en claro y oscuro, en celular y escritorio (la marca Marco). Revisión del grupo y commit (reglas de arriba)
 
 ## 3. Revisión final y verificación
 

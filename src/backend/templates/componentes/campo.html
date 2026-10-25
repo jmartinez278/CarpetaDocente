@@ -1,14 +1,15 @@
 {% comment %}
-Campo del formulario de ingreso. Recibe: campo (BoundField), autocompletar y, para la contraseña,
-es_clave. La contraseña nunca se vuelve a escribir en la página.
+Campo del formulario de ingreso. Recibe: campo (BoundField), autocompletar, ayuda (opcional: pista
+bajo el control) y, para la contraseña, es_clave. La contraseña nunca se vuelve a escribir en la página.
 {% endcomment %}
 <div class="campo">
   <label class="campo__etiqueta" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
   {% if es_clave %}<div class="campo__grupo">{% endif %}
-    <input class="campo__control" id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" type="{% if es_clave %}password{% else %}text{% endif %}"{% if not es_clave and campo.value %} value="{{ campo.value }}"{% endif %} autocomplete="{{ autocompletar }}" required{% if not es_clave %} autocapitalize="none" spellcheck="false"{% endif %}{% if campo.errors %} aria-invalid="true" aria-describedby="{{ campo.id_for_label }}_error"{% endif %}>
+    <input class="campo__control" id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" type="{% if es_clave %}password{% else %}text{% endif %}"{% if not es_clave and campo.value %} value="{{ campo.value }}"{% endif %} autocomplete="{{ autocompletar }}" required{% if not es_clave %} autocapitalize="none" spellcheck="false"{% endif %}{% if campo.errors %} aria-invalid="true"{% endif %}{% if ayuda or campo.errors %} aria-describedby="{% if ayuda %}{{ campo.id_for_label }}_ayuda{% endif %}{% if ayuda and campo.errors %} {% endif %}{% if campo.errors %}{{ campo.id_for_label }}_error{% endif %}"{% endif %}>
     {% if es_clave %}
     <button class="campo__boton" type="button" data-mostrar-clave aria-controls="{{ campo.id_for_label }}" aria-pressed="false" aria-label="Mostrar contraseña" hidden>{% include "iconos/eye.svg" with clase="clave__ver" %}{% include "iconos/eye-off.svg" with clase="clave__ocultar" %}</button>
   </div>
   {% endif %}
+  {% if ayuda %}<p class="text-caption leading-5 text-texto-suave" id="{{ campo.id_for_label }}_ayuda">{{ ayuda }}</p>{% endif %}
   {% if campo.errors %}<p class="campo__error" id="{{ campo.id_for_label }}_error">{% include "iconos/circle-alert.svg" %}<span>{{ campo.errors.0 }}</span></p>{% endif %}
 </div>

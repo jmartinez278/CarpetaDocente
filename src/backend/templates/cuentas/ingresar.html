@@ -22,7 +22,7 @@
   <form class="flex flex-col gap-4 rounded-dimension [.mensaje+&]:mt-4 border border-linea bg-superficie p-6 {% if form.non_field_errors %}mt-4{% else %}mt-8{% endif %} min-[960px]:mx-auto min-[960px]:w-full min-[960px]:max-w-110 min-[960px]:p-8" method="post" novalidate aria-label="Iniciar sesión" data-formulario-ingreso>
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">
-    {% include "componentes/campo.html" with campo=form.username autocompletar="username" %}
+    {% include "componentes/campo.html" with campo=form.username autocompletar="username" ayuda="Ejemplo: jperez (inicial y apellido)" %}
     {% include "componentes/campo.html" with campo=form.password autocompletar="current-password" es_clave=True %}
     <button class="boton-principal" type="submit" data-boton-ingresar>Ingresar</button>
     <p class="text-pretty text-caption leading-5 text-texto-suave">Si olvidaste tu contraseña, pide al administrador que la restablezca.</p>

@@ -1,7 +1,12 @@
 """Pruebas del modelo de usuario propio (spec cuentas-usuarios; documento 11, sección 3.2)."""
 
+import os
+from unittest.mock import patch
+
 import pytest
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.db import IntegrityError, transaction
 from django.db.models import ProtectedError
 
@@ -101,3 +106,29 @@ def test_create_superuser_con_otro_rol_falla():
         Usuario.objects.create_superuser(
             username="admin_ficticio", password=CLAVE_FICTICIA, rol=Usuario.Rol.DOCENTE
         )
+
+
+# --- Usuario en minúsculas (US-003, D7) ---
+
+
+def test_normalize_username_pasa_a_minusculas():
+    assert Usuario.normalize_username("JPerez") == "jperez"
+
+
+def test_createsuperuser_guarda_el_usuario_en_minusculas_y_la_cuenta_ingresa(client):
+    with patch.dict(os.environ, {"DJANGO_SUPERUSER_PASSWORD": CLAVE_FICTICIA}):
+        call_command("createsuperuser", interactive=False, username="Marco", email="")
+
+    cuenta = Usuario.objects.get()
+    assert cuenta.username == "marco"
+    assert cuenta.rol == Usuario.Rol.ADMINISTRADOR
+    assert authenticate(None, username="Marco", password=CLAVE_FICTICIA) == cuenta
+
+
+def test_createsuperuser_con_el_usuario_existente_en_minusculas_falla_sin_crear_otra():
+    Usuario.objects.create_superuser(username="marco", password=CLAVE_FICTICIA)
+
+    with pytest.raises((CommandError, IntegrityError)), transaction.atomic():
+        call_command("createsuperuser", interactive=False, username="Marco", email="")
+
+    assert Usuario.objects.count() == 1

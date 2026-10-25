@@ -79,3 +79,19 @@ def test_la_version_asincrona_tambien_respeta_el_bloqueo(docente, clave):
     assert resultado is None
     docente.refresh_from_db()
     assert servicios.esta_bloqueado(docente)
+
+
+# --- Usuario sin distinguir mayúsculas (US-003, D7) ---
+
+
+@pytest.mark.parametrize("escrito", ["Ana.Quispe", "ANA.QUISPE"])
+def test_el_usuario_con_mayusculas_entra_en_la_cuenta_en_minusculas(docente, clave, escrito):
+    assert authenticate(None, username=escrito, password=clave) == docente
+
+
+def test_cinco_fallos_con_distintas_mayusculas_bloquean_la_misma_cuenta(docente):
+    for escrito in ["ana.quispe", "Ana.Quispe", "ANA.QUISPE", "ana.quispe", "Ana.QUISPE"]:
+        assert authenticate(None, username=escrito, password=CLAVE_INCORRECTA) is None
+
+    docente.refresh_from_db()
+    assert docente.bloqueado_hasta is not None

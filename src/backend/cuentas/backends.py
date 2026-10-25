@@ -21,6 +21,8 @@ class BackendConBloqueo(ModelBackend):
             username = kwargs.get(Usuario.USERNAME_FIELD)
         if username is None or password is None:
             return None
+        # Sin distinguir mayúsculas (D7): búsqueda, hash e intentos caen en la misma cuenta.
+        username = username.lower()
         try:
             usuario = Usuario._default_manager.get_by_natural_key(username)
         except Usuario.DoesNotExist:
