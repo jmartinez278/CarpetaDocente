@@ -48,7 +48,7 @@ El usuario de una cuenta MUST ser único sin distinguir mayúsculas de minúscul
 - **THEN** el sistema no crea la cuenta y muestra el mensaje "El usuario ya existe"
 
 ### Requirement: Formato del usuario
-Al crear una cuenta, el usuario MUST seguir el formato del sistema: la inicial del primer nombre y el primer apellido, en minúsculas, sin tildes, sin ñ y sin espacios, con un número al final (desde el 2) solo cuando esa combinación ya existe. El alta SHALL explicar el formato con un ejemplo y, cuando el usuario se repite, SHALL proponer el siguiente que está libre.
+Al crear una cuenta, el usuario MUST seguir el formato del sistema: la inicial del primer nombre y el primer apellido, en minúsculas, sin tildes, sin ñ y sin espacios, con un número al final (desde el 2) cuando esa combinación ya existe. El sistema SHALL validar la forma del usuario y SHALL proponer la base o el siguiente número libre; no exige que el usuario coincida con el calculado a partir de los nombres, y el Administrador decide el usuario final (por ejemplo, con apellidos compuestos). El alta SHALL explicar el formato con un ejemplo y, cuando el usuario se repite, SHALL proponer el siguiente que está libre.
 
 #### Scenario: Formato inválido
 - **WHEN** el Administrador escribe un usuario con mayúsculas, tildes, ñ, espacios u otros signos (por ejemplo "J.Pérez" o "j perez")

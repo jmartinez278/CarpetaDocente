@@ -84,6 +84,7 @@
 - `BackendConBloqueo.authenticate` pasa el usuario a minúsculas (`str.lower()`) antes de buscar la cuenta. Así la búsqueda, la autenticación y el conteo de intentos de RN-024 caen en la misma cuenta, sin importar cómo se escribió el usuario.
   - Es el único backend de `AUTHENTICATION_BACKENDS`, de modo que cubre `/ingresar/` y cualquier `authenticate()` futuro.
   - El formulario conserva el usuario tal como se escribió para volver a mostrarlo tras un rechazo, como hoy (spec `inicio-sesion`).
+- **Cuentas existentes con mayúsculas:** no hay migración de datos. Solo hay datos ficticios; una cuenta creada antes con mayúsculas se recrea o se pasa a minúsculas a mano en la base local.
 - Un usuario inexistente sigue calculando el hash (#20760), así que el tiempo de respuesta no cambia.
 - **Alternativa descartada:** pasarlo a minúsculas en `FormularioIngreso.clean_username`. Un `authenticate()` que no use el formulario contaría los intentos en otra búsqueda.
 - **Alternativa descartada:** buscar con `username__iexact`. La base de datos no impide dos cuentas que solo cambian en mayúsculas creadas fuera del panel. La búsqueda podría dar dos filas, y el bloqueo dependería de cuál se toma.
