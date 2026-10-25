@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% comment %}
 Marco de las pantallas internas (DESIGN.md, Barra superior y Pie): barra fija con el nombre de la I.E.,
 con el menú de la cuenta a la derecha (US-002), y el pie al final. Cada pantalla llena el bloque "principal".
@@ -15,4 +16,5 @@ con el menú de la cuenta a la derecha (US-002), y el pie al final. Cada pantall
 </header>
 {% block principal %}{% endblock %}
 {% include "componentes/pie.html" %}
+<script src="{% static 'js/bfcache.js' %}" defer></script>
 {% endblock %}

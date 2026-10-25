@@ -45,6 +45,7 @@ Con US-001 se entra al sistema, pero no hay forma de salir: la sesión dura lo q
   - `src/frontend/css/app.css`: menú y mensaje de aviso.
   - Íconos Lucide nuevos.
   - `src/backend/static/js/menu.js`.
+  - `src/backend/static/js/bfcache.js` y `src/backend/templates/admin/base_site.html` (respaldo de "atrás" también en el panel).
 - **Dependencias y migraciones:** ninguna.
 - **Documentos:** `docs/03 Implementación/Catálogo de rutas.md` (1.2.0). El README y docs/01 a 03 no se editan durante el cambio: lo pendiente va a `insumos/pendientes-docs.md`.
 - **Requisitos:** US-002, RF-002, RN-025, RNF-015, RNF-005 y RNF-008; DoD 1 a 9, con la DoD 4 sin aplicar hasta EN-02.

@@ -40,7 +40,7 @@
 ### D3. Pantallas con sesión sin caché
 
 - El mismo middleware de D1 agrega `add_never_cache_headers` a cada respuesta de una petición que llegó con sesión. Así queda cubierto todo lo que exista y lo que se agregue, sin depender de que cada vista recuerde un decorador. El panel y `LoginView` ya responden sin caché.
-- **Respaldo para la caché de páginas del navegador (bfcache):** `menu.js` (D5) recarga la página en `pageshow` cuando `event.persisted` es verdadero. Con la recarga, el servidor redirige a `/ingresar/`. Se agrega porque Safari no corre en el canal.
+- **Respaldo para la caché de páginas del navegador (bfcache):** `static/js/bfcache.js` recarga la página en `pageshow` cuando `event.persisted` es verdadero. Con la recarga, el servidor redirige a `/ingresar/`. Se agrega porque Safari no corre en el canal. Es un script aparte de `menu.js` (D5) para cargarlo también en el panel de administración, con `templates/admin/base_site.html`, que no tiene el menú de la cuenta (hallazgo 2 de la revisión final).
 - **Alternativa descartada:** `never_cache` en `RolRequeridoMixin`, porque deja fuera las vistas que no lo usen.
 
 ### D4. Aviso de inactividad con el framework de mensajes
@@ -59,7 +59,7 @@
   - El `<summary>` mide 44 × 44 px, lleva el ícono Lucide `circle-user-round` y el nombre accesible "Menú de la cuenta".
   - El panel muestra el nombre (`get_full_name`, o el usuario) y un formulario POST a `salir` con `{% csrf_token %}` y el botón "Cerrar sesión", con el ícono `log-out`.
   - El panel se alinea al borde derecho y su ancho no pasa de `100vw − 32px` (RNF-005).
-- **`static/js/menu.js`** (sin Alpine, como `ingresar.js`): Escape cierra el menú y devuelve el foco al `<summary>`; un toque fuera lo cierra; y el respaldo de bfcache (D3). Sin JavaScript, `<details>` se abre y se cierra solo, y el formulario funciona.
+- **`static/js/menu.js`** (sin Alpine, como `ingresar.js`): Escape cierra el menú y devuelve el foco al `<summary>`; un toque fuera lo cierra. Sin JavaScript, `<details>` se abre y se cierra solo, y el formulario funciona.
 - **Alternativa descartada:** desplegable de Alpine, porque la dirección no carga Alpine y cerrar sesión no debe depender de JavaScript.
 - **Alternativa descartada:** `role="menu"` de ARIA, porque exige manejar las flechas, y con un nombre y un botón el patrón de divulgación es el que corresponde.
 - **Diseño del panel:** solo tokens de DESIGN.md (`--color-superficie`, `--color-linea`, el radio y la sombra existentes). Lo que DESIGN.md no fija del panel se anota como deuda para el pulido, y también la fila "Menú de la barra superior: Pendiente".
@@ -97,7 +97,7 @@
 - **[Quien vuelve después de dos semanas no ve el aviso]**, porque la cookie ya venció. → Ve el inicio de sesión normal. Es aceptable.
 - **[Las filas de sesiones viejas se acumulan en la base].** → `clearsessions` queda para el despliegue (EN-02) y se anota en `insumos/pendientes-docs.md`.
 - **[El contraste de `--color-aviso` sobre `--color-superficie` en tema claro]** no está medido en DESIGN.md para texto. → Lo comprueba axe (D6). Si falla, es un caso de accesibilidad y se propone el cambio de DESIGN.md con su diff.
-- **[Safari puede guardar la página en bfcache aunque tenga `no-store`].** → Lo cubre el respaldo de D3. La prueba en un iPhone real queda con EN-07.
+- **[Safari puede guardar la página en bfcache aunque tenga `no-store`].** → Lo cubre el respaldo de D3 (`bfcache.js`, también en el panel). Chromium comprueba la recarga simulando un `pageshow` persistido; la verificación en Safari queda en la prueba pendiente del iPhone (EN-07), sin WebKit en la suite.
 - **[Token CSRF vencido al pulsar "Cerrar sesión"]**, si la pestaña lleva mucho tiempo abierta. → Pasados 60 minutos, el middleware atiende la petición antes de la comprobación del token, así que se cierra la sesión y se ve el aviso. Antes de los 60 minutos, el token del formulario sigue coincidiendo con la cookie CSRF, que dura un año por defecto y no vence con la sesión.
 
 ## Migration Plan

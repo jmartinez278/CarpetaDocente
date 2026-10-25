@@ -6,7 +6,9 @@ también en el panel (design.md de US-002, D1 y D3).
 
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.views import redirect_to_login
+from django.dispatch import receiver
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -16,6 +18,13 @@ from cuentas import servicios
 
 MARCA_DE_ACTIVIDAD = "ultima_actividad"
 ETIQUETA_INACTIVIDAD = "inactividad"
+
+
+@receiver(user_logged_in)
+def iniciar_reloj_de_inactividad(sender, request, **kwargs):
+    """Marca la actividad al autenticar: el POST de ingreso llega como anónimo y el middleware
+    no lo ve, así que sin esto la sesión nueva no caducaría hasta otra petición (RN-025)."""
+    request.session[MARCA_DE_ACTIVIDAD] = timezone.now().timestamp()
 
 
 class InactividadMiddleware:

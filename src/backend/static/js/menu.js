@@ -19,11 +19,3 @@ for (const menu of document.querySelectorAll("[data-menu-cuenta]")) {
     }
   });
 }
-
-// Respaldo de la caché de páginas del navegador (bfcache): si "atrás" restaura una pantalla interna guardada,
-// se recarga y el servidor, ya sin sesión, redirige a /ingresar/.
-window.addEventListener("pageshow", (evento) => {
-  if (evento.persisted && document.querySelector("[data-menu-cuenta]")) {
-    window.location.reload();
-  }
-});

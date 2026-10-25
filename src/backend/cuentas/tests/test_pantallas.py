@@ -338,11 +338,13 @@ def test_sin_ninguna_disponible_la_tarjeta_inicial_es_sesiones(portada):
 def test_la_portada_carga_portada_js_antes_de_alpine(portada):
     scripts = re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE)
 
-    # menu.js es el del menú de la cuenta (US-002) y no depende de Alpine.
-    assert len(scripts) == 3
+    # menu.js es el del menú de la cuenta y bfcache.js el del respaldo de "atrás" (US-002);
+    # ninguno depende de Alpine.
+    assert len(scripts) == 4
     assert "js/portada.js" in scripts[0]
     assert "dist/vendor/alpine.min.js" in scripts[1]
     assert "js/menu.js" in scripts[2]
+    assert "js/bfcache.js" in scripts[3]
     assert all("defer" in script for script in scripts)
     assert "htmx" not in portada.lower()
 
@@ -384,8 +386,11 @@ def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
 def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_scripts(inicio_direccion):
     assert "<table" not in inicio_direccion
     assert "<article" not in inicio_direccion
-    # El único script es el del menú de la cuenta (D5): la dirección no carga Alpine ni portada.js.
-    assert re.findall(r'<script src="([^"]+)"', inicio_direccion) == ["/static/js/menu.js"]
+    # Solo el menú de la cuenta y el respaldo de "atrás" (D5): sin Alpine ni portada.js.
+    assert re.findall(r'<script src="([^"]+)"', inicio_direccion) == [
+        "/static/js/menu.js",
+        "/static/js/bfcache.js",
+    ]
 
 
 # --- Menú de la cuenta (spec cierre-sesion, "Menú de la cuenta"; design.md de US-002, D5) ---
@@ -492,3 +497,12 @@ def test_un_envio_tras_la_inactividad_muestra_el_aviso(client, docente):
     html = client.post("/salir/", follow=True).content.decode()
 
     assert aviso(html)
+
+
+def test_el_panel_carga_el_respaldo_de_atras_sin_el_menu(client, administrador):
+    client.force_login(administrador)
+
+    html = client.get("/admin/").content.decode()
+
+    assert '<script src="/static/js/bfcache.js" defer>' in html
+    assert "js/menu.js" not in html

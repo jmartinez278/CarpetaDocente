@@ -85,8 +85,29 @@ def test_a_los_59_minutos_ve_la_pantalla_y_la_marca_se_renueva(client, docente):
     assert client.session[MARCA] >= antes
 
 
-def test_la_primera_peticion_de_una_sesion_sin_marca_la_recibe(client, docente):
+def test_el_ingreso_real_inicia_el_reloj_y_a_los_60_minutos_la_primera_consulta_se_rechaza(
+    client, docente, clave, monkeypatch
+):
+    inicio = timezone.now()
+    monkeypatch.setattr(timezone, "now", lambda: inicio)
+
+    # El POST de ingreso llega como anónimo; no se sigue la redirección (cookie sí, pantalla no).
+    respuesta = client.post(INGRESAR, {"username": docente.username, "password": clave})
+
+    assert respuesta.status_code == 302
+    assert client.session[MARCA] == inicio.timestamp()
+    monkeypatch.setattr(timezone, "now", lambda: inicio + timedelta(minutes=60))
+    consulta = client.get(PORTADA)
+    assert consulta.status_code == 302
+    assert consulta["Location"] == f"{INGRESAR}?next={quote(PORTADA)}"
+    assert SESSION_KEY not in client.session
+
+
+def test_la_primera_peticion_de_una_sesion_anterior_sin_marca_la_recibe(client, docente):
     client.force_login(docente)
+    sesion = client.session
+    sesion.pop(MARCA, None)
+    sesion.save()
     assert MARCA not in client.session
 
     respuesta = client.get(PORTADA)

@@ -116,3 +116,44 @@ def test_sin_javascript_el_menu_abre_y_cierra_la_sesion(live_server, browser, do
         expect(page).to_have_url(f"{live_server.url}/ingresar/")
     finally:
         contexto.close()
+
+
+def restaurar_desde_bfcache(page):
+    """Simula que "atrás" devuelve la pantalla guardada (``pageshow`` persistido)."""
+    page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}))")
+
+
+def entrar_al_panel(page, live_server, administrador, clave):
+    ingresar(page, live_server, administrador, clave)
+    page.goto(f"{live_server.url}/admin/")
+    expect(page).to_have_url(f"{live_server.url}/admin/")
+    page.wait_for_load_state("load")
+
+
+def test_panel_atras_tras_el_cierre_manual_no_muestra_la_pantalla(
+    live_server, page, administrador, clave
+):
+    entrar_al_panel(page, live_server, administrador, clave)
+    # Otra pestaña cierra la sesión desde el panel; esta queda con la pantalla guardada.
+    otra = page.context.new_page()
+    otra.goto(f"{live_server.url}/admin/")
+    otra.get_by_role("button", name=re.compile("cerrar sesión", re.IGNORECASE)).click()
+    expect(otra).to_have_url(f"{live_server.url}/ingresar/")
+
+    restaurar_desde_bfcache(page)
+
+    expect(page).to_have_url(re.compile(r"/ingresar/\?next=/admin/"))
+    page.go_back()
+    expect(page.get_by_role("heading", name="Acciones recientes")).to_have_count(0)
+
+
+def test_panel_atras_tras_la_inactividad_no_muestra_la_pantalla(
+    live_server, page, administrador, clave
+):
+    entrar_al_panel(page, live_server, administrador, clave)
+    envejecer_sesion(page, 61)
+
+    restaurar_desde_bfcache(page)
+
+    expect(page).to_have_url(re.compile(r"/ingresar/\?next=/admin/"))
+    expect(page.locator(".mensaje--aviso")).to_contain_text(AVISO)
