@@ -60,6 +60,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "cuentas.middleware.InactividadMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -104,6 +105,7 @@ AUTHENTICATION_BACKENDS = ["cuentas.backends.BackendConBloqueo"]
 
 # Pantalla de ingreso para LoginRequiredMixin y el panel (US-001, D2)
 LOGIN_URL = "ingresar"
+LOGOUT_REDIRECT_URL = "ingresar"
 
 
 AUTH_PASSWORD_VALIDATORS = [

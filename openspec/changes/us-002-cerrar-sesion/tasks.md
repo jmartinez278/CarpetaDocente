@@ -12,8 +12,8 @@
 
 ## 1. Backend: inactividad, cierre y caché (D1 a D3, D7)
 
-- [ ] 1.1 Prueba primero, `cuentas/tests/test_servicios_inactividad.py`, con la hora pasada como argumento: a los 59:59 no vence, a los 60:00 vence, y una sesión sin marca no vence. Luego `INACTIVIDAD_MAXIMA` y `sesion_vencida` en `cuentas/servicios.py`, con docstrings que citen RN-025 y RNF-015. Verificar: rojo porque no existe `sesion_vencida`, y luego verde
-- [ ] 1.2 Prueba primero, `cuentas/tests/test_inactividad.py`, escribiendo una marca vieja en la sesión. Casos:
+- [x] 1.1 Prueba primero, `cuentas/tests/test_servicios_inactividad.py`, con la hora pasada como argumento: a los 59:59 no vence, a los 60:00 vence, y una sesión sin marca no vence. Luego `INACTIVIDAD_MAXIMA` y `sesion_vencida` en `cuentas/servicios.py`, con docstrings que citen RN-025 y RNF-015. Verificar: rojo porque no existe `sesion_vencida`, y luego verde
+- [x] 1.2 Prueba primero, `cuentas/tests/test_inactividad.py`, escribiendo una marca vieja en la sesión. Casos:
   - un GET vencido termina la sesión y lleva a `/ingresar/?next=…`;
   - un POST vencido lleva a `/ingresar/` sin `next`;
   - queda el mensaje con la etiqueta `inactividad`;
@@ -22,7 +22,7 @@
   - en `/admin/`, lo mismo que en las demás pantallas.
 
   Luego `InactividadMiddleware` en `cuentas/middleware.py`, registrado en `MIDDLEWARE` después de `MessageMiddleware`. Verificar: rojo y luego verde
-- [ ] 1.3 Prueba primero, `cuentas/tests/test_salir.py`. Casos:
+- [x] 1.3 Prueba primero, `cuentas/tests/test_salir.py`. Casos:
   - un POST a `/salir/` termina la sesión y lleva a `/ingresar/`, sin mensaje;
   - un GET da 405 y deja la sesión iniciada;
   - un POST sin sesión lleva a `/ingresar/`;
@@ -31,7 +31,7 @@
   - después del cierre, `/docente/` lleva a `/ingresar/?next=…`.
 
   Luego la ruta `salir` (`LogoutView`), `LOGOUT_REDIRECT_URL` y las cabeceras en el middleware. Si la prueba del panel falla, se aplica la alternativa de D2. Verificar: rojo y luego verde; `uv run pytest --cov` en verde y con 80 % o más
-- [ ] 1.4 Catálogo de rutas a la versión 1.2.0, según D7, con `scripts/subir_version.py` si corresponde (README). Anotar en `insumos/pendientes-docs.md` el `clearsessions` del despliegue. Verificar: el catálogo nombra `/salir/` y `/admin/logout/`, y su historial tiene la fila 1.2.0. Cierre del grupo y commit (reglas de arriba)
+- [x] 1.4 Catálogo de rutas a la versión 1.2.0, según D7, con `scripts/subir_version.py` si corresponde (README). Anotar en `insumos/pendientes-docs.md` el `clearsessions` del despliegue. Verificar: el catálogo nombra `/salir/` y `/admin/logout/`, y su historial tiene la fila 1.2.0. Cierre del grupo y commit (reglas de arriba)
 
 ## 2. Interfaz: menú, aviso, punta a punta y axe (D4 a D6)
 
