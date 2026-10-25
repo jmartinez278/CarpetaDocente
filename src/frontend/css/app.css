@@ -229,6 +229,10 @@
     color: var(--color-error);
   }
 
+  .mensaje--aviso {
+    color: var(--color-aviso);
+  }
+
   .mensaje__texto {
     display: flex;
     flex-direction: column;
@@ -246,6 +250,75 @@
 
   .mensaje__texto p + p {
     color: var(--color-texto);
+  }
+
+  /* Menú de la cuenta (US-002, D5). DESIGN.md solo fija el botón de 44 × 44 px; el panel usa los tokens de
+     superficie, línea, radio y sombra existentes y su ancho no pasa de 100vw - 32px (RNF-005). */
+  .menu-cuenta {
+    position: relative;
+  }
+
+  .menu-cuenta__boton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-pill);
+    color: var(--color-primario);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .menu-cuenta__boton::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu-cuenta__boton:focus-visible,
+  .menu-cuenta__salir:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 2px;
+  }
+
+  .menu-cuenta[open] .menu-cuenta__boton {
+    background: var(--color-dimension);
+  }
+
+  .menu-cuenta__panel {
+    position: absolute;
+    top: calc(100% + --spacing(2));
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(3);
+    width: 256px;
+    max-width: calc(100vw - 32px);
+    padding: --spacing(4);
+    background: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-tarjeta);
+    box-shadow: var(--shadow-ficha);
+  }
+
+  .menu-cuenta__nombre {
+    overflow-wrap: anywhere;
+    font-weight: 600;
+    color: var(--color-texto);
+  }
+
+  .menu-cuenta__salir {
+    display: flex;
+    align-items: center;
+    gap: --spacing(2);
+    width: 100%;
+    min-height: 44px;
+    padding: 0 --spacing(4);
+    background: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-campo);
+    color: var(--color-primario);
+    font-weight: 600;
+    cursor: pointer;
   }
 
   .boton-principal {

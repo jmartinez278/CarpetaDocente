@@ -56,6 +56,10 @@ def test_los_iconos_de_d9_estan_y_llevan_el_aviso_isc():
         "file-text",
         "check",
         "x",
+        # Menú de la cuenta y aviso de inactividad (US-002, design.md D4 y D5).
+        "circle-user-round",
+        "log-out",
+        "clock",
     }
     assert "ISC License" in (CARPETA_ICONOS / "LICENSE-lucide.txt").read_text(encoding="utf-8")
 

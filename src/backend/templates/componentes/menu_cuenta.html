@@ -1,0 +1,15 @@
+{% load static %}{% comment %}
+Menú de la cuenta (DESIGN.md, Barra superior; design.md de US-002, D5): patrón de divulgación con <details>, que abre y
+cierra sin JavaScript. menu.js suma Escape, el toque fuera y la recarga al volver con "atrás".
+{% endcomment %}
+<details class="menu-cuenta" data-menu-cuenta>
+  <summary class="menu-cuenta__boton" aria-label="Menú de la cuenta">{% include "iconos/circle-user-round.svg" %}</summary>
+  <div class="menu-cuenta__panel">
+    <p class="menu-cuenta__nombre">{{ user.get_full_name|default:user.username }}</p>
+    <form method="post" action="{% url 'salir' %}">
+      {% csrf_token %}
+      <button class="menu-cuenta__salir" type="submit">{% include "iconos/log-out.svg" %}Cerrar sesión</button>
+    </form>
+  </div>
+</details>
+<script src="{% static 'js/menu.js' %}" defer></script>

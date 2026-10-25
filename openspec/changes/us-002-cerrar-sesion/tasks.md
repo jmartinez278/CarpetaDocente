@@ -35,12 +35,12 @@
 
 ## 2. Interfaz: menú, aviso, punta a punta y axe (D4 a D6)
 
-- [ ] 2.1 Prueba primero, en `test_plantillas.py` o `test_pantallas.py`. Casos:
+- [x] 2.1 Prueba primero, en `test_plantillas.py` o `test_pantallas.py`. Casos:
   - la portada y la dirección tienen el menú en la barra, con el nombre del usuario (o su usuario) y un formulario POST a `salir` con el token CSRF;
   - `/ingresar/` muestra el aviso, con sus dos líneas y `role="status"`, cuando hay el mensaje `inactividad`, y no lo muestra en los demás casos.
 
   Luego `componentes/menu_cuenta.html` en `marco.html`; el aviso en `ingresar.html`; `.mensaje--aviso` y las clases del menú en `app.css`; los íconos Lucide `circle-user-round`, `log-out` y `clock`; y `static/js/menu.js` (D3, D5). Verificar: rojo y luego verde; `npm run build` sin errores y ningún color hexadecimal en las plantillas
-- [ ] 2.2 Prueba de punta a punta, `cuentas/tests/test_cerrar_sesion_e2e.py`. Casos:
+- [x] 2.2 Prueba de punta a punta, `cuentas/tests/test_cerrar_sesion_e2e.py`. Casos:
   - camino ideal: ingresar, abrir el menú, "Cerrar sesión" y llegar a `/ingresar/`;
   - botón "atrás" tras cerrar sesión: llega a `/ingresar/` sin el saludo;
   - inactividad: se envejece la marca, se recarga, aparece el aviso y "atrás" no muestra la pantalla;
@@ -49,8 +49,8 @@
   - sin JavaScript, el menú abre y cierra la sesión.
 
   Verificar: `uv run pytest -m e2e --browser chromium` en verde, con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`
-- [ ] 2.3 axe y ancho: sumar `ingresar-con-aviso`, `portada-menu-abierto` y `direccion-menu-abierto` a `test_accesibilidad_e2e.py` (32 combinaciones), y comprobar el ancho a 320 y 360 px con el menú abierto en ambos temas. Verificar: sin `critical` ni `serious`, el ancho del documento no supera el de la ventana y el informe queda en `test-results/`. Si falla el contraste de `--color-aviso`, se muestra el diff propuesto de DESIGN.md y se espera la aprobación
-- [ ] 2.4 La pantalla vista en claro y oscuro, en celular y escritorio (la marca Marco). Anotar en `verificacion.md` lo que DESIGN.md no fija del panel, como deuda para el pulido (D5). Cierre del grupo y commit (reglas de arriba)
+- [x] 2.3 axe y ancho: sumar `ingresar-con-aviso`, `portada-menu-abierto` y `direccion-menu-abierto` a `test_accesibilidad_e2e.py` (32 combinaciones), y comprobar el ancho a 320 y 360 px con el menú abierto en ambos temas. Verificar: sin `critical` ni `serious`, el ancho del documento no supera el de la ventana y el informe queda en `test-results/`. Si falla el contraste de `--color-aviso`, se muestra el diff propuesto de DESIGN.md y se espera la aprobación
+- [x] 2.4 La pantalla vista en claro y oscuro, en celular y escritorio (la marca Marco). Anotar en `verificacion.md` lo que DESIGN.md no fija del panel, como deuda para el pulido (D5). Cierre del grupo y commit (reglas de arriba)
 
 ## 3. Revisión final y verificación (D8)
 

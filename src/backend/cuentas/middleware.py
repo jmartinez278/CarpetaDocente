@@ -47,7 +47,7 @@ class InactividadMiddleware:
     def _cerrar_por_inactividad(self, request):
         logout(request)
         titulo, detalle = servicios.aviso_de_inactividad()
-        messages.info(request, f"{titulo}\n{detalle}", extra_tags=ETIQUETA_INACTIVIDAD)
+        messages.info(request, f"{titulo}\n\n{detalle}", extra_tags=ETIQUETA_INACTIVIDAD)
         destino = reverse("ingresar")
         if request.method == "GET":
             respuesta = redirect_to_login(request.get_full_path(), destino)
