@@ -4,6 +4,11 @@ Los usuarios son los ficticios de ``conftest.py`` (``docente``, ``direccion``) y
 de la fixture ``clave``, generada en cada prueba (DoD 8).
 """
 
+from datetime import timedelta
+
+from django.contrib.sessions.backends.db import SessionStore
+from django.utils import timezone
+
 TEMAS = ("light", "dark")
 ANCHOS = (360, 1280)
 ALTO = 800
@@ -38,3 +43,11 @@ def con_pantalla(page, ancho, tema):
     """Ancho de la ventana y preferencia de tema del sistema (``prefers-color-scheme``)."""
     page.set_viewport_size({"width": ancho, "height": ALTO})
     page.emulate_media(color_scheme=tema)
+
+
+def envejecer_sesion(page, minutos):
+    """Retrasa la marca de actividad de la sesión del navegador, sin esperar 60 minutos (RN-025)."""
+    clave_de_sesion = next(c["value"] for c in page.context.cookies() if c["name"] == "sessionid")
+    sesion = SessionStore(session_key=clave_de_sesion)
+    sesion["ultima_actividad"] = (timezone.now() - timedelta(minutes=minutos)).timestamp()
+    sesion.save()
