@@ -39,8 +39,8 @@
 - Campos: `username`, `first_name`, `last_name`, `rol`, `institucion`, `password1` y `password2`. Nombres, apellidos e institución se marcan obligatorios en el formulario, no en el modelo, porque el Administrador de `createsuperuser` no tiene institución.
 - `rol` ofrece solo DOCENTE y DIRECCION. Un POST con ADMINISTRADOR da el error de opción inválida.
 - `clean_username`:
-  1. Si no cumple `usuario_valido`, da el error de formato, con el ejemplo jperez.
-  2. Si existe sin distinguir mayúsculas, da "El usuario ya existe" y, como segunda línea, "Prueba con jperez3." (`sugerir_usuario`). Para eso los nombres y apellidos se limpian antes que el usuario (orden de los campos).
+  1. Si existe sin distinguir mayúsculas, da "El usuario ya existe" y, como segunda línea, "Prueba con jperez3." (`sugerir_usuario`). Para eso los nombres y apellidos se limpian antes que el usuario (orden de los campos). Va primero para que "JPerez" con "jperez" ya existente diga que el usuario existe, como pide el spec, y no solo que el formato falla.
+  2. Si no cumple `usuario_valido`, da el error de formato, con el ejemplo jperez.
 - El `help_text` del campo usuario explica el formato: "Inicial del primer nombre y primer apellido, en minúsculas, sin tildes ni ñ (ej. jperez). Si ya existe, se agrega un número (jperez2)."
 - `is_staff` e `is_superuser` no están en el formulario, así que quedan en falso.
 
@@ -78,6 +78,9 @@
 ### D7. Usuario en minúsculas al ingresar
 
 - **Convención:** los usuarios de todos los roles van en minúsculas, también los que se crean con `createsuperuser`. El alta del panel ya lo exige por el formato (D1).
+- `Usuario.normalize_username` pasa el usuario a minúsculas, después de la normalización Unicode de Django. `create_user` y `create_superuser`, que es lo que usa `createsuperuser`, lo aplican al guardar. Así "Marco" queda como "marco" e ingresa con D7.
+  - Si "marco" ya existe, `createsuperuser` con "Marco" falla y no crea una segunda cuenta.
+  - La API exacta del comando se confirma con Context7 al implementar.
 - `BackendConBloqueo.authenticate` pasa el usuario a minúsculas (`str.lower()`) antes de buscar la cuenta. Así la búsqueda, la autenticación y el conteo de intentos de RN-024 caen en la misma cuenta, sin importar cómo se escribió el usuario.
   - Es el único backend de `AUTHENTICATION_BACKENDS`, de modo que cubre `/ingresar/` y cualquier `authenticate()` futuro.
   - El formulario conserva el usuario tal como se escribió para volver a mostrarlo tras un rechazo, como hoy (spec `inicio-sesion`).
@@ -91,13 +94,12 @@
   - `test_servicios_usuario.py`: formato, base y sugerencia, con tildes, ñ y números.
   - `test_admin.py`: alta, roles, duplicados, edición, eliminación, la cuenta creada que no entra al panel y la sesión de una cuenta desactivada. Se adaptan las pruebas del alta que ya existen.
   - `test_plantillas.py` o `test_ingresar.py`: la pista y su `aria-describedby`.
-  - `test_backend.py` y `test_ingresar.py`: "JPerez" entra en la cuenta "jperez", y los 5 intentos escritos con distintas mayúsculas bloquean esa misma cuenta (D7).
+  - `test_backend.py` y `test_ingresar.py`: "JPerez" entra en la cuenta "jperez", y los 5 intentos escritos con distintas mayúsculas bloquean esa misma cuenta, y `createsuperuser` con "Marco" guarda "marco" (D7).
 - **Punta a punta** (`test_gestion_cuentas_e2e.py`): el Administrador crea una docente en el panel, ve "Cuenta creada" y la docente ingresa por `/ingresar/`. Después el Administrador la desactiva y la docente ya no ingresa.
 - **axe:** las combinaciones de `test_accesibilidad_e2e.py` sobre `/ingresar/` ya cubren la pista. El panel de Django no entra en axe: no es una pantalla nueva del proyecto.
 
 ## Risks / Trade-offs
 
-- **[Una cuenta con mayúsculas creada con `createsuperuser`]:** no podría ingresar, porque el ingreso busca en minúsculas (D7). → Mitigación: la convención de D7 queda en este documento. `createsuperuser` no la fuerza, y una cuenta así se corrige desde el shell.
 - **[Hay cuentas fuera del formato]:** las de prueba y la de `createsuperuser`. → Mitigación: el formato solo se valida en el alta y el usuario no se edita.
 - **[El Administrador se desactiva a sí mismo]:** pierde el acceso. → Mitigación: se recupera con `createsuperuser` o con el shell. Se acepta y va a la descripción del PR.
 - **[Apellidos compuestos]:** la sugerencia toma la primera palabra. → Mitigación: el Administrador escribe el usuario y el panel solo propone.

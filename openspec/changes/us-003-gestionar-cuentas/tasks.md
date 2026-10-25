@@ -12,13 +12,13 @@
 
 ## 1. Backend: formato del usuario, alta, edición y sin eliminar (D1 a D5)
 
-- [ ] 1.1 Prueba primero, `cuentas/tests/test_servicios_usuario.py`:
+- [x] 1.1 Prueba primero, `cuentas/tests/test_servicios_usuario.py`:
   - `usuario_valido` acepta "jperez", "jperez2" y "jperez10", y rechaza "JPerez", "jpérez", "jpeñez", "j perez", "j.perez", "jperez1", "jperez01" y "j";
   - `usuario_base` de "Ñahui Rosa" / "Núñez Ávila" da "nnunez";
   - `sugerir_usuario` da la base libre o el primer número libre desde el 2, sin distinguir mayúsculas, y `None` si la base tiene menos de dos letras.
 
   Luego `FORMATO_USUARIO`, `usuario_valido`, `usuario_base` y `sugerir_usuario` en `cuentas/servicios.py`, con docstrings que citen R-11 y RF-003. Verificar: rojo y luego verde
-- [ ] 1.2 Prueba primero, en `cuentas/tests/test_admin.py`. Se adaptan `datos_alta` y las pruebas del alta que ya existen (sin `usable_password`, con un usuario del formato, nombres y apellidos). Casos:
+- [x] 1.2 Prueba primero, en `cuentas/tests/test_admin.py`. Se adaptan `datos_alta` y las pruebas del alta que ya existen (sin `usable_password`, con un usuario del formato, nombres y apellidos). Casos:
   - camino ideal con "Cuenta creada" y la cuenta activa, sin `is_staff` ni `is_superuser`;
   - cada obligatorio vacío;
   - el formulario sin `usable_password`;
@@ -28,30 +28,32 @@
   - el `help_text` del usuario.
 
   Luego `FormularioAltaUsuario` sobre `UserCreationForm`, `add_fieldsets` y `response_add` (D2, D3). Verificar: rojo y luego verde
-- [ ] 1.3 Prueba primero, en `test_admin.py`. Casos:
+- [x] 1.3 Prueba primero, en `test_admin.py`. Casos:
   - la edición no tiene `is_staff`, `is_superuser`, `groups`, `user_permissions` ni `debe_cambiar_password`;
   - el usuario es de solo lectura, y el rol también en una cuenta de Administrador;
   - el rol ofrece solo Docente y Dirección;
   - corregir los apellidos conserva el usuario y la contraseña.
 
   Luego `fieldsets`, `get_readonly_fields`, `FormularioEdicionUsuario` y `list_filter` (D4). Las pruebas de "Desbloquear cuenta" siguen en verde. Verificar: rojo y luego verde
-- [ ] 1.4 Prueba primero, en `test_admin.py`. Casos:
+- [x] 1.4 Prueba primero, en `test_admin.py`. Casos:
   - sin botón ni acción de eliminar, y un POST a la vista de eliminación da 403 y la fila sigue;
   - una cuenta desactivada no ingresa (mensaje genérico), sigue en la lista como inactiva y su sesión abierta termina en `/ingresar/`;
   - la cuenta creada en el panel abre `/admin/` y termina en su portada;
   - un docente y la dirección no ven la lista ni el alta de cuentas.
 
   Luego `has_delete_permission` (D5). Verificar: rojo y luego verde (las pruebas de la sesión y del acceso pueden pasar desde el inicio: se anota en `verificacion.md` que fijan un comportamiento que ya existe); `uv run pytest --cov` en verde y con 80 % o más
-- [ ] 1.5 Revisión del grupo y commit (reglas de arriba)
+- [x] 1.5 Revisión del grupo y commit (reglas de arriba)
 
 ## 2. Ingreso: usuario en minúsculas, pista en `/ingresar/` y punta a punta (D6 a D8)
 
-- [ ] 2.1 Prueba primero, en `cuentas/tests/test_backend.py` y `test_ingresar.py`:
+- [ ] 2.1 Prueba primero, en `cuentas/tests/test_backend.py`, `test_ingresar.py` y `test_modelos.py`:
   - "JPerez" con la contraseña correcta entra en la cuenta "jperez" y llega a `/docente/`;
   - 5 contraseñas incorrectas escritas como "jperez", "JPerez" y "JPEREZ" bloquean la cuenta "jperez" (RN-024);
-  - tras un rechazo, el formulario conserva el usuario tal como se escribió.
+  - tras un rechazo, el formulario conserva el usuario tal como se escribió;
+  - `createsuperuser --noinput` con "Marco" guarda "marco" y esa cuenta ingresa con "Marco";
+  - con "marco" existente, `createsuperuser` con "Marco" falla y no crea otra cuenta.
 
-  Luego `BackendConBloqueo.authenticate` pasa el usuario a minúsculas antes de `get_by_natural_key` (D7). Verificar: rojo y luego verde; las pruebas de bloqueo y de ingreso de US-001 siguen en verde
+  Luego `BackendConBloqueo.authenticate` pasa el usuario a minúsculas antes de `get_by_natural_key`, y `Usuario.normalize_username` lo pasa a minúsculas (D7). Verificar: rojo y luego verde; las pruebas de bloqueo y de ingreso de US-001 siguen en verde
 
 - [ ] 2.2 Prueba primero, en `test_plantillas.py` o `test_ingresar.py`:
   - `/ingresar/` muestra "Ejemplo: jperez (inicial y apellido)" bajo el campo Usuario, con `aria-describedby` hacia la pista;
