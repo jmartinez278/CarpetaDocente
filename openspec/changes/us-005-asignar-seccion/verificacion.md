@@ -46,7 +46,12 @@ Se completa en el grupo 3.
 
 ## Minor para la descripción del PR
 
-- Si dos Administradores asignan la misma sección vacía a la vez, el segundo recibe el `ValidationError` de `save()` como un error 500: los datos quedan bien, pero sin el mensaje en el formulario.
 - Cambiar la institución de un año con secciones asignadas deja docentes de otra institución en esas secciones (la regla se valida al cambiar el docente, no el año).
 - La lista y el campo "Docente de aula" muestran el usuario (aquispe), no el nombre completo.
 - El filtro por año de la lista de secciones hace una consulta por año para el nombre de la institución (pocas filas).
+- A2 Important 3: carrera de `cargar_secciones` con un cierre de año al mismo tiempo (`servicios.py`); revisarla con RF-009.
+- A2 Minor: la portada no filtra por `anio_escolar__institucion_id` (`servicios.py`); cambiar la institución de una cuenta no revalida sus secciones.
+- A2 Minor: pruebas pendientes: desempate por nombre, portada en el flujo de dos pasos, rollback de la carga, 24 combinaciones exactas y sin crear usuarios ni instituciones.
+- Revisión 2.3: docstring "US-001" en `cuentas/tests/e2e.py`; `.errorlist` sin limitar a `.field-docente` en `test_asignar_seccion_e2e.py`; axe de la portada con sección solo a 360 px.
+- Revisión 3.1: la prueba del `FOR UPDATE` en la ficha (`adm::test_el_post_de_la_ficha_bloquea_la_fila_de_la_seccion`) solo confirma el SQL, no la carrera real ni que ocurra dentro de `atomic`; además toma la primera consulta a `seccion`, que sería frágil si el middleware la consultara.
+- Revisión 3.1: las pruebas de rol e institución cambiados (`srv`) no comprueban el mensaje `NO_ELEGIBLE`, solo el `ValidationError`; falta un comentario en `SeccionAdmin.get_object` que explique por qué duplica el de Django.

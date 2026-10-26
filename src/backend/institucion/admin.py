@@ -79,6 +79,22 @@ class SeccionAdmin(admin.ModelAdmin):
         """En la ficha el año no cambia, para que la lista de docentes no quede desfasada."""
         return ["anio_escolar"] if obj is not None else []
 
+    def get_object(self, request, object_id, from_field=None):
+        """En un POST carga la sección con ``FOR UPDATE``, dentro de la transacción de la ficha.
+
+        Así, de dos Administradores que guardan a la vez, el segundo espera al primero y ve el
+        mensaje de D3 en el formulario, no un 500 del ``save()``. ``of=("self",)`` bloquea solo
+        la fila de la sección: el ``select_related`` del docente es un ``LEFT JOIN``.
+        """
+        if request.method != "POST":
+            return super().get_object(request, object_id, from_field)
+        queryset = self.get_queryset(request).select_for_update(of=("self",))
+        field = Seccion._meta.pk if from_field is None else Seccion._meta.get_field(from_field)
+        try:
+            return queryset.get(**{field.name: field.to_python(object_id)})
+        except (Seccion.DoesNotExist, ValidationError, ValueError):
+            return None
+
     def get_form(self, request, obj=None, **kwargs):
         if obj is not None:
             kwargs["form"] = FormularioFichaSeccion

@@ -155,6 +155,39 @@ def test_no_se_asigna_una_docente_de_otra_institucion(seccion, crear_usuario, ot
     assert docente_guardado(seccion) is None
 
 
+def test_no_se_asigna_una_docente_desactivada_despues_de_leerla(seccion, docente):
+    vieja = Usuario.objects.get(pk=docente.pk)
+    Usuario.objects.filter(pk=docente.pk).update(is_active=False)
+
+    with pytest.raises(ValidationError) as error:
+        asignar(seccion, vieja)
+
+    assert error.value.message_dict == {"docente": [NO_ELEGIBLE]}
+    assert docente_guardado(seccion) is None
+
+
+def test_no_se_asigna_una_docente_cuyo_rol_cambio_despues_de_leerla(seccion, docente):
+    vieja = Usuario.objects.get(pk=docente.pk)
+    Usuario.objects.filter(pk=docente.pk).update(rol=Usuario.Rol.DIRECCION)
+
+    with pytest.raises(ValidationError):
+        asignar(seccion, vieja)
+
+    assert docente_guardado(seccion) is None
+
+
+def test_no_se_asigna_una_docente_que_cambio_de_institucion_despues_de_leerla(
+    seccion, docente, otra_institucion
+):
+    vieja = Usuario.objects.get(pk=docente.pk)
+    Usuario.objects.filter(pk=docente.pk).update(institucion=otra_institucion)
+
+    with pytest.raises(ValidationError):
+        asignar(seccion, vieja)
+
+    assert docente_guardado(seccion) is None
+
+
 def test_no_se_crea_una_seccion_con_una_cuenta_no_elegible(anio_abierto, direccion):
     with pytest.raises(ValidationError):
         Seccion.objects.create(anio_escolar=anio_abierto, grado=1, nombre="A", docente=direccion)

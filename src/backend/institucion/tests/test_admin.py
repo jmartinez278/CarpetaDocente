@@ -1,6 +1,8 @@
 """Pruebas del panel de administración de institucion (documento 10; spec asignacion-secciones)."""
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from cuentas.models import Usuario
@@ -134,6 +136,21 @@ def test_seccion_ocupada_muestra_el_mensaje_y_no_guarda_nada(
     assert formulario(respuesta).errors["docente"] == [OCUPADA]
     seccion.refresh_from_db()
     assert (seccion.nombre, seccion.docente) == ("A", docente)
+
+
+def test_el_post_de_la_ficha_bloquea_la_fila_de_la_seccion(admin_client, seccion, docente):
+    with CaptureQueriesContext(connection) as consultas:
+        admin_client.post(url_ficha(seccion), datos_ficha(seccion, docente=docente.pk))
+
+    primera = next(q["sql"] for q in consultas if 'FROM "seccion"' in q["sql"])
+    assert "FOR UPDATE" in primera, "la ficha debe cargar la sección con FOR UPDATE en el POST"
+
+
+def test_el_get_de_la_ficha_no_bloquea_la_fila(admin_client, seccion):
+    with CaptureQueriesContext(connection) as consultas:
+        admin_client.get(url_ficha(seccion))
+
+    assert not [q for q in consultas if "FOR UPDATE" in q["sql"]]
 
 
 def test_cambiar_a_una_seccion_repetida_muestra_un_error(admin_client, seccion):

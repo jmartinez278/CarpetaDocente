@@ -60,7 +60,7 @@ Tramo de alto riesgo (modelos y restricciones): va solo y en modo normal.
 
 ## 3. Revisión final y verificación
 
-- [ ] 3.1 Con la revisión final A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio), corregir los Critical e Important, con la prueba primero en cada caso. Los Minor van a la descripción del PR. Verificar: `uv run pytest --cov`, las e2e y `verificar.py --antes-del-commit` en verde
+- [x] 3.1 Con la revisión final A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio), corregir los Critical e Important, con la prueba primero en cada caso. Los Minor van a la descripción del PR. Verificar: `uv run pytest --cov`, las e2e y `verificar.py --antes-del-commit` en verde
 - [ ] 3.2 `verificacion.md` corto: tabla escenario → prueba de los dos specs del cambio, y la DoD 1 a 9 (DoD 4: "No aplica hasta EN-02"). Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit del grupo (reglas de arriba)
 
 ## Workflow follow-up

@@ -55,7 +55,7 @@ def validar_asignacion(seccion, *, bloquear=False):
     - Si la sección ya tiene otro docente guardado, rechaza con ``SECCION_OCUPADA``: el
       cambio de sección se hace en dos pasos, primero vaciando la sección (design, D3).
     - Si la sección está vacía, el docente nuevo debe ser una cuenta activa con rol
-      Docente de la institución del año escolar.
+      Docente de la institución del año escolar, según la base de datos y no según el objeto.
 
     ``bloquear`` lee la fila guardada con ``select_for_update`` (requiere una transacción):
     así, de dos Administradores que asignan a la vez, el segundo recibe el error.
@@ -73,12 +73,15 @@ def validar_asignacion(seccion, *, bloquear=False):
         return
     if guardado is not None:
         raise ValidationError({"docente": SECCION_OCUPADA})
-    docente = seccion.docente
-    if not (
-        docente.is_active
-        and docente.rol == Usuario.Rol.DOCENTE
-        and docente.institucion_id == seccion.anio_escolar.institucion_id
-    ):
+    # La cuenta se relee: ``seccion.docente`` puede ser una copia vieja (activa, con otro rol
+    # o de otra institución cuando ya no lo es en la base).
+    elegible = Usuario.objects.filter(
+        pk=seccion.docente_id,
+        rol=Usuario.Rol.DOCENTE,
+        is_active=True,
+        institucion_id=seccion.anio_escolar.institucion_id,
+    ).exists()
+    if not elegible:
         raise ValidationError({"docente": DOCENTE_NO_ELEGIBLE})
 
 
