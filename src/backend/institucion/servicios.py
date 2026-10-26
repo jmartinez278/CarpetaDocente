@@ -1,18 +1,35 @@
 """Reglas de negocio del módulo institucion (documento 12: capa de servicios)."""
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 
 from cuentas.models import Usuario
-from institucion.models import Seccion
+from institucion.models import AnioEscolar, Seccion
 
 SECCION_OCUPADA = "La sección ya tiene un docente asignado"
+SIN_SECCION = "Tu sección aparecerá cuando el administrador la asigne."
+GRADOS = range(1, 7)
+NOMBRES_SECCION = ("A", "B", "C", "D")
 DOCENTE_NO_ELEGIBLE = "Elige una docente activa de la institución del año escolar."
 
 
 def texto_seccion(seccion):
     """Texto de una sección: "2.º grado, sección A", con el ordinal º (U+00BA) (US-005, D2)."""
     return f"{seccion.grado}.º grado, sección {seccion.nombre}"
+
+
+def texto_secciones_docente(usuario):
+    """Línea de la portada con las secciones del docente en el año ABIERTO (US-005, D2).
+
+    Van ordenadas por grado y nombre y unidas con " · ". Sin ninguna, avisa que aparecerá.
+    """
+    secciones = Seccion.objects.filter(
+        docente=usuario, anio_escolar__estado=AnioEscolar.Estado.ABIERTO
+    ).order_by("grado", "nombre")
+    if not secciones:
+        return SIN_SECCION
+    return " · ".join(texto_seccion(seccion) for seccion in secciones)
 
 
 def docentes_elegibles(seccion):
@@ -63,3 +80,37 @@ def validar_asignacion(seccion, *, bloquear=False):
         and docente.institucion_id == seccion.anio_escolar.institucion_id
     ):
         raise ValidationError({"docente": DOCENTE_NO_ELEGIBLE})
+
+
+def cargar_secciones(institucion, anio):
+    """Crea el año ABIERTO y sus secciones de 1.º a 6.º, A a D, sin docentes (US-005, D2).
+
+    Es idempotente. Devuelve ``(anio_escolar, anio_creado, secciones_creadas)``. Si el año
+    ya existe CERRADO, o la institución tiene otro año ABIERTO, lanza ``ValidationError``
+    y no crea nada.
+    """
+    with transaction.atomic():
+        existente = AnioEscolar.objects.filter(institucion=institucion, anio=anio).first()
+        if existente is not None and existente.estado == AnioEscolar.Estado.CERRADO:
+            raise ValidationError(f"El año {anio} está cerrado: no se cargan secciones en él.")
+        otro_abierto = (
+            AnioEscolar.objects.filter(institucion=institucion, estado=AnioEscolar.Estado.ABIERTO)
+            .exclude(anio=anio)
+            .first()
+        )
+        if otro_abierto is not None:
+            raise ValidationError(
+                f"La institución ya tiene el año {otro_abierto.anio} abierto: "
+                f"ciérralo antes de cargar el {anio}."
+            )
+        anio_escolar, anio_creado = AnioEscolar.objects.get_or_create(
+            institucion=institucion, anio=anio, defaults={"estado": AnioEscolar.Estado.ABIERTO}
+        )
+        secciones_creadas = 0
+        for grado in GRADOS:
+            for nombre in NOMBRES_SECCION:
+                _, creada = Seccion.objects.get_or_create(
+                    anio_escolar=anio_escolar, grado=grado, nombre=nombre
+                )
+                secciones_creadas += creada
+    return anio_escolar, anio_creado, secciones_creadas

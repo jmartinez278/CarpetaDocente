@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 
 from cuentas.models import Usuario
 from institucion import servicios
-from institucion.models import Seccion
+from institucion.models import AnioEscolar, Seccion
 
 pytestmark = pytest.mark.django_db
 
@@ -180,3 +180,88 @@ def test_docente_asignada_y_luego_desactivada_se_puede_quitar(seccion, docente):
     asignar(seccion, None)
 
     assert docente_guardado(seccion) is None
+
+
+# --- cargar_secciones (spec "Carga de las secciones del año") ---
+
+
+def test_primera_carga_crea_el_anio_abierto_y_24_secciones(institucion):
+    anio, anio_creado, creadas = servicios.cargar_secciones(institucion, 2027)
+
+    assert (anio.anio, anio.estado, anio_creado, creadas) == (2027, "ABIERTO", True, 24)
+    secciones = list(anio.secciones.all())
+    assert len(secciones) == 24
+    assert str(secciones[0]) == "1.º grado, sección A"
+    assert str(secciones[-1]) == "6.º grado, sección D"
+    assert all(s.docente_id is None for s in secciones)
+
+
+def test_carga_repetida_no_duplica_nada(institucion):
+    servicios.cargar_secciones(institucion, 2027)
+
+    anio, anio_creado, creadas = servicios.cargar_secciones(institucion, 2027)
+
+    assert (anio_creado, creadas) == (False, 0)
+    assert AnioEscolar.objects.count() == 1
+    assert Seccion.objects.count() == 24
+
+
+def test_carga_completa_las_secciones_que_faltan(anio_abierto, seccion):
+    _, anio_creado, creadas = servicios.cargar_secciones(anio_abierto.institucion, 2027)
+
+    assert (anio_creado, creadas) == (False, 23)
+    assert Seccion.objects.count() == 24
+
+
+def test_carga_rechaza_un_anio_cerrado(institucion):
+    AnioEscolar.objects.create(institucion=institucion, anio=2026, estado="CERRADO")
+
+    with pytest.raises(ValidationError, match="cerrado"):
+        servicios.cargar_secciones(institucion, 2026)
+
+    assert not Seccion.objects.exists()
+
+
+def test_carga_rechaza_otro_anio_abierto(anio_abierto):
+    with pytest.raises(ValidationError, match="abierto"):
+        servicios.cargar_secciones(anio_abierto.institucion, 2028)
+
+    assert AnioEscolar.objects.count() == 1
+    assert not Seccion.objects.exists()
+
+
+# --- texto_secciones_docente (spec pantallas-de-inicio, D2) ---
+
+SIN_SECCION = "Tu sección aparecerá cuando el administrador la asigne."
+
+
+def test_texto_de_una_seccion_del_docente(seccion, docente):
+    asignar(seccion, docente)
+
+    assert servicios.texto_secciones_docente(docente) == "2.º grado, sección A"
+
+
+def test_texto_de_dos_secciones_guardadas_en_desorden(seccion, docente):
+    asignar(Seccion.objects.create(anio_escolar=seccion.anio_escolar, grado=3, nombre="B"), docente)
+    asignar(seccion, docente)
+
+    assert (
+        servicios.texto_secciones_docente(docente) == "2.º grado, sección A · 3.º grado, sección B"
+    )
+
+
+def test_texto_sin_seccion(docente):
+    assert servicios.texto_secciones_docente(docente) == SIN_SECCION
+
+
+def test_texto_con_la_unica_seccion_en_un_anio_cerrado(seccion, docente):
+    asignar(seccion, docente)
+    AnioEscolar.objects.filter(pk=seccion.anio_escolar_id).update(estado="CERRADO")
+
+    assert servicios.texto_secciones_docente(docente) == SIN_SECCION
+
+
+def test_texto_ignora_las_secciones_de_otra_docente(seccion, docente, otra_docente):
+    asignar(seccion, otra_docente)
+
+    assert servicios.texto_secciones_docente(docente) == SIN_SECCION

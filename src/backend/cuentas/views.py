@@ -13,6 +13,7 @@ from cuentas import dimensiones
 from cuentas.acceso import RolRequeridoMixin, pantalla_de_inicio
 from cuentas.forms import FormularioIngreso
 from cuentas.models import Usuario
+from institucion import servicios
 
 
 class IngresarView(LoginView):
@@ -86,4 +87,5 @@ class PortadaDocenteView(RolRequeridoMixin, TemplateView):
         contexto = super().get_context_data(**kwargs)
         contexto["dimensiones"] = dimensiones.DIMENSIONES
         contexto["inicial"] = dimensiones.tarjeta_inicial(dimensiones.DIMENSIONES)
+        contexto["secciones"] = servicios.texto_secciones_docente(self.request.user)
         return contexto

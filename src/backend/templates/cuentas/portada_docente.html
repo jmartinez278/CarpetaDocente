@@ -8,6 +8,7 @@
 <main class="portada" x-data="carrusel">
   <div class="mx-auto w-full max-w-280 px-4 pt-8 min-[960px]:px-6 min-[960px]:pt-0">
     <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">Hola, {{ user.get_full_name|default:user.username }}</h1>
+    <p class="mt-2 text-body text-texto-suave">{{ secciones }}</p>
     <nav class="chips" aria-label="Accesos">
       {% for d in dimensiones %}<a class="chip" href="#c-{{ d.clave }}" :class="{ 'es-activo': controla && activa === 'c-{{ d.clave }}' }" @click.prevent="ir('c-{{ d.clave }}')" :aria-current="activa === 'c-{{ d.clave }}' ? 'true' : 'false'">{{ d.titulo }}<span class="sr-only">: ver tarjeta</span></a>
       {% endfor %}

@@ -37,13 +37,13 @@ Tramo de alto riesgo (modelos y restricciones): va solo y en modo normal.
 
 ## 2. Comando `cargar_secciones` y línea de la sección en la portada (D5, D6)
 
-- [ ] 2.1 Prueba primero, en `test_servicios.py` y `institucion/tests/test_cargar_secciones.py` (con `call_command`):
+- [x] 2.1 Prueba primero, en `test_servicios.py` y `institucion/tests/test_cargar_secciones.py` (con `call_command`):
   - primera carga: año ABIERTO y 24 secciones sin docente, con el mensaje de lo creado;
   - carga repetida: sin duplicados y "No se creó nada…";
   - año CERRADO, otro año ABIERTO e institución inexistente: `CommandError` con el motivo y nada creado.
 
   Luego `servicios.cargar_secciones` y el comando (D2, D5), y la línea de `cargar_secciones` en "Configuración local" del README. Verificar: rojo y luego verde; el comando corre dos veces seguidas en la base local con los dos mensajes
-- [ ] 2.2 Prueba primero, `servicios.texto_secciones_docente` en `test_servicios.py` y la portada en `cuentas/tests/test_pantallas.py`:
+- [x] 2.2 Prueba primero, `servicios.texto_secciones_docente` en `test_servicios.py` y la portada en `cuentas/tests/test_pantallas.py`:
   - una sección: "2.º grado, sección A" bajo el saludo y fuera del `h1`;
   - dos secciones guardadas en desorden: "2.º grado, sección A · 3.º grado, sección B";
   - sin sección, y con la única sección en un año CERRADO: "Tu sección aparecerá cuando el administrador la asigne.";
