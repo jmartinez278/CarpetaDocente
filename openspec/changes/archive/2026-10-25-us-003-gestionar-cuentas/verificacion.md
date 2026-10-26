@@ -23,7 +23,7 @@ Fecha: 25/10/2026. `/codex:adversarial-review --base main --background`, con foc
 | Intento de crear un Administrador | `adm::test_el_alta_rechaza_el_rol_administrador` |
 | Roles ofrecidos | `adm::test_formulario_de_alta_incluye_rol_e_institucion` |
 | Usuario repetido | `adm::test_usuario_repetido_dice_que_ya_existe_y_propone_el_siguiente` |
-| Usuario repetido con otras mayúsculas | `srv::test_compara_sin_distinguir_mayusculas`; `adm::test_formato_invalido_explica_el_ejemplo` (las mayúsculas se rechazan por el formato) |
+| Usuario repetido con otras mayúsculas | `adm::test_usuario_repetido_dice_que_ya_existe_y_propone_el_siguiente` (caso parametrizado con "JPerez") |
 | Formato inválido | `adm::test_formato_invalido_explica_el_ejemplo`, `test_el_usuario_explica_el_formato`; `srv::test_usuario_valido_rechaza_lo_que_no_cumple` |
 | Usuario con número | `adm::test_usuario_con_numero_se_acepta`; `srv::test_usuario_valido_acepta_el_formato` |
 | Sugerencia del siguiente libre | `adm::test_usuario_repetido_dice_que_ya_existe_y_propone_el_siguiente`; `srv::test_salta_los_numeros_ocupados` |

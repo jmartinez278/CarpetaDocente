@@ -6,7 +6,7 @@ Controla la entrada al sistema con usuario y contraseña: quién entra, a qué p
 ## Requirements
 
 ### Requirement: Inicio de sesión único
-El sistema SHALL ofrecer una sola pantalla de inicio de sesión para los tres roles, en `/ingresar/`, con los campos Usuario y Contraseña. Una cuenta activa con su usuario y su contraseña correctos MUST entrar y llegar a la pantalla de inicio de su rol.
+El sistema SHALL ofrecer una sola pantalla de inicio de sesión para los tres roles, en `/ingresar/`, con los campos Usuario y Contraseña. Una cuenta activa con su usuario y su contraseña correctos MUST entrar y llegar a la pantalla de inicio de su rol. Desde US-003 el usuario escrito MUST pasarse a minúsculas antes de autenticar, de modo que el usuario no distingue mayúsculas.
 
 #### Scenario: Camino ideal del docente
 - **WHEN** un docente con una cuenta activa ingresa su usuario y su contraseña correctos en `/ingresar/`
@@ -24,6 +24,10 @@ El sistema SHALL ofrecer una sola pantalla de inicio de sesión para los tres ro
 - **WHEN** se envía el formulario con el usuario o la contraseña vacíos
 - **THEN** el sistema no intenta el ingreso, no cuenta un intento fallido y muestra junto a cada campo vacío "Ingresa tu usuario." o "Ingresa tu contraseña."
 
+#### Scenario: Usuario con mayúsculas
+- **WHEN** la docente de la cuenta "jperez" ingresa "JPerez" con su contraseña correcta
+- **THEN** el sistema le da acceso y la lleva a `/docente/`
+
 ### Requirement: Mensaje genérico ante un ingreso rechazado
 Ante una contraseña incorrecta, un usuario que no existe, una cuenta desactivada o una cuenta bloqueada, el sistema MUST negar el acceso con el mismo mensaje en dos líneas: "Usuario o contraseña incorrectos, o cuenta inactiva" y "Revisa tus datos. Si el problema sigue, pide ayuda al administrador.", sin indicar cuál de los datos falló ni si la cuenta está bloqueada.
 
@@ -40,7 +44,7 @@ Ante una contraseña incorrecta, un usuario que no existe, una cuenta desactivad
 - **THEN** el sistema niega el acceso con el mismo mensaje genérico, y la respuesta no permite distinguir este caso de una contraseña incorrecta
 
 ### Requirement: Bloqueo temporal por intentos fallidos
-Después de 5 intentos fallidos consecutivos sobre una misma cuenta, el sistema MUST bloquearla durante 15 minutos (RN-024). Mientras dure el bloqueo, ningún intento entra, ni siquiera con la contraseña correcta, y esos intentos no se cuentan. Al terminar el bloqueo, la cuenta vuelve a aceptar su contraseña y el conteo empieza de cero.
+Después de 5 intentos fallidos consecutivos sobre una misma cuenta, el sistema MUST bloquearla durante 15 minutos (RN-024). Mientras dure el bloqueo, ningún intento entra, ni siquiera con la contraseña correcta, y esos intentos no se cuentan. Al terminar el bloqueo, la cuenta vuelve a aceptar su contraseña y el conteo empieza de cero. Un intento cuenta en la cuenta de su usuario en minúsculas, sin importar cómo se escribió.
 
 #### Scenario: Quinto intento fallido
 - **WHEN** se ingresa una contraseña incorrecta 5 veces seguidas para una cuenta activa
@@ -61,6 +65,10 @@ Después de 5 intentos fallidos consecutivos sobre una misma cuenta, el sistema 
 #### Scenario: Primer fallo después del bloqueo
 - **WHEN** terminó el bloqueo y el usuario ingresa una contraseña incorrecta una vez
 - **THEN** la cuenta no vuelve a bloquearse: es el primer intento fallido de un nuevo conteo
+
+#### Scenario: Intentos con otras mayúsculas
+- **WHEN** se ingresa una contraseña incorrecta 5 veces seguidas para la cuenta "jperez", escribiendo el usuario como "jperez", "JPerez" o "JPEREZ"
+- **THEN** los 5 intentos cuentan en la misma cuenta y "jperez" queda bloqueada durante 15 minutos
 
 ### Requirement: Ingreso correcto reinicia el conteo
 Un ingreso correcto MUST dejar la cuenta sin intentos fallidos acumulados, de modo que solo 5 fallos consecutivos, sin un ingreso correcto entre ellos, bloqueen la cuenta.
