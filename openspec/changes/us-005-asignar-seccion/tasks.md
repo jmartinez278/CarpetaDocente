@@ -50,13 +50,13 @@ Tramo de alto riesgo (modelos y restricciones): va solo y en modo normal.
   - las tarjetas y los chips no cambian (las pruebas de US-001 siguen en verde).
 
   Luego el servicio, el contexto de `PortadaDocenteView` y el `<p>` en `portada_docente.html` (D6). Verificar: rojo y luego verde; `npm run build` sin errores y ningún color hexadecimal en las plantillas
-- [ ] 2.3 Prueba de punta a punta, `institucion/tests/test_asignar_seccion_e2e.py`:
+- [x] 2.3 Prueba de punta a punta, `institucion/tests/test_asignar_seccion_e2e.py`:
   - el Administrador asigna "2.º grado, sección A" a una docente en la ficha de la sección;
   - la docente ingresa y ve "2.º grado, sección A" bajo el saludo;
   - el Administrador intenta asignar la misma sección a otra docente y ve "La sección ya tiene un docente asignado".
 
   Verificar: `uv run pytest -m e2e --browser chromium` en verde, con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`; axe de `/docente/` en ambos temas sin `critical` ni `serious` y la prueba de ancho a 320 px en verde
-- [ ] 2.4 La portada vista en claro y oscuro, en celular y escritorio, con una, dos y ninguna sección (la marca Marco). Revisión del grupo y commit (reglas de arriba)
+- [x] 2.4 La portada vista en claro y oscuro, en celular y escritorio, con una, dos y ninguna sección (la marca Marco). Revisión del grupo y commit (reglas de arriba)
 
 ## 3. Revisión final y verificación
 

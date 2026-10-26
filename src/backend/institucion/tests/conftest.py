@@ -58,6 +58,13 @@ def direccion(crear_usuario):
 
 
 @pytest.fixture
+def administrador(crear_usuario):
+    return crear_usuario(
+        "admin.ficticio", Usuario.Rol.ADMINISTRADOR, is_staff=True, is_superuser=True
+    )
+
+
+@pytest.fixture
 def anio_abierto(institucion):
     return AnioEscolar.objects.create(institucion=institucion, anio=2027)
 

@@ -7,9 +7,6 @@ A y AA, el contraste incluido (RNF-008), y guarda el informe en ``test-results/`
 por npm (``npm ci`` en ``src/frontend/``). Se pide con ``uv run pytest -m e2e --browser chromium``.
 """
 
-import json
-from pathlib import Path
-
 import pytest
 
 from cuentas.tests.e2e import (
@@ -22,15 +19,11 @@ from cuentas.tests.e2e import (
     con_pantalla,
     envejecer_sesion,
     ingresar,
+    revisar_con_axe,
 )
 
 pytestmark = pytest.mark.e2e
 
-RAIZ = Path(__file__).resolve().parents[4]
-AXE = RAIZ / "src" / "frontend" / "node_modules" / "axe-core" / "axe.min.js"
-INFORMES = RAIZ / "test-results"
-ETIQUETAS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
-IMPACTOS_QUE_FALLAN = {"critical", "serious"}
 VISTAS = [
     "ingresar",
     "ingresar-con-error",
@@ -82,23 +75,7 @@ def test_sin_infracciones_graves_de_accesibilidad(
 ):
     con_pantalla(page, ancho, tema)
     abrir_vista(page, live_server, vista, docente, direccion, clave)
-    page.evaluate("document.fonts.ready")
-
-    page.add_script_tag(path=str(AXE))
-    resultado = page.evaluate(
-        "(etiquetas) => axe.run(document, { runOnly: { type: 'tag', values: etiquetas } })",
-        ETIQUETAS,
-    )
-
-    graves = [v for v in resultado["violations"] if v["impact"] in IMPACTOS_QUE_FALLAN]
-    if graves:
-        INFORMES.mkdir(exist_ok=True)
-        informe = INFORMES / f"accesibilidad-{vista}-{tema}-{ancho}.json"
-        informe.write_text(json.dumps(graves, ensure_ascii=False, indent=2), encoding="utf-8")
-        resumen = [
-            f"{v['id']} ({v['impact']}): {[nodo['target'] for nodo in v['nodes']]}" for v in graves
-        ]
-        pytest.fail(f"axe: {len(graves)} infracciones, informe en {informe}\n" + "\n".join(resumen))
+    revisar_con_axe(page, f"{vista}-{tema}-{ancho}")
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
