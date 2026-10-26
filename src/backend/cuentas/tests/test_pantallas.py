@@ -12,6 +12,7 @@ import pytest
 
 from cuentas import dimensiones
 from cuentas.models import Usuario
+from institucion.models import AnioEscolar, Seccion
 
 pytestmark = pytest.mark.django_db
 
@@ -350,6 +351,58 @@ def test_la_portada_carga_portada_js_antes_de_alpine(portada):
     assert "js/bfcache.js" in scripts[3]
     assert all("defer" in script for script in scripts)
     assert "htmx" not in portada.lower()
+
+
+SIN_SECCION = "Tu sección aparecerá cuando el administrador la asigne."
+
+
+def linea_de_secciones(html):
+    """El ``<p>`` entre el saludo y los accesos (US-005, D6)."""
+    encontrada = re.search(r"</h1>\s*<p\b[^>]*>(.*?)</p>\s*<nav\b", html, re.DOTALL)
+    assert encontrada, "no hay línea de secciones bajo el saludo"
+    return encontrada.group(1).strip()
+
+
+@pytest.fixture
+def portada_con(client, docente):
+    """Portada de la docente con las secciones (grado, nombre) dadas en el año ABIERTO."""
+
+    def abrir(*secciones, estado="ABIERTO"):
+        anio = AnioEscolar.objects.create(institucion=docente.institucion, anio=2027, estado=estado)
+        for grado, nombre in secciones:
+            Seccion.objects.create(anio_escolar=anio, grado=grado, nombre=nombre, docente=docente)
+        client.force_login(docente)
+        return client.get(PORTADA).content.decode()
+
+    return abrir
+
+
+def test_la_portada_muestra_la_seccion_bajo_el_saludo_y_fuera_del_h1(portada_con):
+    html = portada_con((2, "A"))
+
+    assert linea_de_secciones(html) == "2.º grado, sección A"
+    assert saludos(html) == ["Hola, Ana Quispe"]
+
+
+def test_la_portada_ordena_las_secciones_por_grado_y_nombre(portada_con):
+    html = portada_con((3, "B"), (2, "A"))
+
+    assert linea_de_secciones(html) == "2.º grado, sección A · 3.º grado, sección B"
+
+
+def test_la_portada_sin_seccion_dice_que_aparecera(portada):
+    assert linea_de_secciones(portada) == SIN_SECCION
+
+
+def test_la_portada_con_la_unica_seccion_en_un_anio_cerrado(portada_con):
+    assert linea_de_secciones(portada_con((2, "A"), estado="CERRADO")) == SIN_SECCION
+
+
+def test_la_linea_de_secciones_no_cambia_las_tarjetas_ni_los_chips(portada_con):
+    html = portada_con((2, "A"))
+
+    assert len(tarjetas(html)) == 3
+    assert len(re.findall(r'<a class="chip"', html)) == 3
 
 
 def test_una_dimension_disponible_enlaza_a_su_pantalla(client, docente, monkeypatch):

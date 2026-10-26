@@ -90,6 +90,12 @@ Para crear la cuenta de Administrador (queda con rol `ADMINISTRADOR`):
 docker compose exec web python src/backend/manage.py createsuperuser
 ```
 
+Para cargar el año escolar y sus 24 secciones (1.º a 6.º grado, A a D; sin docentes), con el id de la institución. Se puede repetir sin duplicar:
+
+```bash
+docker compose exec web python src/backend/manage.py cargar_secciones --anio 2027 --institucion 1
+```
+
 ### 2B. Opción B: PostgreSQL en Docker y Django en la laptop
 
 ```bash
