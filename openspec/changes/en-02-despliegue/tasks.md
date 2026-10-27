@@ -14,18 +14,18 @@
 
 Tramo de alto riesgo (seguridad): va solo y en modo normal.
 
-- [ ] 1.1 Prueba primero, `config/tests/test_settings.py` (proceso aparte, sin `.env`):
+- [x] 1.1 Prueba primero, `config/tests/test_settings.py` (proceso aparte, sin `.env`):
   - sin `VERCEL`: `ALLOWED_HOSTS`, `SECURE_SSL_REDIRECT`, las cookies y `LOGGING` como hoy;
   - con `VERCEL=1` y `VERCEL_URL`, `VERCEL_BRANCH_URL` y `VERCEL_PROJECT_PRODUCTION_URL` ficticias: hosts, `CSRF_TRUSTED_ORIGINS` con `https://`, una URL ausente que no deja un host vacío, `SECURE_PROXY_SSL_HEADER`, la redirección, las cookies seguras, HSTS, `DISABLE_SERVER_SIDE_CURSORS`, `CONN_MAX_AGE = 0` y el handler a `sys.stdout`.
 
   Luego el bloque de D5 en `settings.py`. Verificar: rojo y luego verde
-- [ ] 1.2 Prueba primero, en un proceso aparte con `VERCEL=1`, `DJANGO_DEBUG=False` y una clave ficticia de 50 caracteres o más: `manage.py check --deploy` sin errores ni advertencias. Con `override_settings`:
+- [x] 1.2 Prueba primero, en un proceso aparte con `VERCEL=1`, `DJANGO_DEBUG=False` y una clave ficticia de 50 caracteres o más: `manage.py check --deploy` sin errores ni advertencias. Con `override_settings`:
   - `X-Forwarded-Proto: https` en `/ingresar/` no redirige y sin la cabecera redirige a HTTPS;
   - un host ajeno da 400;
   - el ingreso deja las cookies con `Secure`.
 
   Luego `SILENCED_SYSTEM_CHECKS` con su comentario (D5). Verificar: rojo y luego verde; `uv run pytest --cov` en verde con 80 % o más y la suite existente sin cambios
-- [ ] 1.3 `.env.example`: las variables de Vercel que lee `settings.py` y `DATABASE_URL_UNPOOLED`, sin valores y con una línea de para qué sirve cada una. Revisión del grupo y commit (reglas de arriba)
+- [x] 1.3 `.env.example`: las variables de Vercel que lee `settings.py` y `DATABASE_URL_UNPOOLED`, sin valores y con una línea de para qué sirve cada una. Revisión del grupo y commit (reglas de arriba)
 
 ## 2. Build en Vercel hasta la primera vista previa (D6, D7)
 

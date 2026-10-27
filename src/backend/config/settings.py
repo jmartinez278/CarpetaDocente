@@ -8,6 +8,7 @@ variables están en ``.env.example``.
 Referencia: https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import sys
 from pathlib import Path
 
 import environ
@@ -30,6 +31,10 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
 
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
+
+# Modo nube: Vercel define VERCEL=1 en el build y en la ejecución. No depende de
+# DEBUG, porque el canal de integración corre con DJANGO_DEBUG=False (EN-02, D5).
+EN_VERCEL = env.bool("VERCEL", default=False)
 
 
 # Aplicaciones
@@ -92,6 +97,52 @@ DATABASES = {
 # Tiempo límite de conexión (segundos): sin él, si PostgreSQL no está levantado
 # la conexión espera indefinidamente. Un connect_timeout en DATABASE_URL tiene prioridad.
 DATABASES["default"].setdefault("OPTIONS", {}).setdefault("connect_timeout", 10)
+
+
+# Producción en Vercel (EN-02, D5): solo con VERCEL=1; la laptop y el canal no cambian.
+
+if EN_VERCEL:
+    # Hosts: las URL del despliegue, de su rama y de producción, sin esquema.
+    _hosts_vercel = [
+        host
+        for host in (
+            env.str(nombre, default="")
+            for nombre in ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL")
+        )
+        if host
+    ]
+    ALLOWED_HOSTS = [*ALLOWED_HOSTS, *_hosts_vercel]
+    CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
+
+    # HTTPS: el proxy de Vercel termina TLS y siempre reescribe X-Forwarded-Proto.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # un año
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # Sin SECURE_HSTS_PRELOAD: sin dominio propio no hay a quién pedir la precarga y
+    # vercel.app ya está en la lista de precarga del navegador. Por eso se silencia W021.
+    SILENCED_SYSTEM_CHECKS = ["security.W021"]
+
+    # La URL agrupada de Neon pasa por PgBouncer en modo transacción: sin cursores del
+    # lado del servidor ni conexiones persistentes (el agrupador ya es el de Neon).
+    DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+    DATABASES["default"]["CONN_MAX_AGE"] = 0
+
+    # Logs a la salida estándar, que Vercel muestra en los logs de ejecución. No se
+    # registran variables de entorno ni la cadena de conexión.
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "consola": {"class": "logging.StreamHandler", "stream": sys.stdout},
+        },
+        "loggers": {
+            "django": {"handlers": ["consola"], "level": "WARNING"},
+            "django.request": {"handlers": ["consola"], "level": "ERROR", "propagate": False},
+        },
+    }
 
 
 # Usuarios y contraseñas
