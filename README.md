@@ -261,6 +261,76 @@ Lo que el equipo agrega en el mismo paso B10, fuera de EN-08:
 | *Block force pushes* | Activa |
 | *Restrict deletions* | Activa |
 
+## Despliegue
+
+El plan A publica el sistema en Vercel (Hobby), con PostgreSQL en Neon (EN-02). Las claves viven en los paneles de Vercel y de Neon, nunca en el repositorio.
+
+### Cómo funciona
+
+- **Vista previa por Pull Request:** cada PR hacia `main` genera una vista previa en Vercel, conectada a su propia rama de Neon (`preview/<rama>`), copia de producción. La URL aparece en el PR.
+- **Producción:** cada fusión en `main` se publica sola, conectada a la rama de producción de Neon y por HTTPS.
+- **Migraciones en el build:** `scripts/build_vercel.py` corre `npm ci`, `npm run build` y `migrate` (con la conexión directa de Neon, `DATABASE_URL_UNPOOLED`). Después Vercel corre `collectstatic`. Si un paso falla, el build falla y no reemplaza la versión publicada.
+- **Límite del rollback:** que el build falle no deshace la base. `migrate` corre antes de publicar, así que:
+  - si un paso del build falla después de `migrate`, la versión anterior sigue en línea contra el esquema ya migrado;
+  - si una migración falla, las anteriores ya quedaron aplicadas.
+
+  Vercel conserva el código anterior, no el esquema. Por eso toda migración debe ser compatible con la versión anterior del código: **agregar antes de quitar** (primero columnas o tablas nuevas, con valor por defecto o nulas; el código nuevo las usa; en un despliegue posterior se quitan las viejas). Los cambios destructivos no van junto con el código que los deja de usar. Si una migración incompatible ya se aplicó, no hay rollback automático: se corrige hacia adelante con otra migración.
+- **Modo nube:** `settings.py` activa HTTPS, cookies seguras, HSTS, los hosts de Vercel y los logs a la salida estándar solo cuando existe `VERCEL=1`. La laptop y el canal de CI no cambian.
+
+> **No correr `runserver` con el `.env.local` de producción.** Si ese archivo trae `VERCEL=1` (Vercel puede exponerla en `vercel env pull`), se activa el modo nube: la redirección a HTTPS no deja usar `http://localhost`, y `runserver` no arranca porque la entrada WSGI de la nube se importa desde la raíz del repo. Además, apuntaría a la base de producción. Con ese archivo solo se corren comandos de administración (ver [Comandos contra producción](#comandos-contra-producción)). Para trabajar en local, usar el `.env` de la [configuración local](#configuración-local).
+
+### Variables por ambiente
+
+Sin valores aquí; cada variable está explicada en `.env.example`.
+
+| Variable | Producción y vista previa | Laptop |
+|---|---|---|
+| `VERCEL`, `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL` | Las define Vercel en cada despliegue | No se usan |
+| `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | La integración de Neon las inyecta por ambiente (conexión agrupada y directa). En vista previa apuntan a la rama `preview/<rama>` | `DATABASE_URL` del PostgreSQL de Docker Compose |
+| `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS` | Se configuran en el panel de Vercel, por ambiente. `DJANGO_ALLOWED_HOSTS` solo suma hosts a los de Vercel | En `.env` |
+
+`DATABASE_URL_UNPOOLED` solo llega al build en despliegues por push a git; `vercel deploy` desde la CLI no la recibe y el build corta con un mensaje claro.
+
+### Cómo ver los logs
+
+Con la CLI de Vercel (`vercel login` y `vercel link` una vez):
+
+```bash
+# Build: instalación, CSS, migraciones y collectstatic
+vercel inspect <url-del-despliegue> --logs
+
+# Ejecución: peticiones y errores de la aplicación
+vercel logs --deployment <url-del-despliegue> --query '<texto a buscar>'
+```
+
+No filtrar por `--level error`: Vercel marca como `info` lo que Django escribe en la salida estándar, y las trazas no aparecen. Buscar por texto (por ejemplo, `Internal Server Error`). Los logs no deben llevar claves ni cadenas de conexión; si aparece una, avisar al equipo para cambiarla.
+
+### Cómo crear el enlace compartible
+
+La vista previa pide iniciar sesión en Vercel. Para que una revisora la abra sin cuenta de Vercel:
+
+1. En el panel de Vercel, abrir el proyecto y el despliegue de la vista previa.
+2. Elegir *Share* y generar el enlace con la opción **Anyone with this link**. Con otra opción, la revisora sigue necesitando una cuenta de Vercel.
+3. Pegar el enlace en el PR. Con el enlace se ve la pantalla de ingreso; sin él, la vista previa pide autenticarse.
+
+La vista previa tiene su propia base de datos: para ingresar hace falta una cuenta ficticia creada en esa rama (siguiente apartado).
+
+### Comandos contra producción
+
+Se corren desde la laptop, con las variables del ambiente en un archivo ignorado por git (`.env.*`). Nunca se pegan en el chat, en un PR ni en un issue.
+
+```bash
+# Producción
+vercel env pull .env.local --environment=production
+uv run --env-file .env.local python src/backend/manage.py <comando>
+```
+
+Al terminar, borrar `.env.local`: trae las claves de producción. Si una variable está marcada como *Secret* en Vercel, `vercel env pull` puede traerla vacía; antes del primer comando se comprueba que `DATABASE_URL` y `DJANGO_SECRET_KEY` no queden vacías (sin imprimir su valor).
+
+Carga inicial de producción, en orden: `createsuperuser`; la institución en el panel, con el nombre en texto y `[DATO I.E. PENDIENTE]` donde falte; `cargar_secciones --anio 2027 --institucion <id>` (el año 2027 es de demostración).
+
+Para una vista previa: copiar la cadena de conexión de la rama `preview/<rama>` desde la consola de Neon a `.env.preview`, correr `uv run --env-file .env.preview python src/backend/manage.py createsuperuser` y borrar el archivo al terminar. Solo cuentas ficticias.
+
 ## Datos
 
 El repositorio es público: solo contiene datos ficticios. No se suben datos reales de estudiantes.

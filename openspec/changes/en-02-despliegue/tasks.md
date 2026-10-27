@@ -54,7 +54,7 @@ Tramo de alto riesgo (seguridad): va solo y en modo normal.
 
 ## 3. README, revisión final y verificación
 
-- [ ] 3.1 README: sección "Despliegue":
+- [x] 3.1 README: sección "Despliegue":
   - cómo funciona: vista previa por PR con su rama de Neon, `main` a producción y migraciones en el build;
   - variables por ambiente, sin valores;
   - cómo ver los logs de build y de ejecución;
@@ -62,7 +62,7 @@ Tramo de alto riesgo (seguridad): va solo y en modo normal.
   - los comandos contra producción de D8.
 
   En "Estado del proyecto", la URL de producción solo si el equipo la aprueba
-- [ ] 3.2 Revisión final A2 que corre Marco (`/codex:adversarial-review --base main --background`, con foco en el spec `despliegue`): corregir los Critical e Important, con la prueba primero. Luego `verificacion.md` corto: tabla escenario → prueba o evidencia del spec `despliegue`, y DoD 1 a 9, con la DoD 4 cumplida por la vista previa de este PR. En la tabla, "Publicación de la rama principal" y "Despliegue fallido" quedan como "se verifica después de la fusión". Verificar: `uv run pytest --cov`, las e2e y `verificar.py --antes-del-commit` en verde; commit del grupo (reglas de arriba)
+- [x] 3.2 Revisión final A2 que corre Marco (`/codex:adversarial-review --base main --background`, con foco en el spec `despliegue`): corregir los Critical e Important, con la prueba primero. Luego `verificacion.md` corto: tabla escenario → prueba o evidencia del spec `despliegue`, y DoD 1 a 9, con la DoD 4 cumplida por la vista previa de este PR. En la tabla, "Publicación de la rama principal" y "Despliegue fallido" quedan como "se verifica después de la fusión". Verificar: `uv run pytest --cov`, las e2e y `verificar.py --antes-del-commit` en verde; commit del grupo (reglas de arriba)
 
 ## Workflow follow-up
 

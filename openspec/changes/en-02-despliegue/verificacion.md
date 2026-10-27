@@ -1,6 +1,54 @@
 # Verificación: EN-02 – Despliegue del plan A
 
-Se completa en el grupo 3 (tabla escenario → prueba y DoD 1 a 9).
+Cierre del grupo 3. Pruebas de `config/tests/test_settings.py` (TS), `cuentas/tests/test_https_vercel.py` (HV), `scripts/tests/test_build_vercel.py` (BV) y `scripts/tests/test_manage_raiz.py` (MR).
+
+## Escenario → prueba o evidencia
+
+| Requisito / escenario | Prueba o evidencia |
+| --- | --- |
+| Configuración: laptop y canal sin cambios | TS `test_sin_vercel_la_configuracion_queda_como_hoy`, `test_sin_vercel_la_entrada_wsgi_queda_como_hoy`; HV `test_fuera_de_vercel_la_pantalla_de_ingreso_no_redirige_a_https`; la suite existente sin cambios |
+| Revisión de despliegue sin advertencias | TS `test_en_vercel_check_deploy_no_da_errores_ni_advertencias` |
+| Hosts: formulario en la URL de la vista previa | TS `test_en_vercel_los_hosts_salen_de_las_variables_del_sistema`, `test_en_vercel_una_url_ausente_no_deja_un_host_vacio`; vista previa: el ingreso al panel funciona (tarea 2.3) |
+| Hosts: host ajeno | HV `test_host_ajeno_recibe_400` |
+| HTTPS: petición detrás del proxy | HV `test_peticion_detras_del_proxy_con_https_no_se_redirige`, `test_peticion_sin_la_cabecera_del_proxy_se_redirige_a_https`; TS `test_en_vercel_https_detras_del_proxy_con_cookies_y_hsts` |
+| HTTPS: cookies de sesión | HV `test_el_ingreso_deja_las_cookies_con_secure` |
+| Conexión agrupada: `iterator()` | TS `test_en_vercel_conexion_agrupada_sin_cursores_ni_conexiones_persistentes` (por configuración; ver Minor) |
+| Logs: error del servidor | TS `test_en_vercel_los_logs_van_a_la_salida_estandar`; vista previa: traza en los logs de ejecución y "Server Error (500)" sin detalles (tarea 2.3) |
+| Build completo | BV `test_ejecuta_npm_ci_npm_build_y_migrate_en_ese_orden`, `test_migrate_recibe_la_url_directa_como_database_url`; log de Vercel (`b9b8457`, `0648b72`): CSS, migraciones, `collectstatic`; `app.css` con estilos (tarea 2.3) |
+| Build: migración que falla | BV `test_un_paso_que_falla_corta_el_build_con_su_codigo`, `test_sin_url_directa_falla_con_mensaje_y_sin_migrate`; evidencia: el build sin `DATABASE_URL_UNPOOLED` cortó con código 1 (tarea 2.2) |
+| Paquete: despliegue desde la laptop | **Parcial.** Por cálculo, 256 archivos sin `.env`, `.env.local`, `insumos/` ni `CLAUDE.local.md`; el log cuenta 260 y la diferencia de 4 no se identificó. Pytest, Playwright y Ruff en el paquete: sin confirmar: el log del build no lista los paquetes (A2 Important; pasa a la Deuda del PR). Por push solo llega lo que está en git (tarea 2.2) |
+| Vista previa por Pull Request | Vista previa `q988pte9u` conectada a `preview/feature/EN-02-despliegue` (tarea 2.3); la del PR se ve al abrirlo |
+| Vista previa: acceso de una revisora | Enlace "Anyone with this link": ve el ingreso; sin él pide autenticarse (tarea 2.3) |
+| Publicación de la rama principal | Se verifica después de la fusión |
+| Despliegue fallido | Se verifica después de la fusión |
+
+## Revisión final A2 (Codex)
+
+`/codex:adversarial-review --base main --background`, con foco en el spec `despliegue` y D5 a D8 (2026-10-27). Reemplaza a una primera ejecución sin foco (approve, sin hallazgos, de lectura superficial). Veredicto: **needs-attention**, sin Critical, con 2 Important y 1 Minor.
+
+| Hallazgo | Resolución |
+| --- | --- |
+| Important: `migrate` corre antes de publicar y un paso posterior que falla, o una migración que falla con las anteriores ya aplicadas, deja la base adelantada (`scripts/build_vercel.py:38-41`) | Resuelto con documentación: `design.md`, Risks, cubre los tres casos y la mitigación; el README, "Despliegue", pide migraciones compatibles con la versión anterior (agregar antes de quitar) y dice el límite del rollback. Es el mecanismo de D1 y no se cambia el código |
+| Important: D7 sin demostrar (dependencias de desarrollo y 4 archivos de diferencia) | **Queda Parcial y pasa a la Deuda del PR.** Marco revisó el log del build (`0648b72`): Vercel solo imprime "Installing required dependencies from uv.lock..." sin la lista de paquetes, así que no confirma ni descarta las dependencias de desarrollo. No se cambia `installCommand` sin evidencia |
+| Minor: sin prueba del POST con CSRF (`test_https_vercel.py:50-55`) | Anotado en "Minor para la descripción del PR" |
+
+Sin fugas de claves en el diff, `.env.example` ni README. Codex no ejecutó pruebas (el Python de `.venv` le dio "permission denied"); se corrieron aparte: 592 pasan y 89 e2e pasan.
+
+**Para quien revise:** el README, la tabla de esta verificación y las casillas del grupo 3 no pasaron por la A2. Estaban sin commit y la revisión es de `main...HEAD`.
+
+## DoD 1 a 9
+
+| N.° | Estado | Evidencia |
+| --- | --- | --- |
+| 1 | Cumple en local; **pendiente del PR** | `uv run pytest --cov`: 592 pasan, cobertura total 95,93 % (mínimo 80 %). La puerta Sonar way solo se ve en el PR |
+| 2 | Cumple en local; **pendiente del PR** | Ruff sin hallazgos (`check` y `format --check`). CodeQL y SonarQube Cloud solo corren en el PR |
+| 3 | **Pendiente (equipo)** | Aprobación de otra integrante en el PR |
+| 4 | Cumple | Vista previa de Vercel de este cambio, con su rama de Neon (tarea 2.3). La del PR se ve al abrirlo |
+| 5 | Cumple en local; **pendiente del PR** | Escenarios con prueba o evidencia (tabla de arriba); 89 e2e en verde. El canal se ve en el PR |
+| 6 | No aplica | Sin reglas de negocio nuevas |
+| 7 | No aplica | Sin pantallas nuevas |
+| 8 | Cumple | Solo datos ficticios; ningún dato de la I.E. inventado; sin `.env`, `insumos/` ni claves en git |
+| 9 | Cumple | Este cambio en OpenSpec, sección "Despliegue" del README y `.env.example`. Ninguna ruta cambia: el Catálogo de rutas no se toca |
 
 ## Minor para la descripción del PR
 
@@ -15,6 +63,7 @@ Se completa en el grupo 3 (tabla escenario → prueba y DoD 1 a 9).
 - `[tool.vercel] entrypoint` en `pyproject.toml` hoy no se usa: decidir en el grupo 3 si se quita o se deja como respaldo, y decirlo en D6. Apunta al mismo módulo, así que no hay riesgo funcional.
 - `design.md`, Context (línea 7): sigue diciendo que `manage.py` está en `src/backend/` sin remitir al `manage.py` delgado de la raíz (D6).
 - Las pruebas de `test_build_vercel.py`, `test_manage_raiz.py` y `test_settings.py` arman cada una su entorno ficticio sin `DJANGO_SETTINGS_MODULE`: tres copias de lo mismo.
+- A2 (segunda), Minor: `cuentas/tests/test_https_vercel.py:50-55` no ejercita el POST con CSRF. Las pruebas de hosts solo comparan listas y la del ingreso usa un cliente sin `enforce_csrf_checks=True`; el escenario "Formulario en la URL de la vista previa" se apoya en el ingreso manual (tarea 2.3). Falta un POST con `Client(enforce_csrf_checks=True)`, token por GET y `Origin` de la vista previa, y el rechazo de un `Origin` ajeno.
 - `scripts/build_vercel.py`: si `npm` no existe en el entorno de build, `subprocess.run` lanza `FileNotFoundError` con traza en vez de un mensaje claro y un código de salida.
 
 ## Evidencia de la tarea 2.2
@@ -34,7 +83,7 @@ Vista previa `q988pte9u` del commit `aa8505c` (2026-10-27), comprobada por Marco
 
 - Estilos: `app.css` e `ingresar.js` responden (304 por caché) y el ingreso se ve con estilos. HTMX se sirve en `/static/dist/vendor/htmx.min.js`, aunque ninguna pantalla lo usa todavía.
 - Ingreso: cuenta ficticia creada con `createsuperuser` contra la rama `preview/feature/EN-02-despliegue` (D8, con `.env.preview`, ya borrado). El ingreso al panel funciona.
-- Error provocado: `django_session` renombrada en la rama de vista previa y luego restaurada. La traza de `django.request` aparece en los logs de ejecución (`insumos/en02_error.log`: "Internal Server Error: /" y `relation "django_session" does not exist`), sin cadena de conexión ni claves. Escenario "Error del servidor".
+- Error provocado: `django_session` renombrada en la rama de vista previa y luego restaurada. La traza de `django.request` aparece en los logs de ejecución (`insumos/en02_error.log`: "Internal Server Error: /" y `relation "django_session" does not exist`), sin cadena de conexión ni claves. La pantalla mostró "Server Error (500)" sin detalles (Marco). Escenario "Error del servidor".
 - Enlace compartible: generado con "Anyone with this link" para que las revisoras entren sin cuenta de Vercel. Con el enlace se ve el ingreso; sin él, la vista previa pide autenticarse en Vercel. Escenario "Acceso de una revisora".
 
 ## Minor del grupo 2 (vista previa)

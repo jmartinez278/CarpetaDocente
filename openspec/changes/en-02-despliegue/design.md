@@ -85,7 +85,11 @@
 
 - **[El build no ve la rama de Neon a tiempo]** → La integración crea la rama al empezar el despliegue. Si `DATABASE_URL_UNPOOLED` no llega al build, el script falla con un mensaje claro (D6) y se revisa con Marco en la tarea 2.2. No se cae a la URL agrupada.
 - **[`vercel deploy` desde la CLI sin rama de Neon]** → Puede que la integración solo cree ramas para despliegues de git. Si pasa, la iteración del grupo 2 se hace con un commit en la rama y la vista previa del PR.
-- **[Migraciones en el build, D1]** → Una migración aplicada en la rama de vista previa no toca producción. En `main`, una migración que falla deja el build en error y producción sigue con la versión anterior. Una migración que pasa y una función que luego falla dejan la base adelantada: se acepta y se anota.
+- **[Migraciones en el build, D1]** → Una migración aplicada en la rama de vista previa no toca producción. En `main`, una migración que falla deja el build en error y producción sigue con la versión anterior. La base queda adelantada, sin rollback, en dos casos más:
+  - una migración que pasa y un paso posterior del build que falla (`collectstatic` o la construcción de la función): Vercel conserva el código anterior contra el esquema nuevo;
+  - una migración que falla cuando las anteriores del mismo build ya se aplicaron.
+
+  Se acepta (D1). Mitigación: las migraciones deben ser compatibles con la versión anterior del código (agregar antes de quitar; lo destructivo, en un despliegue posterior). Queda escrito en el README, "Despliegue", con el límite del rollback. Una prueba automática de esa compatibilidad no entra en EN-02.
 - **[Detección de Django incierta]** → Resuelto en la tarea 2.2. Sin `manage.py` en la raíz, el log no mostró detección ni `collectstatic`. Con el `manage.py` delgado de la raíz (D6), el log dice "Django 5.2.18 detected" y corre `collectstatic`. La alternativa de Root Directory `src/backend` queda descartada.
 - **[Datos de producción en las vistas previas]** → Las ramas de Neon copian producción. Hoy solo hay datos ficticios. Deuda RES-02 antes del piloto.
 - **[HSTS de un año]** → Sin dominio propio, el riesgo es mínimo: `vercel.app` ya fuerza HTTPS.
