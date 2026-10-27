@@ -39,10 +39,13 @@ def cargar_settings(variables: dict[str, str], instruccion: str = "pass"):
     entorno = {k: v for k, v in os.environ.items() if k not in VARIABLES_PROPIAS}
     entorno.pop("DJANGO_SETTINGS_MODULE", None)
     entorno.update(variables)
+    # Desde la raíz del repo, para que coverage guarde las rutas como en el resto de la
+    # suite (src/backend/config/settings.py) y las cuente al medir subprocesos.
+    entorno["PYTHONPATH"] = str(BACKEND_DIR)
     codigo = SIN_ARCHIVO_ENV + "import config.settings as s; " + instruccion
     return subprocess.run(  # noqa: S603 - comando fijo, sin entrada del usuario
         [sys.executable, "-c", codigo],
-        cwd=BACKEND_DIR,
+        cwd=RAIZ,
         env=entorno,
         capture_output=True,
         text=True,

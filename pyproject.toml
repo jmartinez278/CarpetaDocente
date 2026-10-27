@@ -63,6 +63,10 @@ source = ["src/backend", "scripts"]
 omit = ["*/migrations/*", "*/tests/*"]
 # Rutas relativas en coverage.xml: SonarQube Cloud no encuentra las rutas absolutas del ejecutor.
 relative_files = true
+# Las pruebas de settings.py, wsgi.py y manage.py corren en un proceso aparte (sin leer .env):
+# coverage 7.10 o más los mide con este parche, que activa parallel y pytest-cov combina
+# los datos al terminar (pytest-cov 7 ya no lo hace por su cuenta).
+patch = ["subprocess"]
 
 [tool.coverage.report]
 show_missing = true
