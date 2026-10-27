@@ -29,7 +29,7 @@ Tramo de alto riesgo (seguridad): va solo y en modo normal.
 
 ## 2. Build en Vercel hasta la primera vista previa (D6, D7)
 
-- [ ] 2.1 Prueba primero, `scripts/tests/test_build_vercel.py`, con los comandos simulados:
+- [x] 2.1 Prueba primero, `scripts/tests/test_build_vercel.py`, con los comandos simulados:
   - orden `npm ci`, `npm run build` y `migrate`;
   - `migrate` recibe `DATABASE_URL` igual a `DATABASE_URL_UNPOOLED`;
   - sin `DATABASE_URL_UNPOOLED`, error con mensaje y sin `migrate`;

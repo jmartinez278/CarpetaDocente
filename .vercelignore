@@ -1,0 +1,26 @@
+# EN-02, D7: `vercel deploy` sube la carpeta tal cual y no se fía de .gitignore
+.env
+.env.*
+!.env.example
+insumos/
+.venv/
+node_modules/
+.coverage
+coverage.xml
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+Claude outputs/
+# Archivos locales que no se versionan (CLAUDE.md, .gitignore)
+CLAUDE.local.md
+.claude/
+docs/PENDIENTES_TESIS.md
+# El CSS se compila en el build de Vercel, no se sube desde la laptop (D6)
+src/backend/static/dist/
+src/backend/staticfiles/
+# Estado local de herramientas y salidas de pruebas
+.verificar/
+.impeccable/
+PRODUCT.md
+htmlcov/
+test-results/

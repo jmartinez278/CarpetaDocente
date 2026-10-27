@@ -51,3 +51,5 @@ docs/PENDIENTES_TESIS.md
 # Comandos y skills de OpenSpec para Claude Code: los genera `openspec init` en cada equipo
 .claude/commands/opsx/
 .claude/skills/openspec-*/
+# EN-02, D7: carpeta que crea `vercel link`
+.vercel/
