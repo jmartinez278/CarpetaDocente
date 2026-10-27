@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
+RAIZ = BACKEND_DIR.parents[1]
 
 VARIABLES_PROPIAS = (
     "DJANGO_SECRET_KEY",
@@ -277,3 +278,34 @@ def test_en_vercel_check_deploy_no_da_errores_ni_advertencias():
 
     assert resultado.returncode == 0, resultado.stderr
     assert "WARNINGS" not in resultado.stderr
+
+
+def test_sin_vercel_la_entrada_wsgi_queda_como_hoy():
+    assert leer_settings(ENTORNO_MINIMO, "s.WSGI_APPLICATION") == "config.wsgi.application"
+
+
+def test_en_vercel_la_entrada_wsgi_se_importa_desde_la_raiz_del_repo():
+    # Vercel importa WSGI_APPLICATION desde la raíz del repo (/var/task), no desde
+    # src/backend/ (insumos/en02_runtime.log: "No such file or directory:
+    # '/var/task/config/wsgi.py'").
+    ruta = leer_settings(ENTORNO_VERCEL, "s.WSGI_APPLICATION")
+    assert ruta == "src.backend.config.wsgi.application"
+
+    entorno = {k: v for k, v in os.environ.items() if k not in VARIABLES_PROPIAS}
+    entorno.pop("DJANGO_SETTINGS_MODULE", None)
+    entorno.update(ENTORNO_VERCEL)
+    codigo = (
+        SIN_ARCHIVO_ENV + "from django.utils.module_loading import import_string; "
+        f"print(callable(import_string({ruta!r})))"
+    )
+    resultado = subprocess.run(  # noqa: S603 - comando fijo, sin entrada del usuario
+        [sys.executable, "-c", codigo],
+        cwd=RAIZ,
+        env=entorno,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert resultado.returncode == 0, resultado.stderr
+    assert resultado.stdout.strip() == "True"

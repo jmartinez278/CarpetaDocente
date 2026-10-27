@@ -114,6 +114,11 @@ if EN_VERCEL:
     ALLOWED_HOSTS = [*ALLOWED_HOSTS, *_hosts_vercel]
     CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
 
+    # Al detectar manage.py en la raíz, Vercel importa WSGI_APPLICATION desde la raíz
+    # del repo e ignora [tool.vercel] entrypoint. Con "config.wsgi" buscaba
+    # /var/task/config/wsgi.py y daba 500 (insumos/en02_runtime.log, vista previa de 0648b72).
+    WSGI_APPLICATION = "src.backend.config.wsgi.application"
+
     # HTTPS: el proxy de Vercel termina TLS y siempre reescribe X-Forwarded-Proto.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
