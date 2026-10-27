@@ -14,7 +14,7 @@ El sistema solo corre en la laptop: no hay versión publicada para el asesor ni 
 
   `manage.py check --deploy` queda sin advertencias.
 - **Build en Vercel** (D6, D7):
-  - entrada WSGI declarada en `pyproject.toml`, porque `manage.py` está dos niveles abajo;
+  - `manage.py` delgado en la raíz para que Vercel detecte Django, y la entrada WSGI resoluble desde la raíz (`WSGI_APPLICATION` en modo nube);
   - script de build que compila el CSS con npm y aplica las migraciones con `DATABASE_URL_UNPOOLED` (decisión D1 del equipo);
   - Python 3.13, sin dependencias de desarrollo en el paquete;
   - `.vercelignore` para que `vercel deploy` desde la laptop no suba `.env`, `.env.local` ni `insumos/`.

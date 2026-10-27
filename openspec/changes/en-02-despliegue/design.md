@@ -7,7 +7,7 @@
 - `manage.py` está en `src/backend/`, dos niveles bajo la raíz. Vercel solo lo detecta en la raíz o en un subdirectorio inmediato (documentación de Vercel, "Python entrypoints", 2026-08). `pyproject.toml` y `uv.lock` están en la raíz, con `package = false` y las herramientas de desarrollo en `[dependency-groups] dev`.
 - `src/backend/static/dist/` no está en git. Lo genera `npm run build` en `src/frontend/`.
 - No hay WhiteNoise. Según la documentación de Vercel, con `STATIC_ROOT` definido Vercel corre `collectstatic` solo y sirve `STATIC_URL` desde su CDN.
-- El build script se declara en `[tool.vercel.scripts] build`. Corre después de instalar las dependencias. La documentación no dice si va antes o después del `collectstatic` automático: se confirma en el log (tarea 2.2).
+- El build script se declara en `[tool.vercel.scripts] build`. Corre después de instalar las dependencias. La documentación no dice si va antes o después del `collectstatic` automático. Confirmado en la tarea 2.2: el `collectstatic` automático corre después del build script.
 - Paneles ya configurados por Marco (proposal). Decisiones del equipo: D1 (migraciones en el build con `DATABASE_URL_UNPOOLED`), D2 (iad1 + aws-us-east-1) y D4 (sin check de Vercel en el ruleset).
 
 ## Goals / Non-Goals
@@ -35,6 +35,7 @@
     - `SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = True`;
     - `SECURE_HSTS_SECONDS = 31536000` y `SECURE_HSTS_INCLUDE_SUBDOMAINS = True`.
   - **Base de datos:** `DISABLE_SERVER_SIDE_CURSORS = True`, porque la URL agrupada de Neon pasa por PgBouncer en modo transacción (Django, "Transaction pooling and server-side cursors"). `CONN_MAX_AGE = 0`, explícito, y sin el `pool` de psycopg: el agrupador ya es el de Neon. El `connect_timeout` de 10 s se mantiene (el arranque en frío de Neon tarda menos).
+  - **Entrada WSGI:** `WSGI_APPLICATION = "src.backend.config.wsgi.application"`, porque Vercel la importa desde la raíz del repo (ver D6).
   - **Logs:** `LOGGING` con un `StreamHandler` a `sys.stdout` para los loggers `django` (nivel `WARNING`) y `django.request` (nivel `ERROR`, con la traza). No se registran variables ni la cadena de conexión.
 - `SILENCED_SYSTEM_CHECKS = ["security.W021"]` (precarga de HSTS), solo en la nube. Motivo: sin dominio propio no hay a quién pedir la precarga, y `vercel.app` ya está en la lista de precarga del navegador. Queda comentado en el código. **Fijo** (aprobado por Marco, 2026-10-26): HSTS de un año, sin `SECURE_HSTS_PRELOAD` y con W021 silenciado.
 - **Alternativas descartadas:**
@@ -48,8 +49,9 @@
 ### D6. Entrada WSGI y build script desde la raíz
 
 - `pyproject.toml`:
-  - `[tool.vercel] entrypoint = "src.backend.config.wsgi:application"`. Si Vercel no acepta el punto en la ruta, se usa la ruta del archivo que indique su documentación; se confirma en la tarea 2.2;
+  - `[tool.vercel] entrypoint = "src.backend.config.wsgi:application"`. Si Vercel no acepta el punto en la ruta, se usa la ruta del archivo que indique su documentación; se confirma en la tarea 2.2. Resultado de la tarea 2.2: con `manage.py` en la raíz, Vercel ignora este `entrypoint` y usa `WSGI_APPLICATION`, que importa desde la raíz del repo (`insumos/en02_runtime.log`); por eso el modo nube de D5 la fija con la ruta desde la raíz;
   - `[tool.vercel.scripts] build = "python scripts/build_vercel.py"`.
+- `manage.py` delgado en la raíz (tarea 2.2): Vercel solo detecta Django con `manage.py` en la raíz o en un subdirectorio inmediato. Agrega `src/backend` a `sys.path` y delega en `execute_from_command_line`, con su prueba.
 - `config/wsgi.py` agrega `src/backend` a `sys.path` si falta. Así `config.urls` y las apps se importan igual que cuando `manage.py` corre desde `src/backend/`. Es un cambio de dos líneas, con su prueba.
 - `scripts/build_vercel.py` (nuevo, con prueba en `scripts/tests/`), con pasos fijos y sin shell:
   1. `npm ci` y `npm run build` en `src/frontend/`.
@@ -57,7 +59,7 @@
   3. Cada paso que falla corta el build con su código de salida.
 
   La prueba simula los comandos y revisa el orden, el reemplazo de la URL, el corte ante un error y que no imprima la URL.
-- Si el log muestra que el `collectstatic` automático corre **antes** del build script (los estilos quedarían fuera), se agrega `collectstatic --noinput` como paso 1.5 del script y se anota en `verificacion.md`. No se agrega antes de verlo.
+- Confirmado en el log (tarea 2.2): el `collectstatic` automático corre **después** del build script. El orden real es CSS, migraciones y estáticos, y no hace falta un paso de `collectstatic` en el script. Consecuencia, ya aceptada en Risks: si una migración pasa y `collectstatic` falla, la base queda adelantada.
 
 ### D7. Paquete: Python 3.13, solo dependencias de ejecución y `.vercelignore`
 
@@ -84,6 +86,6 @@
 - **[El build no ve la rama de Neon a tiempo]** → La integración crea la rama al empezar el despliegue. Si `DATABASE_URL_UNPOOLED` no llega al build, el script falla con un mensaje claro (D6) y se revisa con Marco en la tarea 2.2. No se cae a la URL agrupada.
 - **[`vercel deploy` desde la CLI sin rama de Neon]** → Puede que la integración solo cree ramas para despliegues de git. Si pasa, la iteración del grupo 2 se hace con un commit en la rama y la vista previa del PR.
 - **[Migraciones en el build, D1]** → Una migración aplicada en la rama de vista previa no toca producción. En `main`, una migración que falla deja el build en error y producción sigue con la versión anterior. Una migración que pasa y una función que luego falla dejan la base adelantada: se acepta y se anota.
-- **[Detección de Django incierta]** → No es segura en ninguno de los dos sentidos. La documentación solo busca `manage.py` hasta un subdirectorio inmediato, pero el panel detectó el preset Django al importar el repo. Se confirma en el log de la tarea 2.2. Sin detección no hay `collectstatic` automático. Alternativa, a decidir con el log: Root Directory `src/backend` en el panel, con acceso a los archivos fuera de esa carpeta. No se elige antes de ver el log.
+- **[Detección de Django incierta]** → Resuelto en la tarea 2.2. Sin `manage.py` en la raíz, el log no mostró detección ni `collectstatic`. Con el `manage.py` delgado de la raíz (D6), el log dice "Django 5.2.18 detected" y corre `collectstatic`. La alternativa de Root Directory `src/backend` queda descartada.
 - **[Datos de producción en las vistas previas]** → Las ramas de Neon copian producción. Hoy solo hay datos ficticios. Deuda RES-02 antes del piloto.
 - **[HSTS de un año]** → Sin dominio propio, el riesgo es mínimo: `vercel.app` ya fuerza HTTPS.

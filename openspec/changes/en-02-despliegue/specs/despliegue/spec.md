@@ -58,7 +58,7 @@ Cada build en Vercel SHALL compilar los estilos y copiar HTMX y Alpine.js antes 
 
 #### Scenario: Build completo
 - **WHEN** Vercel construye un commit válido
-- **THEN** el log muestra, en este orden, la compilación del CSS, la reunión de estáticos y las migraciones aplicadas, y las páginas cargan `app.css` con estilos
+- **THEN** el log muestra, en este orden, la compilación del CSS, las migraciones aplicadas y la reunión de estáticos, y las páginas cargan `app.css` con estilos
 
 #### Scenario: Migración que falla
 - **WHEN** una migración falla durante el build

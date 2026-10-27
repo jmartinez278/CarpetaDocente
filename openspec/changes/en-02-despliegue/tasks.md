@@ -37,14 +37,14 @@ Tramo de alto riesgo (seguridad): va solo y en modo normal.
   - la salida no contiene la URL.
 
   Prueba de `config/wsgi.py`: importa `application` desde la raíz del repo. Luego `scripts/build_vercel.py`, el cambio de `wsgi.py`, `[tool.vercel]` en `pyproject.toml`, `.vercelignore` y `.vercel/` en `.gitignore`. Verificar: rojo y luego verde; `uv run ruff check .`
-- [ ] 2.2 Iteración con Marco: Marco corre `vercel deploy` desde la rama (o empuja la rama si la CLI no crea la rama de Neon, ver Risks) y pasa el log del build. Confirmar en el log:
+- [x] 2.2 Iteración con Marco: Marco corre `vercel deploy` desde la rama (o empuja la rama si la CLI no crea la rama de Neon, ver Risks) y pasa el log del build. Confirmar en el log:
   - Python 3.13 y sin pytest, Playwright ni Ruff instalados;
   - el orden real de CSS, `collectstatic` y `migrate`;
   - la detección de Django y la entrada WSGI;
   - las migraciones aplicadas en `preview/<rama>`.
 
   Ajustar según D6 y D7 (paso de `collectstatic`, `installCommand`, `vercel.json` con `excludeFiles`), cada ajuste con su prueba si toca código. Verificar: el log en verde y la lista de archivos subidos sin `.env`, `.env.local` ni `insumos/`
-- [ ] 2.3 En la vista previa:
+- [x] 2.3 En la vista previa:
   - la pantalla de ingreso con estilos y HTMX cargados;
   - el ingreso con una cuenta ficticia creada en la rama de Neon (D8): Marco copia la cadena de conexión de `preview/<rama>` desde la consola de Neon a `.env.preview` (ignorado por `.env.*`), corre `uv run --env-file .env.preview python src/backend/manage.py createsuperuser` y borra el archivo al terminar. Claude Code no lo lee;
   - un error provocado aparece en los logs de ejecución sin claves;
@@ -72,6 +72,7 @@ Tramo de alto riesgo (seguridad): va solo y en modo normal.
   - **RNF-009:** el registro mensual de disponibilidad no entra en EN-02.
   - **`openspec/specs/pantallas-de-inicio/spec.md`:** el requisito "Portada del docente" supera los 500 caracteres y `openspec validate --specs --strict` lo marca como aviso. Dividirlo en dos requisitos (portada y línea de secciones) en una historia que toque esa spec. El mismo aviso ya existía en `gestion-cuentas` y en otro requisito de `pantallas-de-inicio`.
   - **Año de la carga inicial:** el año 2027 de la carga inicial es de demostración; el año del piloto está pendiente con la I.E. Reiniciar la rama production de Neon antes del piloto, con el año confirmado (junto con la deuda de RES-02).
+  - **Dependencias de desarrollo en el paquete (spec `despliegue`, "Paquete sin claves ni herramientas de desarrollo"):** sin confirmar. El log de Vercel no lista los paquetes instalados y el panel no deja ver el contenido de la función. No se fijó `installCommand` sin evidencia. Riesgo: un paquete más pesado; pytest, Ruff y Playwright no tienen ruta pública.
   - Los Minor de `verificacion.md`.
 - **(equipo)** Aprobación del PR por otra integrante (DoD 3).
 
