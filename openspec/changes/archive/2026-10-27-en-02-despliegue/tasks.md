@@ -80,11 +80,11 @@ Tramo de alto riesgo (seguridad): va solo y en modo normal.
 
 Necesitan que `main` ya tenga el código. Su evidencia va en `verificacion.md`, en el commit de archivo de EN-02, que es el primer commit de la rama de US-006.
 
-- [ ] Producción (D8), los comandos los corre Marco:
+- [x] Producción (D8), los comandos los corre Marco (evidencia en `verificacion.md`, "Evidencia de producción"):
   - primer despliegue de `main` en verde;
   - `vercel env pull .env.local --environment=production`;
   - `createsuperuser`, la institución en el panel con `[DATO I.E. PENDIENTE]` donde falte y `cargar_secciones --anio 2027 --institucion <id>`.
 
   Confirmar que la URL de producción responde por HTTPS, redirige HTTP y muestra las 24 secciones en el panel (escenario "Publicación de la rama principal")
-- [ ] Escenario "Despliegue fallido": un PR de prueba hacia `main` que rompe el build (por ejemplo, un error de sintaxis en `app.css`). Comprobar que el PR muestra el error de Vercel y que producción sigue respondiendo con la versión anterior. Cerrar el PR sin fusionar y borrar su rama (la limpieza de Neon borra la suya)
-- [ ] `/opsx:archive`, con la evidencia de los dos puntos anteriores en `verificacion.md`. La siguiente historia sale de `main`, y su primer commit es este archivo.
+- [ ] **No verificado al archivar; pasa a deuda** (`verificacion.md`, "Deuda: despliegue fallido"). Escenario "Despliegue fallido": un PR de prueba hacia `main` que rompe el build (por ejemplo, un error de sintaxis en `app.css`). Comprobar que el PR muestra el error de Vercel y que producción sigue respondiendo con la versión anterior. Cerrar el PR sin fusionar y borrar su rama (la limpieza de Neon borra la suya)
+- [x] `/opsx:archive`, con la evidencia de los dos puntos anteriores en `verificacion.md`. La siguiente historia sale de `main`, y su primer commit es este archivo.
