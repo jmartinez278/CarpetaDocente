@@ -280,13 +280,30 @@ def test_en_vercel_check_deploy_no_da_errores_ni_advertencias():
     assert "WARNINGS" not in resultado.stderr
 
 
+def test_en_vercel_la_depuracion_activa_impide_arrancar():
+    # Con DEBUG=True un 500 mostraría la traza y las variables de la petición en una
+    # URL que se comparte con "Anyone with this link".
+    resultado = cargar_settings({**ENTORNO_VERCEL, "DJANGO_DEBUG": "True"})
+
+    assert resultado.returncode != 0
+    assert "ImproperlyConfigured" in resultado.stderr
+    assert "DJANGO_DEBUG" in resultado.stderr
+
+
+def test_sin_vercel_la_depuracion_activa_sigue_permitida():
+    resultado = cargar_settings({**ENTORNO_MINIMO, "DJANGO_DEBUG": "True"}, "print(s.DEBUG)")
+
+    assert resultado.returncode == 0, resultado.stderr
+    assert resultado.stdout.strip() == "True"
+
+
 def test_sin_vercel_la_entrada_wsgi_queda_como_hoy():
     assert leer_settings(ENTORNO_MINIMO, "s.WSGI_APPLICATION") == "config.wsgi.application"
 
 
 def test_en_vercel_la_entrada_wsgi_se_importa_desde_la_raiz_del_repo():
     # Vercel importa WSGI_APPLICATION desde la raíz del repo (/var/task), no desde
-    # src/backend/ (insumos/en02_runtime.log: "No such file or directory:
+    # src/backend/ (error real de la vista previa de 0648b72: "No such file or directory:
     # '/var/task/config/wsgi.py'").
     ruta = leer_settings(ENTORNO_VERCEL, "s.WSGI_APPLICATION")
     assert ruta == "src.backend.config.wsgi.application"

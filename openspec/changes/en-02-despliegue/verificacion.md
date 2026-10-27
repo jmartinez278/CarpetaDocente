@@ -36,6 +36,19 @@ Sin fugas de claves en el diff, `.env.example` ni README. Codex no ejecutó prue
 
 **Para quien revise:** el README, la tabla de esta verificación y las casillas del grupo 3 no pasaron por la A2. Estaban sin commit y la revisión es de `main...HEAD`.
 
+## Revisión del grupo antes del PR (revisor subagente)
+
+`requesting-code-review` con subagente, sobre `06eb815..98b0ecb` (2026-10-27), por ser un grupo de seguridad y despliegue. Sin Critical; 3 Important y 7 Minor. Corrió 226 pruebas (`config`, `scripts` y `test_https_vercel.py`) y pasaron.
+
+| Hallazgo | Resolución |
+| --- | --- |
+| Important 1: con `VERCEL=1` y `DJANGO_DEBUG=True` un 500 mostraría la traza en una URL compartida | Corregido con la prueba primero: `test_en_vercel_la_depuracion_activa_impide_arrancar` (rojo y luego verde); en la nube el arranque falla con `ImproperlyConfigured`. Sin Vercel, `DEBUG=True` sigue permitido (prueba propia). Marco revisa `DJANGO_DEBUG=False` en Preview y Production en el panel |
+| Important 2: afirmaciones del README sin respaldo | README matizado: vista previa por PR comprobada con push de rama, el corte del build comprobado solo en vista previa, comandos de logs con la versión de la CLI (65.4.0) |
+| Important 3: documentación desalineada | Comentario de `[tool.vercel]` en `pyproject.toml` y `design.md` (Context, D5 y D6) corregidos; la lista de Minor depurada |
+| Minor 4 (cita de `insumos/` en comentarios) | Corregido |
+| Minor 9 (enlace compartible y `/admin/`) | Una línea en el README |
+| Minor 5 a 8 y 10 | En "Minor para la descripción del PR" |
+
 ## DoD 1 a 9
 
 | N.° | Estado | Evidencia |
@@ -56,14 +69,13 @@ Sin fugas de claves en el diff, `.env.example` ni README. Codex no ejecutó prue
 - El escenario de `iterator()` sin cursor con nombre se prueba por la configuración (`DISABLE_SERVER_SIDE_CURSORS`, `CONN_MAX_AGE = 0`), no recorriendo filas por la conexión agrupada de Neon: eso se ve en la vista previa (grupo 2).
 - `test_en_vercel_check_deploy_no_da_errores_ni_advertencias`: la comprobación de `"WARNINGS" not in stderr` es redundante con `--fail-level WARNING`.
 - `VERCEL=` vacío (copia de `.env.example`) se lee como apagado; no tiene prueba propia.
-- `scripts/build_vercel.py`: la salida de `npm` y de `migrate` pasa sin filtrar. La prueba de que no imprime la URL cubre solo la salida propia del script; un error de psycopg podría mostrar host o usuario. Se revisa en el log de la tarea 2.2.
-- `pyproject.toml`, `[tool.vercel]`: el comentario dice que Vercel carga la aplicación desde ese `entrypoint`, pero con `manage.py` en la raíz Vercel usa `WSGI_APPLICATION` y lo ignora. El comentario quedó desactualizado.
+- `scripts/build_vercel.py`: la salida de `npm` y de `migrate` pasa sin filtrar. La prueba de que no imprime la URL cubre solo la salida propia del script; un error de psycopg podría mostrar host o usuario (por eso el README dice "ni nombres de servidor"). Se revisa en el log de la tarea 2.2. Además pasa el entorno completo a `npm ci` y `npm run build`: los scripts de instalación de npm verían `DATABASE_URL` y `DJANGO_SECRET_KEY` (riesgo de cadena de suministro); bastaría un entorno reducido (revisor).
 - `scripts/tests/test_manage_raiz.py`: corre `manage.py check` sin desactivar la lectura de `.env` ni quitar las variables `VERCEL*`, a diferencia del patrón de `test_settings.py`. El resultado puede depender del `.env` de la laptop. Lo mismo, solo con las `VERCEL*`, en `test_wsgi_importa_application_desde_la_raiz_del_repo` de `scripts/tests/test_build_vercel.py`.
-- `settings.py`, modo nube: con `VERCEL=1` en la laptop (por ejemplo, si `vercel env pull` lo escribe en `.env.local`), `runserver` desde `src/backend/` no arranca, porque `src.backend.config.wsgi` no se importa desde ahí. Los comandos de D8 no usan `WSGI_APPLICATION`. Decir en D8 o en el README (3.1) que no se corre `runserver` con `.env.local` de producción.
-- `[tool.vercel] entrypoint` en `pyproject.toml` hoy no se usa: decidir en el grupo 3 si se quita o se deja como respaldo, y decirlo en D6. Apunta al mismo módulo, así que no hay riesgo funcional.
-- `design.md`, Context (línea 7): sigue diciendo que `manage.py` está en `src/backend/` sin remitir al `manage.py` delgado de la raíz (D6).
 - Las pruebas de `test_build_vercel.py`, `test_manage_raiz.py` y `test_settings.py` arman cada una su entorno ficticio sin `DJANGO_SETTINGS_MODULE`: tres copias de lo mismo.
 - A2 (segunda), Minor: `cuentas/tests/test_https_vercel.py:50-55` no ejercita el POST con CSRF. Las pruebas de hosts solo comparan listas y la del ingreso usa un cliente sin `enforce_csrf_checks=True`; el escenario "Formulario en la URL de la vista previa" se apoya en el ingreso manual (tarea 2.3). Falta un POST con `Client(enforce_csrf_checks=True)`, token por GET y `Origin` de la vista previa, y el rechazo de un `Origin` ajeno.
+- Revisor subagente, Minor: HSTS con `SECURE_HSTS_INCLUDE_SUBDOMAINS` por un año compromete los subdominios cuando haya dominio propio (fuera de EN-02); y el comentario "vercel.app ya está en la lista de precarga" no tiene fuente.
+- Revisor subagente, Minor: si `.env` (no solo `.env.local`) trae `VERCEL=1`, casi toda la suite falla con 301, porque `SECURE_SSL_REDIRECT` se activa. Una línea en `conftest.py` o en el README lo evitaría.
+- Revisor subagente, Minor: la prueba `modo_nube` de `test_https_vercel.py` replica a mano los valores del modo nube en vez de importar `config.settings`; `test_settings.py` cierra el hueco.
 - `scripts/build_vercel.py`: si `npm` no existe en el entorno de build, `subprocess.run` lanza `FileNotFoundError` con traza en vez de un mensaje claro y un código de salida.
 
 ## Evidencia de la tarea 2.2

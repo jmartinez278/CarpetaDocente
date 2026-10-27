@@ -267,9 +267,9 @@ El plan A publica el sistema en Vercel (Hobby), con PostgreSQL en Neon (EN-02). 
 
 ### Cómo funciona
 
-- **Vista previa por Pull Request:** cada PR hacia `main` genera una vista previa en Vercel, conectada a su propia rama de Neon (`preview/<rama>`), copia de producción. La URL aparece en el PR.
+- **Vista previa por Pull Request:** cada PR hacia `main` genera una vista previa en Vercel, conectada a su propia rama de Neon (`preview/<rama>`), copia de producción. La URL aparece en el PR (comprobado con vistas previas de push de rama; la del propio PR de EN-02 se ve al abrirlo).
 - **Producción:** cada fusión en `main` se publica sola, conectada a la rama de producción de Neon y por HTTPS.
-- **Migraciones en el build:** `scripts/build_vercel.py` corre `npm ci`, `npm run build` y `migrate` (con la conexión directa de Neon, `DATABASE_URL_UNPOOLED`). Después Vercel corre `collectstatic`. Si un paso falla, el build falla y no reemplaza la versión publicada.
+- **Migraciones en el build:** `scripts/build_vercel.py` corre `npm ci`, `npm run build` y `migrate` (con la conexión directa de Neon, `DATABASE_URL_UNPOOLED`). Después Vercel corre `collectstatic`. Si un paso falla, el build falla y no reemplaza la versión publicada (comprobado en vista previa; en producción se verifica después de la fusión).
 - **Límite del rollback:** que el build falle no deshace la base. `migrate` corre antes de publicar, así que:
   - si un paso del build falla después de `migrate`, la versión anterior sigue en línea contra el esquema ya migrado;
   - si una migración falla, las anteriores ya quedaron aplicadas.
@@ -287,13 +287,13 @@ Sin valores aquí; cada variable está explicada en `.env.example`.
 |---|---|---|
 | `VERCEL`, `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL` | Las define Vercel en cada despliegue | No se usan |
 | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | La integración de Neon las inyecta por ambiente (conexión agrupada y directa). En vista previa apuntan a la rama `preview/<rama>` | `DATABASE_URL` del PostgreSQL de Docker Compose |
-| `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS` | Se configuran en el panel de Vercel, por ambiente. `DJANGO_ALLOWED_HOSTS` solo suma hosts a los de Vercel | En `.env` |
+| `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS` | Se configuran en el panel de Vercel, por ambiente. `DJANGO_ALLOWED_HOSTS` solo suma hosts a los de Vercel. **`DJANGO_DEBUG` debe ser `False` en Preview y Production** (o no definirse): con `True` el arranque falla | En `.env` |
 
 `DATABASE_URL_UNPOOLED` solo llega al build en despliegues por push a git; `vercel deploy` desde la CLI no la recibe y el build corta con un mensaje claro.
 
 ### Cómo ver los logs
 
-Con la CLI de Vercel (`vercel login` y `vercel link` una vez):
+Con la CLI de Vercel (`vercel login` y `vercel link` una vez). Comandos probados en la vista previa de EN-02 con la CLI 65.4.0:
 
 ```bash
 # Build: instalación, CSS, migraciones y collectstatic
@@ -303,7 +303,7 @@ vercel inspect <url-del-despliegue> --logs
 vercel logs --deployment <url-del-despliegue> --query '<texto a buscar>'
 ```
 
-No filtrar por `--level error`: Vercel marca como `info` lo que Django escribe en la salida estándar, y las trazas no aparecen. Buscar por texto (por ejemplo, `Internal Server Error`). Los logs no deben llevar claves ni cadenas de conexión; si aparece una, avisar al equipo para cambiarla.
+No filtrar por `--level error`: Vercel marca como `info` lo que Django escribe en la salida estándar, y las trazas no aparecen. Buscar por texto (por ejemplo, `Internal Server Error`). Los logs no deben llevar claves, cadenas de conexión ni nombres de servidor; si aparece una, avisar al equipo para cambiarla.
 
 ### Cómo crear el enlace compartible
 
@@ -312,6 +312,8 @@ La vista previa pide iniciar sesión en Vercel. Para que una revisora la abra si
 1. En el panel de Vercel, abrir el proyecto y el despliegue de la vista previa.
 2. Elegir *Share* y generar el enlace con la opción **Anyone with this link**. Con otra opción, la revisora sigue necesitando una cuenta de Vercel.
 3. Pegar el enlace en el PR. Con el enlace se ve la pantalla de ingreso; sin él, la vista previa pide autenticarse.
+
+**No compartir el enlace cuando haya datos reales:** la vista previa es una copia de producción y el enlace deja entrar, incluso a `/admin/`, a quien lo reciba.
 
 La vista previa tiene su propia base de datos: para ingresar hace falta una cuenta ficticia creada en esa rama (siguiente apartado).
 

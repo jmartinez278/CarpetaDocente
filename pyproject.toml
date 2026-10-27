@@ -14,7 +14,8 @@ dependencies = [
 package = false
 
 [tool.vercel]
-# Vercel carga la aplicación WSGI desde la raíz (EN-02, D6)
+# Respaldo (EN-02, D6): con manage.py en la raíz, Vercel ignora este entrypoint y usa
+# WSGI_APPLICATION de settings.py. Apunta al mismo módulo.
 entrypoint = "src.backend.config.wsgi:application"
 
 [tool.vercel.scripts]

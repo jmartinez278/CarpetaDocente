@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 # src/backend/ (proyecto Django) y raíz del repositorio (donde vive .env)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -102,6 +103,14 @@ DATABASES["default"].setdefault("OPTIONS", {}).setdefault("connect_timeout", 10)
 # Producción en Vercel (EN-02, D5): solo con VERCEL=1; la laptop y el canal no cambian.
 
 if EN_VERCEL:
+    # Con DEBUG=True un error 500 muestra la traza y las variables de la petición, y las
+    # vistas previas se comparten con un enlace abierto: en la nube no se admite.
+    if DEBUG:
+        raise ImproperlyConfigured(
+            "DJANGO_DEBUG debe ser False (o no definirse) en Vercel: con True un error 500 "
+            "mostraría la traza y el entorno de la petición."
+        )
+
     # Hosts: las URL del despliegue, de su rama y de producción, sin esquema.
     _hosts_vercel = [
         host
@@ -116,7 +125,7 @@ if EN_VERCEL:
 
     # Al detectar manage.py en la raíz, Vercel importa WSGI_APPLICATION desde la raíz
     # del repo e ignora [tool.vercel] entrypoint. Con "config.wsgi" buscaba
-    # /var/task/config/wsgi.py y daba 500 (insumos/en02_runtime.log, vista previa de 0648b72).
+    # /var/task/config/wsgi.py y daba 500 (FileNotFoundError en la vista previa de 0648b72).
     WSGI_APPLICATION = "src.backend.config.wsgi.application"
 
     # HTTPS: el proxy de Vercel termina TLS y siempre reescribe X-Forwarded-Proto.

@@ -4,7 +4,7 @@
 
 - `config/settings.py` lee todo de `django-environ` y de `.env` (las variables del entorno mandan). No distingue ambientes: el canal corre con `DJANGO_DEBUG=False`, así que la depuración apagada **no** sirve para detectar producción (un `SECURE_SSL_REDIRECT` atado a ella rompería las pruebas del canal).
 - `config/tests/test_settings.py` ya carga la configuración en un proceso aparte, sin leer `.env`. Las pruebas nuevas siguen ese patrón.
-- `manage.py` está en `src/backend/`, dos niveles bajo la raíz. Vercel solo lo detecta en la raíz o en un subdirectorio inmediato (documentación de Vercel, "Python entrypoints", 2026-08). `pyproject.toml` y `uv.lock` están en la raíz, con `package = false` y las herramientas de desarrollo en `[dependency-groups] dev`.
+- `manage.py` está en `src/backend/`, dos niveles bajo la raíz (por eso D6 agrega uno delgado en la raíz). Vercel solo lo detecta en la raíz o en un subdirectorio inmediato (documentación de Vercel, "Python entrypoints", 2026-08). `pyproject.toml` y `uv.lock` están en la raíz, con `package = false` y las herramientas de desarrollo en `[dependency-groups] dev`.
 - `src/backend/static/dist/` no está en git. Lo genera `npm run build` en `src/frontend/`.
 - No hay WhiteNoise. Según la documentación de Vercel, con `STATIC_ROOT` definido Vercel corre `collectstatic` solo y sirve `STATIC_URL` desde su CDN.
 - El build script se declara en `[tool.vercel.scripts] build`. Corre después de instalar las dependencias. La documentación no dice si va antes o después del `collectstatic` automático. Confirmado en la tarea 2.2: el `collectstatic` automático corre después del build script.
@@ -36,6 +36,7 @@
     - `SECURE_HSTS_SECONDS = 31536000` y `SECURE_HSTS_INCLUDE_SUBDOMAINS = True`.
   - **Base de datos:** `DISABLE_SERVER_SIDE_CURSORS = True`, porque la URL agrupada de Neon pasa por PgBouncer en modo transacción (Django, "Transaction pooling and server-side cursors"). `CONN_MAX_AGE = 0`, explícito, y sin el `pool` de psycopg: el agrupador ya es el de Neon. El `connect_timeout` de 10 s se mantiene (el arranque en frío de Neon tarda menos).
   - **Entrada WSGI:** `WSGI_APPLICATION = "src.backend.config.wsgi.application"`, porque Vercel la importa desde la raíz del repo (ver D6).
+  - **Depuración:** con `DJANGO_DEBUG=True` el arranque falla con `ImproperlyConfigured` (revisión previa al PR): un 500 mostraría la traza en una URL compartida con "Anyone with this link". Con el valor ausente o `False` no cambia nada.
   - **Logs:** `LOGGING` con un `StreamHandler` a `sys.stdout` para los loggers `django` (nivel `WARNING`) y `django.request` (nivel `ERROR`, con la traza). No se registran variables ni la cadena de conexión.
 - `SILENCED_SYSTEM_CHECKS = ["security.W021"]` (precarga de HSTS), solo en la nube. Motivo: sin dominio propio no hay a quién pedir la precarga, y `vercel.app` ya está en la lista de precarga del navegador. Queda comentado en el código. **Fijo** (aprobado por Marco, 2026-10-26): HSTS de un año, sin `SECURE_HSTS_PRELOAD` y con W021 silenciado.
 - **Alternativas descartadas:**
@@ -49,7 +50,7 @@
 ### D6. Entrada WSGI y build script desde la raíz
 
 - `pyproject.toml`:
-  - `[tool.vercel] entrypoint = "src.backend.config.wsgi:application"`. Si Vercel no acepta el punto en la ruta, se usa la ruta del archivo que indique su documentación; se confirma en la tarea 2.2. Resultado de la tarea 2.2: con `manage.py` en la raíz, Vercel ignora este `entrypoint` y usa `WSGI_APPLICATION`, que importa desde la raíz del repo (`insumos/en02_runtime.log`); por eso el modo nube de D5 la fija con la ruta desde la raíz;
+  - `[tool.vercel] entrypoint = "src.backend.config.wsgi:application"`. Si Vercel no acepta el punto en la ruta, se usa la ruta del archivo que indique su documentación; se confirma en la tarea 2.2. Resultado de la tarea 2.2: con `manage.py` en la raíz, Vercel ignora este `entrypoint` y usa `WSGI_APPLICATION`, que importa desde la raíz del repo (`FileNotFoundError` en el log de ejecución); por eso el modo nube de D5 la fija con la ruta desde la raíz;
   - `[tool.vercel.scripts] build = "python scripts/build_vercel.py"`.
 - `manage.py` delgado en la raíz (tarea 2.2): Vercel solo detecta Django con `manage.py` en la raíz o en un subdirectorio inmediato. Agrega `src/backend` a `sys.path` y delega en `execute_from_command_line`, con su prueba.
 - `config/wsgi.py` agrega `src/backend` a `sys.path` si falta. Así `config.urls` y las apps se importan igual que cuando `manage.py` corre desde `src/backend/`. Es un cambio de dos líneas, con su prueba.
