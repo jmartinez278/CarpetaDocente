@@ -6,7 +6,7 @@ diálogo de la portada, más el aviso de la portada fuera de banda; sin ella, la
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template.defaultfilters import pluralize
 from django.urls import reverse
@@ -16,6 +16,7 @@ from cuentas.acceso import RolRequeridoMixin, es_htmx
 from cuentas.models import Usuario
 from institucion import servicios
 from institucion.forms import EstudianteForm, ListaPegadaForm
+from institucion.models import Estudiante
 
 PLANTILLAS = "institucion/estudiantes/"
 ETIQUETA_AVISO = "estudiantes"
@@ -147,6 +148,8 @@ class EditarView(SeccionDocenteMixin, View):
         if formulario.is_valid():
             try:
                 servicios.editar_estudiante(self.estudiante, **formulario.cleaned_data)
+            except Estudiante.DoesNotExist:
+                raise Http404 from None
             except ValidationError as error:
                 # El servicio deja en la instancia los valores rechazados: se vuelve a cargar.
                 self.estudiante.refresh_from_db()

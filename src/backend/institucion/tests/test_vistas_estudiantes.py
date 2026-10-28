@@ -717,6 +717,27 @@ def test_la_correccion_que_crea_un_homonimo_no_se_guarda(
     assert ana_lucia.nombres == "ANA LUCIA"
 
 
+def test_editar_un_estudiante_quitado_mientras_se_enviaba_da_404_sin_recrearlo(
+    entrar, docente, seccion_docente, ana_lucia, monkeypatch
+):
+    # Revisión A2: otra pestaña lo quita después de que la vista lo cargó y antes de guardar.
+    from institucion import views
+
+    validar = views.EstudianteForm.is_valid
+
+    def quitado_entretanto(formulario):
+        Estudiante.objects.filter(pk=ana_lucia.pk).delete()
+        return validar(formulario)
+
+    monkeypatch.setattr(views.EstudianteForm, "is_valid", quitado_entretanto)
+    datos = {"apellidos": "QUISPE MAMANI", "nombres": "ana lucía"}
+
+    respuesta = entrar(docente).post(url_editar(seccion_docente, ana_lucia), datos)
+
+    assert respuesta.status_code == 404
+    assert seccion_docente.estudiantes.count() == 0
+
+
 @pytest.mark.parametrize("ruta", ["editar", "quitar"])
 @pytest.mark.parametrize("metodo", ["get", "post"])
 def test_un_estudiante_de_otra_seccion_da_404(

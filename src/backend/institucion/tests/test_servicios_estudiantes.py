@@ -262,6 +262,23 @@ def test_editar_hacia_un_homonimo_se_rechaza_y_no_cambia_nada(seccion):
     assert estudiante.nombres == "ANA LUCIA"
 
 
+@pytest.mark.parametrize("borrar", ["quitar", "vaciar"])
+def test_editar_un_estudiante_ya_quitado_no_lo_vuelve_a_crear(seccion, borrar):
+    # Revisión A2: Editar carga al estudiante antes de guardar; si otra pestaña lo quitó o vació
+    # la lista entretanto, el save() de Django haría un INSERT con la misma PK.
+    crear(seccion, "QUISPE MAMANI, ANA LUCIA")
+    cargado_en_editar = seccion.estudiantes.get()
+    if borrar == "quitar":
+        servicios.quitar_estudiante(seccion.estudiantes.get())
+    else:
+        servicios.vaciar_lista(seccion)
+
+    with pytest.raises(Estudiante.DoesNotExist):
+        servicios.editar_estudiante(cargado_en_editar, "quispe mamani", "ana lucía")
+
+    assert seccion.estudiantes.count() == 0
+
+
 # --- quitar_estudiante y vaciar_lista ---
 
 

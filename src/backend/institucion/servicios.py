@@ -4,7 +4,7 @@ import unicodedata
 from dataclasses import dataclass
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Count, ProtectedError, Q, RestrictedError
 
 from cuentas.models import Usuario
@@ -339,14 +339,20 @@ def importar_lista(seccion, texto):
     return len(filas), []
 
 
-def _guardar_estudiante(estudiante):
-    """Valida (campos y ``uq_estudiante``) y guarda; un homónimo por carrera da el mismo error."""
+def _guardar_estudiante(estudiante, existente=False):
+    """Valida (campos y ``uq_estudiante``) y guarda; un homónimo por carrera da el mismo error.
+
+    Con ``existente`` solo actualiza: si otra petición lo quitó entretanto, el ``save()`` normal
+    lo volvería a crear con la misma PK; aquí lanza ``Estudiante.DoesNotExist``.
+    """
     estudiante.full_clean()
     try:
         with transaction.atomic():
-            estudiante.save()
+            estudiante.save(force_update=existente)
     except IntegrityError:
         raise ValidationError(ESTUDIANTE_REPETIDO) from None
+    except DatabaseError:
+        raise Estudiante.DoesNotExist from None
     return estudiante
 
 
@@ -361,10 +367,13 @@ def agregar_estudiante(seccion, apellidos, nombres):
 
 
 def editar_estudiante(estudiante, apellidos, nombres):
-    """Corrige apellidos y nombres con las reglas de ``agregar_estudiante``."""
+    """Corrige apellidos y nombres con las reglas de ``agregar_estudiante``.
+
+    Si el estudiante ya no existe (quitado en otra pestaña), lanza ``Estudiante.DoesNotExist``.
+    """
     estudiante.apellidos = normalizar_nombre(apellidos)
     estudiante.nombres = normalizar_nombre(nombres)
-    return _guardar_estudiante(estudiante)
+    return _guardar_estudiante(estudiante, existente=True)
 
 
 def quitar_estudiante(estudiante):
