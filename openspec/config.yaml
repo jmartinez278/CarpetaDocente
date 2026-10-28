@@ -1,32 +1,42 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+context: |
+  Sistema web de gestión y planificación pedagógica para primaria (EBR), I.E. Virgen del Carmen - Huayucachi. Proyecto de tesis de 3 integrantes: el equipo decide.
+  - Escribe todos los artefactos en español.
+  - Si existe insumos/<ID>/decisiones.md (por ejemplo, insumos/US-030/decisiones.md), es la fuente de las decisiones de esta historia: aplícalas sin reabrirlas. Sus bocetos, si los hay, están en la ruta de su sección "Bocetos".
+  - openspec/specs/ manda sobre el comportamiento. docs/01 Inicio y docs/02 Planificación están congelados: de ahí salen los criterios de aceptación, RF, RN, RNF y el modelo de datos, pero no se editan. Un choque con OpenSpec o con decisiones.md va a la deuda de tasks.md.
+  - Solo datos ficticios. Un dato de la I.E. no confirmado se marca [DATO I.E. PENDIENTE].
+  - Las reglas de negocio van en servicios.py; las vistas no escriben directo en la base de datos.
+  - Interfaz: tokens de DESIGN.md, sin repetir DESIGN.md en los artefactos. Temas claro y oscuro, 360 px, sin desplazamiento horizontal, red Slow 4G (RNF-002).
+  - Trazabilidad con la tesis: cada historia corresponde a un RF de docs/01 Inicio/06 y a una de las tres dimensiones (planificación de sesiones de aprendizaje, registro y control de notas, control de asistencia). Si la tesis mide un indicador con datos de esta historia, el sistema debe guardarlos.
+  - Entorno local: Windows (PowerShell o Git Bash) y PostgreSQL en Docker Compose.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Corta, con qué cambia, por qué y qué queda fuera de alcance (con la historia a la que va).
+    - Indica el RF y la dimensión de la tesis que cubre.
+    - Solo decisiones nuevas; no repitas lo que ya dicen openspec/specs, DESIGN.md o decisiones.md.
+  specs:
+    - Los escenarios Gherkin del criterio de aceptación (docs/02 Planificación/01) pasan casi directo.
+  design:
+    - Decisiones numeradas (D1, D2, ...) con su porqué; los riesgos y las zonas delicadas primero.
+    - Si la historia guarda datos que mide la tesis, di qué campo los guarda.
+  tasks:
+    - Máximo 3 grupos y unas 15 tareas.
+    - Cada tarea empieza por la prueba ("Prueba primero, <archivo>") y termina con "Verificar:" y lo que se comprueba.
+    - Los tramos de alto riesgo (modelos y restricciones, migraciones, seguridad, despliegue, workflows) van solos en su grupo o parte.
+    - Un commit por grupo (o por parte en un grupo grande), nunca por tarea; la casilla y la evidencia van en ese commit.
+    - El último grupo es la revisión final (A2) y verificacion.md.
+    - Al final, "Workflow follow-up" con la deuda.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - Pruebas primero; ante una falla inesperada, depuración sistemática.
+      - Antes de usar una API de Django, HTMX, Tailwind o Playwright, consulta su documentación actual (Context7).
+      - Revisión al cerrar cada grupo o parte, no por tarea. Critical e Important se corrigen; los Minor van a verificacion.md, "## Minor para la descripción del PR".
+      - Antes de proponer un commit, lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit`. Commit solo con aprobación.
+      - verificacion.md corto - tabla escenario → prueba y DoD 1 a 9.
+  archive:
+    guidance:
+      - Se archiva con "Sync now", como primer commit de la rama de la historia siguiente.
