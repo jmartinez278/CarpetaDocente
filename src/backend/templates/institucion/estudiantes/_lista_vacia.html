@@ -1,0 +1,12 @@
+{% extends "institucion/estudiantes/_base.html" %}
+{% block cuerpo %}
+<div class="lista-vacia">
+  {% include "iconos/inbox.svg" %}
+  <p>Tu sección aún no tiene estudiantes.</p>
+</div>
+{% endblock %}
+{% block pie %}
+{% url 'estudiantes:agregar' seccion.pk as url_agregar %}{% url 'estudiantes:pegar' seccion.pk as url_pegar %}
+<a class="boton-principal" href="{{ url_agregar }}" hx-get="{{ url_agregar }}">Agregar uno por uno</a>
+<a class="boton-secundario" href="{{ url_pegar }}" hx-get="{{ url_pegar }}">Pegar lista</a>
+{% endblock %}

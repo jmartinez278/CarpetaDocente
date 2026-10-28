@@ -12,3 +12,13 @@ Grupo 1 (revisión del grupo, sin DESIGN.md):
 - Condicional anidado en `_errores_de_filas` poco legible; `_clave_orden` repetida en el desempate de `estudiantes_ordenados`.
 - Falta una prueba del máximo de 120 caracteres al editar (solo al agregar).
 - El mensaje "Este estudiante ya está en la lista" está en `servicios.py` y en `Estudiante.Meta` (el ciclo de importación impide compartirlo).
+
+Grupo 2, parte A (revisión de la parte, con las secciones de DESIGN.md que usa):
+
+- Mientras no existan las partes B y C, "Agregar uno por uno" y "Pegar lista" abren rutas con `PendienteView` (404): no hacen nada al pulsarlas. Temporal: `PendienteView` (en `institucion/views.py` y `urls.py`) la reemplazan las partes B y C con sus vistas reales, y el catálogo de rutas suma entonces las cinco rutas restantes.
+- CSS adelantado para B y C: `.mensaje--exito` y `.campo-ayuda` (aún sin uso).
+- Si la petición del parcial falla (500 o red), HTMX no muestra nada en el diálogo.
+- Con el diálogo abierto y la sesión vencida, la entrada de historial extra queda al ir a `/ingresar/` (inocuo: tras ingresar va a `/docente/`).
+- El aviso de la portada (`role="status"`) cambia por `hx-swap-oob` mientras el diálogo deja la portada inerte: el lector de pantalla probablemente no lo anuncie hasta cerrar el diálogo.
+- Para B y C: los POST del diálogo necesitan el token CSRF (`{% csrf_token %}` en cada formulario).
+

@@ -944,6 +944,11 @@
       min-height: 0;
     }
 
+    /* Sin carrusel que desplazar, la tarjeta inicial no es destino de la carga: arrastraría la página hacia abajo. */
+    .carrusel__item--inicial {
+      scroll-initial-target: none;
+    }
+
     .chips,
     .puntos {
       display: none;
@@ -1041,5 +1046,308 @@
 
   .boton-principal:active {
     transform: none;
+  }
+}
+
+/* Lista de estudiantes de la sección (US-006, D8): lo que DESIGN.md 0.3.1 no cubre, tomado de estudiantes.css del boceto
+   (insumos/US-006-bocetos) con los tokens de arriba. El diálogo es de 640 px en computadora y una hoja desde abajo en el
+   celular; cabecera y pie quedan fijos y solo el cuerpo se desplaza. Mismo criterio de espaciado: --spacing(n). */
+@layer components {
+  body.con-dialogo {
+    overflow: hidden;
+  }
+
+  /* Línea de la sección con "Ver estudiantes" al lado (portada) y el aviso debajo. */
+  .seccion-entrada {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: --spacing(1) --spacing(4);
+    margin-top: --spacing(2);
+  }
+
+  .entrada-estudiantes {
+    min-height: 44px;
+    margin-top: 0;
+    text-decoration: none;
+  }
+
+  .entrada-estudiantes:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .aviso-portada:not(:empty) {
+    margin-top: --spacing(4);
+  }
+
+  .modal-estudiantes {
+    position: fixed;
+    inset: 0;
+    width: 640px;
+    max-width: calc(100% - 32px);
+    height: min(800px, calc(100dvh - 64px));
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    background: var(--color-superficie);
+    color: var(--color-texto);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-tarjeta);
+    overflow: hidden;
+  }
+
+  .modal-estudiantes[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .modal-estudiantes::backdrop {
+    background: color-mix(in srgb, var(--color-fondo) 72%, transparent);
+  }
+
+  /* La misma estructura como página completa (sin JavaScript): panel de 640 px, sin altura fija. */
+  .panel-estudiantes {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    margin-top: --spacing(4);
+    background: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-tarjeta);
+    overflow: hidden;
+  }
+
+  .modal-cabecera {
+    min-width: 0;
+    padding: --spacing(6) --spacing(6) --spacing(4);
+    border-bottom: 1px solid var(--color-linea);
+    background: var(--color-superficie);
+  }
+
+  .modal-contexto {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: --spacing(3);
+    align-items: start;
+  }
+
+  .modal-titulo {
+    font-family: var(--font-display);
+    font-size: var(--text-heading);
+    font-weight: 600;
+    line-height: 30px;
+    text-wrap: balance;
+  }
+
+  .modal-cantidad {
+    margin-top: --spacing(1);
+    color: var(--color-texto-suave);
+    font-size: var(--text-caption);
+    line-height: 20px;
+  }
+
+  .modal-cuerpo {
+    min-width: 0;
+    min-height: 0;
+    padding: --spacing(6);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--color-borde) var(--color-superficie);
+  }
+
+  .modal-cuerpo > * + * {
+    margin-top: --spacing(6);
+  }
+
+  .modal-pie {
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(2);
+    min-height: 16px;
+    padding: --spacing(4) --spacing(6);
+    border-top: 1px solid var(--color-linea);
+    background: var(--color-superficie);
+  }
+
+  .modal-pie:empty {
+    padding-block: --spacing(2);
+  }
+
+  /* "Cerrar": botón con el borde del botón secundario (DESIGN.md), ícono x y texto, de 44 px de alto como mínimo.
+     "Volver a la lista" es un enlace de texto de 44 px. */
+  .cerrar-dialogo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: --spacing(2);
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 --spacing(4);
+    border: 1px solid var(--color-primario);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-primario);
+    font: inherit;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    line-height: 20px;
+    cursor: pointer;
+  }
+
+  .volver-lista {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: --spacing(2);
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 --spacing(1);
+    border: 0;
+    background: transparent;
+    color: var(--color-primario);
+    font: inherit;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    line-height: 20px;
+    cursor: pointer;
+  }
+
+  .cerrar-dialogo .icono,
+  .volver-lista .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .volver-lista {
+    font-size: var(--text-body);
+    line-height: 24px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .flecha-volver {
+    transform: rotate(180deg);
+  }
+
+  /* Botón secundario de DESIGN.md: borde de 1 px en --color-primario y fondo transparente. */
+  .boton-secundario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: --spacing(2);
+    min-height: 48px;
+    padding: 0 --spacing(4);
+    border: 1px solid var(--color-primario);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-primario);
+    font: inherit;
+    font-size: var(--text-body);
+    font-weight: 600;
+    line-height: 24px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .boton-principal {
+    text-decoration: none;
+  }
+
+  .mensaje--exito {
+    color: var(--color-exito);
+  }
+
+  .campo-ayuda {
+    color: var(--color-texto-suave);
+    font-size: var(--text-caption);
+    line-height: 20px;
+  }
+
+  .lista-vacia {
+    display: flex;
+    min-height: 240px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: --spacing(4);
+    text-align: center;
+  }
+
+  .lista-vacia .icono {
+    width: 32px;
+    height: 32px;
+    color: var(--color-texto-suave);
+  }
+
+  /* Fila de estudiante: número, nombre completo que baja de línea (sin "…") y, en la parte B, "Editar". */
+  .estudiantes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .estudiante {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    gap: --spacing(2);
+    align-items: center;
+    min-height: 64px;
+    padding: --spacing(2) 0;
+  }
+
+  .estudiante + .estudiante {
+    border-top: 1px solid var(--color-linea);
+  }
+
+  .estudiante__numero {
+    font-size: var(--text-caption);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-texto-suave);
+  }
+
+  .estudiante__nombre {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  /* Foco de 2 px con --color-primario en los controles. El título recibe el foco por código (tabindex="-1") para anunciar
+     la vista: no es un control, WCAG 2.4.7 no lo exige y no lleva contorno. */
+  .entrada-estudiantes:focus-visible,
+  .cerrar-dialogo:focus-visible,
+  .volver-lista:focus-visible,
+  .boton-secundario:focus-visible,
+  .modal-estudiantes a:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 2px;
+  }
+
+  .modal-titulo[tabindex="-1"]:focus {
+    outline: none;
+  }
+
+  @media (max-width: 959.98px) {
+    .modal-estudiantes {
+      width: 100%;
+      max-width: 100%;
+      height: calc(100dvh - 16px);
+      margin: auto 0 0;
+      border-inline: 0;
+      border-bottom: 0;
+      border-radius: var(--radius-tarjeta) var(--radius-tarjeta) 0 0;
+    }
+
+    .modal-cabecera,
+    .modal-cuerpo {
+      padding: --spacing(4);
+    }
+
+    .modal-pie {
+      padding: --spacing(4) --spacing(4) calc(--spacing(4) + env(safe-area-inset-bottom));
+    }
+
+    .modal-pie:empty {
+      padding-block: --spacing(2);
+    }
   }
 }

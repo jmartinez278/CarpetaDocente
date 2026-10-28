@@ -1,0 +1,8 @@
+{% extends "institucion/estudiantes/_base.html" %}
+{% comment %}Lista mínima: número y nombre. La parte B (tarea 2.5) agrega Editar, Agregar estudiante, Vaciar lista y el aviso de éxito.{% endcomment %}
+{% block cuerpo %}
+<ol class="estudiantes">
+  {% for estudiante in estudiantes %}<li class="estudiante"><span class="estudiante__numero">{{ forloop.counter }}</span><span class="estudiante__nombre">{{ estudiante.apellidos }}, {{ estudiante.nombres }}</span></li>
+  {% endfor %}
+</ol>
+{% endblock %}

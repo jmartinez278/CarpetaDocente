@@ -11,6 +11,7 @@ urlpatterns = [
     path("ingresar/", IngresarView.as_view(), name="ingresar"),
     path("salir/", LogoutView.as_view(), name="salir"),
     path("docente/", include("cuentas.urls")),
+    path("docente/secciones/<int:seccion_id>/estudiantes/", include("institucion.urls")),
     path("direccion/", include("direccion.urls")),
     # Antes de admin.site.urls: el panel no tiene un login propio (RN-024).
     path("admin/login/", IngresoPanelView.as_view(), name="ingreso_panel"),

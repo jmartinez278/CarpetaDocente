@@ -100,7 +100,7 @@ Incluidas en `config/urls.py` bajo `docente/secciones/<int:seccion_id>/estudiant
 DESIGN.md 0.3.1 no se toca. Va a `src/frontend/css/app.css`, en `@layer components`, con los tokens, tomado de `estudiantes.css` y de `notas.md` ("Reutilización y puntos no cubiertos por DESIGN.md"):
 
 - Diálogo de 640 px en PC y hoja desde abajo en el celular (16 px de aire arriba), con grilla cabecera/cuerpo/pie y solo el cuerpo desplazable; fondo atenuado al 72 %, sin desenfoque ni sombra nueva.
-- "Cerrar" como texto e ícono `x`, sin borde ni cápsula, 44 × 44 px; "Volver a la lista", "Editar" y las acciones de riesgo (texto en `--color-error`) como enlaces de 44 px.
+- "Cerrar" como botón con el borde del botón secundario (1 px `--color-primario`, cápsula), ícono `x` y texto, de 44 px de alto como mínimo (decisión del grill; el "sin cápsula" de `notas.md` no aplica); "Volver a la lista", "Editar" y las acciones de riesgo (texto en `--color-error`) como enlaces de 44 px.
 - `.boton-secundario` y `.mensaje--exito` (DESIGN.md los define; el CSS aún no los tiene).
 - Fila de estudiante (número, nombre que baja de línea, "Editar"); cuadro de texto derivado de Campo.
 - Foco de 2 px con `--color-primario` en los títulos que reciben foco (P2 de foco).

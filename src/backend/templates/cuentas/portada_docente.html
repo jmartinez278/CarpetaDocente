@@ -2,13 +2,19 @@
 {% load static %}
 
 {% block scripts %}<script src="{% static 'js/portada.js' %}" defer></script>
-<script src="{% static 'dist/vendor/alpine.min.js' %}" defer></script>{% endblock %}
+<script src="{% static 'dist/vendor/alpine.min.js' %}" defer></script>
+<script src="{% static 'dist/vendor/htmx.min.js' %}" defer></script>
+<script src="{% static 'js/estudiantes.js' %}" defer></script>{% endblock %}
 
 {% block principal %}
 <main class="portada" x-data="carrusel">
   <div class="mx-auto w-full max-w-280 px-4 pt-8 min-[960px]:px-6 min-[960px]:pt-0">
     <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">Hola, {{ user.get_full_name|default:user.username }}</h1>
-    <p class="mt-2 text-body text-texto-suave">{{ secciones }}</p>
+    <div class="seccion-entrada">
+      <p class="text-body text-texto-suave">{{ secciones }}</p>
+      {% if entrada %}{% url 'estudiantes:lista' entrada.pk as url_lista %}<a class="dimension__accion entrada-estudiantes" id="ver-estudiantes" href="{{ url_lista }}" hx-get="{{ url_lista }}" hx-target="#estudiantes" hx-swap="innerHTML" data-abrir-estudiantes>Ver estudiantes{% include "iconos/arrow-right.svg" with clase="dimension__flecha" %}</a>{% endif %}
+    </div>
+    {% if entrada %}{% include "institucion/estudiantes/_aviso_portada.html" with cantidad=entrada.cantidad_estudiantes %}{% endif %}
     <nav class="chips" aria-label="Accesos">
       {% for d in dimensiones %}<a class="chip" href="#c-{{ d.clave }}" :class="{ 'es-activo': controla && activa === 'c-{{ d.clave }}' }" @click.prevent="ir('c-{{ d.clave }}')" :aria-current="activa === 'c-{{ d.clave }}' ? 'true' : 'false'">{{ d.titulo }}<span class="sr-only">: ver tarjeta</span></a>
       {% endfor %}
@@ -19,4 +25,5 @@
   </div>
   <div class="puntos" aria-hidden="true">{% for d in dimensiones %}<span class="punto" :class="{ 'es-activo': controla && activa === 'c-{{ d.clave }}' }"></span>{% endfor %}</div>
 </main>
+{% if entrada %}<dialog class="modal-estudiantes" id="estudiantes" aria-labelledby="modal-titulo" aria-describedby="modal-cantidad" hx-target="this" hx-swap="innerHTML"></dialog>{% endif %}
 {% endblock %}

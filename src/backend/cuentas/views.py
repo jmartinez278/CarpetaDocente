@@ -88,4 +88,5 @@ class PortadaDocenteView(RolRequeridoMixin, TemplateView):
         contexto["dimensiones"] = dimensiones.DIMENSIONES
         contexto["inicial"] = dimensiones.tarjeta_inicial(dimensiones.DIMENSIONES)
         contexto["secciones"] = servicios.texto_secciones_docente(self.request.user)
+        contexto["entrada"] = servicios.seccion_unica(self.request.user)
         return contexto

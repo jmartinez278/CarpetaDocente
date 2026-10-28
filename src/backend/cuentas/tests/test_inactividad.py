@@ -143,3 +143,69 @@ def test_en_la_direccion_la_inactividad_cierra_la_sesion(client, direccion):
     assert respuesta.status_code == 302
     assert respuesta["Location"].startswith(INGRESAR)
     assert SESSION_KEY not in client.session
+
+
+# --- Peticiones de HTMX (US-006, D7): el diálogo no muestra el ingreso adentro ---
+
+HTMX = {"HTTP_HX_REQUEST": "true"}
+HACIA_INGRESAR = f"{INGRESAR}?next={quote(PORTADA)}"
+
+
+def test_una_peticion_htmx_vencida_responde_200_con_hx_redirect(client, docente):
+    client.force_login(docente)
+    envejecer(client, 60)
+
+    respuesta = client.get("/docente/", **HTMX)
+
+    assert respuesta.status_code == 200
+    assert respuesta["HX-Redirect"] == HACIA_INGRESAR
+    assert respuesta.content == b""
+    assert SESSION_KEY not in client.session
+    assert "no-store" in respuesta["Cache-Control"]
+
+
+def test_un_post_htmx_vencido_tambien_lleva_a_la_portada_como_next(client, docente):
+    client.force_login(docente)
+    envejecer(client, 60)
+
+    respuesta = client.post("/docente/", **HTMX)
+
+    assert respuesta.status_code == 200
+    assert respuesta["HX-Redirect"] == HACIA_INGRESAR
+
+
+def test_la_peticion_htmx_vencida_deja_el_aviso_de_inactividad(client, docente):
+    client.force_login(docente)
+    envejecer(client, 60)
+    client.get("/docente/", **HTMX)
+
+    respuesta = client.get(INGRESAR)
+
+    avisos = [m for m in respuesta.context["messages"] if "inactividad" in m.tags]
+    assert len(avisos) == 1
+
+
+def test_sin_htmx_el_302_de_siempre(client, docente):
+    client.force_login(docente)
+    envejecer(client, 60)
+
+    respuesta = client.get("/docente/")
+
+    assert respuesta.status_code == 302
+    assert "HX-Redirect" not in respuesta
+
+
+def test_una_peticion_htmx_sin_sesion_responde_200_con_hx_redirect(client):
+    respuesta = client.get("/docente/", **HTMX)
+
+    assert respuesta.status_code == 200
+    assert respuesta["HX-Redirect"] == HACIA_INGRESAR
+
+
+def test_una_peticion_htmx_de_otro_rol_lleva_a_su_pantalla_con_hx_redirect(client, direccion):
+    client.force_login(direccion)
+
+    respuesta = client.get("/docente/", **HTMX)
+
+    assert respuesta.status_code == 200
+    assert respuesta["HX-Redirect"] == "/direccion/"
