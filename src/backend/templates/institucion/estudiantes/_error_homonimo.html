@@ -1,0 +1,1 @@
+{% if formulario.non_field_errors %}<div class="mensaje mensaje--error" role="alert">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>{{ formulario.non_field_errors.0 }}</p><p>Si son personas distintas, escribe el segundo nombre completo.</p></div></div>{% endif %}

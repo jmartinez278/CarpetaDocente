@@ -144,3 +144,54 @@ class Seccion(models.Model):
         from institucion import servicios
 
         servicios.validar_asignacion(self)
+
+
+class Estudiante(models.Model):
+    """Estudiante de una sección: solo apellidos y nombres, en mayúsculas (US-006, D1; RN-015).
+
+    ``save()`` guarda la forma normalizada, así que ``uq_estudiante`` compara siempre lo
+    guardado. ``QuerySet.update()`` y ``bulk_update`` no pasan por ``save()``; ``bulk_create``
+    solo lo usa ``servicios.importar_lista``, con filas ya normalizadas.
+
+    Las tablas futuras con FK a estudiante (calificación, asistencia, exoneración) usarán
+    ``models.RESTRICT`` y no ``CASCADE`` como el documento 11: así quitar o vaciar la lista
+    se bloquea solo cuando hay registros (``servicios.ListaConRegistros``).
+    """
+
+    seccion = models.ForeignKey(
+        Seccion,
+        on_delete=models.CASCADE,
+        related_name="estudiantes",
+        verbose_name="sección",
+    )
+    apellidos = models.CharField("apellidos", max_length=120)
+    nombres = models.CharField("nombres", max_length=120)
+
+    class Meta:
+        db_table = "estudiante"
+        verbose_name = "estudiante"
+        verbose_name_plural = "estudiantes"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["seccion", "apellidos", "nombres"],
+                name="uq_estudiante",
+                violation_error_message="Este estudiante ya está en la lista",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.apellidos}, {self.nombres}"
+
+    def save(self, *args, **kwargs):
+        self._normalizar()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        """Normaliza antes de que ``full_clean`` valide ``uq_estudiante``."""
+        self._normalizar()
+
+    def _normalizar(self):
+        from institucion import servicios
+
+        self.apellidos = servicios.normalizar_nombre(self.apellidos)
+        self.nombres = servicios.normalizar_nombre(self.nombres)

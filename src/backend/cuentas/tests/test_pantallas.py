@@ -343,22 +343,25 @@ def test_la_portada_carga_portada_js_antes_de_alpine(portada):
     scripts = re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE)
 
     # menu.js es el del menú de la cuenta y bfcache.js el del respaldo de "atrás" (US-002);
-    # ninguno depende de Alpine.
-    assert len(scripts) == 4
+    # ninguno depende de Alpine. Desde US-006, HTMX y estudiantes.js (el diálogo de la lista).
+    assert len(scripts) == 6
     assert "js/portada.js" in scripts[0]
     assert "dist/vendor/alpine.min.js" in scripts[1]
-    assert "js/menu.js" in scripts[2]
-    assert "js/bfcache.js" in scripts[3]
+    assert "dist/vendor/htmx.min.js" in scripts[2]
+    assert "js/estudiantes.js" in scripts[3]
+    assert "js/menu.js" in scripts[4]
+    assert "js/bfcache.js" in scripts[5]
     assert all("defer" in script for script in scripts)
-    assert "htmx" not in portada.lower()
 
 
 SIN_SECCION = "Tu sección aparecerá cuando el administrador la asigne."
 
 
 def linea_de_secciones(html):
-    """El ``<p>`` entre el saludo y los accesos (US-005, D6)."""
-    encontrada = re.search(r"</h1>\s*<p\b[^>]*>(.*?)</p>\s*<nav\b", html, re.DOTALL)
+    """El ``<p>`` de ``.seccion-entrada``, entre el saludo y los accesos (US-005, D6)."""
+    encontrada = re.search(
+        r'</h1>\s*<div class="seccion-entrada">\s*<p\b[^>]*>(.*?)</p>', html, re.DOTALL
+    )
     assert encontrada, "no hay línea de secciones bajo el saludo"
     return encontrada.group(1).strip()
 
@@ -374,6 +377,7 @@ def portada_con(client, docente):
         client.force_login(docente)
         return client.get(PORTADA).content.decode()
 
+    abrir.cliente = client
     return abrir
 
 
@@ -403,6 +407,86 @@ def test_la_linea_de_secciones_no_cambia_las_tarjetas_ni_los_chips(portada_con):
 
     assert len(tarjetas(html)) == 3
     assert len(re.findall(r'<a class="chip"', html)) == 3
+
+
+# --- Entrada a la lista de estudiantes (US-006, D6; spec "Portada del docente") ---
+
+AVISO_SIN_ESTUDIANTES = "Tu sección aún no tiene estudiantes"
+AYUDA_AVISO = "Agrégalos para poder tomar asistencia"
+
+
+def entrada(html):
+    """El ``div.seccion-entrada``: la línea de secciones y, si hay, el enlace a la lista."""
+    encontrada = re.search(r'<div class="seccion-entrada">.*?</div>', html, re.DOTALL)
+    assert encontrada, "no hay seccion-entrada"
+    return encontrada.group(0)
+
+
+def aviso_portada(html):
+    encontrada = re.search(r'<div id="aviso-portada"[^>]*>(.*?)</div>\s*(?=<nav)', html, re.DOTALL)
+    assert encontrada, "no hay aviso-portada"
+    return encontrada.group(1)
+
+
+def test_con_una_seccion_ver_estudiantes_va_junto_a_la_linea(portada_con):
+    html = portada_con((2, "A"))
+    seccion = Seccion.objects.get()
+    url = f"/docente/secciones/{seccion.pk}/estudiantes/"
+
+    bloque = entrada(html)
+    enlace = etiqueta(bloque, 'id="ver-estudiantes"')
+    assert f'href="{url}"' in enlace
+    assert f'hx-get="{url}"' in enlace
+    assert 'hx-target="#estudiantes"' in enlace
+    assert 'hx-swap="innerHTML"' in enlace
+    assert "data-abrir-estudiantes" in enlace
+    assert re.search(r"Ver estudiantes\s*<svg", bloque)
+    assert bloque.index("2.º grado, sección A") < bloque.index("Ver estudiantes")
+    assert "<a" not in re.search(r"<p\b.*?</p>", bloque, re.DOTALL).group(0), "la línea es texto"
+
+
+def test_con_una_seccion_la_portada_tiene_el_dialogo_vacio(portada_con):
+    html = portada_con((2, "A"))
+
+    dialogo = re.search(r"<dialog\b[^>]*>(.*?)</dialog>", html, re.DOTALL)
+    assert dialogo and dialogo.group(1).strip() == ""
+    etiqueta_dialogo = etiqueta(html, 'id="estudiantes"')
+    assert 'aria-labelledby="modal-titulo"' in etiqueta_dialogo
+    assert 'aria-describedby="modal-cantidad"' in etiqueta_dialogo
+    assert 'hx-target="this"' in etiqueta_dialogo
+    assert 'hx-swap="innerHTML"' in etiqueta_dialogo
+
+
+def test_la_seccion_sin_estudiantes_muestra_el_aviso_bajo_la_linea(portada_con):
+    html = portada_con((2, "A"))
+
+    assert AVISO_SIN_ESTUDIANTES in aviso_portada(html)
+    assert AYUDA_AVISO in aviso_portada(html)
+    assert 'role="status"' in aviso_portada(html)
+    assert html.index("Ver estudiantes") < html.index('id="aviso-portada"')
+
+
+def test_con_estudiantes_la_portada_no_muestra_el_aviso(portada_con):
+    from institucion.models import Estudiante
+
+    html_vacia = portada_con((2, "A"))
+    assert AVISO_SIN_ESTUDIANTES in html_vacia
+    Estudiante.objects.create(seccion=Seccion.objects.get(), apellidos="QUISPE", nombres="ANA")
+
+    html = portada_con.cliente.get(PORTADA).content.decode()
+
+    assert aviso_portada(html).strip() == ""
+    assert "Ver estudiantes" in html
+
+
+@pytest.mark.parametrize("secciones", [[], [(2, "A"), (3, "B")]])
+def test_sin_seccion_o_con_varias_no_hay_enlace_ni_aviso_ni_dialogo(portada_con, secciones):
+    html = portada_con(*secciones)
+
+    assert "Ver estudiantes" not in html
+    assert AVISO_SIN_ESTUDIANTES not in html
+    assert "<dialog" not in html
+    assert "data-abrir-estudiantes" not in html
 
 
 def test_una_dimension_disponible_enlaza_a_su_pantalla(client, docente, monkeypatch):

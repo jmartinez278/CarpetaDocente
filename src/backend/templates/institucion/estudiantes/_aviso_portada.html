@@ -1,0 +1,1 @@
+<div id="aviso-portada" class="aviso-portada"{% if oob %} hx-swap-oob="true"{% endif %}>{% if cantidad == 0 %}<div class="mensaje mensaje--aviso" role="status">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>Tu sección aún no tiene estudiantes</p><p>Agrégalos para poder tomar asistencia</p></div></div>{% endif %}</div>

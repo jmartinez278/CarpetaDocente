@@ -1,0 +1,11 @@
+{% comment %}
+Campo de Agregar y Editar (Campo de texto de DESIGN.md): etiqueta encima, error debajo con ícono. Recibe: campo
+(BoundField), prefijo ("agregar" o "editar"), ayuda_id (la ayuda que lo describe), ayuda (texto bajo el
+campo, opcional) y foco (nombre del campo que recibe el foco en el diálogo).
+{% endcomment %}
+<div class="campo">
+  <label class="campo__etiqueta" for="{{ prefijo }}-{{ campo.name }}">{{ campo.label }}</label>
+  <input class="campo__control" id="{{ prefijo }}-{{ campo.name }}" name="{{ campo.html_name }}" type="text"{% if campo.value %} value="{{ campo.value }}"{% endif %} maxlength="120" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="{{ ayuda_id }}{% if campo.errors %} {{ prefijo }}-{{ campo.name }}-error{% endif %}"{% if campo.errors %} aria-invalid="true"{% endif %}{% if foco == campo.name %} data-foco{% endif %}>
+  {% if ayuda %}<p class="campo-ayuda" id="{{ ayuda_id }}">{{ ayuda }}</p>{% endif %}
+  {% if campo.errors %}<p class="campo__error" id="{{ prefijo }}-{{ campo.name }}-error">{% include "iconos/circle-alert.svg" %}<span>{{ campo.errors.0 }}</span></p>{% endif %}
+</div>

@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.cache import add_never_cache_headers
 
 from cuentas import servicios
+from cuentas.acceso import es_htmx, redirigir
 
 MARCA_DE_ACTIVIDAD = "ultima_actividad"
 ETIQUETA_INACTIVIDAD = "inactividad"
@@ -31,7 +32,8 @@ class InactividadMiddleware:
     """Termina la sesión tras 60 minutos sin peticiones y evita que se guarde en caché.
 
     - Vencida: ``logout()``, deja el aviso y redirige a ``/ingresar/``. Si era un GET,
-      conserva la dirección pedida en ``next``; si no, no vuelve a un envío.
+      conserva la dirección pedida en ``next``; si no, no vuelve a un envío. Una petición de
+      HTMX recibe ``HX-Redirect`` con la portada como ``next`` (US-006, D7).
     - Vigente: renueva la marca de la última actividad.
     - Toda respuesta a una petición con sesión lleva las cabeceras de no caché, para que
       el botón "atrás" no muestre la pantalla después de cerrar la sesión.
@@ -58,7 +60,11 @@ class InactividadMiddleware:
         titulo, detalle = servicios.aviso_de_inactividad()
         messages.info(request, f"{titulo}\n\n{detalle}", extra_tags=ETIQUETA_INACTIVIDAD)
         destino = reverse("ingresar")
-        if request.method == "GET":
+        if es_htmx(request):
+            respuesta = redirigir(
+                request, redirect_to_login(reverse("docente:portada"), destino).url
+            )
+        elif request.method == "GET":
             respuesta = redirect_to_login(request.get_full_path(), destino)
         else:
             respuesta = redirect(destino)

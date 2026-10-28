@@ -1,0 +1,14 @@
+{% extends "marco.html" %}
+{% comment %}
+Página completa de cada vista de la lista (US-006, D5): lo que se ve sin JavaScript o al abrir la dirección directa.
+Mismo parcial que el diálogo, en un panel de 640 px, con el título como h1 y sin "Cerrar".
+{% endcomment %}
+
+{% block titulo %}{{ titulo }} · CarpetaDocente{% endblock %}
+
+{% block principal %}
+<main class="mx-auto w-full max-w-160 px-4 py-8 min-[960px]:py-12">
+  <a class="volver-lista" href="{% url 'docente:portada' %}">{% include "iconos/arrow-right.svg" with clase="flecha-volver" %}Volver a la portada</a>
+  <div class="panel-estudiantes">{% include parcial %}</div>
+</main>
+{% endblock %}

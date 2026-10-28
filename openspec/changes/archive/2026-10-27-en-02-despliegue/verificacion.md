@@ -19,8 +19,8 @@ Cierre del grupo 3. Pruebas de `config/tests/test_settings.py` (TS), `cuentas/te
 | Paquete: despliegue desde la laptop | **Parcial.** Por cálculo, 256 archivos sin `.env`, `.env.local`, `insumos/` ni `CLAUDE.local.md`; el log cuenta 260 y la diferencia de 4 no se identificó. Pytest, Playwright y Ruff en el paquete: sin confirmar: el log del build no lista los paquetes (A2 Important; pasa a la Deuda del PR). Por push solo llega lo que está en git (tarea 2.2) |
 | Vista previa por Pull Request | Vista previa `q988pte9u` conectada a `preview/feature/EN-02-despliegue` (tarea 2.3); la del PR se ve al abrirlo |
 | Vista previa: acceso de una revisora | Enlace "Anyone with this link": ve el ingreso; sin él pide autenticarse (tarea 2.3) |
-| Publicación de la rama principal | Se verifica después de la fusión |
-| Despliegue fallido | Se verifica después de la fusión |
+| Publicación de la rama principal | Producción (D8), ver "Evidencia de producción" |
+| Despliegue fallido | **No verificado al archivar; pasa a la deuda.** Procedimiento en "Minor para la descripción del PR" |
 
 ## Revisión final A2 (Codex)
 
@@ -77,6 +77,20 @@ Sin fugas de claves en el diff, `.env.example` ni README. Codex no ejecutó prue
 - Revisor subagente, Minor: si `.env` (no solo `.env.local`) trae `VERCEL=1`, casi toda la suite falla con 301, porque `SECURE_SSL_REDIRECT` se activa. Una línea en `conftest.py` o en el README lo evitaría.
 - Revisor subagente, Minor: la prueba `modo_nube` de `test_https_vercel.py` replica a mano los valores del modo nube en vez de importar `config.settings`; `test_settings.py` cierra el hueco.
 - `scripts/build_vercel.py`: si `npm` no existe en el entorno de build, `subprocess.run` lanza `FileNotFoundError` con traza en vez de un mensaje claro y un código de salida.
+
+## Evidencia de producción (D8)
+
+Hecha por Marco tras fusionar el PR #63 (sin claves ni URL de Neon):
+
+- Primer despliegue de `main` en verde.
+- Superusuario creado.
+- Institución creada en el panel.
+- `cargar_secciones --anio 2027`: 24 secciones.
+- HTTPS y redirección desde HTTP comprobados. Escenario "Publicación de la rama principal".
+
+## Deuda: despliegue fallido
+
+Escenario "Despliegue fallido" sin verificar al archivar. Procedimiento: un PR de prueba hacia `main` que rompe `src/frontend/css/app.css` (por ejemplo, con un error de sintaxis); comprobar que el PR muestra el error de Vercel y que producción sigue con la versión anterior; cerrar el PR sin fusionar y borrar su rama.
 
 ## Evidencia de la tarea 2.2
 

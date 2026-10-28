@@ -1,0 +1,16 @@
+{% comment %}
+Parcial base de la lista de estudiantes (US-006, D5): cabecera, cuerpo y pie. Lo usan el diálogo de la portada y la
+página completa; las vistas lo extienden. Los ids y las clases salen del boceto (insumos/US-006-bocetos).
+{% endcomment %}
+<header class="modal-cabecera">
+  <div class="modal-contexto">
+    <div>
+      {% if en_dialogo %}<h2 id="modal-titulo" class="modal-titulo"{% block foco_titulo %} data-foco tabindex="-1"{% endblock %}>{{ titulo }}</h2>{% else %}<h1 id="modal-titulo" class="modal-titulo">{{ titulo }}</h1>{% endif %}
+      <p id="modal-cantidad" class="modal-cantidad">{{ cantidad }} estudiante{{ cantidad|pluralize }}</p>
+    </div>
+    {% if en_dialogo %}<button class="cerrar-dialogo" type="button" data-cerrar>{% include "iconos/x.svg" %}Cerrar</button>{% endif %}
+  </div>
+  {% block accion %}{% endblock %}
+</header>
+<div class="modal-cuerpo" id="modal-cuerpo">{% block cuerpo %}{% endblock %}</div>
+<footer class="modal-pie" id="modal-pie">{% block pie %}{% endblock %}</footer>

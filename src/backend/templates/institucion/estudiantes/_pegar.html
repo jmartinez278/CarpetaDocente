@@ -1,0 +1,36 @@
+{% extends "institucion/estudiantes/_base.html" %}
+{% comment %}
+Pegar lista (vista 3) y, con errores, Revisar lista (vista 4). El botón "Importar" va en el pie, fuera del formulario,
+asociado con form="form-pegar". Los números de línea van como texto (los enlaces a la línea son deuda). El salto de
+línea tras la etiqueta textarea es a propósito: el HTML descarta el primero, así una línea en blanco al inicio no se pierde.
+{% endcomment %}
+{% block foco_titulo %}{% endblock %}
+{% block cuerpo %}
+{% url 'estudiantes:pegar' seccion.pk as url_pegar %}
+{% if errores %}
+<h{{ en_dialogo|yesno:"3,2" }} class="vista-titulo" data-foco tabindex="-1">Revisar lista</h{{ en_dialogo|yesno:"3,2" }}>
+<div class="mensaje mensaje--error" role="alert">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>No se guardó ningún estudiante</p><p>Corrige las líneas indicadas y vuelve a importar.</p></div></div>
+<ul class="errores-linea" id="pegar-errores">
+  {% for error in errores %}<li><p class="error-titulo">{{ error.titulo }}</p><p class="campo-ayuda">{{ error.ayuda }}</p></li>
+  {% endfor %}
+</ul>
+{% else %}
+<h{{ en_dialogo|yesno:"3,2" }} class="vista-titulo">Pegar lista</h{{ en_dialogo|yesno:"3,2" }}>
+{% endif %}
+<form id="form-pegar" method="post" action="{{ url_pegar }}" hx-post="{{ url_pegar }}" novalidate>
+  {% csrf_token %}
+  <div class="campo">
+    <label class="campo__etiqueta" for="lista-pegada">Apellidos y nombres</label>
+    <p class="campo-ayuda" id="pegar-ayuda">Copia la columna de apellidos y nombres de tu Excel y pégala aquí</p>
+    <textarea class="campo__control campo-lista" id="lista-pegada" name="lista" rows="8" wrap="soft" spellcheck="false" autocapitalize="characters" aria-describedby="pegar-ayuda pegar-formato pegar-ejemplo"{% if errores %} aria-invalid="true"{% else %} data-foco{% endif %}>
+{{ texto }}</textarea>
+    <p class="campo-ayuda" id="pegar-formato">Una línea por estudiante. La coma separa apellidos y nombres. Máximo 60 líneas.</p>
+    <p class="campo-ayuda" id="pegar-ejemplo">Ejemplo: <span>QUISPE MAMANI, ANA</span></p>
+  </div>
+</form>
+{% endblock %}
+{% block pie %}
+{% url 'estudiantes:lista' seccion.pk as url_lista %}
+<button class="boton-principal" type="submit" form="form-pegar">Importar</button>
+<a class="volver-lista" href="{{ url_lista }}" hx-get="{{ url_lista }}">{% include "iconos/arrow-right.svg" with clase="flecha-volver" %}Volver a la lista</a>
+{% endblock %}

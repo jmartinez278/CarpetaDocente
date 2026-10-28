@@ -38,7 +38,7 @@ def test_el_administrador_asigna_la_seccion_y_la_docente_la_ve(
     try:
         ingresar(portada, live_server, docente, clave)
         expect(portada).to_have_url(f"{live_server.url}/docente/")
-        expect(portada.locator("h1 + p")).to_have_text(SECCION)
+        expect(portada.locator(".seccion-entrada p")).to_have_text(SECCION)
         expect(portada.locator("h1")).not_to_contain_text(SECCION)
     finally:
         contexto.close()
@@ -60,7 +60,7 @@ def docente_con_seccion(seccion, docente):
 def test_la_portada_con_la_seccion_pasa_axe(live_server, page, tema, docente_con_seccion, clave):
     con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
-    expect(page.locator("h1 + p")).to_have_text(SECCION)
+    expect(page.locator(".seccion-entrada p")).to_have_text(SECCION)
 
     revisar_con_axe(page, f"portada-con-seccion-{tema}")
 
@@ -71,7 +71,7 @@ def test_la_portada_con_la_seccion_no_desborda_a_320_px(
 ):
     con_pantalla(page, 320, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
-    expect(page.locator("h1 + p")).to_have_text(SECCION)
+    expect(page.locator(".seccion-entrada p")).to_have_text(SECCION)
     page.evaluate("document.fonts.ready")
 
     assert page.evaluate("document.documentElement.scrollWidth") <= 320

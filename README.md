@@ -269,7 +269,7 @@ El plan A publica el sistema en Vercel (Hobby), con PostgreSQL en Neon (EN-02). 
 
 - **Vista previa por Pull Request:** cada PR hacia `main` genera una vista previa en Vercel, conectada a su propia rama de Neon (`preview/<rama>`), copia de producción. La URL aparece en el PR (comprobado con vistas previas de push de rama; la del propio PR de EN-02 se ve al abrirlo).
 - **Producción:** cada fusión en `main` se publica sola, conectada a la rama de producción de Neon y por HTTPS.
-- **Migraciones en el build:** `scripts/build_vercel.py` corre `npm ci`, `npm run build` y `migrate` (con la conexión directa de Neon, `DATABASE_URL_UNPOOLED`). Después Vercel corre `collectstatic`. Si un paso falla, el build falla y no reemplaza la versión publicada (comprobado en vista previa; en producción se verifica después de la fusión).
+- **Migraciones en el build:** `scripts/build_vercel.py` corre `npm ci`, `npm run build` y `migrate` (con la conexión directa de Neon, `DATABASE_URL_UNPOOLED`). Después Vercel corre `collectstatic`. Si un paso falla, el build falla y no reemplaza la versión publicada (comprobado en vista previa; el primer despliegue de `main` en producción salió en verde, pero el build fallido en producción aún no se ha verificado).
 - **Límite del rollback:** que el build falle no deshace la base. `migrate` corre antes de publicar, así que:
   - si un paso del build falla después de `migrate`, la versión anterior sigue en línea contra el esquema ya migrado;
   - si una migración falla, las anteriores ya quedaron aplicadas.
@@ -327,7 +327,13 @@ vercel env pull .env.local --environment=production
 uv run --env-file .env.local python src/backend/manage.py <comando>
 ```
 
-Al terminar, borrar `.env.local`: trae las claves de producción. Si una variable está marcada como *Secret* en Vercel, `vercel env pull` puede traerla vacía; antes del primer comando se comprueba que `DATABASE_URL` y `DJANGO_SECRET_KEY` no queden vacías (sin imprimir su valor).
+Tres cosas que pasan al correr estos comandos:
+
+1. **Apagar la depuración en la misma terminal, antes de cada comando.** El `.env` de la laptop trae `DJANGO_DEBUG=True` y, con `VERCEL=1`, `settings.py` rechaza el arranque. En PowerShell: `$env:DJANGO_DEBUG = "False"`.
+2. **Las variables de tipo *Secret* llegan como `[SENSITIVE]`, no vacías.** `DJANGO_SECRET_KEY` es una de ellas y no bloquea estos comandos. Antes del primer comando se comprueba que `DATABASE_URL` no quede vacía ni sea `[SENSITIVE]` (sin imprimir su valor).
+3. **`vercel env pull` agrega `.env*` a `.gitignore`.** Revertir ese cambio; no se commitea.
+
+Al terminar, borrar `.env.local`: trae las claves de producción.
 
 Carga inicial de producción, en orden: `createsuperuser`; la institución en el panel, con el nombre en texto y `[DATO I.E. PENDIENTE]` donde falte; `cargar_secciones --anio 2027 --institucion <id>` (el año 2027 es de demostración).
 
