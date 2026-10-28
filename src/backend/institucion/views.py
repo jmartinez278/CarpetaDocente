@@ -4,15 +4,27 @@ Cada vista arma su contenido una sola vez: con ``HX-Request`` responde el parcia
 diálogo de la portada, más el aviso de la portada fuera de banda; sin ella, la página completa.
 """
 
-from django.http import Http404
+from django.contrib import messages
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
+from django.template.defaultfilters import pluralize
+from django.urls import reverse
 from django.views import View
 
 from cuentas.acceso import RolRequeridoMixin, es_htmx
 from cuentas.models import Usuario
 from institucion import servicios
+from institucion.forms import ListaPegadaForm
 
 PLANTILLAS = "institucion/estudiantes/"
+ETIQUETA_AVISO = "estudiantes"
+
+
+def ver_otra(destino):
+    """Post/Redirect/Get con 303 (D5): el XHR de HTMX la sigue con ``HX-Request``."""
+    respuesta = HttpResponseRedirect(destino)
+    respuesta.status_code = 303
+    return respuesta
 
 
 class SeccionDocenteMixin(RolRequeridoMixin):
@@ -53,6 +65,37 @@ class ListaView(SeccionDocenteMixin, View):
         estudiantes = servicios.estudiantes_ordenados(self.seccion)
         parcial = "_lista" if estudiantes else "_lista_vacia"
         return self.responder(request, parcial, {"estudiantes": estudiantes})
+
+
+class PegarView(SeccionDocenteMixin, View):
+    """Pegar lista y Revisar lista (vistas 3 y 4), solo con la sección vacía (D2, D5).
+
+    Correcto: 303 a la lista con el aviso de éxito (una sola vez). Con errores: 200 con el
+    texto intacto y cada error. Con estudiantes: el aviso, sin el cuadro, y nada guardado.
+    """
+
+    def get(self, request, seccion_id):
+        if self.seccion.estudiantes.exists():
+            return self.responder(request, "_pegar_con_estudiantes")
+        return self.responder(request, "_pegar", {"texto": ""})
+
+    def post(self, request, seccion_id):
+        formulario = ListaPegadaForm(request.POST)
+        formulario.is_valid()
+        texto = formulario.cleaned_data.get("lista", "")
+        try:
+            cantidad, errores = servicios.importar_lista(self.seccion, texto)
+        except servicios.SeccionConEstudiantes:
+            return self.responder(request, "_pegar_con_estudiantes")
+        if errores:
+            return self.responder(request, "_pegar", {"texto": texto, "errores": errores})
+        importados = f"{cantidad} estudiante{pluralize(cantidad)} importado{pluralize(cantidad)}"
+        messages.success(
+            request,
+            f"{importados}\n\nRevisa los nombres; puedes corregirlos con Editar",
+            extra_tags=ETIQUETA_AVISO,
+        )
+        return ver_otra(reverse("estudiantes:lista", args=[self.seccion.pk]))
 
 
 class PendienteView(SeccionDocenteMixin, View):

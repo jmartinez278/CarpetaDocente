@@ -22,3 +22,11 @@ Grupo 2, parte A (revisión de la parte, con las secciones de DESIGN.md que usa)
 - El aviso de la portada (`role="status"`) cambia por `hx-swap-oob` mientras el diálogo deja la portada inerte: el lector de pantalla probablemente no lo anuncie hasta cerrar el diálogo.
 - Para B y C: los POST del diálogo necesitan el token CSRF (`{% csrf_token %}` en cada formulario).
 
+Grupo 2, parte B (revisión de la parte, con Mensaje, Campo de texto y Movimiento de DESIGN.md):
+
+- En Revisar lista, el cuadro (`aria-invalid="true"`) no apunta a la lista de errores con `aria-describedby`: el lector los oye por el `role="alert"` y el foco en "Revisar lista", pero no al volver al cuadro.
+- Los errores van arriba del cuadro y sin ícono por línea (como el boceto), no debajo del campo como pide Campo de texto: el mensaje de error de la vista sí lleva ícono.
+- El aviso "N estudiantes importados" (`role="status"`) llega dentro del contenido nuevo; el foco va al título, así que el lector probablemente no lo anuncie solo.
+- "Importar" no se desactiva mientras envía: un doble clic podría mandar un segundo POST, que encuentra la sección con estudiantes y muestra "Tu sección ya tiene estudiantes" en lugar del aviso de éxito (no se guarda nada de más).
+- Las e2e de 2.4 y 2.5 se escribieron después de las pruebas de vistas ya en verde y pasaron al primer intento: no se las vio fallar.
+

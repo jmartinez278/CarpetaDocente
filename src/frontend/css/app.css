@@ -1035,6 +1035,12 @@
   }
 }
 
+@keyframes aparecer-opacidad {
+  from {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mensaje {
     animation: none;
@@ -1282,7 +1288,6 @@
   /* Fila de estudiante: número, nombre completo que baja de línea (sin "…") y, en la parte B, "Editar". */
   .estudiantes {
     list-style: none;
-    margin: 0;
     padding: 0;
   }
 
@@ -1311,18 +1316,95 @@
     overflow-wrap: break-word;
   }
 
+  /* "Agregar estudiante" en la cabecera, "Editar" por fila y "Vaciar lista" (riesgo, en --color-error) al final: enlaces
+     de 44 px como mínimo. */
+  .modal-accion {
+    display: flex;
+    flex-direction: column;
+    margin-top: --spacing(4);
+  }
+
+  .editar-fila,
+  .accion-peligro {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 --spacing(1);
+    color: var(--color-primario);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .accion-peligro {
+    color: var(--color-error);
+  }
+
+  .fin-lista {
+    margin-top: --spacing(8);
+    padding-top: --spacing(4);
+    border-top: 1px solid var(--color-linea);
+  }
+
+  /* Pegar lista y Revisar lista: título de la vista, cuadro de texto derivado de Campo y errores por línea. */
+  .vista-titulo {
+    font-size: var(--text-subheading);
+    font-weight: 600;
+    line-height: 26px;
+  }
+
+  .campo-lista {
+    height: 208px;
+    min-height: 208px;
+    padding: --spacing(3) --spacing(4);
+    resize: vertical;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .errores-linea {
+    list-style: none;
+    padding: 0;
+  }
+
+  .errores-linea li {
+    padding-block: --spacing(3);
+  }
+
+  .errores-linea li + li {
+    border-top: 1px solid var(--color-linea);
+  }
+
+  .error-titulo {
+    font-weight: 600;
+    overflow-wrap: break-word;
+  }
+
+  .errores-linea .campo-ayuda {
+    margin-top: --spacing(1);
+  }
+
+  /* Mensajes de la lista (diálogo y página completa): aparecen solo con opacidad (Movimiento, ≤200 ms); sin animación
+     con "reducir movimiento". */
+  .modal-cuerpo .mensaje {
+    animation-name: aparecer-opacidad;
+  }
+
   /* Foco de 2 px con --color-primario en los controles. El título recibe el foco por código (tabindex="-1") para anunciar
      la vista: no es un control, WCAG 2.4.7 no lo exige y no lleva contorno. */
   .entrada-estudiantes:focus-visible,
   .cerrar-dialogo:focus-visible,
   .volver-lista:focus-visible,
   .boton-secundario:focus-visible,
-  .modal-estudiantes a:focus-visible {
+  .modal-estudiantes a:focus-visible,
+  .panel-estudiantes a:focus-visible {
     outline: 2px solid var(--color-primario);
     outline-offset: 2px;
   }
 
-  .modal-titulo[tabindex="-1"]:focus {
+  .modal-titulo[tabindex="-1"]:focus,
+  .vista-titulo[tabindex="-1"]:focus {
     outline: none;
   }
 

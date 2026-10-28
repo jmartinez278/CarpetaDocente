@@ -55,17 +55,17 @@ Tramo de alto riesgo (modelo y restricción): va solo y en modo normal.
 
 ### Parte B: pegar lista y la lista con estudiantes
 
-- [ ] 2.4 Pegar lista y Revisar lista. Capturas `estado-3-360-claro.png`, `estado-3-1280-claro.png`, `estado-4-360-claro.png`, `estado-4-1280-oscuro.png` y `estado-4-final-cuerpo-360-claro.png`; HTML `#vista-3` y `#vista-4`, con el número de línea como texto, sin los botones `.localizar-linea` (deuda).
+- [x] 2.4 Pegar lista y Revisar lista. Capturas `estado-3-360-claro.png`, `estado-3-1280-claro.png`, `estado-4-360-claro.png`, `estado-4-1280-oscuro.png` y `estado-4-final-cuerpo-360-claro.png`; HTML `#vista-3` y `#vista-4`, con el número de línea como texto, sin los botones `.localizar-linea` (deuda).
   - Prueba primero en `test_vistas_estudiantes.py` (además, lo diferido de 2.1: POST correcto → 303 y el aviso de éxito una sola vez, POST con errores → 200 con el formulario, con `{% csrf_token %}` en cada formulario): el texto pegado vuelve intacto con `aria-invalid`, cada error con su número, motivo y ayuda; "No se guardó ningún estudiante"; Pegar lista solo con la sección vacía: la lista con estudiantes no ofrece "Pegar lista", el GET muestra el aviso sin el cuadro y el POST no guarda nada.
   - E2E: escenario "Camino ideal" (25 líneas con líneas en blanco → "25 estudiantes importados" y "25 estudiantes" en la cabecera); escenario "Caso de error" (línea sin apellidos y dos repetidas → nada guardado y el texto intacto); sesión vencida al tocar "Importar" → la página completa en `/ingresar/` con el aviso; axe de las dos vistas en ambos temas y anchos.
 
   Verificar: rojo y luego verde
-- [ ] 2.5 Lista con estudiantes. Captura `estado-5-360-claro.png`; HTML `#vista-5`.
+- [x] 2.5 Lista con estudiantes. Captura `estado-5-360-claro.png`; HTML `#vista-5`.
   - Prueba primero: orden y número calculado, nombre completo sin "…", "Editar" con el nombre en su etiqueta accesible, "Agregar estudiante" arriba, "Vaciar lista" al final, el aviso de éxito con `role="status"` que no se va solo.
   - E2E: tras importar y cerrar, la portada ya no muestra el aviso, sin recargar; un nombre de 120 + 120 caracteres se lee completo a 320 px sin desplazamiento horizontal; axe en ambos temas y anchos.
 
   Verificar: rojo y luego verde
-- [ ] 2.6 Pantallas de la parte vistas (la marca Marco). Revisión de la parte (Mensaje, Campo de texto, Movimiento de DESIGN.md) y commit (reglas de arriba)
+- [x] 2.6 Pantallas de la parte vistas (la marca Marco). Revisión de la parte (Mensaje, Campo de texto, Movimiento de DESIGN.md) y commit (reglas de arriba)
 
 ### Parte C: agregar, editar, quitar y vaciar
 

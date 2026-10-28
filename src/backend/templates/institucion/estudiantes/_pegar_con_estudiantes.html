@@ -1,0 +1,10 @@
+{% extends "institucion/estudiantes/_base.html" %}
+{% comment %}Pegar lista con la sección ya cargada: el aviso, sin el cuadro de texto (spec "Pegar lista solo con la sección vacía").{% endcomment %}
+{% block cuerpo %}
+<h{{ en_dialogo|yesno:"3,2" }} class="vista-titulo">Pegar lista</h{{ en_dialogo|yesno:"3,2" }}>
+<div class="mensaje mensaje--aviso" role="status">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>Tu sección ya tiene estudiantes</p><p>Agrega a los que falten con Agregar estudiante.</p></div></div>
+{% endblock %}
+{% block pie %}
+{% url 'estudiantes:lista' seccion.pk as url_lista %}
+<a class="volver-lista" href="{{ url_lista }}" hx-get="{{ url_lista }}">{% include "iconos/arrow-right.svg" with clase="flecha-volver" %}Volver a la lista</a>
+{% endblock %}
