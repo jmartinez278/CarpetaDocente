@@ -483,3 +483,435 @@ def test_otra_docente_no_puede_pegar_en_la_seccion(entrar, otra_docente, seccion
 
     assert respuesta.status_code == 404
     assert seccion_docente.estudiantes.count() == 0
+
+
+# --- Agregar y Editar (spec "Agregar un estudiante" y "Editar un estudiante") ---
+
+AYUDA_HOMONIMO = "Si son personas distintas, escribe el segundo nombre completo."
+
+
+def url_agregar(seccion):
+    return reverse("estudiantes:agregar", args=[seccion.pk])
+
+
+def url_editar(seccion, estudiante):
+    return reverse("estudiantes:editar", args=[seccion.pk, estudiante.pk])
+
+
+def url_quitar(seccion, estudiante):
+    return reverse("estudiantes:quitar", args=[seccion.pk, estudiante.pk])
+
+
+def entrada(html, nombre):
+    return re.search(rf'<input[^>]*name="{nombre}"[^>]*>', html).group(0)
+
+
+def formulario_estudiante(html):
+    """El formulario de Agregar o Editar (la página completa tiene además el de "Salir")."""
+    return [f for f in formularios(html) if 'name="apellidos"' in f]
+
+
+def con_foco(html):
+    return re.findall(r"<[a-z0-9]+\b[^>]*data-foco[^>]*>", html)
+
+
+def aviso_portada(html):
+    return re.search(r'<div[^>]*id="aviso-portada"[^>]*hx-swap-oob="true"[^>]*>.*', html, re.S)
+
+
+@pytest.fixture
+def ana_lucia(seccion_docente):
+    return Estudiante.objects.create(
+        seccion=seccion_docente, apellidos="QUISPE MAMANI", nombres="ANA LUCIA"
+    )
+
+
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_agregar_tiene_dos_campos_obligatorios_de_120(entrar, docente, seccion_docente, cabeceras):
+    html = entrar(docente).get(url_agregar(seccion_docente), **cabeceras).content.decode()
+
+    assert "Agregar estudiante" in html
+    for nombre, etiqueta in [("apellidos", "Apellidos"), ("nombres", "Nombres")]:
+        control = entrada(html, nombre)
+        assert "required" in control
+        assert 'maxlength="120"' in control
+        assert "value=" not in control
+        assert re.search(rf'<label[^>]*for="agregar-{nombre}"[^>]*>{etiqueta}</label>', html)
+    assert "Los nombres se guardan en mayúsculas." in html
+    assert re.search(
+        r'<button[^>]*type="submit"[^>]*form="form-estudiante"[^>]*>\s*Guardar y agregar otro',
+        html,
+    )
+    assert f'href="{url_lista(seccion_docente)}"' in html.split("Guardar y agregar otro")[1]
+    formulario = formulario_estudiante(html)
+    assert len(formulario) == 1
+    assert 'name="csrfmiddlewaretoken"' in formulario[0]
+    assert f'hx-post="{url_agregar(seccion_docente)}"' in formulario[0]
+
+
+def test_en_agregar_el_foco_va_a_apellidos(entrar, docente, seccion_docente):
+    html = entrar(docente).get(url_agregar(seccion_docente), **HTMX).content.decode()
+
+    assert con_foco(html) == [entrada(html, "apellidos")]
+
+
+def test_guardar_y_agregar_otro_redirige_a_agregar_con_303(entrar, docente, seccion_docente):
+    datos = {"apellidos": "  quispe   mamani ", "nombres": "ana lucía"}
+
+    respuesta = entrar(docente).post(url_agregar(seccion_docente), datos)
+
+    assert respuesta.status_code == 303
+    assert respuesta["Location"] == url_agregar(seccion_docente)
+    estudiante = seccion_docente.estudiantes.get()
+    assert (estudiante.apellidos, estudiante.nombres) == ("QUISPE MAMANI", "ANA LUCÍA")
+
+
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_tras_agregar_los_campos_vuelven_vacios_con_el_aviso_una_vez(
+    entrar, docente, seccion_docente, cabeceras
+):
+    cliente = entrar(docente)
+    datos = {"apellidos": "QUISPE MAMANI", "nombres": "ANA"}
+
+    respuesta = cliente.post(url_agregar(seccion_docente), datos, follow=True, **cabeceras)
+    html = respuesta.content.decode()
+
+    assert respuesta.redirect_chain == [(url_agregar(seccion_docente), 303)]
+    assert re.search(r'<div class="mensaje mensaje--exito"[^>]*role="status"', html)
+    assert "Estudiante agregado" in html
+    assert "1 estudiante<" in html
+    assert "value=" not in entrada(html, "apellidos")
+    assert "Estudiante agregado" not in cliente.get(url_agregar(seccion_docente)).content.decode()
+
+
+def test_con_htmx_agregar_quita_el_aviso_de_la_portada(entrar, docente, seccion_docente):
+    datos = {"apellidos": "ROJAS", "nombres": "ANA"}
+
+    html = (
+        entrar(docente)
+        .post(url_agregar(seccion_docente), datos, follow=True, **HTMX)
+        .content.decode()
+    )
+
+    aviso = aviso_portada(html)
+    assert aviso, "falta el aviso fuera de banda"
+    assert "Tu sección aún no tiene estudiantes" not in aviso.group(0)
+
+
+def test_un_campo_vacio_muestra_su_error_y_no_guarda(entrar, docente, seccion_docente):
+    respuesta = entrar(docente).post(
+        url_agregar(seccion_docente), {"apellidos": "QUISPE MAMANI", "nombres": "   "}, **HTMX
+    )
+
+    html = respuesta.content.decode()
+    assert respuesta.status_code == 200
+    assert seccion_docente.estudiantes.count() == 0
+    nombres = entrada(html, "nombres")
+    assert 'aria-invalid="true"' in nombres
+    assert "agregar-nombres-error" in nombres
+    assert re.search(
+        r'<p class="campo__error" id="agregar-nombres-error">.*?<span>Escribe los nombres</span>',
+        html,
+        re.S,
+    )
+    assert 'value="QUISPE MAMANI"' in entrada(html, "apellidos")
+    assert "aria-invalid" not in entrada(html, "apellidos")
+    assert con_foco(html) == [nombres]
+
+
+def test_mas_de_120_caracteres_muestra_su_error(entrar, docente, seccion_docente):
+    datos = {"apellidos": "A" * 121, "nombres": "ANA"}
+
+    html = entrar(docente).post(url_agregar(seccion_docente), datos).content.decode()
+
+    assert "Usa un máximo de 120 caracteres." in html
+    assert seccion_docente.estudiantes.count() == 0
+
+
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_el_homonimo_al_agregar_conserva_lo_escrito_y_sugiere_el_segundo_nombre(
+    entrar, docente, seccion_docente, ana_lucia, cabeceras
+):
+    datos = {"apellidos": "quispe mamani", "nombres": "ana lucia"}
+
+    respuesta = entrar(docente).post(url_agregar(seccion_docente), datos, **cabeceras)
+
+    html = respuesta.content.decode()
+    assert respuesta.status_code == 200
+    assert seccion_docente.estudiantes.count() == 1
+    error = re.search(
+        r'<div class="mensaje mensaje--error" role="alert">.*?</div></div>', html, re.S
+    )
+    assert error, "falta el mensaje del homónimo"
+    assert "Este estudiante ya está en la lista" in error.group(0)
+    assert AYUDA_HOMONIMO in error.group(0)
+    assert 'value="quispe mamani"' in entrada(html, "apellidos")
+    assert 'value="ana lucia"' in entrada(html, "nombres")
+
+
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_editar_muestra_los_valores_y_la_salida_para_quitar(
+    entrar, docente, seccion_docente, ana_lucia, cabeceras
+):
+    url = url_editar(seccion_docente, ana_lucia)
+
+    html = entrar(docente).get(url, **cabeceras).content.decode()
+
+    assert "Editar estudiante" in html
+    assert 'value="QUISPE MAMANI"' in entrada(html, "apellidos")
+    assert 'value="ANA LUCIA"' in entrada(html, "nombres")
+    for nombre in ("apellidos", "nombres"):
+        assert 'maxlength="120"' in entrada(html, nombre)
+        assert "required" in entrada(html, nombre)
+    assert html.count("Se guarda en mayúsculas. Máximo 120 caracteres.") == 2
+    quitar = url_quitar(seccion_docente, ana_lucia)
+    assert re.search(
+        rf'<a[^>]*class="accion-peligro"[^>]*href="{quitar}"[^>]*hx-get="{quitar}"[^>]*>'
+        r"Quitar estudiante</a>",
+        html,
+    )
+    assert "Solo puedes quitarlo si no tiene asistencia ni notas." in html
+    assert re.search(
+        r'<button[^>]*type="submit"[^>]*form="form-estudiante"[^>]*>\s*Guardar cambios', html
+    )
+    formulario = formulario_estudiante(html)
+    assert len(formulario) == 1
+    assert 'name="csrfmiddlewaretoken"' in formulario[0]
+    assert f'hx-post="{url}"' in formulario[0]
+
+
+def test_en_editar_el_foco_va_a_apellidos(entrar, docente, seccion_docente, ana_lucia):
+    html = entrar(docente).get(url_editar(seccion_docente, ana_lucia), **HTMX).content.decode()
+
+    assert con_foco(html) == [entrada(html, "apellidos")]
+
+
+def test_guardar_cambios_vuelve_a_la_lista_con_el_nombre_corregido(
+    entrar, docente, seccion_docente, ana_lucia
+):
+    cliente = entrar(docente)
+    datos = {"apellidos": "QUISPE MAMANI", "nombres": "ana lucía"}
+
+    respuesta = cliente.post(url_editar(seccion_docente, ana_lucia), datos)
+
+    assert respuesta.status_code == 303
+    assert respuesta["Location"] == url_lista(seccion_docente)
+    html = cliente.get(url_lista(seccion_docente)).content.decode()
+    assert '<span class="estudiante__nombre">QUISPE MAMANI, ANA LUCÍA</span>' in html
+
+
+def test_la_correccion_que_crea_un_homonimo_no_se_guarda(
+    entrar, docente, seccion_docente, ana_lucia
+):
+    Estudiante.objects.create(seccion=seccion_docente, apellidos="QUISPE MAMANI", nombres="ANA")
+    datos = {"apellidos": "Quispe Mamani", "nombres": "Ana"}
+
+    respuesta = entrar(docente).post(url_editar(seccion_docente, ana_lucia), datos, **HTMX)
+
+    html = respuesta.content.decode()
+    assert respuesta.status_code == 200
+    assert "Este estudiante ya está en la lista" in html
+    assert AYUDA_HOMONIMO in html
+    assert 'value="Quispe Mamani"' in entrada(html, "apellidos")
+    ana_lucia.refresh_from_db()
+    assert ana_lucia.nombres == "ANA LUCIA"
+
+
+@pytest.mark.parametrize("ruta", ["editar", "quitar"])
+@pytest.mark.parametrize("metodo", ["get", "post"])
+def test_un_estudiante_de_otra_seccion_da_404(
+    entrar, docente, seccion_docente, anio_abierto, otra_docente, ruta, metodo
+):
+    otra = Seccion.objects.create(
+        anio_escolar=anio_abierto, grado=3, nombre="B", docente=otra_docente
+    )
+    ajeno = Estudiante.objects.create(seccion=otra, apellidos="ROJAS", nombres="LUIS")
+    url = reverse(f"estudiantes:{ruta}", args=[seccion_docente.pk, ajeno.pk])
+
+    respuesta = getattr(entrar(docente), metodo)(url, {"apellidos": "X", "nombres": "Y"})
+
+    assert respuesta.status_code == 404
+    assert "ROJAS" not in respuesta.content.decode()
+    ajeno.refresh_from_db()
+    assert ajeno.apellidos == "ROJAS"
+
+
+def test_otra_docente_no_puede_agregar_en_la_seccion(entrar, otra_docente, seccion_docente):
+    datos = {"apellidos": "ROJAS", "nombres": "LUIS"}
+
+    respuesta = entrar(otra_docente).post(url_agregar(seccion_docente), datos)
+
+    assert respuesta.status_code == 404
+    assert seccion_docente.estudiantes.count() == 0
+
+
+def test_ya_no_hay_vistas_pendientes():
+    from institucion import views
+
+    assert not hasattr(views, "PendienteView")
+
+
+# --- Quitar y vaciar (spec "Quitar y vaciar") ---
+
+AYUDA_BLOQUEO = "Si es un error, pide ayuda al administrador"
+
+
+def url_vaciar(seccion):
+    return reverse("estudiantes:vaciar", args=[seccion.pk])
+
+
+def formulario_de(html, accion):
+    return [f for f in formularios(html) if f'action="{accion}"' in f]
+
+
+def solo_volver_a_la_lista(html, seccion):
+    pie = re.search(r'<footer class="modal-pie"[^>]*>(.*?)</footer>', html, re.S).group(1)
+    assert re.findall(r"<(?:a|button)\b[^>]*>", pie) == [
+        re.search(r'<a[^>]*class="volver-lista"[^>]*>', pie).group(0)
+    ]
+    assert f'href="{url_lista(seccion)}"' in pie
+
+
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_quitar_pide_confirmacion_con_el_nombre(
+    entrar, docente, seccion_docente, ana_lucia, cabeceras
+):
+    url = url_quitar(seccion_docente, ana_lucia)
+
+    html = entrar(docente).get(url, **cabeceras).content.decode()
+
+    assert re.search(r'class="vista-titulo"[^>]*>Quitar estudiante<', html)
+    assert '<p class="confirmacion-nombre">¿Quitar a QUISPE MAMANI, ANA LUCIA?</p>' in html
+    assert "Solo se puede si no tiene asistencia ni notas" in html
+    assert re.search(r'<button[^>]*form="form-quitar"[^>]*>\s*Quitar estudiante', html)
+    formulario = formulario_de(html, url)
+    assert len(formulario) == 1
+    assert 'id="form-quitar"' in formulario[0]
+    assert 'name="csrfmiddlewaretoken"' in formulario[0]
+    assert f'hx-post="{url}"' in formulario[0]
+    assert f'href="{url_lista(seccion_docente)}"' in html.split("form-quitar")[-1]
+
+
+def test_en_quitar_el_foco_va_al_titulo_de_la_vista(entrar, docente, seccion_docente, ana_lucia):
+    html = entrar(docente).get(url_quitar(seccion_docente, ana_lucia), **HTMX).content.decode()
+
+    foco = con_foco(html)
+    assert len(foco) == 1
+    assert re.match(r'<h3[^>]*class="vista-titulo"[^>]*tabindex="-1"', foco[0])
+
+
+def test_quitar_sin_registros_vuelve_a_la_lista_con_uno_menos(
+    entrar, docente, seccion_docente, lista_de_tres
+):
+    cliente = entrar(docente)
+    quitado = lista_de_tres[0]
+
+    respuesta = cliente.post(url_quitar(seccion_docente, quitado))
+
+    assert respuesta.status_code == 303
+    assert respuesta["Location"] == url_lista(seccion_docente)
+    assert not Estudiante.objects.filter(pk=quitado.pk).exists()
+    assert "2 estudiantes" in cliente.get(url_lista(seccion_docente)).content.decode()
+
+
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_quitar_con_registros_muestra_el_bloqueo_y_no_quita(
+    entrar, docente, seccion_docente, ana_lucia, borrado_con_registros, cabeceras
+):
+    respuesta = entrar(docente).post(url_quitar(seccion_docente, ana_lucia), **cabeceras)
+
+    html = respuesta.content.decode()
+    assert respuesta.status_code == 200
+    assert Estudiante.objects.filter(pk=ana_lucia.pk).exists()
+    alerta = re.search(
+        r'<div class="mensaje mensaje--error" role="alert">.*?</div></div>', html, re.S
+    )
+    assert alerta, "falta el bloqueo"
+    assert "No se puede quitar: el estudiante ya tiene registros" in alerta.group(0)
+    assert AYUDA_BLOQUEO in alerta.group(0)
+    assert not formulario_de(html, url_quitar(seccion_docente, ana_lucia))
+    solo_volver_a_la_lista(html, seccion_docente)
+
+
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_vaciar_pide_confirmacion_con_la_cantidad(
+    entrar, docente, seccion_docente, lista_de_tres, cabeceras
+):
+    html = entrar(docente).get(url_vaciar(seccion_docente), **cabeceras).content.decode()
+
+    assert re.search(r'class="vista-titulo"[^>]*>Vaciar lista<', html)
+    aviso = re.search(
+        r'<div class="mensaje mensaje--aviso" role="status">.*?</div></div>', html, re.S
+    )
+    assert aviso, "falta la confirmación"
+    assert "Se quitarán los 3 estudiantes." in aviso.group(0)
+    assert "Solo se puede si ninguno tiene asistencia ni notas" in aviso.group(0)
+    assert re.search(r'<button[^>]*form="form-vaciar"[^>]*>\s*Vaciar lista', html)
+    formulario = formulario_de(html, url_vaciar(seccion_docente))
+    assert len(formulario) == 1
+    assert 'name="csrfmiddlewaretoken"' in formulario[0]
+    assert f'hx-post="{url_vaciar(seccion_docente)}"' in formulario[0]
+
+
+def test_vaciar_con_un_estudiante_va_en_singular(entrar, docente, seccion_docente, ana_lucia):
+    html = entrar(docente).get(url_vaciar(seccion_docente)).content.decode()
+
+    assert "Se quitará 1 estudiante." in html
+
+
+def test_vaciar_una_lista_vacia_vuelve_a_la_lista(entrar, docente, seccion_docente):
+    respuesta = entrar(docente).get(url_vaciar(seccion_docente))
+
+    assert respuesta.status_code == 303
+    assert respuesta["Location"] == url_lista(seccion_docente)
+
+
+def test_vaciar_sin_registros_deja_la_lista_vacia_y_el_aviso_de_la_portada(
+    entrar, docente, seccion_docente, lista_de_tres
+):
+    respuesta = entrar(docente).post(url_vaciar(seccion_docente), follow=True, **HTMX)
+
+    html = respuesta.content.decode()
+    assert respuesta.redirect_chain == [(url_lista(seccion_docente), 303)]
+    assert seccion_docente.estudiantes.count() == 0
+    assert "Tu sección aún no tiene estudiantes." in html
+    aviso = aviso_portada(html)
+    assert aviso and "Tu sección aún no tiene estudiantes" in aviso.group(0)
+
+
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_vaciar_con_registros_muestra_el_bloqueo_y_no_quita_ninguno(
+    entrar, docente, seccion_docente, lista_de_tres, borrado_con_registros, cabeceras
+):
+    respuesta = entrar(docente).post(url_vaciar(seccion_docente), **cabeceras)
+
+    html = respuesta.content.decode()
+    assert respuesta.status_code == 200
+    assert seccion_docente.estudiantes.count() == 3
+    alerta = re.search(
+        r'<div class="mensaje mensaje--error" role="alert">.*?</div></div>', html, re.S
+    )
+    assert alerta, "falta el bloqueo"
+    assert "No se puede vaciar: algunos estudiantes ya tienen registros" in alerta.group(0)
+    assert AYUDA_BLOQUEO in alerta.group(0)
+    assert not formulario_de(html, url_vaciar(seccion_docente))
+    solo_volver_a_la_lista(html, seccion_docente)
+
+
+def test_en_el_bloqueo_el_foco_va_al_titulo_de_la_vista(
+    entrar, docente, seccion_docente, lista_de_tres, borrado_con_registros
+):
+    html = entrar(docente).post(url_vaciar(seccion_docente), **HTMX).content.decode()
+
+    foco = con_foco(html)
+    assert len(foco) == 1
+    assert re.match(r'<h3[^>]*class="vista-titulo"[^>]*tabindex="-1"', foco[0])
+
+
+def test_otra_docente_no_puede_vaciar_la_seccion(
+    entrar, otra_docente, seccion_docente, lista_de_tres
+):
+    respuesta = entrar(otra_docente).post(url_vaciar(seccion_docente))
+
+    assert respuesta.status_code == 404
+    assert seccion_docente.estudiantes.count() == 3

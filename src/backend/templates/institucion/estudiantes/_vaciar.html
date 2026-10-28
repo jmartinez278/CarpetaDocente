@@ -1,0 +1,21 @@
+{% extends "institucion/estudiantes/_base.html" %}
+{% comment %}
+Vaciar (vista 9) y su bloqueo (9b). "Vaciar lista" va en el pie con form="form-vaciar". Con registros: el bloqueo, sin el
+formulario y solo con "Volver a la lista". El foco va al título de la vista.
+{% endcomment %}
+{% block foco_titulo %}{% endblock %}
+{% block cuerpo %}
+<h{{ en_dialogo|yesno:"3,2" }} class="vista-titulo" data-foco tabindex="-1">Vaciar lista</h{{ en_dialogo|yesno:"3,2" }}>
+{% if bloqueado %}
+<div class="mensaje mensaje--error" role="alert">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>No se puede vaciar: algunos estudiantes ya tienen registros</p><p>Si es un error, pide ayuda al administrador</p></div></div>
+{% else %}
+{% url 'estudiantes:vaciar' seccion.pk as url_vaciar %}
+<div class="mensaje mensaje--aviso" role="status">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>{% if cantidad == 1 %}Se quitará 1 estudiante.{% else %}Se quitarán los {{ cantidad }} estudiantes.{% endif %}</p><p>Solo se puede si ninguno tiene asistencia ni notas</p></div></div>
+<form id="form-vaciar" method="post" action="{{ url_vaciar }}" hx-post="{{ url_vaciar }}">{% csrf_token %}</form>
+{% endif %}
+{% endblock %}
+{% block pie %}
+{% url 'estudiantes:lista' seccion.pk as url_lista %}
+{% if not bloqueado %}<button class="boton-principal" type="submit" form="form-vaciar">Vaciar lista</button>{% endif %}
+<a class="volver-lista" href="{{ url_lista }}" hx-get="{{ url_lista }}">{% include "iconos/arrow-right.svg" with clase="flecha-volver" %}Volver a la lista</a>
+{% endblock %}

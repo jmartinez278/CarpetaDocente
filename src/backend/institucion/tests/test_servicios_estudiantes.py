@@ -2,8 +2,6 @@
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db.models import RestrictedError
-from django.db.models.query import QuerySet
 
 from institucion import servicios
 from institucion.models import AnioEscolar, Estudiante, Seccion
@@ -265,30 +263,6 @@ def test_editar_hacia_un_homonimo_se_rechaza_y_no_cambia_nada(seccion):
 
 
 # --- quitar_estudiante y vaciar_lista ---
-
-
-@pytest.fixture
-def borrado_con_registros(monkeypatch):
-    """Simula un registro que apunta al estudiante: borra y luego lanza ``RestrictedError``.
-
-    Así la prueba comprueba que el servicio deshace lo borrado (hasta que US-030 cree
-    ``asistencia`` con ``RESTRICT``, design de US-006, D2).
-    """
-    original_queryset = QuerySet.delete
-    original_modelo = Estudiante.delete
-
-    def queryset_delete(self):
-        if self.model is Estudiante:
-            original_queryset(self)
-            raise RestrictedError("simulado", set())
-        return original_queryset(self)
-
-    def modelo_delete(self, *args, **kwargs):
-        original_modelo(self, *args, **kwargs)
-        raise RestrictedError("simulado", set())
-
-    monkeypatch.setattr(QuerySet, "delete", queryset_delete)
-    monkeypatch.setattr(Estudiante, "delete", modelo_delete)
 
 
 def test_quitar_sin_registros_lo_borra(seccion):

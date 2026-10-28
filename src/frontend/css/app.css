@@ -1341,10 +1341,28 @@
     color: var(--color-error);
   }
 
-  .fin-lista {
+  .fin-lista,
+  .editor-riesgo {
     margin-top: --spacing(8);
     padding-top: --spacing(4);
     border-top: 1px solid var(--color-linea);
+  }
+
+  /* Agregar y Editar: los campos uno bajo otro; "Quitar estudiante" separado al final, con su condición. Quitar: el
+     nombre citado en mayúsculas, que baja de línea. */
+  .form-estudiante {
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(4);
+  }
+
+  .editor-riesgo .campo-ayuda {
+    margin-top: --spacing(1);
+  }
+
+  .confirmacion-nombre {
+    font-weight: 600;
+    overflow-wrap: break-word;
   }
 
   /* Pegar lista y Revisar lista: título de la vista, cuadro de texto derivado de Campo y errores por línea. */

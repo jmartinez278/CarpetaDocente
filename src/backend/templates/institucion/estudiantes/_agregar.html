@@ -1,0 +1,25 @@
+{% extends "institucion/estudiantes/_base.html" %}
+{% comment %}
+Agregar (vista 6). "Guardar y agregar otro" va en el pie, fuera del formulario, asociado con form="form-estudiante". Tras
+guardar vuelve aquí con los campos vacíos, el foco en Apellidos y el aviso "Estudiante agregado" (una sola vez).
+{% endcomment %}
+{% block foco_titulo %}{% endblock %}
+{% block cuerpo %}
+{% url 'estudiantes:agregar' seccion.pk as url_agregar %}
+<h{{ en_dialogo|yesno:"3,2" }} class="vista-titulo">Agregar estudiante</h{{ en_dialogo|yesno:"3,2" }}>
+{% for mensaje in messages %}{% if "estudiantes" in mensaje.tags %}
+<div class="mensaje mensaje--exito" role="status">{% include "iconos/check.svg" %}<div class="mensaje__texto"><p>{{ mensaje.message }}</p></div></div>
+{% endif %}{% endfor %}
+{% include "institucion/estudiantes/_error_homonimo.html" %}
+<form class="form-estudiante" id="form-estudiante" method="post" action="{{ url_agregar }}" hx-post="{{ url_agregar }}" aria-label="Agregar estudiante" novalidate>
+  {% csrf_token %}
+  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.apellidos prefijo="agregar" autocompletar="family-name" ayuda_id="ayuda-nombres" %}
+  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.nombres prefijo="agregar" autocompletar="given-name" ayuda_id="ayuda-nombres" %}
+  <p class="campo-ayuda" id="ayuda-nombres">Los nombres se guardan en mayúsculas.</p>
+</form>
+{% endblock %}
+{% block pie %}
+{% url 'estudiantes:lista' seccion.pk as url_lista %}
+<button class="boton-principal" type="submit" form="form-estudiante">Guardar y agregar otro</button>
+<a class="volver-lista" href="{{ url_lista }}" hx-get="{{ url_lista }}">{% include "iconos/arrow-right.svg" with clase="flecha-volver" %}Volver a la lista</a>
+{% endblock %}

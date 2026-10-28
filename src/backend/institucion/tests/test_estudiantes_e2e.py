@@ -471,3 +471,198 @@ def test_revisar_lista_como_pagina_completa_pasa_axe(
 
     revisar_con_axe(page, f"revisar-lista-pagina-{ancho}-{tema}")
     assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+
+
+# --- Agregar y Editar (spec "Agregar un estudiante" y "Editar un estudiante") ---
+
+
+def campo(page, etiqueta):
+    return dialogo(page).get_by_label(etiqueta, exact=True)
+
+
+def test_flujo_alternativo_valido_agrega_y_la_cabecera_pasa_a_26(portada, con_25, seccion):
+    abrir(portada)
+    expect(portada.locator("#modal-cantidad")).to_have_text("25 estudiantes")
+    dialogo(portada).get_by_role("link", name="Agregar estudiante").click()
+    expect(campo(portada, "Apellidos")).to_be_focused()
+
+    campo(portada, "Apellidos").fill("aguirre huamán")
+    campo(portada, "Nombres").fill("lucía")
+    dialogo(portada).get_by_role("button", name="Guardar y agregar otro").click()
+
+    expect(dialogo(portada).get_by_role("status")).to_contain_text("Estudiante agregado")
+    expect(portada.locator("#modal-cantidad")).to_have_text("26 estudiantes")
+    expect(campo(portada, "Apellidos")).to_be_focused()
+    expect(campo(portada, "Apellidos")).to_have_value("")
+    expect(campo(portada, "Nombres")).to_have_value("")
+    assert seccion.estudiantes.filter(apellidos="AGUIRRE HUAMÁN", nombres="LUCÍA").exists()
+
+
+def test_corregir_un_nombre_vuelve_a_la_lista_con_el_nombre_corregido(portada, seccion):
+    from institucion.models import Estudiante
+
+    Estudiante.objects.create(seccion=seccion, apellidos="QUISPE MAMANI", nombres="ANA LUCIA")
+    abrir(portada)
+    dialogo(portada).get_by_role("link", name="Editar a QUISPE MAMANI, ANA LUCIA").click()
+    expect(campo(portada, "Apellidos")).to_be_focused()
+
+    campo(portada, "Nombres").fill("ana lucía")
+    dialogo(portada).get_by_role("button", name="Guardar cambios").click()
+
+    expect(dialogo(portada).locator(".estudiante__nombre")).to_have_text("QUISPE MAMANI, ANA LUCÍA")
+    expect(portada.locator("#modal-titulo")).to_be_focused()
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_agregar_y_editar_pasan_axe(
+    live_server, page, docente_con_seccion, con_25, clave, ancho, tema
+):
+    con_pantalla(page, ancho, tema)
+    ingresar(page, live_server, docente_con_seccion, clave)
+    abrir(page)
+    dialogo(page).get_by_role("link", name="Agregar estudiante").click()
+    expect(campo(page, "Apellidos")).to_be_focused()
+    revisar_con_axe(page, f"agregar-{ancho}-{tema}")
+
+    campo(page, "Apellidos").fill("AGUIRRE HUAMÁN")
+    dialogo(page).get_by_role("button", name="Guardar y agregar otro").click()
+    expect(campo(page, "Nombres")).to_have_attribute("aria-invalid", "true")
+    revisar_con_axe(page, f"agregar-error-{ancho}-{tema}")
+
+    campo(page, "Nombres").fill("LUCÍA")
+    dialogo(page).get_by_role("button", name="Guardar y agregar otro").click()
+    expect(dialogo(page).get_by_role("status")).to_contain_text("Estudiante agregado")
+    esperar_animaciones(page)
+    revisar_con_axe(page, f"agregar-exito-{ancho}-{tema}")
+
+    dialogo(page).get_by_role("link", name="Volver a la lista").click()
+    dialogo(page).get_by_role("link", name="Editar a AGUILAR FLORES, LUCIANA").click()
+    expect(campo(page, "Apellidos")).to_be_focused()
+    revisar_con_axe(page, f"editar-{ancho}-{tema}")
+    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= ancho
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_agregar_con_homonimo_como_pagina_completa_pasa_axe(
+    live_server, page, docente_con_seccion, seccion, con_25, clave, ancho, tema
+):
+    con_pantalla(page, ancho, tema)
+    ingresar(page, live_server, docente_con_seccion, clave)
+    page.goto(f"{live_server.url}/docente/secciones/{seccion.pk}/estudiantes/agregar/")
+    page.get_by_label("Apellidos", exact=True).fill("aguilar flores")
+    page.get_by_label("Nombres", exact=True).fill("luciana")
+    page.get_by_role("button", name="Guardar y agregar otro").click()
+    expect(page.get_by_role("alert")).to_contain_text("Este estudiante ya está en la lista")
+    esperar_animaciones(page)
+
+    revisar_con_axe(page, f"agregar-homonimo-pagina-{ancho}-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+
+
+# --- Quitar, vaciar y sus bloqueos (spec "Quitar y vaciar" y "Sin JavaScript") ---
+
+
+def test_quitar_uno_baja_la_cabecera_en_uno(portada, con_25, seccion):
+    abrir(portada)
+    dialogo(portada).get_by_role("link", name="Editar a QUISPE MAMANI, ANA LUCÍA").click()
+    dialogo(portada).get_by_role("link", name="Quitar estudiante").click()
+    expect(dialogo(portada)).to_contain_text("¿Quitar a QUISPE MAMANI, ANA LUCÍA?")
+    expect(portada.locator(".vista-titulo")).to_be_focused()
+
+    dialogo(portada).get_by_role("button", name="Quitar estudiante").click()
+
+    expect(portada.locator("#modal-cantidad")).to_have_text("24 estudiantes")
+    expect(dialogo(portada)).not_to_contain_text("QUISPE MAMANI, ANA LUCÍA")
+    assert seccion.estudiantes.count() == 24
+
+
+def test_vaciar_25_deja_la_lista_vacia_y_el_aviso_vuelve_a_la_portada(portada, con_25, seccion):
+    portada.reload()
+    expect(portada.locator("#aviso-portada")).to_be_empty()
+    abrir(portada)
+    dialogo(portada).get_by_role("link", name="Vaciar lista").click()
+    expect(dialogo(portada)).to_contain_text("Se quitarán los 25 estudiantes.")
+
+    dialogo(portada).get_by_role("button", name="Vaciar lista").click()
+
+    expect(dialogo(portada)).to_contain_text("Tu sección aún no tiene estudiantes.")
+    expect(portada.locator("#modal-cantidad")).to_have_text("0 estudiantes")
+    dialogo(portada).get_by_role("button", name="Cerrar").click()
+    expect(portada.locator("#aviso-portada")).to_contain_text("Tu sección aún no tiene estudiantes")
+    assert seccion.estudiantes.count() == 0
+
+
+def test_sin_javascript_todo_funciona_como_pagina_completa(
+    live_server, browser, docente_con_seccion, seccion, clave
+):
+    contexto = browser.new_context(java_script_enabled=False)
+    page = contexto.new_page()
+    try:
+        ingresar(page, live_server, docente_con_seccion, clave)
+        ver_estudiantes(page).click()
+        expect(page.get_by_role("heading", level=1, name=TITULO)).to_be_visible()
+
+        page.get_by_role("link", name="Pegar lista").click()
+        page.get_by_label("Apellidos y nombres").fill("\n".join(NOMBRES[:3]))
+        page.get_by_role("button", name="Importar").click()
+        expect(page.get_by_role("status")).to_contain_text("3 estudiantes importados")
+
+        page.get_by_role("link", name="Agregar estudiante").click()
+        page.get_by_label("Apellidos", exact=True).fill("quispe mamani")
+        page.get_by_label("Nombres", exact=True).fill("ana lucia")
+        page.get_by_role("button", name="Guardar y agregar otro").click()
+        expect(page.get_by_role("status")).to_contain_text("Estudiante agregado")
+        expect(page.locator("#modal-cantidad")).to_have_text("4 estudiantes")
+
+        page.get_by_role("link", name="Volver a la lista").click()
+        page.get_by_role("link", name="Editar a QUISPE MAMANI, ANA LUCIA").click()
+        page.get_by_label("Nombres", exact=True).fill("ana lucía")
+        page.get_by_role("button", name="Guardar cambios").click()
+        expect(page.locator(".estudiantes")).to_contain_text("QUISPE MAMANI, ANA LUCÍA")
+
+        page.get_by_role("link", name="Editar a QUISPE MAMANI, ANA LUCÍA").click()
+        page.get_by_role("link", name="Quitar estudiante").click()
+        page.get_by_role("button", name="Quitar estudiante").click()
+        expect(page.locator("#modal-cantidad")).to_have_text("3 estudiantes")
+
+        page.get_by_role("link", name="Vaciar lista").click()
+        page.get_by_role("button", name="Vaciar lista").click()
+        expect(page.get_by_text("Tu sección aún no tiene estudiantes.")).to_be_visible()
+        expect(page.get_by_role("heading", level=1, name=TITULO)).to_be_visible()
+        assert seccion.estudiantes.count() == 0
+    finally:
+        contexto.close()
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_quitar_vaciar_y_los_bloqueos_pasan_axe(
+    live_server, page, docente_con_seccion, con_25, borrado_con_registros, clave, ancho, tema
+):
+    con_pantalla(page, ancho, tema)
+    ingresar(page, live_server, docente_con_seccion, clave)
+    abrir(page)
+    dialogo(page).get_by_role("link", name="Editar a AGUILAR FLORES, LUCIANA").click()
+    dialogo(page).get_by_role("link", name="Quitar estudiante").click()
+    expect(page.locator(".vista-titulo")).to_be_focused()
+    revisar_con_axe(page, f"quitar-{ancho}-{tema}")
+
+    dialogo(page).get_by_role("button", name="Quitar estudiante").click()
+    expect(dialogo(page).get_by_role("alert")).to_contain_text("No se puede quitar")
+    esperar_animaciones(page)
+    revisar_con_axe(page, f"quitar-bloqueo-{ancho}-{tema}")
+
+    dialogo(page).get_by_role("link", name="Volver a la lista").click()
+    dialogo(page).get_by_role("link", name="Vaciar lista").click()
+    expect(dialogo(page)).to_contain_text("Se quitarán los 25 estudiantes.")
+    esperar_animaciones(page)
+    revisar_con_axe(page, f"vaciar-{ancho}-{tema}")
+
+    dialogo(page).get_by_role("button", name="Vaciar lista").click()
+    expect(dialogo(page).get_by_role("alert")).to_contain_text("No se puede vaciar")
+    expect(dialogo(page).get_by_role("button")).to_have_count(1)  # solo "Cerrar"
+    esperar_animaciones(page)
+    revisar_con_axe(page, f"vaciar-bloqueo-{ancho}-{tema}")
+    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= ancho

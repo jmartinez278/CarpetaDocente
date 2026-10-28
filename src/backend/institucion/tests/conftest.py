@@ -3,9 +3,11 @@
 import secrets
 
 import pytest
+from django.db.models import RestrictedError
+from django.db.models.query import QuerySet
 
 from cuentas.models import Usuario
-from institucion.models import AnioEscolar, Institucion, Seccion
+from institucion.models import AnioEscolar, Estudiante, Institucion, Seccion
 
 
 @pytest.fixture(autouse=True)
@@ -73,3 +75,27 @@ def anio_abierto(institucion):
 def seccion(anio_abierto):
     """2.º grado, sección A del año abierto, sin docente."""
     return Seccion.objects.create(anio_escolar=anio_abierto, grado=2, nombre="A")
+
+
+@pytest.fixture
+def borrado_con_registros(monkeypatch):
+    """Simula un registro que apunta al estudiante: borra y luego lanza ``RestrictedError``.
+
+    Así la prueba comprueba que el servicio deshace lo borrado (hasta que US-030 cree
+    ``asistencia`` con ``RESTRICT``, design de US-006, D2).
+    """
+    original_queryset = QuerySet.delete
+    original_modelo = Estudiante.delete
+
+    def queryset_delete(self):
+        if self.model is Estudiante:
+            original_queryset(self)
+            raise RestrictedError("simulado", set())
+        return original_queryset(self)
+
+    def modelo_delete(self, *args, **kwargs):
+        original_modelo(self, *args, **kwargs)
+        raise RestrictedError("simulado", set())
+
+    monkeypatch.setattr(QuerySet, "delete", queryset_delete)
+    monkeypatch.setattr(Estudiante, "delete", modelo_delete)

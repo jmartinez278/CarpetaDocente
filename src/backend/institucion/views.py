@@ -5,7 +5,8 @@ diálogo de la portada, más el aviso de la portada fuera de banda; sin ella, la
 """
 
 from django.contrib import messages
-from django.http import Http404, HttpResponseRedirect
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template.defaultfilters import pluralize
 from django.urls import reverse
@@ -14,7 +15,7 @@ from django.views import View
 from cuentas.acceso import RolRequeridoMixin, es_htmx
 from cuentas.models import Usuario
 from institucion import servicios
-from institucion.forms import ListaPegadaForm
+from institucion.forms import EstudianteForm, ListaPegadaForm
 
 PLANTILLAS = "institucion/estudiantes/"
 ETIQUETA_AVISO = "estudiantes"
@@ -41,6 +42,11 @@ class SeccionDocenteMixin(RolRequeridoMixin):
             self.seccion = get_object_or_404(
                 servicios.secciones_docente(request.user), pk=kwargs["seccion_id"]
             )
+            if "estudiante_id" in kwargs:
+                # Un estudiante solo se alcanza a través de su propia sección (D4).
+                self.estudiante = get_object_or_404(
+                    self.seccion.estudiantes, pk=kwargs["estudiante_id"]
+                )
         return super().dispatch(request, *args, **kwargs)
 
     def responder(self, request, parcial, contexto=None, status=200):
@@ -98,8 +104,89 @@ class PegarView(SeccionDocenteMixin, View):
         return ver_otra(reverse("estudiantes:lista", args=[self.seccion.pk]))
 
 
-class PendienteView(SeccionDocenteMixin, View):
-    """Marcador de las rutas que el resto de la historia completa (grupo 2, partes B y C)."""
+def _foco(formulario):
+    """Apellidos, salvo que solo Nombres tenga error: el foco va al primer campo por corregir."""
+    errores = formulario.errors
+    return "nombres" if "nombres" in errores and "apellidos" not in errores else "apellidos"
 
-    def get(self, request, *args, **kwargs):
-        raise Http404
+
+class AgregarView(SeccionDocenteMixin, View):
+    """Agregar (vista 6): "Guardar y agregar otro" vuelve aquí con 303 y "Estudiante agregado"."""
+
+    def get(self, request, seccion_id):
+        return self.responder(
+            request, "_agregar", {"formulario": EstudianteForm(), "foco": "apellidos"}
+        )
+
+    def post(self, request, seccion_id):
+        formulario = EstudianteForm(request.POST)
+        if formulario.is_valid():
+            try:
+                servicios.agregar_estudiante(self.seccion, **formulario.cleaned_data)
+            except ValidationError as error:
+                formulario.add_error(None, error)
+            else:
+                messages.success(request, "Estudiante agregado", extra_tags=ETIQUETA_AVISO)
+                return ver_otra(reverse("estudiantes:agregar", args=[self.seccion.pk]))
+        return self.responder(
+            request, "_agregar", {"formulario": formulario, "foco": _foco(formulario)}
+        )
+
+
+class EditarView(SeccionDocenteMixin, View):
+    """Editar (vista 7): "Guardar cambios" vuelve a la lista con 303."""
+
+    def get(self, request, seccion_id, estudiante_id):
+        formulario = EstudianteForm(
+            initial={"apellidos": self.estudiante.apellidos, "nombres": self.estudiante.nombres}
+        )
+        return self._responder(request, formulario)
+
+    def post(self, request, seccion_id, estudiante_id):
+        formulario = EstudianteForm(request.POST)
+        if formulario.is_valid():
+            try:
+                servicios.editar_estudiante(self.estudiante, **formulario.cleaned_data)
+            except ValidationError as error:
+                # El servicio deja en la instancia los valores rechazados: se vuelve a cargar.
+                self.estudiante.refresh_from_db()
+                formulario.add_error(None, error)
+            else:
+                return ver_otra(reverse("estudiantes:lista", args=[self.seccion.pk]))
+        return self._responder(request, formulario)
+
+    def _responder(self, request, formulario):
+        contexto = {"formulario": formulario, "estudiante": self.estudiante}
+        return self.responder(request, "_editar", {**contexto, "foco": _foco(formulario)})
+
+
+class QuitarView(SeccionDocenteMixin, View):
+    """Quitar (vista 8): confirmado, 303 a la lista. Con registros, el bloqueo y nada borrado."""
+
+    def get(self, request, seccion_id, estudiante_id):
+        return self.responder(request, "_quitar", {"estudiante": self.estudiante})
+
+    def post(self, request, seccion_id, estudiante_id):
+        try:
+            servicios.quitar_estudiante(self.estudiante)
+        except servicios.ListaConRegistros:
+            contexto = {"estudiante": self.estudiante, "bloqueado": True}
+            return self.responder(request, "_quitar", contexto)
+        return ver_otra(reverse("estudiantes:lista", args=[self.seccion.pk]))
+
+
+class VaciarView(SeccionDocenteMixin, View):
+    """Vaciar (vista 9): confirmado, 303 a la lista vacía. Con registros, el bloqueo (9b) y
+    ninguno borrado. Con la lista ya vacía no hay nada que confirmar: vuelve a la lista."""
+
+    def get(self, request, seccion_id):
+        if not self.seccion.estudiantes.exists():
+            return ver_otra(reverse("estudiantes:lista", args=[self.seccion.pk]))
+        return self.responder(request, "_vaciar")
+
+    def post(self, request, seccion_id):
+        try:
+            servicios.vaciar_lista(self.seccion)
+        except servicios.ListaConRegistros:
+            return self.responder(request, "_vaciar", {"bloqueado": True})
+        return ver_otra(reverse("estudiantes:lista", args=[self.seccion.pk]))

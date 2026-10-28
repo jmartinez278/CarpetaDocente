@@ -69,17 +69,17 @@ Tramo de alto riesgo (modelo y restricción): va solo y en modo normal.
 
 ### Parte C: agregar, editar, quitar y vaciar
 
-- [ ] 2.7 Agregar y Editar. Capturas `estado-6-360-claro.png` y `estado-7-360-claro.png`; HTML `#vista-6` y `#vista-7`.
+- [x] 2.7 Agregar y Editar. Capturas `estado-6-360-claro.png` y `estado-7-360-claro.png`; HTML `#vista-6` y `#vista-7`.
   - Prueba primero (además, lo diferido de 2.1: estudiante de otra sección → 404 en editar y quitar; al terminar, quitar `PendienteView` de `institucion/views.py` y de `urls.py`): campos obligatorios con `maxlength="120"`, errores en el campo, homónimo con la sugerencia y lo escrito conservado, "Guardar y agregar otro" con los campos vacíos y "Estudiante agregado", "Guardar cambios" vuelve a la lista.
   - E2E: escenario "Flujo alternativo válido" (de 25 a 26 en la cabecera, foco en Apellidos); corregir "ANA LUCIA" a "ana lucía" → "QUISPE MAMANI, ANA LUCÍA"; axe en ambos temas y anchos.
 
   Verificar: rojo y luego verde
-- [ ] 2.8 Quitar, Vaciar y sus bloqueos. Capturas `estado-8-360-claro.png`, `estado-9-360-claro.png` y `estado-9b-360-claro.png`; HTML `#vista-8`, `#vista-9` y `#vista-9b` (y el bloqueo de quitar con el mismo molde que `#vista-9b`).
+- [x] 2.8 Quitar, Vaciar y sus bloqueos. Capturas `estado-8-360-claro.png`, `estado-9-360-claro.png` y `estado-9b-360-claro.png`; HTML `#vista-8`, `#vista-9` y `#vista-9b` (y el bloqueo de quitar con el mismo molde que `#vista-9b`).
   - Prueba primero: confirmaciones con el nombre y la cantidad; con `RestrictedError` simulado, los bloqueos con sus textos, solo "Volver a la lista" y nada borrado.
   - E2E: quitar uno (la cabecera baja en uno); vaciar 25 → lista vacía y el aviso vuelve a la portada; sin JavaScript, desde "Ver estudiantes" como página completa: agregar, pegar, editar y vaciar; axe de las tres vistas en ambos temas y anchos.
 
   Verificar: rojo y luego verde; `uv run pytest --cov` (80 % o más) y `uv run pytest -m e2e --browser chromium` en verde, con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`
-- [ ] 2.9 Pantallas de la parte vistas (la marca Marco). Revisión de la parte (Botón principal, Mensaje y Campo de texto de DESIGN.md) y commit (reglas de arriba)
+- [x] 2.9 Pantallas de la parte vistas (la marca Marco). Revisión de la parte (Botón principal, Mensaje y Campo de texto de DESIGN.md) y commit (reglas de arriba)
 
 ## 3. Revisión final y verificación
 

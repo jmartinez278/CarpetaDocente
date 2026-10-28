@@ -1,0 +1,25 @@
+{% extends "institucion/estudiantes/_base.html" %}
+{% comment %}
+Editar (vista 7). "Guardar cambios" va en el pie con form="form-estudiante" y vuelve a la lista. "Quitar estudiante"
+(acción de riesgo) lleva a su confirmación.
+{% endcomment %}
+{% block foco_titulo %}{% endblock %}
+{% block cuerpo %}
+{% url 'estudiantes:editar' seccion.pk estudiante.pk as url_editar %}{% url 'estudiantes:quitar' seccion.pk estudiante.pk as url_quitar %}
+<h{{ en_dialogo|yesno:"3,2" }} class="vista-titulo">Editar estudiante</h{{ en_dialogo|yesno:"3,2" }}>
+{% include "institucion/estudiantes/_error_homonimo.html" %}
+<form class="form-estudiante" id="form-estudiante" method="post" action="{{ url_editar }}" hx-post="{{ url_editar }}" aria-label="Editar estudiante" novalidate>
+  {% csrf_token %}
+  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.apellidos prefijo="editar" autocompletar="family-name" ayuda_id="editar-apellidos-ayuda" ayuda="Se guarda en mayúsculas. Máximo 120 caracteres." %}
+  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.nombres prefijo="editar" autocompletar="given-name" ayuda_id="editar-nombres-ayuda" ayuda="Se guarda en mayúsculas. Máximo 120 caracteres." %}
+</form>
+<div class="editor-riesgo">
+  <a class="accion-peligro" href="{{ url_quitar }}" hx-get="{{ url_quitar }}">Quitar estudiante</a>
+  <p class="campo-ayuda">Solo puedes quitarlo si no tiene asistencia ni notas.</p>
+</div>
+{% endblock %}
+{% block pie %}
+{% url 'estudiantes:lista' seccion.pk as url_lista %}
+<button class="boton-principal" type="submit" form="form-estudiante">Guardar cambios</button>
+<a class="volver-lista" href="{{ url_lista }}" hx-get="{{ url_lista }}">{% include "iconos/arrow-right.svg" with clase="flecha-volver" %}Volver a la lista</a>
+{% endblock %}
