@@ -549,6 +549,24 @@ def test_agregar_tiene_dos_campos_obligatorios_de_120(entrar, docente, seccion_d
     assert f'hx-post="{url_agregar(seccion_docente)}"' in formulario[0]
 
 
+@pytest.mark.parametrize("vista", ["agregar", "editar"])
+def test_los_campos_del_estudiante_no_se_autocompletan(
+    entrar, docente, seccion_docente, ana_lucia, vista
+):
+    # SonarQube (Web:S6840): family-name y given-name autocompletarían el nombre de la docente,
+    # no el del estudiante (esos valores describen a quien usa el navegador).
+    url = (
+        url_agregar(seccion_docente)
+        if vista == "agregar"
+        else url_editar(seccion_docente, ana_lucia)
+    )
+
+    html = entrar(docente).get(url).content.decode()
+
+    for nombre in ("apellidos", "nombres"):
+        assert 'autocomplete="off"' in entrada(html, nombre)
+
+
 def test_en_agregar_el_foco_va_a_apellidos(entrar, docente, seccion_docente):
     html = entrar(docente).get(url_agregar(seccion_docente), **HTMX).content.decode()
 

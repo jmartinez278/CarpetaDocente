@@ -118,3 +118,9 @@ Grupo 2, parte C (revisión de la parte, con Botón principal, Mensaje y Campo d
 - Vaciar con la lista ya vacía (dirección abierta a mano) vuelve a la lista con 303 en lugar de mostrar "Se quitarán los 0 estudiantes.".
 - Si el estudiante se quitó en otra pestaña, Editar o Quitar dan 404 y el diálogo no muestra nada (como el Minor de la parte A sobre las respuestas con error).
 
+
+SonarQube Cloud (PR #64): la puerta falló por "Reliability Rating on New Code" C, con dos hallazgos de confiabilidad de severidad media, ya corregidos. Los otros 14 son de mantenibilidad y no cuentan para la puerta; quedan como deuda:
+
+- `Web:S6840` en `_campo_estudiante.html:8` (corregido, con la prueba primero: `vis::test_los_campos_del_estudiante_no_se_autocompletan`). `autocomplete="family-name"` y `"given-name"` autocompletarían el nombre de la docente, no el del estudiante: ahora es `off`.
+- `Web:InputWithoutLabelCheck` en `_pegar.html:5` (falso positivo, corregido): Sonar no entiende `{% comment %}` y leyó un `<textarea>` dentro del comentario. El cuadro real (`#lista-pegada`) ya tiene su `<label for>`. Se cambió la redacción del comentario; sin prueba (no cambia el comportamiento).
+- Deuda de mantenibilidad: `role="status"` en vez de `<output>` (`_aviso_portada.html`, `_lista.html`, `_vaciar.html`, `_agregar.html`, `_pegar_con_estudiantes.html`); el literal `"estudiantes:lista"` repetido 5 veces en `views.py`; el selector `.volver-lista` duplicado en `app.css` (líneas 1203 y 1227); el condicional anidado de `servicios.py:283` (ya anotado en el grupo 1); `pytest.raises` con más de una llamada que puede lanzar (`test_servicios_estudiantes.py:146` y `:314`); asserts compuestos (`test_vistas_estudiantes.py:154`, `:156` y `:900`; `test_pantallas.py:452`).

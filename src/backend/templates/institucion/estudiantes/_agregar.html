@@ -13,8 +13,8 @@ guardar vuelve aquí con los campos vacíos, el foco en Apellidos y el aviso "Es
 {% include "institucion/estudiantes/_error_homonimo.html" %}
 <form class="form-estudiante" id="form-estudiante" method="post" action="{{ url_agregar }}" hx-post="{{ url_agregar }}" aria-label="Agregar estudiante" novalidate>
   {% csrf_token %}
-  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.apellidos prefijo="agregar" autocompletar="family-name" ayuda_id="ayuda-nombres" %}
-  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.nombres prefijo="agregar" autocompletar="given-name" ayuda_id="ayuda-nombres" %}
+  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.apellidos prefijo="agregar" ayuda_id="ayuda-nombres" %}
+  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.nombres prefijo="agregar" ayuda_id="ayuda-nombres" %}
   <p class="campo-ayuda" id="ayuda-nombres">Los nombres se guardan en mayúsculas.</p>
 </form>
 {% endblock %}

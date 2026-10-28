@@ -10,8 +10,8 @@ Editar (vista 7). "Guardar cambios" va en el pie con form="form-estudiante" y vu
 {% include "institucion/estudiantes/_error_homonimo.html" %}
 <form class="form-estudiante" id="form-estudiante" method="post" action="{{ url_editar }}" hx-post="{{ url_editar }}" aria-label="Editar estudiante" novalidate>
   {% csrf_token %}
-  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.apellidos prefijo="editar" autocompletar="family-name" ayuda_id="editar-apellidos-ayuda" ayuda="Se guarda en mayúsculas. Máximo 120 caracteres." %}
-  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.nombres prefijo="editar" autocompletar="given-name" ayuda_id="editar-nombres-ayuda" ayuda="Se guarda en mayúsculas. Máximo 120 caracteres." %}
+  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.apellidos prefijo="editar" ayuda_id="editar-apellidos-ayuda" ayuda="Se guarda en mayúsculas. Máximo 120 caracteres." %}
+  {% include "institucion/estudiantes/_campo_estudiante.html" with campo=formulario.nombres prefijo="editar" ayuda_id="editar-nombres-ayuda" ayuda="Se guarda en mayúsculas. Máximo 120 caracteres." %}
 </form>
 <div class="editor-riesgo">
   <a class="accion-peligro" href="{{ url_quitar }}" hx-get="{{ url_quitar }}">Quitar estudiante</a>
