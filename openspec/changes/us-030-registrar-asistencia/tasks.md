@@ -55,7 +55,7 @@
 
 ### Parte C: lote, cortes de red, sesión vencida y cierre
 
-- [ ] 2.7 Prueba primero, en `test_asistencia_e2e.py`:
+- [x] 2.7 Prueba primero, en `test_asistencia_e2e.py`:
   - lote: "Flujo alternativo válido"; "Deshacer" (nada en la base); "Fin de la cuenta" con su anuncio; "Toque durante la cuenta"; cerrar la página durante la cuenta (la base tiene los N); pausa con el puntero;
   - RNF-011: 10 cortes de red con `context.set_offline` durante los toques → 0 toques perdidos o duplicados en la base y cada fila fallida con "sin guardar. Reintentando…"; "N sin guardar"; "Sin conexión" solo al tercer fallo seguido y una vez; se va al volver la red;
   - aviso al salir con una marca pendiente (`beforeunload`);
@@ -63,7 +63,7 @@
   - cierre: aparece tras el último "Guardado", no con la última marca sin guardar ni durante la cuenta, y desaparece si se deshace; axe de las vistas con barra, sin conexión y completa, en ambos temas y anchos; 320 px sin desplazamiento horizontal con un nombre de 120 + 120.
 
   Luego el lote, reintentos, `sessionStorage`, aviso al salir y cierre en `asistencia.js` (D3, D5, D6, D8). Verificar: rojo y luego verde; `uv run pytest --cov` (80 % o más) y `uv run pytest -m e2e --browser chromium` en verde, con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`
-- [ ] 2.8 Pantallas de la parte vistas (la marca Marco). Revisión de la parte (Mensaje de error, Movimiento y Fila de asistencia de DESIGN.md) y commit (reglas de arriba)
+- [x] 2.8 Pantallas de la parte vistas (la marca Marco). Revisión de la parte (Mensaje de error, Movimiento y Fila de asistencia de DESIGN.md) y commit (reglas de arriba)
 
 ## 3. Revisión final y verificación
 
@@ -78,6 +78,7 @@
   - pantalla para cambiar el estado del estudiante → según la I.E. (Nayely); cabeceras con franjas de Sesiones y Notas;
   - dos pestañas o equipos sobre la misma fila (gana la última); sin JavaScript no se marca;
   - P2 F de la crítica r3 (bloque de guardado junto al avance en PC) → pulido;
+  - recomendación de pulido (US-006, idea de Marco del 29-10): "Quitar estudiante" y "Vaciar lista" como **popup de confirmación** (preferido por Marco: más rápido e intuitivo), con el bloqueo "No se puede quitar…" como resultado dentro del mismo popup. Variante: al pie del popup, una nota en `--color-texto-suave` con "*" ("* No puedes quitar ni vaciar si ya hay registros"). Implica: diálogo encima del diálogo de la lista (Esc, Atrás y foco en `estudiantes.js`), `alertdialog`, el componente en DESIGN.md (solo en el pulido) y conservar la vista actual sin JavaScript. Hoy Editar y Vaciar ya dicen la condición en texto de ayuda; revisar que no se repita;
   - contradicciones: doc 11 (`asistencia.estudiante_id` en cascada → `RESTRICT`; `actualizado_en` agregado); doc 06/02 ("Marcar todos como Asistió"; nota de justificación de RF-031 en US-030).
 - **(equipo)** Aprobación del PR por otra integrante (DoD 3).
 - Después de la fusión: `/opsx:archive` con "Sync now". La siguiente historia sale de `main` y su primer commit es este archivo.

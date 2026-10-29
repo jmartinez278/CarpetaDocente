@@ -2189,6 +2189,11 @@ body:has(.vista-asistencia) {
     display: none;
   }
 
+  /* Con la barra abierta, la última fila no queda debajo de ella. */
+  body:has(.barra-deshacer:not([hidden])) .vista-asistencia {
+    padding-bottom: 88px;
+  }
+
   .barra-deshacer p {
     max-width: 620px;
     font-size: var(--text-caption);
