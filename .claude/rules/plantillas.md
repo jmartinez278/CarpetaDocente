@@ -8,7 +8,7 @@ paths:
 
 # Reglas de plantillas e interfaz
 
-- La referencia visual es `DESIGN.md` (0.3.1, fijo hasta el pulido final). Solo se cambia, mostrando el diff y con aprobación, si algo rompe la accesibilidad o un RNF; lo demás va a la deuda del cambio.
+- La referencia visual es `DESIGN.md` (0.4, fijo hasta el pulido final). Solo se cambia, mostrando el diff y con aprobación, si algo rompe la accesibilidad o un RNF; lo demás va a la deuda del cambio.
 - En las plantillas **no se escriben colores hex ni `style=`**: solo clases de los tokens de `DESIGN.md`.
 - **Prohibido el desplazamiento horizontal** en páginas y componentes (RNF-005). Única excepción: el carrusel de dimensiones de la portada en el celular; la página no se desplaza.
 - **Temas claro y oscuro** según `prefers-color-scheme`, con los mismos tokens. Cada pantalla se verifica en ambos temas, a 360 y 1280 px. El selector de tema es un RF posterior al Sprint 1: no se agrega antes.

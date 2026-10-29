@@ -14,7 +14,7 @@
 
 ### Parte A: DESIGN.md 0.4 (commit propio, antes de cualquier plantilla)
 
-- [ ] 1.1 Prueba primero: no aplica (documento). Aplicar `DESIGN-0.3-propuesta.md` como "Cambios 0.4 (dirección visual 0.3, US-030)", con la corrección de la frase repetida, y alinear las secciones que lista D11; actualizar `.claude/rules/plantillas.md` a 0.4. Mostrar el diff a Marco antes del commit. Verificar: el encabezado dice 0.4 y 29-10-2026; ninguna sección sigue diciendo "Apellido, inicial.", "5 columnas" ni "Hola," como regla; `verificar.py --antes-del-commit` pasa; commit solo con DESIGN.md y la regla
+- [x] 1.1 Prueba primero: no aplica (documento). Aplicar `DESIGN-0.3-propuesta.md` como "Cambios 0.4 (dirección visual 0.3, US-030)", con la corrección de la frase repetida, y alinear las secciones que lista D11; actualizar `.claude/rules/plantillas.md` a 0.4. Mostrar el diff a Marco antes del commit. Verificar: el encabezado dice 0.4 y 29-10-2026; ninguna sección sigue diciendo "Apellido, inicial.", "5 columnas" ni "Hola," como regla; `verificar.py --antes-del-commit` pasa; commit solo con DESIGN.md y la regla
 
 ### Parte B: modelos y migraciones (alto riesgo, solo)
 
