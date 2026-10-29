@@ -24,15 +24,15 @@
 
 ### Parte C: servicios y marca de actividad
 
-- [ ] 1.5 Prueba primero, `asistencia/tests/test_servicios.py` (con `hoy` fijo):
+- [x] 1.5 Prueba primero, `asistencia/tests/test_servicios.py` (con `hoy` fijo):
   - `marcar`: crea la jornada con el primer toque y una sola con dos toques; el mismo guardado dos veces deja una fila; dos estados seguidos dejan el último; nota guardada solo con JUSTIFICADO y borrada al pasar a otro; nota de 101 caracteres, estado inválido, fecha que no es hoy, sábado, estudiante de otra sección y estudiante RETIRADO rechazados sin crear jornada;
   - `marcar_restantes`: solo los Sin marcar; no pisa a los ya marcados; un id ajeno hace fallar todo el lote;
   - `lista_de_hoy`: sin jornada no la crea; orden, numeración 1..M solo de activos, no activos aparte, avance "18 de 25" y totales; completa cuando los activos tienen estado;
   - `pendiente_hoy`, `es_dia_de_clases`, `texto_fecha` ("Miércoles 28 de octubre") y `saludo` (11:59, 12:00, 18:59, 19:00, 4:00).
 
   Luego `asistencia/servicios.py` (D2). Verificar: rojo y luego verde
-- [ ] 1.6 Prueba primero, `cuentas/tests/test_inactividad.py`: dos peticiones a 10 s no modifican la sesión; a 30 s, sí; los escenarios de 59 y 60 minutos siguen en verde. Luego D9 en `InactividadMiddleware`. Verificar: rojo y luego verde; `uv run pytest --cov` en verde y con 80 % o más
-- [ ] 1.7 Revisión de la parte y commit (reglas de arriba)
+- [x] 1.6 Prueba primero, `cuentas/tests/test_inactividad.py`: dos peticiones a 10 s no modifican la sesión; a 30 s, sí; los escenarios de 59 y 60 minutos siguen en verde. Luego D9 en `InactividadMiddleware`. Verificar: rojo y luego verde; `uv run pytest --cov` en verde y con 80 % o más
+- [x] 1.7 Revisión de la parte y commit (reglas de arriba)
 
 ## 2. Pantallas y guardado (D3 a D8, D10, D12)
 

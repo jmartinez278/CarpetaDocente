@@ -85,6 +85,46 @@ def test_a_los_59_minutos_ve_la_pantalla_y_la_marca_se_renueva(client, docente):
     assert client.session[MARCA] >= antes
 
 
+def test_dos_peticiones_a_10_segundos_no_modifican_la_sesion(client, docente):
+    client.force_login(docente)
+    envejecer(client, 0, segundos=10)
+    marca = client.session[MARCA]
+
+    for _ in range(2):
+        assert client.get(PORTADA).status_code == 200
+
+    assert client.session[MARCA] == marca
+
+
+def test_a_los_30_segundos_la_marca_se_renueva(client, docente):
+    client.force_login(docente)
+    envejecer(client, 0, segundos=30)
+    marca = client.session[MARCA]
+    antes = timezone.now().timestamp()
+
+    assert client.get(PORTADA).status_code == 200
+
+    assert client.session[MARCA] > marca
+    assert client.session[MARCA] >= antes
+
+
+@pytest.mark.parametrize(("segundos", "se_renueva"), [(29, False), (30, True)])
+def test_el_borde_de_los_30_segundos_con_el_reloj_congelado(
+    client, docente, monkeypatch, segundos, se_renueva
+):
+    client.force_login(docente)
+    ahora = timezone.now()
+    monkeypatch.setattr(timezone, "now", lambda: ahora)
+    marca = (ahora - timedelta(seconds=segundos)).timestamp()
+    sesion = client.session
+    sesion[MARCA] = marca
+    sesion.save()
+
+    assert client.get(PORTADA).status_code == 200
+
+    assert client.session[MARCA] == (ahora.timestamp() if se_renueva else marca)
+
+
 def test_el_ingreso_real_inicia_el_reloj_y_a_los_60_minutos_la_primera_consulta_se_rechaza(
     client, docente, clave, monkeypatch
 ):
