@@ -1,0 +1,16 @@
+{% comment %}Panel de PC (opción D, decisión 9): fijo al bajar, sin fondo y separado por una línea vertical. Desde 960 px reemplaza a la franja fija del celular.{% endcomment %}
+<div class="panel-jornada">
+  <p class="fecha">{{ texto_fecha }}</p>
+  {% include "asistencia/_selector.html" %}
+  <p class="selector-ayuda">Solo puedes marcar hoy.</p>
+  {% include "asistencia/_resumen.html" with panel=True %}
+  <progress max="{{ lista.total }}" value="{{ lista.marcados }}" aria-label="Estudiantes marcados" data-progreso></progress>
+  <dl class="resumen-detalle">{% for estado, palabra, total in lista.totales_en_orden %}<div><dt>{{ palabra }}</dt><dd data-total="{{ estado }}">{{ total }}</dd></div>{% endfor %}</dl>
+  {% include "asistencia/_marcar_todos.html" %}
+  {% include "asistencia/_leyenda.html" %}
+  <div class="panel-guardado">
+    {% include "asistencia/_guardado.html" %}
+    <p class="ayuda" data-nombres-pendientes hidden></p>
+    <p class="ayuda aviso-conexion" data-sin-conexion hidden>Sin conexión. Tus marcas se guardarán cuando vuelva la señal. No cierres esta pantalla.</p>
+  </div>
+</div>

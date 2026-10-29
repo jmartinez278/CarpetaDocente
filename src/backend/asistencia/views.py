@@ -10,11 +10,13 @@ que no es activo de la sección y 409 fecha que no es hoy o no es día de clases
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 
 from asistencia import servicios
 from institucion.models import Estudiante
+from institucion.servicios import texto_seccion_corto
 from institucion.views import SeccionDocenteMixin
 
 
@@ -27,11 +29,21 @@ class HoyView(SeccionDocenteMixin, View):
 
     def get(self, request, seccion_id):
         hoy = timezone.localdate()
+        seccion = self.seccion
+        dia_de_clases = servicios.es_dia_de_clases(hoy)
+        lista = servicios.lista_de_hoy(seccion, hoy)
         contexto = {
-            "seccion": self.seccion,
+            "seccion": seccion,
+            "seccion_corta": texto_seccion_corto(seccion),
             "fecha": hoy,
             "texto_fecha": servicios.texto_fecha(hoy),
-            "lista": servicios.lista_de_hoy(self.seccion, hoy),
+            "semana": servicios.semana(hoy),
+            "dia_de_clases": dia_de_clases,
+            "lista": lista,
+            "con_lista": dia_de_clases and bool(lista.filas),
+            # El JS cambia el 0 por el id del estudiante de cada fila.
+            "url_marcar": reverse("asistencia:marcar", args=[seccion.pk, hoy, 0]),
+            "url_restantes": reverse("asistencia:restantes", args=[seccion.pk, hoy]),
         }
         return render(request, "asistencia/hoy.html", contexto)
 

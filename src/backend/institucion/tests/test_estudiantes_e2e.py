@@ -686,7 +686,7 @@ def test_tomar_la_asistencia_abre_la_asistencia_como_pagina_completa(live_server
     tomar_asistencia(portada).click()
 
     expect(portada).to_have_url(f"{live_server.url}/docente/secciones/{seccion.pk}/asistencia/")
-    expect(portada.get_by_role("heading", level=1)).to_have_text("Asistencia")
+    expect(portada.get_by_role("heading", level=1)).to_have_text("Asistencia · 2.º A")
     expect(portada.locator("dialog")).to_have_count(0)
 
 

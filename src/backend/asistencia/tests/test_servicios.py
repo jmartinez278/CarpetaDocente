@@ -371,3 +371,77 @@ def test_texto_fecha_en_espanol(fecha, esperado):
 )
 def test_saludo_segun_la_hora(hora, esperado):
     assert servicios.saludo(hora) == esperado
+
+
+# --- semana (selector de la pantalla) ---
+
+
+def test_semana_de_un_miercoles():
+    semana = servicios.semana(datetime.date(2026, 10, 28))
+
+    assert semana.etiqueta == "Semana del 26 al 30 de octubre"
+    assert [d.abreviatura for d in semana.dias] == ["Lun", "Mar", "Mié", "Jue", "Vie"]
+    assert [d.fecha.day for d in semana.dias] == [26, 27, 28, 29, 30]
+    assert [d.es_hoy for d in semana.dias] == [False, False, True, False, False]
+    assert semana.dias[2].etiqueta == "Mié 28 de octubre, hoy"
+    assert semana.dias[0].etiqueta == "Lun 26 de octubre, no disponible"
+
+
+def test_semana_que_cruza_de_mes():
+    semana = servicios.semana(datetime.date(2026, 10, 1))
+
+    assert semana.etiqueta == "Semana del 28 de septiembre al 2 de octubre"
+
+
+@pytest.mark.parametrize("dia", [31, 1], ids=["sabado", "domingo"])
+def test_en_fin_de_semana_es_la_semana_que_acaba_de_pasar_sin_hoy(dia):
+    fecha = datetime.date(2026, 10, 31) if dia == 31 else datetime.date(2026, 11, 1)
+
+    semana = servicios.semana(fecha)
+
+    assert semana.etiqueta == "Semana del 26 al 30 de octubre"
+    assert not any(d.es_hoy for d in semana.dias)
+
+
+# --- lo que la pantalla lee de una fila y de la lista ---
+
+
+@pytest.mark.parametrize(
+    ("estado", "palabra", "siguiente", "clase"),
+    [
+        (None, "Sin marcar", "Asistió", "estado--sin-marcar"),
+        ("ASISTIO", "Asistió", "Faltó", "estado--asistio"),
+        ("FALTO", "Faltó", "Tarde", "estado--falto"),
+        ("TARDE", "Tarde", "Justificado", "estado--tarde"),
+        ("JUSTIFICADO", "Justificado", "Asistió", "estado--justificado"),
+    ],
+)
+def test_la_fila_dice_su_estado_y_el_siguiente(estado, palabra, siguiente, clase):
+    fila = servicios.Fila(numero=1, estudiante=None, estado=estado, nota="")
+
+    assert (fila.palabra, fila.siguiente, fila.clase) == (palabra, siguiente, clase)
+
+
+def test_el_resumen_va_en_el_orden_de_la_pantalla():
+    lista = servicios.ListaDeHoy(
+        jornada=None,
+        filas=[],
+        no_activos=[],
+        totales={"ASISTIO": 21, "FALTO": 2, "TARDE": 1, "JUSTIFICADO": 1},
+    )
+
+    assert lista.resumen == "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1"
+
+
+@pytest.mark.parametrize(
+    ("sin_marcar", "texto"),
+    [(0, ""), (1, "Marcar el restante como Asistió"), (7, "Marcar los 7 restantes como Asistió")],
+)
+def test_el_texto_de_marcar_los_restantes(sin_marcar, texto):
+    filas = [
+        servicios.Fila(numero=n, estudiante=None, estado=None, nota="") for n in range(sin_marcar)
+    ]
+    filas += [servicios.Fila(numero=99, estudiante=None, estado="ASISTIO", nota="")]
+    lista = servicios.ListaDeHoy(jornada=None, filas=filas, no_activos=[])
+
+    assert lista.texto_marcar_restantes == texto

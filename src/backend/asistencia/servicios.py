@@ -4,6 +4,7 @@ Las vistas solo leen la petición y llaman aquí. Cada función recibe ``hoy`` (
 fecha de Lima) para que las pruebas fijen el día sin tocar el reloj.
 """
 
+import datetime
 from dataclasses import dataclass, field
 
 from django.core.exceptions import ValidationError
@@ -16,6 +17,23 @@ from institucion.servicios import estudiantes_ordenados
 
 MAX_CARACTERES_NOTA = 100
 ESTADOS = [estado for estado, _ in Asistencia.Estado.choices]
+SIN_MARCAR = "Sin marcar"
+PALABRAS = dict(Asistencia.Estado.choices)
+# Ciclo del toque: Sin marcar → Asistió → Faltó → Tarde → Justificado → Asistió; nunca a Sin marcar.
+SIGUIENTE = {
+    None: Asistencia.Estado.ASISTIO,
+    Asistencia.Estado.ASISTIO: Asistencia.Estado.FALTO,
+    Asistencia.Estado.FALTO: Asistencia.Estado.TARDE,
+    Asistencia.Estado.TARDE: Asistencia.Estado.JUSTIFICADO,
+    Asistencia.Estado.JUSTIFICADO: Asistencia.Estado.ASISTIO,
+}
+# Orden de los totales en la pantalla: "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1".
+ORDEN_TOTALES = [
+    Asistencia.Estado.ASISTIO,
+    Asistencia.Estado.TARDE,
+    Asistencia.Estado.FALTO,
+    Asistencia.Estado.JUSTIFICADO,
+]
 
 DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 MESES = [
@@ -47,6 +65,19 @@ class Fila:
     estado: str | None
     nota: str
 
+    @property
+    def palabra(self):
+        return PALABRAS[self.estado] if self.estado else SIN_MARCAR
+
+    @property
+    def siguiente(self):
+        return PALABRAS[SIGUIENTE[self.estado]]
+
+    @property
+    def clase(self):
+        """La clase del círculo: ``estado--falto`` o ``estado--sin-marcar``."""
+        return f"estado--{self.estado.lower()}" if self.estado else "estado--sin-marcar"
+
 
 @dataclass
 class ListaDeHoy:
@@ -70,6 +101,31 @@ class ListaDeHoy:
         return self.total - self.marcados
 
     @property
+    def texto_marcar_restantes(self):
+        """ "Marcar los 7 restantes como Asistió", "el restante" con uno y vacío sin ninguno."""
+        if self.sin_marcar == 0:
+            return ""
+        if self.sin_marcar == 1:
+            return "Marcar el restante como Asistió"
+        return f"Marcar los {self.sin_marcar} restantes como Asistió"
+
+    @property
+    def primera_sin_marcar(self):
+        """El id de la primera fila Sin marcar, para el enlace "7 sin marcar"."""
+        fila = next((f for f in self.filas if f.estado is None), None)
+        return f"fila-{fila.estudiante.pk}" if fila else ""
+
+    @property
+    def totales_en_orden(self):
+        """(estado, palabra, total) en el orden de la pantalla."""
+        return [(e, PALABRAS[e], self.totales.get(e, 0)) for e in ORDEN_TOTALES]
+
+    @property
+    def resumen(self):
+        """ "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1"."""
+        return " · ".join(f"{palabra}: {n}" for _, palabra, n in self.totales_en_orden)
+
+    @property
     def completa(self):
         """Hay estudiantes activos y todos tienen estado (se calcula, no se guarda: doc 11)."""
         return self.total > 0 and self.sin_marcar == 0
@@ -82,7 +138,51 @@ def es_dia_de_clases(fecha):
 
 def texto_fecha(fecha):
     """ "Miércoles 28 de octubre", sin depender del idioma del servidor."""
-    return f"{DIAS[fecha.weekday()]} {fecha.day} de {MESES[fecha.month - 1]}"
+    return f"{DIAS[fecha.weekday()]} {_dia_y_mes(fecha)}"
+
+
+@dataclass
+class Dia:
+    """Un día del selector: solo hoy responde en US-030; los demás los abre US-031."""
+
+    fecha: datetime.date
+    es_hoy: bool
+
+    @property
+    def abreviatura(self):
+        return DIAS[self.fecha.weekday()][:3]
+
+    @property
+    def etiqueta(self):
+        estado = "hoy" if self.es_hoy else "no disponible"
+        return f"{self.abreviatura} {_dia_y_mes(self.fecha)}, {estado}"
+
+
+@dataclass
+class Semana:
+    dias: list[Dia]
+
+    @property
+    def etiqueta(self):
+        """ "Semana del 26 al 30 de octubre"; con el mes en las dos fechas si la semana lo cruza."""
+        lunes, viernes = self.dias[0].fecha, self.dias[-1].fecha
+        desde = f"{lunes.day}" if lunes.month == viernes.month else _dia_y_mes(lunes)
+        return f"Semana del {desde} al {_dia_y_mes(viernes)}"
+
+
+def _dia_y_mes(fecha):
+    return f"{fecha.day} de {MESES[fecha.month - 1]}"
+
+
+def semana(hoy):
+    """Lunes a viernes de la semana de hoy; el sábado y el domingo, la que acaba de pasar."""
+    lunes = hoy - datetime.timedelta(days=hoy.weekday())
+    return Semana(
+        dias=[
+            Dia(fecha=fecha, es_hoy=fecha == hoy)
+            for fecha in (lunes + datetime.timedelta(days=n) for n in range(5))
+        ]
+    )
 
 
 def saludo(hora):
