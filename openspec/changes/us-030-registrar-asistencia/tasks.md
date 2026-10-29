@@ -38,14 +38,14 @@
 
 ### Parte A: rutas, barra, portada y aviso de la lista de estudiantes
 
-- [ ] 2.1 Prueba primero, `asistencia/tests/test_vistas.py` y `cuentas/tests/test_pantallas.py`:
+- [x] 2.1 Prueba primero, `asistencia/tests/test_vistas.py` y `cuentas/tests/test_pantallas.py`:
   - las tres rutas de D10: docente de la sección 200/204; otra docente y año CERRADO 404; otro rol a su inicio; sin sesión a `/ingresar/?next=…`; con `HX-Request` y sesión vencida, `HX-Redirect`; POST sin CSRF rechazado; respuestas 400, 404 y 409 de D3;
   - portada: "Buenos días," según la hora; fecha delante de la sección; tarjeta Asistencia con "Registrar asistencia" y enlace a `asistencia:hoy` solo con sección única, "Próximamente" sin ella; píldora "Hoy: pendiente" con `aria-describedby`, ausente con la jornada completa, en sábado y sin estudiantes;
   - el aviso "N estudiantes importados" con "Tomar la asistencia de hoy".
 
   Luego `asistencia/urls.py` con el conversor `fecha`, las vistas, `config/urls.py`, la portada (D10), `tarjeta_dimension.html`, la barra de `marco.html` y `_lista.html`; actualizar en la misma rama las pruebas de US-001 y US-006 que miran "Hola," y el Catálogo de rutas de `docs/03` (versión y fecha). Verificar: rojo y luego verde; `test_dimensiones.py` en verde
-- [ ] 2.2 Portada y lista de estudiantes con la dirección 0.4. Capturas `portada-360-claro.png`, `portada-1280-claro.png`, `estudiantes-360-claro.png` y `detalle-barra-*`. E2E: la píldora aparece una vez (sin movimiento con "reducir movimiento"); el enlace del aviso abre la asistencia como página completa; axe de la portada (con y sin píldora) y de la lista con el aviso en ambos temas a 360 y 1280 px; 320 px sin desplazamiento horizontal. Verificar: e2e en verde, `npm run build` sin errores y ningún hexadecimal ni `style=` en las plantillas
-- [ ] 2.3 Pantallas de la parte vistas en claro/oscuro y celular/escritorio (la marca Marco). Revisión de la parte (con las secciones de DESIGN.md que usa: Barra, Saludo, Tarjeta de dimensión, Mensaje, Movimiento) y commit (reglas de arriba)
+- [x] 2.2 Portada y lista de estudiantes con la dirección 0.4. Capturas `portada-360-claro.png`, `portada-1280-claro.png`, `estudiantes-360-claro.png` y `detalle-barra-*`. E2E: la píldora aparece una vez (sin movimiento con "reducir movimiento"); el enlace del aviso abre la asistencia como página completa; axe de la portada (con y sin píldora) y de la lista con el aviso en ambos temas a 360 y 1280 px; 320 px sin desplazamiento horizontal. Verificar: e2e en verde, `npm run build` sin errores y ningún hexadecimal ni `style=` en las plantillas
+- [x] 2.3 Pantallas de la parte vistas en claro/oscuro y celular/escritorio (la marca Marco). Revisión de la parte (con las secciones de DESIGN.md que usa: Barra, Saludo, Tarjeta de dimensión, Mensaje, Movimiento) y commit (reglas de arriba)
 
 ### Parte B: pantalla de asistencia y guardado por toque
 

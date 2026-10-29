@@ -9,9 +9,9 @@
 {% block principal %}
 <main class="portada" x-data="carrusel">
   <div class="mx-auto w-full max-w-280 px-4 pt-8 min-[960px]:px-6 min-[960px]:pt-0">
-    <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">Hola, {{ user.get_full_name|default:user.username }}</h1>
+    <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">{{ saludo }}, {{ user.get_full_name|default:user.username }}</h1>
     <div class="seccion-entrada">
-      <p class="text-body text-texto-suave">{{ secciones }}</p>
+      <p class="text-body text-balance text-texto-suave">{{ fecha }} · {{ secciones }}</p>
       {% if entrada %}{% url 'estudiantes:lista' entrada.pk as url_lista %}<a class="dimension__accion entrada-estudiantes" id="ver-estudiantes" href="{{ url_lista }}" hx-get="{{ url_lista }}" hx-target="#estudiantes" hx-swap="innerHTML" data-abrir-estudiantes>Ver estudiantes{% include "iconos/arrow-right.svg" with clase="dimension__flecha" %}</a>{% endif %}
     </div>
     {% if entrada %}{% include "institucion/estudiantes/_aviso_portada.html" with cantidad=entrada.cantidad_estudiantes %}{% endif %}

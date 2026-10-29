@@ -5,6 +5,7 @@ de la fixture ``clave``, generada en cada prueba (DoD 8).
 """
 
 import json
+import re
 from datetime import timedelta
 from pathlib import Path
 
@@ -21,6 +22,22 @@ AXE = RAIZ / "src" / "frontend" / "node_modules" / "axe-core" / "axe.min.js"
 INFORMES = RAIZ / "test-results"
 ETIQUETAS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
 IMPACTOS_QUE_FALLAN = {"critical", "serious"}
+
+
+def saludo_de(nombre):
+    """El saludo de la portada del docente a cualquier hora: "Buenos días, Ana Quispe" (US-030)."""
+    return re.compile(rf"^(Buenos días|Buenas tardes|Buenas noches), {re.escape(nombre)}$")
+
+
+def fijar_hora_de_lima(monkeypatch, momento):
+    """``timezone.localtime()`` (y con él ``localdate()``) devuelve ``momento`` también en el hilo
+    del ``live_server``; con un valor, sigue siendo el de Django. La sesión usa otro reloj."""
+    original = timezone.localtime
+
+    def localtime(value=None, tz=None):
+        return momento if value is None else original(value, tz)
+
+    monkeypatch.setattr(timezone, "localtime", localtime)
 
 
 def abrir_ingresar(page, live_server):

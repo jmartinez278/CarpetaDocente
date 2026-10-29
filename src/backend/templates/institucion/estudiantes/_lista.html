@@ -2,7 +2,8 @@
 {% comment %}
 Lista con estudiantes (vista 5): "Agregar estudiante" arriba, la lista ordenada con su número y "Editar" por fila, y
 "Vaciar lista" al final. Sin "Pegar lista": solo se pega con la sección vacía. El aviso de éxito (messages, etiqueta
-"estudiantes") se ve una sola vez y no se va solo.
+"estudiantes") se ve una sola vez y no se va solo. Desde US-030 lleva el paso siguiente, "Tomar la asistencia de hoy":
+un enlace normal, sin hx-get, que también desde el diálogo abre la página completa (design de US-030, D10).
 {% endcomment %}
 {% block accion %}
 {% url 'estudiantes:agregar' seccion.pk as url_agregar %}
@@ -10,7 +11,8 @@ Lista con estudiantes (vista 5): "Agregar estudiante" arriba, la lista ordenada 
 {% endblock %}
 {% block cuerpo %}
 {% for mensaje in messages %}{% if "estudiantes" in mensaje.tags %}
-<div class="mensaje mensaje--exito" role="status">{% include "iconos/check.svg" %}<div class="mensaje__texto">{{ mensaje.message|linebreaks }}</div></div>
+<div class="mensaje mensaje--exito" role="status">{% include "iconos/check.svg" %}<div class="mensaje__texto">{{ mensaje.message|linebreaks }}
+<p><a class="mensaje-enlace" href="{% url 'asistencia:hoy' seccion.pk %}">Tomar la asistencia de hoy{% include "iconos/arrow-right.svg" %}</a></p></div></div>
 {% endif %}{% endfor %}
 <ol class="estudiantes" aria-label="Estudiantes ordenados por apellidos">
   {% for estudiante in estudiantes %}{% url 'estudiantes:editar' seccion.pk estudiante.pk as url_editar %}<li class="estudiante"><span class="estudiante__numero" aria-hidden="true">{{ forloop.counter }}</span><span class="estudiante__nombre">{{ estudiante.apellidos }}, {{ estudiante.nombres }}</span><a class="editar-fila" href="{{ url_editar }}" hx-get="{{ url_editar }}" aria-label="Editar a {{ estudiante.apellidos }}, {{ estudiante.nombres }}">Editar</a></li>

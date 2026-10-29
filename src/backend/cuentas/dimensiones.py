@@ -1,17 +1,26 @@
 """Las tres dimensiones de la portada del docente y su bandera de disponibilidad (US-001, D7).
 
 La historia que construye la pantalla de una dimensión cambia aquí su entrada: pone
-``disponible=True`` y el ``url_name`` de esa pantalla (US-030 lo hará con Asistencia).
-``test_dimensiones.py`` falla si una dimensión disponible no resuelve su ruta, para que ninguna
-tarjeta enlace a una página que no existe (spec pantallas-de-inicio).
+``disponible=True`` y el ``url_name`` de esa pantalla. ``test_dimensiones.py`` falla si una
+dimensión disponible no resuelve su ruta, para que ninguna tarjeta enlace a una página que no existe
+(spec pantallas-de-inicio). Desde US-030, Asistencia está disponible; su ruta es de la sección, así
+que la portada la enlaza solo si la docente tiene una sola sección (``para_portada``).
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+
+from django.urls import reverse
+
+# Dimensiones cuya pantalla es de una sección: su ruta lleva el id de la sección.
+POR_SECCION = {"asistencia"}
 
 
 @dataclass(frozen=True)
 class Dimension:
-    """Una tarjeta de la portada. ``icono`` es el nombre del SVG en ``templates/iconos/``."""
+    """Una tarjeta de la portada. ``icono`` es el nombre del SVG en ``templates/iconos/``.
+
+    ``url`` la arma ``para_portada`` a partir de ``url_name``; la tarjeta solo lee ``url``.
+    """
 
     clave: str
     titulo: str
@@ -20,6 +29,7 @@ class Dimension:
     icono: str
     url_name: str | None = None
     disponible: bool = False
+    url: str | None = None
 
 
 # En el orden de las tarjetas (DESIGN.md, Tarjeta de dimensión G4e).
@@ -44,8 +54,26 @@ DIMENSIONES = (
         "Control de asistencia",
         "Registrar asistencia",
         "calendar-check",
+        url_name="asistencia:hoy",
+        disponible=True,
     ),
 )
+
+
+def para_portada(dimensiones, seccion):
+    """Las tarjetas con su ``url``. Sin ``seccion`` (ninguna o varias), las de sección quedan en
+    "Próximamente", con la misma regla que "Ver estudiantes" (design de US-030, D10)."""
+    tarjetas = []
+    for dimension in dimensiones:
+        if dimension.disponible and dimension.clave in POR_SECCION:
+            if seccion is None:
+                dimension = replace(dimension, disponible=False)
+            else:
+                dimension = replace(dimension, url=reverse(dimension.url_name, args=[seccion.pk]))
+        elif dimension.disponible:
+            dimension = replace(dimension, url=reverse(dimension.url_name))
+        tarjetas.append(dimension)
+    return tuple(tarjetas)
 
 
 def tarjeta_inicial(dimensiones):

@@ -1,0 +1,15 @@
+{% extends "marco.html" %}
+{% comment %}
+Asistencia de hoy (design de US-030, D10). Parte A del grupo 2: solo el título y la fecha, para que la tarjeta de la
+portada y el aviso de la lista de estudiantes lleven a una página que existe. La lista, el panel y el guardado por
+toque entran en la parte B (tarea 2.4).
+{% endcomment %}
+
+{% block titulo %}Asistencia · CarpetaDocente{% endblock %}
+
+{% block principal %}
+<main class="mx-auto w-full max-w-280 flex-1 px-4 pt-6 min-[960px]:px-6 min-[960px]:pt-8">
+  <h1 class="font-display text-display leading-[1.15] font-semibold text-primario">Asistencia</h1>
+  <p class="text-body text-texto-suave">{{ texto_fecha }}</p>
+</main>
+{% endblock %}

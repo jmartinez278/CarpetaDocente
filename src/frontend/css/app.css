@@ -1451,3 +1451,81 @@
     }
   }
 }
+
+/* Dirección visual 0.3 en las pantallas ya existentes (DESIGN.md 0.4; design de US-030, D10 y D12), tomado de
+   variante.css del boceto (prototipos-cd/decision-final) con los tokens de arriba: la barra con la línea tenue, la píldora
+   "Hoy: pendiente" de la tarjeta Asistencia y el enlace al paso siguiente del Mensaje de éxito. */
+@layer components {
+  /* Barra: la línea de la base al 55 % con el fondo, en claro y en oscuro; las medidas de lo fijo no cambian. */
+  .barra-superior {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-linea) 55%, var(--color-fondo));
+  }
+
+  /* "Hoy: pendiente": la forma de la insignia "Próximamente" en --color-superficie, con el reloj en --color-aviso. En el
+     celular, arriba a la derecha, en el lugar de la insignia; en PC, en el hueco entre el subtítulo y la acción. */
+  .pildora-pendiente {
+    order: -1;
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: --spacing(2);
+    padding: 2px 12px 2px 10px;
+    background: var(--color-superficie);
+    color: var(--color-texto);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    line-height: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pildora-pendiente .icono {
+    width: 16px;
+    height: 16px;
+    color: var(--color-aviso);
+  }
+
+  @media (min-width: 960px) {
+    .pildora-pendiente {
+      order: 0;
+      align-self: flex-start;
+      margin: auto 0 auto var(--d-sangria);
+    }
+
+    .dimension:has(.pildora-pendiente) .dimension__accion {
+      margin-top: 0;
+    }
+  }
+
+  /* Momento de autor de la portada: la píldora sube una vez; con "reducir movimiento", ya está en su lugar. */
+  @media (prefers-reduced-motion: no-preference) {
+    .pildora-pendiente {
+      animation: subir-pildora 420ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both;
+    }
+  }
+
+  /* Paso siguiente del Mensaje de éxito ("Tomar la asistencia de hoy"): enlace de 44 px de alto. */
+  .mensaje__texto .mensaje-enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: --spacing(1);
+    min-height: 44px;
+    color: var(--color-primario);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .mensaje-enlace .icono {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@keyframes subir-pildora {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

@@ -2,16 +2,19 @@
 Tarjeta de dimensión G4e (DESIGN.md; design.md de US-001, D7). Recibe: d (una Dimension) e inicial (la clave
 de la tarjeta en que abre el carrusel). Disponible: un solo enlace, el del título, estirado sobre la tarjeta y
 descrito por el verbo. "Próximamente": un botón con aria-disabled que no navega, descrito por la insignia, que
-al tocarlo avisa en una región aria-live ya presente y vacía (portada.js).
+al tocarlo avisa en una región aria-live ya presente y vacía (portada.js). Desde US-030, d.url es la dirección ya
+armada (dimensiones.para_portada) y la tarjeta Asistencia lleva la píldora "Hoy: pendiente" si pendiente_hoy: texto,
+sin enlace propio, descrito en el enlace de la tarjeta (design de US-030, D10).
 {% endcomment %}
 <article class="carrusel__item dimension{% if not d.disponible %} dimension--proxima{% endif %}{% if d.clave == inicial %} carrusel__item--inicial{% endif %}" id="c-{{ d.clave }}" aria-labelledby="dim-{{ d.clave }}"{% if not d.disponible %} x-data="proxima"{% endif %} :class="{ 'carrusel__item--asoma': activa && activa !== 'c-{{ d.clave }}' }">
   <div class="dimension__cabecera">
     <div class="dimension__linea">
       {% include "iconos/"|add:d.icono|add:".svg" %}
-      <h2 class="dimension__titulo" id="dim-{{ d.clave }}">{% if d.disponible %}<a class="dimension__enlace" href="{% url d.url_name %}" aria-describedby="acc-{{ d.clave }}">{{ d.titulo }}</a>{% else %}<button class="dimension__boton" type="button" aria-disabled="true" aria-describedby="ins-{{ d.clave }}" @click="avisar()">{{ d.titulo }}</button>{% endif %}</h2>
+      <h2 class="dimension__titulo" id="dim-{{ d.clave }}">{% if d.disponible %}<a class="dimension__enlace" href="{{ d.url }}" aria-describedby="acc-{{ d.clave }}{% if d.clave == 'asistencia' and pendiente_hoy %} pend-asistencia{% endif %}">{{ d.titulo }}</a>{% else %}<button class="dimension__boton" type="button" aria-disabled="true" aria-describedby="ins-{{ d.clave }}" @click="avisar()">{{ d.titulo }}</button>{% endif %}</h2>
     </div>
     {% if d.disponible %}
     <p class="dimension__subtitulo">{{ d.subtitulo }}</p>
+    {% if d.clave == "asistencia" and pendiente_hoy %}<p class="pildora-pendiente" id="pend-asistencia">{% include "iconos/clock.svg" %}Hoy: pendiente</p>{% endif %}
     <p class="dimension__accion" id="acc-{{ d.clave }}">{{ d.verbo }}{% include "iconos/arrow-right.svg" with clase="dimension__flecha" %}</p>
     {% else %}
     <p class="insignia" id="ins-{{ d.clave }}">Próximamente</p>
