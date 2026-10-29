@@ -153,10 +153,17 @@ class Estudiante(models.Model):
     guardado. ``QuerySet.update()`` y ``bulk_update`` no pasan por ``save()``; ``bulk_create``
     solo lo usa ``servicios.importar_lista``, con filas ya normalizadas.
 
-    Las tablas futuras con FK a estudiante (calificación, asistencia, exoneración) usarán
+    Las tablas con FK a estudiante (asistencia, y luego calificación y exoneración) usan
     ``models.RESTRICT`` y no ``CASCADE`` como el documento 11: así quitar o vaciar la lista
     se bloquea solo cuando hay registros (``servicios.ListaConRegistros``).
     """
+
+    class Estado(models.TextChoices):
+        """Situación del estudiante en la sección (US-030, D1); solo los ACTIVOS pasan lista."""
+
+        ACTIVO = "ACTIVO", "Activo"
+        TRASLADADO = "TRASLADADO", "Trasladado"
+        RETIRADO = "RETIRADO", "Retirado"
 
     seccion = models.ForeignKey(
         Seccion,
@@ -166,6 +173,8 @@ class Estudiante(models.Model):
     )
     apellidos = models.CharField("apellidos", max_length=120)
     nombres = models.CharField("nombres", max_length=120)
+    estado = models.CharField("estado", max_length=12, choices=Estado, default=Estado.ACTIVO)
+    fecha_estado = models.DateField("fecha del estado", null=True, blank=True)
 
     class Meta:
         db_table = "estudiante"
@@ -176,6 +185,10 @@ class Estudiante(models.Model):
                 fields=["seccion", "apellidos", "nombres"],
                 name="uq_estudiante",
                 violation_error_message="Este estudiante ya está en la lista",
+            ),
+            models.CheckConstraint(
+                condition=Q(estado__in=["ACTIVO", "TRASLADADO", "RETIRADO"]),
+                name="ck_estudiante_estado",
             ),
         ]
 

@@ -90,3 +90,48 @@ def test_borrar_la_seccion_borra_a_sus_estudiantes(seccion):
     seccion.delete()
 
     assert Estudiante.objects.count() == 0
+
+
+# --- estado (US-030, design D1) ---
+
+
+def test_estudiante_nuevo_queda_activo_y_sin_fecha_de_estado(seccion):
+    estudiante = Estudiante.objects.create(seccion=seccion, apellidos="QUISPE", nombres="ANA")
+
+    estudiante.refresh_from_db()
+    assert estudiante.estado == "ACTIVO"
+    assert estudiante.fecha_estado is None
+
+
+def test_estado_fuera_de_los_tres_lo_rechaza_la_base_de_datos(seccion):
+    with pytest.raises(IntegrityError), transaction.atomic():
+        Estudiante.objects.create(
+            seccion=seccion, apellidos="QUISPE", nombres="ANA", estado="EGRESADO"
+        )
+
+
+@pytest.mark.parametrize("estado", ["ACTIVO", "TRASLADADO", "RETIRADO"])
+def test_los_tres_estados_validos_se_guardan(seccion, estado):
+    estudiante = Estudiante.objects.create(
+        seccion=seccion, apellidos="QUISPE", nombres="ANA", estado=estado
+    )
+
+    estudiante.refresh_from_db()
+    assert estudiante.estado == estado
+
+
+def test_importar_lista_deja_activos_a_los_estudiantes(seccion):
+    cantidad, errores = servicios.importar_lista(seccion, "QUISPE MAMANI, ANA\nHUAMAN RUIZ, LUIS")
+
+    assert errores == []
+    assert cantidad == 2
+    assert set(seccion.estudiantes.values_list("estado", flat=True)) == {"ACTIVO"}
+    assert set(seccion.estudiantes.values_list("fecha_estado", flat=True)) == {None}
+
+
+def test_agregar_estudiante_lo_deja_activo(seccion):
+    estudiante = servicios.agregar_estudiante(seccion, "quispe", "ana")
+
+    estudiante.refresh_from_db()
+    assert estudiante.estado == "ACTIVO"
+    assert estudiante.fecha_estado is None

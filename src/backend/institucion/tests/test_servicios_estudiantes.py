@@ -375,3 +375,48 @@ def test_seccion_unica_es_none_sin_secciones(docente):
 
 def test_texto_seccion_corto(seccion):
     assert servicios.texto_seccion_corto(seccion) == "2.º A"
+
+
+# --- con asistencia real (US-030: FK RESTRICT, sin simular) ---
+
+
+@pytest.fixture
+def asistencia_de(seccion, docente, fecha_asistencia):
+    """Marca a un estudiante de la sección en una jornada real."""
+    from asistencia.models import Asistencia, Jornada
+
+    jornada = Jornada.objects.create(
+        seccion=seccion, fecha=fecha_asistencia, registrado_por=docente
+    )
+
+    def marcar(estudiante):
+        return Asistencia.objects.create(jornada=jornada, estudiante=estudiante, estado="ASISTIO")
+
+    return marcar
+
+
+@pytest.fixture
+def fecha_asistencia():
+    import datetime
+
+    return datetime.date(2026, 10, 28)
+
+
+def test_quitar_con_asistencia_real_lanza_y_no_borra(seccion, asistencia_de):
+    crear(seccion, "QUISPE, ANA")
+    asistencia_de(seccion.estudiantes.get())
+
+    with pytest.raises(servicios.ListaConRegistros):
+        servicios.quitar_estudiante(seccion.estudiantes.get())
+
+    assert seccion.estudiantes.count() == 1
+
+
+def test_vaciar_con_asistencia_real_lanza_y_no_borra_ninguno(seccion, asistencia_de):
+    crear(seccion, "QUISPE, ANA", "RAMOS, LUIS", "SOTO, PEDRO")
+    asistencia_de(seccion.estudiantes.get(apellidos="RAMOS"))
+
+    with pytest.raises(servicios.ListaConRegistros):
+        servicios.vaciar_lista(seccion)
+
+    assert seccion.estudiantes.count() == 3
