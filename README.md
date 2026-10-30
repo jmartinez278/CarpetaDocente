@@ -93,7 +93,7 @@ docker compose exec web python src/backend/manage.py createsuperuser
 Para cargar el año escolar y sus 24 secciones (1.º a 6.º grado, A a D; sin docentes), con el id de la institución. Se puede repetir sin duplicar:
 
 ```bash
-docker compose exec web python src/backend/manage.py cargar_secciones --anio 2027 --institucion 1
+docker compose exec web python src/backend/manage.py cargar_secciones --anio 2026 --institucion 1
 ```
 
 ### 2B. Opción B: PostgreSQL en Docker y Django en la laptop
@@ -335,10 +335,28 @@ Tres cosas que pasan al correr estos comandos:
 
 Al terminar, borrar `.env.local`: trae las claves de producción.
 
-Carga inicial de producción, en orden: `createsuperuser`; la institución en el panel, con el nombre en texto y `[DATO I.E. PENDIENTE]` donde falte; `cargar_secciones --anio 2027 --institucion <id>` (el año 2027 es de demostración).
+Carga inicial de producción, en orden: `createsuperuser`; la institución en el panel, con el nombre en texto y `[DATO I.E. PENDIENTE]` donde falte; `cargar_secciones --anio 2026 --institucion <id>` (el año 2026 es de demostración: `cargar_demo` toma la asistencia de los días anteriores a hoy dentro del año escolar).
 
 Para una vista previa: copiar la cadena de conexión de la rama `preview/<rama>` desde la consola de Neon a `.env.preview`, correr `uv run --env-file .env.preview python src/backend/manage.py createsuperuser` y borrar el archivo al terminar. Solo cuentas ficticias.
 
 ## Datos
 
 El repositorio es público: solo contiene datos ficticios. No se suben datos reales de estudiantes.
+
+### Datos de demostración
+
+Tres comandos del equipo (EN-06), con la contraseña de las cuentas demo en `DEMO_CLAVE` (ver `.env.example`):
+
+```bash
+# Llena 1.º A a 2.º D del año ABIERTO: docente demo, 25 estudiantes ficticios y 10 días de asistencia
+uv run python src/backend/manage.py cargar_demo --institucion <id> [--estudiantes 30] [--confirmar]
+# Las libera y desactiva las cuentas demo (demounoa … demodosd)
+uv run python src/backend/manage.py quitar_demo --confirmar
+# Borra estudiantes, jornadas y asistencia de una sección del piloto; conserva su docente
+uv run python src/backend/manage.py descartar_seccion --seccion <id> --confirmar
+```
+
+- `cargar_demo` se puede repetir sin duplicar nada y se niega si una de las 8 secciones tiene una docente real o estudiantes. Fuera del modo de desarrollo pide `--confirmar`; sin él dice qué haría.
+- `quitar_demo` y `descartar_seccion` sin `--confirmar` dicen qué borrarían y no tocan nada.
+- **Antes del piloto, `quitar_demo`**: las secciones quedan libres para las listas reales.
+- **Antes de `descartar_seccion` en producción, un respaldo de Neon** (una rama o un punto de restauración desde su consola). Borra registros reales que mide la tesis: solo con la decisión del equipo.
