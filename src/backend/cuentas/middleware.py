@@ -66,6 +66,8 @@ class InactividadMiddleware:
             request.session[MARCA_DE_ACTIVIDAD] = ahora.timestamp()
 
     def _cerrar_por_inactividad(self, request):
+        # El receptor de ``user_logged_out`` la lee para el motivo de CIERRE_SESION (US-008, D4).
+        request._cierre_por_inactividad = True
         logout(request)
         titulo, detalle = servicios.aviso_de_inactividad()
         messages.info(request, f"{titulo}\n\n{detalle}", extra_tags=ETIQUETA_INACTIVIDAD)

@@ -37,9 +37,9 @@
 
 ### Parte A: sesión y asistencia
 
-- [ ] 2.1 Prueba primero, `actividad/tests/test_sesion.py`: ingreso correcto → INICIO_SESION; "Cerrar sesión" → CIERRE_SESION con motivo `boton`; cierre por inactividad → motivo `inactividad`; ingreso rechazado no deja entrada (EN-04); abrir la portada no deja entrada. Luego `actividad/signals.py`, `ActividadConfig.ready()`, `atomic()` en `IngresarView.form_valid` y la marca en `InactividadMiddleware` (D4). Verificar: rojo y luego verde; `inicio-sesion` y `cierre-sesion` siguen en verde
-- [ ] 2.2 Prueba primero, `asistencia/tests/test_actividad.py`: "Camino ideal" (primer toque → REGISTRO_ASISTENCIA con usuario, fecha, hora y jornada, y ASISTENCIA_CAMBIADA con anterior vacío y origen `toque`); cambio de estado con anterior y nuevo; mismo estado y nota otra vez → sin entrada; nota cambiada → `nota_cambiada` sin el texto; lote → una por cada Sin marcar, origen `lote`; JORNADA_COMPLETA una sola vez (también con el último marcado por el lote); toque rechazado (otra sección, fecha que no es hoy) → sin entrada; abrir la asistencia de hoy → sin entrada. Luego `asistencia/servicios.py` (D6). Verificar: rojo y luego verde; las pruebas de US-030 (unitarias y e2e) siguen en verde
-- [ ] 2.3 Revisión de la parte y commit (reglas de arriba)
+- [x] 2.1 Prueba primero, `actividad/tests/test_sesion.py`: ingreso correcto → INICIO_SESION; "Cerrar sesión" → CIERRE_SESION con motivo `boton`; cierre por inactividad → motivo `inactividad`; ingreso rechazado no deja entrada (EN-04); abrir la portada no deja entrada. Luego `actividad/signals.py`, `ActividadConfig.ready()`, `atomic()` en `IngresarView.form_valid` y la marca en `InactividadMiddleware` (D4). Verificar: rojo y luego verde; `inicio-sesion` y `cierre-sesion` siguen en verde
+- [x] 2.2 Prueba primero, `asistencia/tests/test_actividad.py`: "Camino ideal" (primer toque → REGISTRO_ASISTENCIA con usuario, fecha, hora y jornada, y ASISTENCIA_CAMBIADA con anterior vacío y origen `toque`); cambio de estado con anterior y nuevo; mismo estado y nota otra vez → sin entrada; nota cambiada → `nota_cambiada` sin el texto; lote → una por cada Sin marcar, origen `lote`; JORNADA_COMPLETA una sola vez (también con el último marcado por el lote); toque rechazado (otra sección, fecha que no es hoy) → sin entrada; abrir la asistencia de hoy → sin entrada. Luego `asistencia/servicios.py` (D6). Verificar: rojo y luego verde; las pruebas de US-030 (unitarias y e2e) siguen en verde
+- [x] 2.3 Revisión de la parte y commit (reglas de arriba)
 
 ### Parte B: estudiantes, panel y comandos
 
@@ -70,6 +70,7 @@
   - plazo de conservación → US-009;
   - participantes contados con el estado de hoy, no el de cada semana (no hay historial de asignaciones); indicadores por institución si entra una segunda I.E.;
   - US-031 reutiliza ASISTENCIA_CAMBIADA (días anteriores), sin operación nueva;
+  - `cuentas/0002_usuario_es_demo` no marca cuentas demo cargadas antes del PR #66; antes del piloto, confirmar que producción no tiene cuentas demo (o quitarlas) → equipo;
   - contradicciones para la pasada de docs: RNF-016 (catálogo, lecturas fuera, consola con usuario vacío, conservación, transacción); doc 06 RF-008 Ruta Infeliz (docente y dirección no entran al panel); doc 11 3.7 (`entidad`/`entidad_id` como cadena vacía en vez de NULL, índice extra por operación y fecha).
 - **(equipo)** Aprobación del PR por otra integrante (DoD 3).
 - Después de la fusión: `/opsx:archive` con "Sync now". La siguiente historia sale de `main` y su primer commit es este archivo.

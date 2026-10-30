@@ -14,6 +14,7 @@ import pytest
 from playwright.sync_api import expect
 
 from actividad.models import Operacion, RegistroActividad
+from actividad.tests.conftest import quitar_inicio_de_sesion
 from actividad.tests.test_panel import entrada
 from cuentas.tests.e2e import ANCHOS, TEMAS, con_pantalla, ingresar, revisar_con_axe
 
@@ -42,6 +43,7 @@ def con_entradas(docente):
 def en_el_panel(live_server, page, administrador, clave):
     ingresar(page, live_server, administrador, clave)
     expect(page).to_have_url(f"{live_server.url}/admin/")
+    quitar_inicio_de_sesion(administrador)
     return page
 
 

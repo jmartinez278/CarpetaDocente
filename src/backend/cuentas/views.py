@@ -3,6 +3,7 @@
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.views import LoginView, redirect_to_login
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -28,6 +29,11 @@ class IngresarView(LoginView):
     form_class = FormularioIngreso
     template_name = "cuentas/ingresar.html"
     redirect_authenticated_user = True
+
+    def form_valid(self, form):
+        # ``last_login`` y la entrada INICIO_SESION van juntos o no van (US-008, D4).
+        with transaction.atomic():
+            return super().form_valid(form)
 
     def get_redirect_url(self):
         destino = super().get_redirect_url()

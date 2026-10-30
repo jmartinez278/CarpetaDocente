@@ -41,6 +41,26 @@ Abreviaturas: `pan` = `test_panel.py`, `exp` = `test_exportar.py`, `ind` = `test
 
 Accesibilidad: la guía-rastro del panel de Django no pasaba axe (`link-in-text-block`, enlaces blancos sin subrayado sobre texto celeste, 1,42:1). `static/css/panel.css`, cargada desde `templates/admin/base_site.html`, la subraya en todas las pantallas del panel.
 
+## Escenarios de `registro-actividad` (parte 2A)
+
+Abreviaturas: `ses` = `actividad/tests/test_sesion.py`, `asi` = `asistencia/tests/test_actividad.py`.
+
+| Spec | Escenario | Prueba |
+| --- | --- | --- |
+| registro-actividad | Inicio y cierre de sesión | `ses::test_ingreso_correcto_deja_inicio_sesion`, `test_cerrar_sesion_con_el_boton_deja_cierre_sesion_con_motivo_boton` |
+| registro-actividad | Cierre por inactividad | `ses::test_cierre_por_inactividad_deja_motivo_inactividad` |
+| registro-actividad | Una lectura no deja entrada | `ses::test_abrir_la_portada_no_deja_entrada`, `asi::test_abrir_la_asistencia_de_hoy_no_deja_entrada` (la lista de estudiantes llega con la parte 2B) |
+| registro-actividad | Camino ideal (registro de asistencia) | `asi::test_primer_toque_deja_registro_asistencia_y_asistencia_cambiada`, `test_el_segundo_toque_no_deja_otro_registro_asistencia` |
+| registro-actividad | Primer toque del día | `asi::test_primer_toque_deja_registro_asistencia_y_asistencia_cambiada` |
+| registro-actividad | Mismo estado otra vez | `asi::test_mismo_estado_y_nota_otra_vez_no_deja_entrada`, `test_lote_repetido_no_deja_entradas_nuevas` |
+| registro-actividad | Lote | `asi::test_lote_deja_una_entrada_por_cada_sin_marcar_con_origen_lote`, `test_lote_que_abre_la_jornada_deja_registro_asistencia` |
+| registro-actividad | Jornada completa | `asi::test_jornada_completa_al_marcar_al_ultimo_activo`, `test_jornada_completa_una_sola_vez_aunque_luego_cambie_un_estado`, `test_jornada_completa_cuando_el_lote_marca_al_ultimo`, `test_un_estudiante_no_activo_no_impide_la_jornada_completa` |
+| registro-actividad | Justificación | `asi::test_nota_cambiada_lo_dice_sin_el_texto`, `test_la_primera_justificacion_con_nota_dice_nota_cambiada` |
+| registro-actividad | La operación falla | `asi::test_toque_de_otra_seccion_no_deja_entrada`, `test_toque_con_fecha_que_no_es_hoy_no_deja_entrada`, `test_si_falla_el_guardado_no_queda_entrada`; ingreso rechazado, `ses::test_ingreso_rechazado_no_deja_entrada` |
+| registro-actividad | El registro falla | ingreso, `ses::test_inicio_de_sesion_y_last_login_van_en_la_misma_transaccion`; toque, `asi::test_si_falla_el_registro_el_toque_no_se_guarda` (agregada tras la revisión; pasó de entrada porque el `atomic()` ya lo garantizaba) |
+
+Además: "Cerrar sesión" sin sesión no deja entrada (`ses::test_salir_sin_sesion_no_deja_entrada`). Como `force_login` también dispara `user_logged_in`, las pruebas del panel entran con `entrar()` (`actividad/tests/conftest.py`), que quita esa entrada de la preparación. Verde: suite unitaria y e2e de `cuentas` y `asistencia` (US-001, US-002 y US-030: 161) y del resto de apps (96). La revisión encontró rota la e2e de la lista del registro (parte 1B: el ingreso real deja INICIO_SESION); `en_el_panel` quita esa entrada con `quitar_inicio_de_sesion`.
+
 ## Minor para la descripción del PR
 
 Parte 1A (revisión de la parte):
@@ -61,3 +81,11 @@ Parte 1B (revisión de la parte; corregidos antes del commit: las fechas del for
 - `exportar_csv` carga todo el resultado en memoria (sin `.iterator()`); bajo volumen en el piloto.
 - Sin prueba de una cuenta con `is_staff` sin rol Administrador en la lista, `exportar/` e `indicadores/` (403 por código); sin prueba de una exportación de más de 50 entradas (que sale el `queryset` y no la página); `test_una_fecha_invalida_no_rompe_la_lista` acepta 200 o 302.
 - La lista hace dos `COUNT(*)` por carga; `show_full_result_count = False` ahorraría uno.
+
+Parte 2A (revisión de la parte; corregido antes del commit: la e2e de la lista del registro):
+
+- El reinicio de intentos de RN-024 se confirma en `authenticate()` (`intentar_ingreso`, su propio `atomic()`), antes de `form_valid`: si INICIO_SESION falla, `last_login` se revierte pero el contador queda en 0. D4 pedía los tres juntos; la contraseña era correcta, así que no cambia nada para la docente.
+- Sin pruebas de concurrencia de D6 (dos toques finales a la vez → un JORNADA_COMPLETA; primer toque doble → un REGISTRO_ASISTENCIA): lo garantiza el bloqueo de la jornada, sin prueba con hilos. Tampoco se prueba que un lote con un id de otra sección no deje entrada.
+- `_registrar_si_completa` hace hasta 4 consultas por toque (cuenta los activos dos veces y luego busca JORNADA_COMPLETA); cada toque suma de 4 a 6 consultas.
+- El `select_for_update` sobre `asistencia` en `marcar` y `marcar_restantes` es redundante con el bloqueo de la jornada (D6 lo pide; inofensivo).
+- Si la jornada queda completa porque se retira a un estudiante, el siguiente reintento sin cambios deja JORNADA_COMPLETA.

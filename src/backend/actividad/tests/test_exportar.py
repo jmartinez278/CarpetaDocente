@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from actividad.models import Operacion, RegistroActividad
 from actividad.servicios import celda_segura
+from actividad.tests.conftest import entrar
 from actividad.tests.test_panel import URL_LISTA, entrada
 
 pytestmark = pytest.mark.django_db
@@ -20,7 +21,7 @@ COLUMNAS = ["Fecha y hora", "Usuario", "Operación", "Entidad", "Identificador",
 
 @pytest.fixture
 def panel(client, administrador):
-    client.force_login(administrador)
+    entrar(client, administrador)
     return client
 
 
@@ -112,7 +113,7 @@ def test_get_responde_405_y_no_deja_entrada(panel, entradas):
 
 @pytest.mark.parametrize("rol", ["docente", "direccion"])
 def test_otro_rol_no_obtiene_el_csv(client, request, entradas, rol):
-    client.force_login(request.getfixturevalue(rol))
+    entrar(client, request.getfixturevalue(rol))
 
     respuesta = exportar(client)
 

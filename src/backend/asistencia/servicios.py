@@ -11,6 +11,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from actividad.models import Operacion, RegistroActividad
+from actividad.servicios import registrar
 from asistencia.models import Asistencia, Jornada
 from institucion.models import Estudiante
 from institucion.servicios import estudiantes_ordenados
@@ -260,6 +262,9 @@ def marcar(seccion, estudiante_id, fecha, estado, nota, usuario, hoy=None):
     La jornada nace con el primer toque. ``FechaNoValida`` si no es hoy o es fin de semana,
     ``ValidationError`` si el estado o la nota no valen, ``Estudiante.DoesNotExist`` si no es
     un estudiante activo de la sección. Con cualquier error no se crea nada.
+
+    Deja ASISTENCIA_CAMBIADA con el estado anterior (leído con bloqueo antes del upsert), salvo
+    en un reintento con el mismo estado y nota (US-008, D6).
     """
     hoy = hoy or timezone.localdate()
     _validar_fecha(fecha, hoy)
@@ -274,6 +279,12 @@ def marcar(seccion, estudiante_id, fecha, estado, nota, usuario, hoy=None):
     with transaction.atomic():
         estudiante = _activos(seccion).get(pk=estudiante_id)
         jornada = _jornada(seccion, fecha, usuario)
+        anterior = (
+            Asistencia.objects.select_for_update()
+            .filter(jornada=jornada, estudiante=estudiante)
+            .values_list("estado", "nota_justificacion")
+            .first()
+        )
         # Un solo INSERT ... ON CONFLICT DO UPDATE: dos peticiones iguales no chocan (D2).
         Asistencia.objects.bulk_create(
             [
@@ -288,13 +299,26 @@ def marcar(seccion, estudiante_id, fecha, estado, nota, usuario, hoy=None):
             unique_fields=["jornada", "estudiante"],
             update_fields=["estado", "nota_justificacion", "actualizado_en"],
         )
+        estado_anterior, nota_anterior = anterior or (None, "")
+        if (estado_anterior, nota_anterior) != (estado, nota):
+            _registrar_cambio(
+                usuario,
+                jornada,
+                estudiante,
+                estado_anterior,
+                estado,
+                "toque",
+                nota_cambiada=nota != nota_anterior,
+            )
+        _registrar_si_completa(usuario, seccion, jornada)
 
 
 def marcar_restantes(seccion, estudiante_ids, fecha, usuario, hoy=None):
     """Pone Asistió a los que aún no tienen estado hoy; nunca pisa uno ya puesto (decisión 3).
 
     Un id que no es un estudiante activo de la sección hace fallar todo el lote
-    (``Estudiante.DoesNotExist``) sin guardar ninguno.
+    (``Estudiante.DoesNotExist``) sin guardar ninguno. Deja una ASISTENCIA_CAMBIADA con origen
+    ``lote`` por cada estudiante que no tenía estado (US-008, D6).
     """
     hoy = hoy or timezone.localdate()
     _validar_fecha(fecha, hoy)
@@ -307,6 +331,11 @@ def marcar_restantes(seccion, estudiante_ids, fecha, usuario, hoy=None):
         if len(estudiantes) != len(ids):
             raise Estudiante.DoesNotExist
         jornada = _jornada(seccion, fecha, usuario)
+        con_estado = set(
+            Asistencia.objects.select_for_update()
+            .filter(jornada=jornada, estudiante__in=estudiantes)
+            .values_list("estudiante_id", flat=True)
+        )
         Asistencia.objects.bulk_create(
             [
                 Asistencia(jornada=jornada, estudiante=estudiante, estado=Asistencia.Estado.ASISTIO)
@@ -314,11 +343,58 @@ def marcar_restantes(seccion, estudiante_ids, fecha, usuario, hoy=None):
             ],
             ignore_conflicts=True,
         )
+        for estudiante in sorted(estudiantes, key=lambda e: e.pk):
+            if estudiante.pk not in con_estado:
+                _registrar_cambio(
+                    usuario, jornada, estudiante, None, Asistencia.Estado.ASISTIO, "lote"
+                )
+        _registrar_si_completa(usuario, seccion, jornada)
 
 
 def _jornada(seccion, fecha, usuario):
-    """La jornada única de la sección y fecha; si dos peticiones chocan, Django relee."""
-    jornada, _ = Jornada.objects.get_or_create(
+    """La jornada única de la sección y fecha; si dos peticiones chocan, Django relee.
+
+    La toma con bloqueo: los guardados de una jornada van en fila, así dos toques finales
+    simultáneos no dejan dos JORNADA_COMPLETA (US-008, D6). La jornada nueva deja
+    REGISTRO_ASISTENCIA.
+    """
+    jornada, creada = Jornada.objects.select_for_update().get_or_create(
         seccion=seccion, fecha=fecha, defaults={"registrado_por": usuario}
     )
+    if creada:
+        registrar(
+            usuario,
+            Operacion.REGISTRO_ASISTENCIA,
+            entidad="jornada",
+            entidad_id=jornada,
+            detalle={"seccion": seccion.pk, "fecha": fecha.isoformat()},
+        )
     return jornada
+
+
+def _registrar_cambio(usuario, jornada, estudiante, anterior, nuevo, origen, nota_cambiada=False):
+    """ASISTENCIA_CAMBIADA sin el texto de la nota, solo si cambió (RN-015)."""
+    registrar(
+        usuario,
+        Operacion.ASISTENCIA_CAMBIADA,
+        entidad="asistencia",
+        entidad_id=jornada,
+        detalle={
+            "estudiante": estudiante.pk,
+            "anterior": anterior,
+            "nuevo": nuevo,
+            "nota_cambiada": nota_cambiada,
+            "origen": origen,
+        },
+    )
+
+
+def _registrar_si_completa(usuario, seccion, jornada):
+    """JORNADA_COMPLETA la primera vez que todos los activos tienen estado, una sola vez."""
+    if not _completa_o_vacia(seccion, jornada.fecha) or not _activos(seccion).exists():
+        return
+    ya_registrada = RegistroActividad.objects.filter(
+        operacion=Operacion.JORNADA_COMPLETA, entidad="jornada", entidad_id=str(jornada.pk)
+    ).exists()
+    if not ya_registrada:
+        registrar(usuario, Operacion.JORNADA_COMPLETA, entidad="jornada", entidad_id=jornada)

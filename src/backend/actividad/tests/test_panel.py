@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from actividad.models import Operacion, RegistroActividad
 from actividad.servicios import registrar
+from actividad.tests.conftest import entrar
 
 pytestmark = pytest.mark.django_db
 
@@ -40,7 +41,7 @@ def una_entrada(docente):
 
 @pytest.fixture
 def panel(client, administrador):
-    client.force_login(administrador)
+    entrar(client, administrador)
     return client
 
 
@@ -130,7 +131,7 @@ def rutas_del_registro(una_entrada):
 @pytest.mark.parametrize("rol", ["docente", "direccion"])
 @pytest.mark.parametrize("ruta", ["lista", "ficha"])
 def test_docente_y_direccion_no_entran_al_registro(client, request, una_entrada, rol, ruta):
-    client.force_login(request.getfixturevalue(rol))
+    entrar(client, request.getfixturevalue(rol))
     antes = campos_de(una_entrada)
 
     respuesta = client.get(rutas_del_registro(una_entrada)[ruta])
@@ -143,7 +144,7 @@ def test_docente_y_direccion_no_entran_al_registro(client, request, una_entrada,
 
 @pytest.mark.parametrize("rol", ["docente", "direccion"])
 def test_docente_y_direccion_no_borran_ni_cambian_por_post(client, request, una_entrada, rol):
-    client.force_login(request.getfixturevalue(rol))
+    entrar(client, request.getfixturevalue(rol))
     antes = campos_de(una_entrada)
 
     client.post(reverse(URL_FICHA, args=[una_entrada.pk]), {"operacion": "INICIO_SESION"})
@@ -163,7 +164,7 @@ def test_docente_y_direccion_no_borran_ni_cambian_por_post(client, request, una_
 def test_docente_y_direccion_no_entran_a_exportar_ni_a_indicadores(
     client, request, una_entrada, rol, metodo, nombre
 ):
-    client.force_login(request.getfixturevalue(rol))
+    entrar(client, request.getfixturevalue(rol))
 
     respuesta = getattr(client, metodo)(reverse(nombre))
 
