@@ -1,0 +1,2 @@
+{% comment %}"Marcar los N restantes como Asistió" (decisión 3): Botón secundario, solo mientras haya estudiantes Sin marcar.{% endcomment %}
+<button type="button" class="boton-secundario marcar-todos" data-marcar-todos{% if not lista.sin_marcar %} hidden{% endif %}>{{ lista.texto_marcar_restantes }}</button>

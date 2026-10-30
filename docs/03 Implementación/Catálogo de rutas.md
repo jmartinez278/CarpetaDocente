@@ -8,8 +8,8 @@
 | **Producto** | CarpetaDocente (nombre temporal) |
 | **Integrantes** | Cuicapuza Remigio Nayely Nilda · Martinez Llanos Marco Jhair · Vera Zea Jhoanna Hade |
 | **Asesor** | Ing. Elvis Wilfredo Carmen Delgadillo |
-| **Fecha** | 27/10/2026 |
-| **Versión** | 1.3.0 |
+| **Fecha** | 29/10/2026 |
+| **Versión** | 1.4.0 |
 
 ---
 
@@ -17,7 +17,7 @@
 
 El sistema genera sus páginas en el servidor y no expone una API pública, así que, según el criterio 9 de la DoD (documento 01 de planificación, sección 7), la documentación de rutas reemplaza a OpenAPI/Swagger. Cada historia que agrega o cambia rutas actualiza este catálogo en su mismo Pull Request.
 
-Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/backend/cuentas/urls.py` (namespace `docente`), `src/backend/direccion/urls.py` (namespace `direccion`) y `src/backend/institucion/urls.py` (namespace `estudiantes`, bajo `/docente/secciones/<id>/estudiantes/`).
+Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/backend/cuentas/urls.py` (namespace `docente`), `src/backend/direccion/urls.py` (namespace `direccion`), `src/backend/institucion/urls.py` (namespace `estudiantes`, bajo `/docente/secciones/<id>/estudiantes/`) y `src/backend/asistencia/urls.py` (namespace `asistencia`, bajo `/docente/secciones/<id>/asistencia/`).
 
 ## 2. Rutas
 
@@ -33,6 +33,9 @@ Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/ba
 | `/docente/secciones/<id>/estudiantes/<id>/editar/` | GET, POST | `estudiantes:editar` | `EditarView` | `institucion` | Como `estudiantes:lista`; un estudiante de otra sección, 404. POST correcto, 303 a la lista; con errores, 200 con lo escrito y cada error | RF-006 (US-006) | US-006 |
 | `/docente/secciones/<id>/estudiantes/<id>/quitar/` | GET, POST | `estudiantes:quitar` | `QuitarView` | `institucion` | Como `estudiantes:editar`. GET, la confirmación; POST, 303 a la lista. Si el estudiante tiene registros, 200 con el bloqueo y nada borrado | RF-006 (US-006) | US-006 |
 | `/docente/secciones/<id>/estudiantes/vaciar/` | GET, POST | `estudiantes:vaciar` | `VaciarView` | `institucion` | Como `estudiantes:lista`. GET, la confirmación con la cantidad (con la lista vacía, 303 a la lista); POST, 303 a la lista vacía. Si algún estudiante tiene registros, 200 con el bloqueo y ninguno borrado | RF-006 (US-006) | US-006 |
+| `/docente/secciones/<id>/asistencia/` | GET | `asistencia:hoy` | `HoyView` | `asistencia` | Como `estudiantes:lista`. La asistencia de hoy (fecha de Lima) de la sección; abrirla no crea la jornada | RF-030, RF-032 (US-030) | US-030 |
+| `/docente/secciones/<id>/asistencia/<AAAA-MM-DD>/estudiantes/<id>/` | POST | `asistencia:marcar` | `MarcarView` | `asistencia` | Como `asistencia:hoy`. Guarda el estado de destino de un estudiante (`estado` y `nota`); repetirlo deja lo mismo. Responde sin cuerpo: 204 guardado; 400 estado o nota que no valen; 404 estudiante que no es activo de la sección; 409 fecha que no es hoy o no es día de clases. Solo POST con token CSRF | RF-030, RNF-011 (US-030) | US-030 |
+| `/docente/secciones/<id>/asistencia/<AAAA-MM-DD>/restantes/` | POST | `asistencia:restantes` | `RestantesView` | `asistencia` | Como `asistencia:marcar`. Guarda Asistió para los estudiantes enviados (`estudiante` repetido) que aún no tienen estado hoy; nunca pisa uno ya puesto. Un id que no es activo de la sección, 404 sin guardar ninguno; un id que no es número, 400 | RF-030 (US-030) | US-030 |
 | `/direccion/` | GET | `direccion:inicio` | `InicioDireccionView` | `direccion` | Solo rol Dirección. Sin sesión, a `/ingresar/?next=…`; otro rol, a su pantalla | RF-001 (US-001) | US-001 |
 | `/admin/login/` | GET | `ingreso_panel` | `IngresoPanelView` | `cuentas` | Reemplaza el ingreso propio del panel. Sin sesión, a `/ingresar/` con `next`; con `is_staff`, al panel; otro rol, a su pantalla; Administrador sin `is_staff`, 403 | RF-001, RN-024 (US-001) | US-001 |
 | `/admin/logout/` | POST | `admin:logout` | `LogoutView` (la del panel) | Django (`django.contrib.admin`) | Cierra la sesión y lleva a `/ingresar/` (`LOGOUT_REDIRECT_URL`), no a la página "Sesión cerrada" del panel | RF-002 (US-002) | US-002 |
@@ -46,6 +49,7 @@ Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/ba
 - **Pantalla de inicio de cada rol:** Docente, `/docente/`; Dirección, `/direccion/`; Administrador, `/admin/`. La verificación de rol de US-001 es `RolRequeridoMixin` (`cuentas/acceso.py`); los permisos completos por rol son de US-004.
 
 - **Peticiones de HTMX (US-006):** con la cabecera `HX-Request`, la sesión vencida, la falta de sesión o un rol distinto responden 200 con `HX-Redirect` (a `/ingresar/?next=/docente/` o a la pantalla del rol), para que la página completa cambie y el formulario de ingreso no aparezca dentro del diálogo. Sin la cabecera, el 302 de siempre.
+- **Guardados de la asistencia (US-030):** la pantalla de asistencia envía cada guardado con `HX-Request` (sin cargar HTMX), así que la sesión vencida o la falta de sesión responden igual, con `HX-Redirect`. Una fecha mal escrita o que no existe (`2026-02-30`) no es una ruta: 404.
 
 ## Historial de cambios
 
@@ -55,5 +59,6 @@ Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/ba
 | 1.1.0 | 22/10/2026 | Equipo del proyecto | US-001: `/` pasa a redirigir según la sesión; se agregan `/ingresar/`, `/docente/`, `/direccion/` y `/admin/login/`, con su acceso por rol. Se quita la nota "exigirá sesión con EN-04". |
 | 1.2.0 | 25/10/2026 | Equipo del proyecto | US-002: se agregan `/salir/` (solo POST) y `/admin/logout/`, que ahora lleva a `/ingresar/`; nota sobre el cierre por inactividad y la falta de caché en las pantallas con sesión. Se quita "su cierre de sesión propio sigue hasta US-002". |
 | 1.3.0 | 27/10/2026 | Equipo del proyecto | US-006: se agrega la lista de estudiantes de la sección (`/docente/secciones/<id>/estudiantes/`), Pegar lista (`…/pegar/`), Agregar (`…/agregar/`), Editar (`…/<id>/editar/`), Quitar (`…/<id>/quitar/`) y Vaciar (`…/vaciar/`); nota sobre las peticiones de HTMX y la sesión vencida. |
+| 1.4.0 | 29/10/2026 | Equipo del proyecto | US-030: se agregan la asistencia de hoy de la sección (`/docente/secciones/<id>/asistencia/`), el guardado de un estudiante (`…/<fecha>/estudiantes/<id>/`) y el de los restantes (`…/<fecha>/restantes/`); nota sobre sus guardados y la sesión vencida. |
 
 [← Volver al README Principal](../../README.md)

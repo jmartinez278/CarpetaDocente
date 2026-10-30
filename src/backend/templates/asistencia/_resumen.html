@@ -1,0 +1,8 @@
+{% comment %}Avance o cierre de la jornada (D8). El servidor dibuja los dos y el JS cambia cuál se ve; "Sin cambios" hasta el primer toque. En el panel de PC va sin el estado del guardado, que tiene su bloque abajo.{% endcomment %}
+<div class="resumen-jornada">
+  <p class="cierre-jornada" data-cierre{% if not lista.completa %} hidden{% endif %}>{% include "iconos/check.svg" %}Asistencia de hoy completa</p>
+  <p class="resumen-completo" data-resumen-completo{% if not lista.completa %} hidden{% endif %}>{{ lista.resumen }}</p>
+  <p class="avance" data-avance{% if lista.completa %} hidden{% endif %}><strong data-marcados>{{ lista.marcados }}</strong><span class="avance__corto" aria-hidden="true">/{{ lista.total }}</span><span class="avance__largo"> de {{ lista.total }} marcados</span></p>
+  {% if not panel %}{% include "asistencia/_guardado.html" %}{% endif %}
+  <a class="resumen-enlace" href="#{{ lista.primera_sin_marcar }}" data-sin-marcar{% if lista.completa %} hidden{% endif %}>{{ lista.sin_marcar }} sin marcar</a>
+</div>

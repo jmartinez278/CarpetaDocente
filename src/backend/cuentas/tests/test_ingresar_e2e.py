@@ -16,6 +16,7 @@ from cuentas.tests.e2e import (
     campo_clave,
     campo_usuario,
     ingresar,
+    saludo_de,
 )
 
 pytestmark = pytest.mark.e2e
@@ -37,7 +38,7 @@ def test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada(live_server, page, docent
     boton_ingresar(page).click()
 
     expect(page).to_have_url(f"{live_server.url}/docente/")
-    expect(page.get_by_role("heading", level=1)).to_have_text("Hola, Ana Quispe")
+    expect(page.get_by_role("heading", level=1)).to_have_text(saludo_de("Ana Quispe"))
     expect(page.get_by_role("heading", level=2)).to_have_text(["Sesiones", "Notas", "Asistencia"])
     # Alpine se carga con defer: se espera a que termine, no a que aparezca el marcado.
     page.wait_for_function("typeof Alpine === 'object'", timeout=5000)

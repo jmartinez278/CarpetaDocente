@@ -18,6 +18,10 @@ from cuentas import servicios
 from cuentas.acceso import es_htmx, redirigir
 
 MARCA_DE_ACTIVIDAD = "ultima_actividad"
+# La marca se reescribe solo si la guardada tiene 30 s o más: una pantalla que guarda por
+# toque no escribe la sesión en cada petición. La sesión puede cerrarse hasta 30 s antes de
+# los 60 minutos, nunca después (RN-025; design de US-030, D9).
+RENOVACION_DE_LA_MARCA = 30
 ETIQUETA_INACTIVIDAD = "inactividad"
 
 
@@ -34,7 +38,7 @@ class InactividadMiddleware:
     - Vencida: ``logout()``, deja el aviso y redirige a ``/ingresar/``. Si era un GET,
       conserva la dirección pedida en ``next``; si no, no vuelve a un envío. Una petición de
       HTMX recibe ``HX-Redirect`` con la portada como ``next`` (US-006, D7).
-    - Vigente: renueva la marca de la última actividad.
+    - Vigente: renueva la marca de la última actividad si la guardada tiene 30 s o más.
     - Toda respuesta a una petición con sesión lleva las cabeceras de no caché, para que
       el botón "atrás" no muestre la pantalla después de cerrar la sesión.
     """
@@ -49,11 +53,17 @@ class InactividadMiddleware:
         ahora = timezone.now()
         if servicios.sesion_vencida(request.session.get(MARCA_DE_ACTIVIDAD), ahora):
             return self._cerrar_por_inactividad(request)
-        request.session[MARCA_DE_ACTIVIDAD] = ahora.timestamp()
+        self._renovar_marca(request, ahora)
 
         respuesta = self.get_response(request)
         add_never_cache_headers(respuesta)
         return respuesta
+
+    def _renovar_marca(self, request, ahora):
+        """Escribe la marca si falta o tiene 30 s o más; si no, no toca la sesión."""
+        marca = request.session.get(MARCA_DE_ACTIVIDAD)
+        if marca is None or ahora.timestamp() - marca >= RENOVACION_DE_LA_MARCA:
+            request.session[MARCA_DE_ACTIVIDAD] = ahora.timestamp()
 
     def _cerrar_por_inactividad(self, request):
         logout(request)

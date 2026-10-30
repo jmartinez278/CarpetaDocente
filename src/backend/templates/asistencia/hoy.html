@@ -1,0 +1,64 @@
+{% extends "marco.html" %}
+{% load static %}
+{% comment %}
+Asistencia de hoy (design de US-030, D4, D10 y D12; DESIGN.md 0.4, Fila de asistencia y Asistencia en PC). El servidor dibuja
+la pantalla completa: lista, estados, avance, totales y nota. asistencia.js agrega el toque, la cola de guardado, el lote y los
+avisos. Celular: una columna con la franja fija arriba. PC (960 px): la lista a la izquierda y el panel a la derecha.
+{% endcomment %}
+
+{% block titulo %}Asistencia · {{ seccion_corta }} · CarpetaDocente{% endblock %}
+
+{% block principal %}
+<main class="vista-asistencia{% if con_lista %} con-panel{% if lista.completa %} jornada-completa{% endif %}{% endif %}" data-dimension="asistencia">
+  <header class="cabecera-asistencia">
+    <h1>{% include "iconos/calendar-check.svg" %}Asistencia · {{ seccion_corta }}</h1>
+    <span class="franjas-cabecera" aria-hidden="true"></span>
+    <p class="fecha{% if con_lista %} fecha-movil{% endif %}">{{ texto_fecha }}</p>
+    {% if con_lista %}<p class="selector-ayuda ayuda-movil">Solo puedes marcar hoy.</p>{% endif %}
+  </header>
+  {% if not dia_de_clases %}
+  <div class="distribucion">{% include "asistencia/_fin_de_semana.html" %}</div>
+  {% elif not con_lista %}
+  <div class="distribucion">{% include "asistencia/_sin_estudiantes.html" %}</div>
+  {% else %}
+  <div class="distribucion" data-asistencia data-seccion="{{ seccion.pk }}" data-fecha="{{ fecha|date:'Y-m-d' }}" data-url-marcar="{{ url_marcar }}" data-url-restantes="{{ url_restantes }}">
+    <div class="controles">
+      <div class="franja-jornada">
+        {% include "asistencia/_selector.html" %}
+        {% include "asistencia/_resumen.html" %}
+      </div>
+      {% include "asistencia/_panel.html" %}
+    </div>
+    <div class="zona-lista">
+      <noscript><p class="mensaje mensaje--aviso">Activa JavaScript para registrar la asistencia.</p></noscript>
+      <div class="aviso-movil">
+        <div class="mensaje mensaje--error aviso-conexion" data-sin-conexion hidden>{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p class="mensaje__titulo">Sin conexión</p><p>Tus marcas se guardarán cuando vuelva la señal. No cierres esta pantalla.</p></div></div>
+      </div>
+      <div class="acciones-lista">
+        {% include "asistencia/_marcar_todos.html" %}
+        {% include "asistencia/_leyenda.html" with plegable=True %}
+      </div>
+      <div class="lista-superficie">
+        <div class="lista-cabecera"><span>{{ lista.total }} estudiante{{ lista.total|pluralize }} activo{{ lista.total|pluralize }}</span><span>Hoy</span></div>
+        <ol class="estudiantes" aria-label="Asistencia de hoy">
+          {% for fila in lista.filas %}<li class="estudiante fila-asistencia" id="fila-{{ fila.estudiante.pk }}" data-estudiante="{{ fila.estudiante.pk }}" data-estado="{{ fila.estado|default_if_none:"" }}">{% include "asistencia/_fila.html" %}</li>
+          {% endfor %}
+        </ol>
+        {% if lista.no_activos %}
+        <div class="inactivos">
+          <p class="inactivos__titulo">Fuera del registro de hoy</p>
+          <p class="ayuda">No cuentan entre los {{ lista.total }} estudiantes.</p>
+          <ul>{% for estudiante in lista.no_activos %}<li><span class="estudiante__nombre">{{ estudiante.apellidos }}, {{ estudiante.nombres }}</span><span class="marca-inactivo">{{ estudiante.estado }}</span></li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</main>
+{% if con_lista %}
+<div class="barra-deshacer" data-barra-deshacer hidden><p data-deshacer-mensaje></p><button type="button" data-deshacer>Deshacer <span data-segundos aria-hidden="true">(5)</span></button></div>
+<div id="anuncio" class="sr-only" role="status" aria-live="polite"></div>
+<script src="{% static 'js/asistencia.js' %}" defer></script>
+{% endif %}
+{% endblock %}

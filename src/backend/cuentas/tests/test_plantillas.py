@@ -60,6 +60,9 @@ def test_los_iconos_de_d9_estan_y_llevan_el_aviso_isc():
         "circle-user-round",
         "log-out",
         "clock",
+        # Selector de la semana y leyenda de la asistencia (US-030, D10).
+        "chevron-left",
+        "chevron-right",
     }
     assert "ISC License" in (CARPETA_ICONOS / "LICENSE-lucide.txt").read_text(encoding="utf-8")
 

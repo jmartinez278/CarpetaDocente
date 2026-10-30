@@ -10,7 +10,7 @@ import re
 import pytest
 from playwright.sync_api import expect
 
-from cuentas.tests.e2e import envejecer_sesion, ingresar
+from cuentas.tests.e2e import envejecer_sesion, ingresar, saludo_de
 
 pytestmark = pytest.mark.e2e
 
@@ -57,7 +57,7 @@ def test_atras_despues_de_cerrar_sesion_no_muestra_el_saludo(live_server, page, 
     page.go_back()
 
     expect(page).to_have_url(f"{live_server.url}/ingresar/?next=/docente/")
-    expect(page.get_by_text("Hola, Ana Quispe")).to_have_count(0)
+    expect(page.get_by_text(saludo_de("Ana Quispe"))).to_have_count(0)
 
 
 def test_inactividad_muestra_el_aviso_y_atras_no_muestra_la_pantalla(
@@ -78,7 +78,7 @@ def test_inactividad_muestra_el_aviso_y_atras_no_muestra_la_pantalla(
     expect(aviso).to_contain_text(DETALLE)
     page.go_back()
     expect(page).to_have_url(f"{live_server.url}/ingresar/?next=/docente/")
-    expect(page.get_by_text("Hola, Ana Quispe")).to_have_count(0)
+    expect(page.get_by_text(saludo_de("Ana Quispe"))).to_have_count(0)
 
 
 def test_escape_cierra_el_menu_y_devuelve_el_foco(live_server, page, docente, clave):

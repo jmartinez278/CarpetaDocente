@@ -1,0 +1,2 @@
+{% comment %}El círculo de un estado (Estados de asistencia de DESIGN.md): forma e ícono además del color; Justificado con la "J".{% endcomment %}
+<span class="estado {{ circulo }}" aria-hidden="true">{% if circulo == "estado--asistio" %}{% include "iconos/check.svg" %}{% elif circulo == "estado--falto" %}{% include "iconos/x.svg" %}{% elif circulo == "estado--tarde" %}{% include "iconos/clock.svg" %}{% elif circulo == "estado--justificado" %}J{% endif %}</span>

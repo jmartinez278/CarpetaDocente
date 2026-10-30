@@ -1,0 +1,6 @@
+{% comment %}Selector de la semana (decisiones 5 y 11): solo hoy responde; los otros días y las flechas se ven atenuados y lo dicen con aria-disabled, sin salir del orden del teclado.{% endcomment %}
+<div class="selector-semana" role="group" aria-label="{{ semana.etiqueta }}">
+  <button type="button" class="flecha" aria-disabled="true" aria-label="Semana anterior no disponible">{% include "iconos/chevron-left.svg" %}</button>
+  {% for dia in semana.dias %}<button type="button" class="dia{% if dia.es_hoy %} dia--hoy{% endif %}" {% if dia.es_hoy %}aria-current="date"{% else %}aria-disabled="true"{% endif %} aria-label="{{ dia.etiqueta }}"><span>{{ dia.abreviatura }}</span> <span class="dia__numero">{{ dia.fecha.day }}{% if dia.es_hoy %}<span class="dia__punto" aria-hidden="true"></span>{% endif %}</span></button>
+  {% endfor %}<button type="button" class="flecha" aria-disabled="true" aria-label="Semana siguiente no disponible">{% include "iconos/chevron-right.svg" %}</button>
+</div>

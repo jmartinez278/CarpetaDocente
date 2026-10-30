@@ -6,6 +6,8 @@ sección pasa axe en ambos temas y no desborda a 320 px. Necesita el CSS compila
 pide con ``uv run pytest -m e2e --browser chromium``.
 """
 
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -14,6 +16,8 @@ from cuentas.tests.e2e import TEMAS, con_pantalla, ingresar, revisar_con_axe
 pytestmark = pytest.mark.e2e
 
 SECCION = "2.º grado, sección A"
+# Desde US-030 la línea empieza con la fecha de hoy: "Jueves 29 de octubre · 2.º grado, sección A".
+LINEA = re.compile(rf"^\S+ \d{{1,2}} de \S+ · {re.escape(SECCION)}$")
 OCUPADA = "La sección ya tiene un docente asignado"
 
 
@@ -38,7 +42,7 @@ def test_el_administrador_asigna_la_seccion_y_la_docente_la_ve(
     try:
         ingresar(portada, live_server, docente, clave)
         expect(portada).to_have_url(f"{live_server.url}/docente/")
-        expect(portada.locator(".seccion-entrada p")).to_have_text(SECCION)
+        expect(portada.locator(".seccion-entrada p")).to_have_text(LINEA)
         expect(portada.locator("h1")).not_to_contain_text(SECCION)
     finally:
         contexto.close()
@@ -60,7 +64,7 @@ def docente_con_seccion(seccion, docente):
 def test_la_portada_con_la_seccion_pasa_axe(live_server, page, tema, docente_con_seccion, clave):
     con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
-    expect(page.locator(".seccion-entrada p")).to_have_text(SECCION)
+    expect(page.locator(".seccion-entrada p")).to_have_text(LINEA)
 
     revisar_con_axe(page, f"portada-con-seccion-{tema}")
 
@@ -71,7 +75,7 @@ def test_la_portada_con_la_seccion_no_desborda_a_320_px(
 ):
     con_pantalla(page, 320, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
-    expect(page.locator(".seccion-entrada p")).to_have_text(SECCION)
+    expect(page.locator(".seccion-entrada p")).to_have_text(LINEA)
     page.evaluate("document.fonts.ready")
 
     assert page.evaluate("document.documentElement.scrollWidth") <= 320

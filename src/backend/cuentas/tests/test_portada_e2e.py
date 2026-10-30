@@ -1,17 +1,30 @@
 """Portada del docente y desborde horizontal en el navegador (spec pantallas-de-inicio; D10).
 
 Chip sin historial (R-19), aviso de "Próximamente" y ``scrollWidth <= clientWidth`` a 320, 360 y
-1280 en ambos temas. Necesita el CSS compilado y Chromium:
-``uv run pytest -m e2e --browser chromium``.
+1280 en ambos temas. Desde US-030, la píldora "Hoy: pendiente": aparece una vez, sin movimiento
+con "reducir movimiento", y la portada con y sin ella pasa axe. Necesita el CSS compilado y
+Chromium: ``uv run pytest -m e2e --browser chromium``.
 """
 
 import re
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from playwright.sync_api import expect
 
-from cuentas.tests.e2e import TEMAS, abrir_ingresar, con_pantalla, ingresar
+from asistencia.models import Asistencia, Jornada
+from cuentas.tests.e2e import (
+    ANCHOS,
+    TEMAS,
+    abrir_ingresar,
+    con_pantalla,
+    fijar_hora_de_lima,
+    ingresar,
+    revisar_con_axe,
+)
+from institucion.models import AnioEscolar, Estudiante, Seccion
 
 pytestmark = pytest.mark.e2e
 
@@ -187,3 +200,116 @@ def test_los_tokens_aplicados_toman_su_valor_del_tema(live_server, page, docente
             [selector, propiedad],
         )
         assert calculado == esperado, (tema, token, calculado, esperado)
+
+
+# --- "Hoy: pendiente" en la tarjeta Asistencia (US-030; DESIGN.md 0.4, Movimiento) ---
+
+MIERCOLES = date(2026, 10, 28)
+
+
+@pytest.fixture
+def seccion_de_ana(docente, monkeypatch):
+    """Un miércoles a las 9:00 de Lima, con "2.º grado, sección A" de Ana y tres estudiantes."""
+    fijar_hora_de_lima(monkeypatch, datetime(2026, 10, 28, 9, 0, tzinfo=ZoneInfo("America/Lima")))
+    anio = AnioEscolar.objects.create(institucion=docente.institucion, anio=2027)
+    seccion = Seccion.objects.create(anio_escolar=anio, grado=2, nombre="A", docente=docente)
+    for apellidos in ("AGUILAR FLORES", "BRAVO CASAS", "CRUZ HUAMÁN"):
+        Estudiante.objects.create(seccion=seccion, apellidos=apellidos, nombres="ANA")
+    return seccion
+
+
+def completar_la_jornada(seccion):
+    jornada = Jornada.objects.create(
+        seccion=seccion, fecha=MIERCOLES, registrado_por=seccion.docente
+    )
+    for estudiante in seccion.estudiantes.all():
+        Asistencia.objects.create(jornada=jornada, estudiante=estudiante, estado="ASISTIO")
+
+
+def pildora(page):
+    return page.locator("#pend-asistencia")
+
+
+def esperar_la_subida(page):
+    """La subida termina; con ``both`` la animación sigue en ``getAnimations()``, ya terminada."""
+    page.wait_for_function(
+        """() => [...document.querySelectorAll(".pildora-pendiente")]
+            .flatMap((p) => p.getAnimations())
+            .every((a) => a.playState === "finished")"""
+    )
+
+
+def animaciones(page):
+    return pildora(page).evaluate(
+        "(p) => p.getAnimations().map((a) => [a.animationName, a.effect.getTiming().iterations])"
+    )
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_la_pildora_aparece_una_vez_con_una_subida_corta(
+    live_server, page, seccion_de_ana, docente, clave, ancho
+):
+    con_pantalla(page, ancho, "light")
+    ingresar(page, live_server, docente, clave)
+
+    expect(pildora(page)).to_have_text("Hoy: pendiente")
+    assert animaciones(page) == [["subir-pildora", 1]]
+    esperar_la_subida(page)
+    expect(pildora(page)).to_have_css("opacity", "1")
+    expect(pildora(page)).to_be_in_viewport()
+
+
+def test_con_reducir_movimiento_la_pildora_ya_esta_en_su_lugar(
+    live_server, page, seccion_de_ana, docente, clave
+):
+    con_pantalla(page, 360, "light")
+    page.emulate_media(reduced_motion="reduce")
+    ingresar(page, live_server, docente, clave)
+
+    expect(pildora(page)).to_have_text("Hoy: pendiente")
+    assert animaciones(page) == []
+    expect(pildora(page)).to_have_css("opacity", "1")
+
+
+def test_la_tarjeta_asistencia_lleva_a_la_asistencia_de_hoy(
+    live_server, page, seccion_de_ana, docente, clave
+):
+    con_pantalla(page, 1280, "light")
+    ingresar(page, live_server, docente, clave)
+    enlace = page.get_by_role("link", name="Asistencia", exact=True)
+    expect(enlace).to_have_accessible_description("Registrar asistencia Hoy: pendiente")
+
+    enlace.click()
+
+    expect(page).to_have_url(f"{live_server.url}/docente/secciones/{seccion_de_ana.pk}/asistencia/")
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("ancho", ANCHOS)
+@pytest.mark.parametrize("con_pildora", [True, False], ids=["con-pildora", "completa"])
+def test_la_portada_con_y_sin_pildora_pasa_axe(
+    live_server, page, seccion_de_ana, docente, clave, ancho, tema, con_pildora
+):
+    if not con_pildora:
+        completar_la_jornada(seccion_de_ana)
+    con_pantalla(page, ancho, tema)
+    ingresar(page, live_server, docente, clave)
+    expect(pildora(page)).to_have_count(1 if con_pildora else 0)
+    # axe mide el color calculado: a media subida lo mezcla con la opacidad.
+    esperar_la_subida(page)
+
+    nombre = "con-pildora" if con_pildora else "completa"
+    revisar_con_axe(page, f"portada-{nombre}-{ancho}-{tema}")
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("ancho", [320, 360, 1280])
+def test_la_portada_con_la_pildora_no_se_desplaza_en_horizontal(
+    live_server, page, seccion_de_ana, docente, clave, ancho, tema
+):
+    con_pantalla(page, ancho, tema)
+    ingresar(page, live_server, docente, clave)
+    expect(pildora(page)).to_be_attached()
+    page.evaluate("document.fonts.ready")
+
+    assert page.evaluate("document.documentElement.scrollWidth") <= ancho

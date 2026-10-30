@@ -3,7 +3,7 @@
 > Un aula cálida y ordenada: el café del uniforme, con sus franjas arena, y el dorado del escudo enmarcan la pantalla; el trabajo diario ocurre sobre papel casi blanco, tranquilo y legible.
 
 **Theme:** claro y oscuro. El tema sigue la preferencia del sistema (`prefers-color-scheme`); no hay selector en la interfaz (el selector será un RF aparte, después del Sprint 1).
-**Estado:** propuesta 0.3.1 · 22-10-2026 · insumo para Impeccable (ruta B) y para el prototipo (evidencia local, fuera del repositorio). Los colores salen de fotos y afiches de la I.E. (aproximados) y pasaron filtros WCAG 2.x, APCA y simulación de daltonismo. Este archivo es la referencia visual del proyecto (CLAUDE.md, sección Interfaz); la ratifica la aprobación, por otra integrante, del PR que lo incorpora (cierra C7).
+**Estado:** propuesta 0.4 · 29-10-2026 · insumo para Impeccable (ruta B) y para el prototipo (evidencia local, fuera del repositorio). Los colores salen de fotos y afiches de la I.E. (aproximados) y pasaron filtros WCAG 2.x, APCA y simulación de daltonismo. Este archivo es la referencia visual del proyecto (CLAUDE.md, sección Interfaz); la ratifica la aprobación, por otra integrante, del PR que lo incorpora (cierra C7).
 **Cambios 0.2:** tarjetas café con franjas del uniforme y miniatura que desborda; botón principal en píldora; fuente de títulos por definir con `/impeccable typeset`; tuteo; títulos cortos con subtítulo formal; una sola librería de íconos; movimiento solo funcional; asistencia de 5 columnas en computadora; criterio de "listo para docentes".
 **Cambios 0.3** (revisión del prototipo de US-001, tramo 4, variante G4e):
 - Fuente de títulos Besley 600, definitiva (alojada, subconjunto latino, 17 KB; en 0.3.1 llega por npm, ver Títulos). Íconos Lucide 1.52.0 (trazo 1,75 px). Radios sin cambios.
@@ -24,6 +24,9 @@
 - Tratamiento ("Prof.") y grado en los ejemplos: se muestran cuando el sistema guarde esos datos (design de US-001, D8; US-005).
 - Disponibilidad de las tarjetas: al cerrar US-001, las tres en "Próximamente"; con US-030, solo Asistencia.
 - Las referencias a rutas locales del prototipo pasan a "evidencia local".
+**Cambios 0.4** (29-10-2026, dirección visual 0.3 de `prototipos-cd`, US-030; decisión: AB-3 con la barra de línea tenue y cabeceras con franjas cortas; ningún cambio toca los colores de estado de asistencia, las filas de la lista ni el ciclo de toques):
+- la barra superior conserva su línea inferior de 1px, pero más tenue: `--color-linea` al 55 % con `--color-fondo`, en claro y en oscuro, para que el nombre de la I.E. flote sobre la banda de la barra; se descartó una línea dorada de 2px (`--color-dorado` al 50 %), porque se veía amarillo limón en claro y oliva en oscuro; las medidas de lo fijo bajo la barra no cambian; el descarte «Barra café con franja dorada» sigue vigente; la cabecera de cada pantalla de trabajo lleva el ícono de su dimensión (el de su tarjeta, 24px en `--color-primario`) junto al título y, debajo, las franjas del uniforme cortas (48px; 3px y 2px, separadas 6px) en el tinte de su dimensión (`--color-tinte-sesiones`, `--color-tinte-notas`, `--color-tinte-asistencia`, iguales en claro y en oscuro); sin banda ni fondo; el título baja: 24px de aire bajo la barra en celular y 32px en PC; la portada, la lista de estudiantes, la cuenta y el ingreso no llevan franjas (en el ingreso irá la insignia del colegio); regla: las franjas son líneas, nunca fondo ni detrás de texto, una pareja por pantalla en la primera vista (salvo las tarjetas de la portada y el cierre de jornada); los acentos de dimensión dejan de usarse solo dentro de la miniatura; saludo de la portada según la hora («Buenos días», «Buenas tardes», «Buenas noches») sobre `--color-fondo`, con la fecha delante de la sección («Miércoles 28 de octubre · 2.º grado, sección A») y `text-wrap: balance` cuando no cabe en una línea; asistencia de hoy pendiente: «Hoy: pendiente» con `clock` en `--color-aviso`, en una píldora de `--color-superficie` (14px/600, `--radius-pill`) dentro de la tarjeta Asistencia; en celular, arriba a la derecha, en el lugar de la insignia; en PC, centrada en el hueco entre el subtítulo y la acción, con `--d-sangria`; sin enlace propio (la tarjeta entera es el enlace), descrita por `aria-describedby`; con la jornada completa no está, y las tarjetas quedan iguales (dato real que provee US-030); el Mensaje de éxito de la lista de estudiantes puede llevar un enlace de 44px al paso siguiente («Tomar la asistencia de hoy»); cierre de jornada: con la lista completa y guardada (sin marcas pendientes ni un «Marcar todos» por deshacer; sin conexión no hay cierre), el resumen muestra «Asistencia de hoy completa» en `--font-display` 600 de 20px y `--color-primario`, con `check` en `--color-exito` (más grande que el texto del panel, de 14px en celular y 16px en PC), y las franjas del uniforme reemplazan la línea inferior de la franja fija (en PC, la barra de progreso al 100 %), sin botones ni pasos nuevos; Movimiento admite **dos** momentos de autor, uno por pantalla: en la portada, «Hoy: pendiente» aparece una vez con una subida corta (`opacity` y `transform: translateY` de 6px, 420ms, `cubic-bezier(0.16, 1, 0.3, 1)`, 300ms de espera; con «reducir movimiento», ya está en su lugar); en la asistencia, las franjas del cierre se trazan una vez, de izquierda a derecha (`transform: scaleX`, 480 ms, `cubic-bezier(0.16, 1, 0.3, 1)`), y con «reducir movimiento» aparecen sin trazarse; «Asistencia en PC» pasa a: lista de hoy a la izquierda y panel de la jornada a la derecha, sin fondo (fecha, selector de semana, avance, totales, «Marcar todos», leyenda y guardado), en lugar de las 5 columnas de días (decisión 9 de US-030, variante 10a); «Marcar todos como Asistió» es Botón secundario (acción en lote) y dice cuántos marca: «Marcar los 7 restantes como Asistió» («el restante» si queda uno), sin la ayuda de debajo; «restantes» porque «faltar» es el estado Faltó, y en celular la lista empieza en el primer pliegue: el aviso sin conexión es un Mensaje de error compacto (ícono `circle-alert`, «Sin conexión» 16px/600 en `--color-error` y «qué hacer» 14px en `--color-texto`, padding 12px 14px) y no repite el nombre de la marca sin guardar (ya está en su fila y en «1 sin guardar»); en la franja fija, «N sin guardar» cuenta solo las marcas que fallaron, y una marca en curso dice «Guardando…» en `--color-texto-suave`; en oscuro, los círculos de la leyenda llevan ícono y letra en `--color-texto` y la leyenda de la lista va plegada, en una línea de 44px con los cuatro estados en orden, y abierta muestra sus nombres; «Nunca texto en mayúsculas sostenidas» gana una excepción: el nombre completo del estudiante y las marcas «RETIRADO» y «TRASLADADO» (decisión 7).
+- Pendiente: en claro, las franjas salvia de la cabecera son tenues sobre el papel; revisarlas cuando existan Sesiones y Notas (ver `decision-final/capturas/cabeceras-*-claro.png`); probar la línea tenue de la barra y las franjas de la cabecera con sol en el celular.
 
 CarpetaDocente (nombre provisional) es una aplicación web para docentes de primaria de la I.E. Virgen del Carmen (Huayucachi, Junín, Perú). Se usa sobre todo desde el celular, con datos móviles (referencia: 4G lento), dentro del aula o en el patio con sol; la dirección la usa en computadora. Debe sentirse institucional, cálida y confiable: ni plantilla genérica de SaaS ni sistema estatal antiguo.
 
@@ -101,7 +104,7 @@ El error oscuro es más claro que el círculo "Faltó" (`#e66f61`): ese tono da 
 
 ### Acentos de las tres dimensiones
 
-Se usan **dentro de la miniatura** de cada tarjeta (fondos de fichas, insignias, detalles), nunca como color de la tarjeta. Siempre acompañados de ícono y título. Mismo valor en ambos temas; el texto encima es `--color-sobre-claro`.
+Se usan **dentro de la miniatura** de cada tarjeta (fondos de fichas, insignias, detalles), nunca como color de la tarjeta; también tiñen las franjas cortas de la cabecera de cada pantalla de trabajo (ver Cabecera de pantalla de trabajo). Siempre acompañados de ícono y título. Mismo valor en ambos temas; el texto encima es `--color-sobre-claro`.
 
 En la tarjeta "Próximamente" van **apagados**, mezclados con `--color-superficie` (`color-mix(in srgb, <tinte> 40 %, superficie)` en claro, con texto `--color-sobre-claro`; al 20 % en oscuro, con texto `--color-texto`), para que lo no disponible no sea lo más vivo de la pantalla. Texto encima: ≥ 15,0:1 en claro y 6,5:1 en oscuro.
 
@@ -132,7 +135,7 @@ En la tarjeta "Próximamente" van **apagados**, mezclados con `--color-superfici
 | heading | display | 600 | 24px | 30px | `--text-heading` |
 | display | display | 600 | 27px móvil / 40px PC | 1.15 | `--text-display` |
 
-El display es para el nombre de la I.E. en el inicio de sesión y para el saludo de la portada: a 27px, "I.E. Virgen del Carmen" y "Hola, Prof. Ana Quispe" caben en una línea a 360px (325 y 323 de 328px). Mientras el sistema no guarde el tratamiento, el saludo es "Hola, Ana Quispe", más corto (design de US-001, D8). Un nombre de docente más largo baja a dos líneas (`text-wrap: balance`). Mínimo absoluto 14px. Nunca texto en mayúsculas sostenidas.
+El display es para el nombre de la I.E. en el inicio de sesión y para el saludo de la portada: a 27px, "I.E. Virgen del Carmen" y el saludo caben en una línea a 360px. El saludo cambia con la hora ("Buenos días", "Buenas tardes", "Buenas noches") y, mientras el sistema no guarde el tratamiento, lleva solo el nombre ("Buenos días, Ana Quispe"; design de US-001, D8). Un saludo más largo baja a dos líneas (`text-wrap: balance`). Mínimo absoluto 14px. Nunca texto en mayúsculas sostenidas, salvo el nombre completo del estudiante y las marcas "RETIRADO" y "TRASLADADO" (decisión 7 de US-030).
 
 ## Tokens — Spacing & Shapes
 
@@ -170,7 +173,7 @@ Una sola sombra en todo el sistema, reservada para las fichas que desbordan de u
 ## Components
 
 ### Barra superior
-Mismo fondo que la página (`--color-fondo`) con una línea fina de 1px `--color-linea` en el borde inferior; alto 56px; fija arriba. A la izquierda "I.E. Virgen del Carmen" en `--font-display` 600, `--color-primario`, 20px en celular y 22px en PC. Sin menú en US-001: un menú sin función es un control muerto. Entra con US-002 (cerrar sesión), a la derecha, de 44 × 44px; a 360px quedan 51px de aire entre el nombre y el menú. El nombre del sistema no va en la barra: va en el pie.
+Mismo fondo que la página (`--color-fondo`) con una línea fina de 1px en el borde inferior, `--color-linea` al 55 % mezclado con `--color-fondo` (más tenue, en claro y en oscuro); alto 56px; fija arriba. A la izquierda "I.E. Virgen del Carmen" en `--font-display` 600, `--color-primario`, 20px en celular y 22px en PC. Sin menú en US-001: un menú sin función es un control muerto. Entra con US-002 (cerrar sesión), a la derecha, de 44 × 44px; a 360px quedan 51px de aire entre el nombre y el menú. El nombre del sistema no va en la barra: va en el pie.
 
 ### Inicio de sesión
 - Una columna centrada en horizontal sobre `--color-fondo`, sin las tarjetas de dimensión. Ancho máximo 440px en celular y 560px en PC (el nombre a 40px mide 482px); el formulario, máximo 440px.
@@ -230,13 +233,16 @@ Caja con fondo `--color-superficie`, borde completo de 1px en el color del estad
 - Desde 960px no hay carrusel: las tres tarjetas en fila.
 
 ### Fila de asistencia (celular)
-Una fila por estudiante sobre `--color-superficie`: "Apellido, inicial." 16px a la izquierda y círculo de estado a la derecha (36px visibles, área táctil 44px). Tocar el círculo cicla: Sin marcar → Asistió → Faltó → Tarde → Justificado → Asistió (una vez guardado ya no vuelve a "Sin marcar"). Sin menús ni ventanas emergentes. Cada toque se guarda solo; si queda sin conexión, la fila lo indica y reintenta.
+Una fila por estudiante sobre `--color-superficie`: nombre completo en mayúsculas (decisión 7 de US-030), 16px, a la izquierda y círculo de estado a la derecha (36px visibles, área táctil 44px). Tocar el círculo cicla: Sin marcar → Asistió → Faltó → Tarde → Justificado → Asistió (una vez guardado ya no vuelve a "Sin marcar"). Sin menús ni ventanas emergentes. Cada toque se guarda solo; si queda sin conexión, la fila lo indica y reintenta.
+
+### Cabecera de pantalla de trabajo
+Ícono de su dimensión (el de su tarjeta, 24px, `--color-primario`) junto al título y, debajo, las franjas cortas del uniforme (48px; 3px y 2px, separadas 6px) en el tinte de la dimensión (`--color-tinte-sesiones`, `--color-tinte-notas` o `--color-tinte-asistencia`, iguales en claro y en oscuro). Sin banda ni fondo; 24px de aire bajo la barra en celular y 32px en PC. La portada, la lista de estudiantes, la cuenta y el ingreso no llevan franjas.
 
 ### Selector de día (celular)
 Fila de 5 chips (Lun a Vie) de ancho fijo sobre la lista. Estados del chip: registrado (check), hoy (punto `--color-primario` relleno), sin clase (guion `--color-texto-suave`), futuro (atenuado). Por defecto, hoy. En el celular siempre se ve un solo día a la vez.
 
 ### Asistencia en PC
-La semana completa: columna de nombres y **5 columnas de días** (Lun a Vie) con los mismos círculos, y una columna final de totales. El día de hoy resaltado con encabezado en `--color-dimension`. Un día sin clase se muestra como columna atenuada "Sin clase" y no afecta los totales. Nunca desplazamiento horizontal: si el ancho no alcanza, se vuelve al modo de un día con selector.
+Lista de hoy a la izquierda y panel de la jornada a la derecha, sin fondo: fecha, selector de semana, avance, totales, "Marcar todos", leyenda y guardado (decisión 9 de US-030, variante 10a). Los mismos círculos que en el celular. Ya no se muestra la semana completa en columnas. Nunca desplazamiento horizontal.
 
 ### Resumen de jornada
 Fijo arriba de la lista: "18 de 25 marcados" mientras falten; al completar "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1". Indicador "Guardado" con check a la derecha.
@@ -253,7 +259,7 @@ Al marcar Justificado, aparece debajo de la fila un campo opcional de una línea
 
 ## Movimiento
 
-Solo funcional: pulso breve del círculo de asistencia al cambiar de estado (≤150ms), respuesta del botón al toque, aparición de mensajes (≤200ms), desplazamiento suave del carrusel al tocar un chip. Animar solo `transform` y `opacity`. Con "reducir movimiento" activado, sin animación (el chip y el punto activos del carrusel siguen la posición: no son movimiento). Nada decorativo ni en bucle.
+Solo funcional: pulso breve del círculo de asistencia al cambiar de estado (≤150ms), respuesta del botón al toque, aparición de mensajes (≤200ms), desplazamiento suave del carrusel al tocar un chip. Dos momentos de autor, uno por pantalla: en la portada, "Hoy: pendiente" aparece una vez; en la asistencia, las franjas del cierre se trazan una vez (ver Cambios 0.4). Animar solo `transform` y `opacity`. Con "reducir movimiento" activado, sin animación (el chip y el punto activos del carrusel siguen la posición: no son movimiento). Nada decorativo ni en bucle.
 
 ## Do's and Don'ts
 
@@ -309,16 +315,16 @@ Solo funcional: pulso breve del círculo de asistencia al cambiar de estado (≤
 
 ## Layout
 
-Celular primero (360px), margen lateral 16px, una sola columna, barra superior fija. Un título por pantalla y una acción principal. En PC: contenido centrado con ancho máximo de 1120px; la portada usa el saludo y tres tarjetas en fila; la asistencia muestra la semana completa. En el celular, la portada muestra las dimensiones en el carrusel.
+Celular primero (360px), margen lateral 16px, una sola columna, barra superior fija. Un título por pantalla y una acción principal. En PC: contenido centrado con ancho máximo de 1120px; la portada usa el saludo y tres tarjetas en fila; la asistencia muestra la lista de hoy y el panel de la jornada. En el celular, la portada muestra las dimensiones en el carrusel.
 
 ## Pantallas del prototipo
 
 Prototipo de US-001 (variante G4e), en tema claro y oscuro:
 
 1. Inicio de sesión — celular y PC. Espacio del escudo, "I.E. Virgen del Carmen", "Huayucachi", "Sesiones · Notas · Asistencia", formulario y pie. Estados: normal con foco, contraseña visible, error ("Usuario o contraseña incorrectos, o cuenta inactiva" / "Revisa tus datos. Si el problema sigue, pide ayuda al administrador.", con el usuario conservado), enviando y campos vacíos.
-2. Portada del docente — celular (carrusel) y PC (tres en fila). "Hola, Prof. Ana Quispe" y las tres tarjetas, con solo Asistencia disponible (estado con US-030, con "Llegará en una próxima versión." al tocar una "Próximamente") y en el estado final (las tres disponibles). Al cerrar US-001, las tres en "Próximamente" y el saludo sin tratamiento.
+2. Portada del docente — celular (carrusel) y PC (tres en fila). El saludo según la hora ("Buenos días, Ana Quispe"), la fecha con la sección y las tres tarjetas, con solo Asistencia disponible (estado con US-030, con "Llegará en una próxima versión." al tocar una "Próximamente") y en el estado final (las tres disponibles). Al cerrar US-001, las tres en "Próximamente" y el saludo sin tratamiento.
 3. Inicio de la dirección — PC. Mismo marco y, en el Sprint 1, un estado vacío fijo: "Los consolidados de notas y asistencia estarán aquí en una próxima versión." El panel de consolidados es US-040.
-4. Asistencia de hoy — celular (un día con selector) y PC (5 columnas). 3.° grado, sección A, 25 estudiantes ficticios. Se prototipa con su historia.
+4. Asistencia de hoy — celular (un día con selector) y PC (lista de hoy y panel de la jornada). 3.° grado, sección A, 25 estudiantes ficticios. Se prototipa con su historia.
 
 ## Listo para la prueba con docentes
 

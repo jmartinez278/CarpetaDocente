@@ -7,12 +7,15 @@ axe en los grupos 6 y 8.
 
 import re
 from dataclasses import replace
+from datetime import date, datetime
 
 import pytest
+from django.utils import timezone
 
+from asistencia.models import Asistencia, Jornada
 from cuentas import dimensiones
 from cuentas.models import Usuario
-from institucion.models import AnioEscolar, Seccion
+from institucion.models import AnioEscolar, Estudiante, Seccion
 
 pytestmark = pytest.mark.django_db
 
@@ -33,6 +36,33 @@ TEXTOS_EN_ORDEN = [
     AYUDA,
     "CarpetaDocente · 2026",
 ]
+
+
+MIERCOLES = date(2026, 10, 28)
+SABADO = date(2026, 10, 31)
+HOY = "Miércoles 28 de octubre"
+
+
+@pytest.fixture(autouse=True)
+def hora_de_lima(monkeypatch):
+    """Fija la hora de Lima (por defecto, miércoles 28 de octubre a las 9:00) sin tocar el reloj.
+
+    ``timezone.localdate()`` también la usa. Con un valor, ``localtime`` sigue siendo el de Django.
+    """
+    original = timezone.localtime
+    ahora = {"valor": datetime(2026, 10, 28, 9, 0)}
+
+    def localtime(value=None, timezone=None):
+        if value is not None:
+            return original(value, timezone)
+        return ahora["valor"]
+
+    monkeypatch.setattr(timezone, "localtime", localtime)
+
+    def fijar(dia=MIERCOLES, hora=9, minuto=0):
+        ahora["valor"] = datetime(dia.year, dia.month, dia.day, hora, minuto)
+
+    return fijar
 
 
 @pytest.fixture
@@ -247,6 +277,15 @@ def test_barra_con_el_nombre_de_la_ie_y_solo_el_menu_de_la_cuenta(pantalla, requ
 
 
 @pytest.mark.parametrize("pantalla", ["portada", "inicio_direccion"])
+def test_la_barra_lleva_la_linea_tenue(pantalla, request):
+    """DESIGN.md 0.4, Barra superior: la línea de la base al 55 % con el fondo (design D12)."""
+    cabecera = re.search(r"<header\b[^>]*>", barra(request.getfixturevalue(pantalla))).group(0)
+
+    assert "barra-superior" in cabecera
+    assert "border-linea" not in cabecera
+
+
+@pytest.mark.parametrize("pantalla", ["portada", "inicio_direccion"])
 def test_pie_al_final_y_titulo_de_la_pagina(pantalla, request):
     html = request.getfixturevalue(pantalla)
     pie = re.search(r"<footer\b.*?</footer>", html, re.DOTALL)
@@ -260,13 +299,32 @@ def test_pie_al_final_y_titulo_de_la_pagina(pantalla, request):
 
 
 def test_la_portada_saluda_con_el_nombre_completo(portada):
-    assert saludos(portada) == ["Hola, Ana Quispe"]
+    """Escenario "Portada al entrar": a las 9:00 de Lima."""
+    assert saludos(portada) == ["Buenos días, Ana Quispe"]
 
 
 def test_sin_nombre_la_portada_saluda_con_el_usuario(client, crear_usuario):
     client.force_login(crear_usuario("docente.sin.nombre", Usuario.Rol.DOCENTE))
 
-    assert saludos(client.get(PORTADA).content.decode()) == ["Hola, docente.sin.nombre"]
+    assert saludos(client.get(PORTADA).content.decode()) == ["Buenos días, docente.sin.nombre"]
+
+
+@pytest.mark.parametrize(
+    ("hora", "minuto", "saludo"),
+    [
+        (4, 0, "Buenos días"),
+        (11, 59, "Buenos días"),
+        (12, 0, "Buenas tardes"),
+        (18, 59, "Buenas tardes"),
+        (19, 0, "Buenas noches"),
+    ],
+)
+def test_el_saludo_depende_de_la_hora_de_lima(client, docente, hora_de_lima, hora, minuto, saludo):
+    """Escenario "Saludo según la hora"."""
+    hora_de_lima(hora=hora, minuto=minuto)
+    client.force_login(docente)
+
+    assert saludos(client.get(PORTADA).content.decode()) == [f"{saludo}, Ana Quispe"]
 
 
 def test_la_portada_no_inventa_grado_ni_tratamiento(portada):
@@ -384,22 +442,24 @@ def portada_con(client, docente):
 def test_la_portada_muestra_la_seccion_bajo_el_saludo_y_fuera_del_h1(portada_con):
     html = portada_con((2, "A"))
 
-    assert linea_de_secciones(html) == "2.º grado, sección A"
-    assert saludos(html) == ["Hola, Ana Quispe"]
+    assert linea_de_secciones(html) == f"{HOY} · 2.º grado, sección A"
+    assert saludos(html) == ["Buenos días, Ana Quispe"]
 
 
 def test_la_portada_ordena_las_secciones_por_grado_y_nombre(portada_con):
     html = portada_con((3, "B"), (2, "A"))
 
-    assert linea_de_secciones(html) == "2.º grado, sección A · 3.º grado, sección B"
+    assert linea_de_secciones(html) == f"{HOY} · 2.º grado, sección A · 3.º grado, sección B"
 
 
 def test_la_portada_sin_seccion_dice_que_aparecera(portada):
-    assert linea_de_secciones(portada) == SIN_SECCION
+    assert linea_de_secciones(portada) == f"{HOY} · {SIN_SECCION}"
 
 
 def test_la_portada_con_la_unica_seccion_en_un_anio_cerrado(portada_con):
-    assert linea_de_secciones(portada_con((2, "A"), estado="CERRADO")) == SIN_SECCION
+    html = portada_con((2, "A"), estado="CERRADO")
+
+    assert linea_de_secciones(html) == f"{HOY} · {SIN_SECCION}"
 
 
 def test_la_linea_de_secciones_no_cambia_las_tarjetas_ni_los_chips(portada_con):
@@ -467,8 +527,6 @@ def test_la_seccion_sin_estudiantes_muestra_el_aviso_bajo_la_linea(portada_con):
 
 
 def test_con_estudiantes_la_portada_no_muestra_el_aviso(portada_con):
-    from institucion.models import Estudiante
-
     html_vacia = portada_con((2, "A"))
     assert AVISO_SIN_ESTUDIANTES in html_vacia
     Estudiante.objects.create(seccion=Seccion.objects.get(), apellidos="QUISPE", nombres="ANA")
@@ -490,24 +548,136 @@ def test_sin_seccion_o_con_varias_no_hay_enlace_ni_aviso_ni_dialogo(portada_con,
 
 
 def test_una_dimension_disponible_enlaza_a_su_pantalla(client, docente, monkeypatch):
-    """Escenario "Dimensión activada por su historia", con una ruta que existe en vez de la suya."""
+    """Escenario "Dimensión activada por su historia", con una ruta que existe en vez de la suya.
+
+    Sin sección, Asistencia queda en "Próximamente": la única disponible es Sesiones.
+    """
     sesiones, notas, asistencia = dimensiones.DIMENSIONES
-    activa = replace(asistencia, disponible=True, url_name="docente:portada")
-    monkeypatch.setattr(dimensiones, "DIMENSIONES", (sesiones, notas, activa))
+    activa = replace(sesiones, disponible=True, url_name="docente:portada")
+    monkeypatch.setattr(dimensiones, "DIMENSIONES", (activa, notas, asistencia))
     client.force_login(docente)
 
     html = client.get(PORTADA).content.decode()
-    tarjeta = tarjetas(html)[2]
+    tarjeta = tarjetas(html)[0]
 
     enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
     assert 'href="/docente/"' in enlace
-    assert 'aria-describedby="acc-asistencia"' in enlace
-    assert '<p class="dimension__accion" id="acc-asistencia">Registrar asistencia' in tarjeta
+    assert 'aria-describedby="acc-sesiones"' in enlace
+    assert '<p class="dimension__accion" id="acc-sesiones">Ver sesiones' in tarjeta
     assert "Próximamente" not in tarjeta
     assert "dimension--proxima" not in tarjeta
     assert "aria-live" not in tarjeta
     assert "carrusel__item--inicial" in tarjeta
     assert len(re.findall(r'<a class="dimension__enlace"', html)) == 1
+
+
+# --- Tarjeta Asistencia y "Hoy: pendiente" (US-030; spec pantallas-de-inicio, D10) ---
+
+
+def tarjeta_asistencia(html):
+    return tarjetas(html)[2]
+
+
+def url_asistencia(seccion):
+    return f"/docente/secciones/{seccion.pk}/asistencia/"
+
+
+@pytest.fixture
+def con_estudiantes(portada_con):
+    """Portada con una sección de ``cantidad`` activos, ``marcados`` con estado en ``dia``."""
+
+    def abrir(cantidad=2, marcados=0, retirados=0, dia=MIERCOLES):
+        portada_con((2, "A"))
+        seccion = Seccion.objects.get()
+        activos = [
+            Estudiante.objects.create(seccion=seccion, apellidos=f"APELLIDO {n}", nombres="ANA")
+            for n in range(cantidad)
+        ]
+        for n in range(retirados):
+            Estudiante.objects.create(
+                seccion=seccion, apellidos=f"RETIRADO {n}", nombres="LUIS", estado="RETIRADO"
+            )
+        if marcados:
+            jornada = Jornada.objects.create(
+                seccion=seccion, fecha=dia, registrado_por=seccion.docente
+            )
+            for estudiante in activos[:marcados]:
+                Asistencia.objects.create(jornada=jornada, estudiante=estudiante, estado="ASISTIO")
+        return portada_con.cliente.get(PORTADA).content.decode()
+
+    return abrir
+
+
+def test_con_una_seccion_asistencia_lleva_a_la_asistencia_de_hoy(portada_con):
+    """Escenario "Asistencia con una sección"."""
+    html = portada_con((2, "A"))
+    tarjeta = tarjeta_asistencia(html)
+
+    enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
+    assert f'href="{url_asistencia(Seccion.objects.get())}"' in enlace
+    assert '<p class="dimension__accion" id="acc-asistencia">Registrar asistencia' in tarjeta
+    assert "Próximamente" not in tarjeta
+    assert "carrusel__item--inicial" in tarjeta
+    for otra in tarjetas(html)[:2]:
+        assert "Próximamente" in otra
+        assert "<a " not in otra
+
+
+@pytest.mark.parametrize("secciones", [[], [(2, "A"), (3, "B")]], ids=["sin-seccion", "dos"])
+def test_sin_seccion_unica_asistencia_es_proximamente(portada_con, secciones):
+    """Escenario "Asistencia sin sección única"."""
+    tarjeta = tarjeta_asistencia(portada_con(*secciones))
+
+    assert re.search(r'<p class="insignia" id="ins-asistencia">Próximamente</p>', tarjeta)
+    assert "<a " not in tarjeta
+    assert "href" not in tarjeta
+    assert "Hoy: pendiente" not in tarjeta
+
+
+def pildora(tarjeta):
+    encontrada = re.search(
+        r'<p class="pildora-pendiente" id="pend-asistencia">(.*?)</p>', tarjeta, re.DOTALL
+    )
+    return encontrada.group(1) if encontrada else None
+
+
+@pytest.mark.parametrize("marcados", [0, 1], ids=["ninguno", "a-medias"])
+def test_la_asistencia_de_hoy_pendiente_lleva_la_pildora(con_estudiantes, marcados):
+    """Escenario "Asistencia de hoy pendiente": sin enlace propio y descrita en el de la tarjeta."""
+    tarjeta = tarjeta_asistencia(con_estudiantes(cantidad=2, marcados=marcados))
+
+    contenido = pildora(tarjeta)
+    assert contenido is not None, "no está la píldora"
+    assert re.fullmatch(r"<svg\b[^>]*>.*</svg>Hoy: pendiente", contenido.strip(), re.DOTALL)
+    enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
+    assert 'aria-describedby="acc-asistencia pend-asistencia"' in enlace
+    assert tarjeta.count("<a ") == 1
+    assert tarjeta.index("Hoy: pendiente") > tarjeta.index("</a>"), "fuera del enlace"
+
+
+def test_con_la_jornada_completa_no_hay_pildora(con_estudiantes):
+    """Escenario "Asistencia de hoy completa": un retirado no cuenta."""
+    tarjeta = tarjeta_asistencia(con_estudiantes(cantidad=2, marcados=2, retirados=1))
+
+    assert pildora(tarjeta) is None
+    assert 'aria-describedby="acc-asistencia"' in etiqueta(tarjeta, 'class="dimension__enlace"')
+
+
+def test_el_sabado_no_hay_pildora(con_estudiantes, hora_de_lima):
+    """Escenario "Fin de semana o sección sin estudiantes"."""
+    hora_de_lima(dia=SABADO)
+
+    assert pildora(tarjeta_asistencia(con_estudiantes(cantidad=2))) is None
+
+
+def test_sin_estudiantes_no_hay_pildora(con_estudiantes):
+    assert pildora(tarjeta_asistencia(con_estudiantes(cantidad=0))) is None
+
+
+def test_la_jornada_de_otro_dia_no_completa_la_de_hoy(con_estudiantes):
+    ayer = date(2026, 10, 27)
+
+    assert pildora(tarjeta_asistencia(con_estudiantes(cantidad=2, marcados=2, dia=ayer)))
 
 
 # --- Inicio de la dirección ---

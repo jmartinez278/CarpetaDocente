@@ -2,13 +2,13 @@
 {% load static %}
 {% comment %}
 Marco de las pantallas internas (DESIGN.md, Barra superior y Pie): barra fija con el nombre de la I.E.,
-con el menú de la cuenta a la derecha (US-002), y el pie al final. Cada pantalla llena el bloque "principal".
+con el menú de la cuenta a la derecha (US-002), y el pie al final. Desde DESIGN.md 0.4, la línea de la barra es tenue. Cada pantalla llena el bloque "principal".
 {% endcomment %}
 
 {% block titulo %}Inicio · CarpetaDocente{% endblock %}
 
 {% block contenido %}
-<header class="sticky top-0 z-10 border-b border-linea bg-fondo">
+<header class="barra-superior sticky top-0 z-10 bg-fondo">
   <div class="mx-auto flex h-14 max-w-280 items-center justify-between px-4 min-[960px]:px-6">
     <p class="font-display text-xl leading-none font-semibold whitespace-nowrap text-primario min-[960px]:text-[22px]">I.E. Virgen del Carmen</p>
     {% include "componentes/menu_cuenta.html" %}

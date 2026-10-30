@@ -379,8 +379,7 @@ def editar_estudiante(estudiante, apellidos, nombres):
 def quitar_estudiante(estudiante):
     """Borra al estudiante; con registros que lo referencian lanza ``ListaConRegistros``.
 
-    La regla no consulta tablas: aparece sola cuando US-030 cree ``asistencia`` con FK
-    ``RESTRICT``.
+    La regla no consulta tablas: la dan las FK ``RESTRICT`` (hoy, ``asistencia``).
     """
     try:
         with transaction.atomic():

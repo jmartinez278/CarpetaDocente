@@ -6,7 +6,7 @@ from pathlib import Path
 from django.template.loader import get_template
 from django.urls import NoReverseMatch, reverse
 
-from cuentas.dimensiones import DIMENSIONES, tarjeta_inicial
+from cuentas.dimensiones import DIMENSIONES, POR_SECCION, tarjeta_inicial
 
 CARPETA_PLANTILLAS = Path(__file__).resolve().parents[2] / "templates"
 
@@ -17,8 +17,10 @@ def sin_pantalla(dimensiones):
     for dimension in dimensiones:
         if not dimension.disponible:
             continue
+        # Una ruta de la sección (Asistencia) necesita su id; cualquiera sirve para resolverla.
+        argumentos = [1] if dimension.clave in POR_SECCION else []
         try:
-            reverse(dimension.url_name)
+            reverse(dimension.url_name, args=argumentos)
         except NoReverseMatch:
             faltan.append(dimension.clave)
     return faltan
@@ -32,8 +34,10 @@ def test_las_tres_dimensiones_en_orden_con_sus_textos():
     ]
 
 
-def test_al_cerrar_us_001_ninguna_esta_disponible():
-    assert [d for d in DIMENSIONES if d.disponible or d.url_name] == []
+def test_desde_us_030_solo_asistencia_esta_disponible():
+    disponibles = [(d.clave, d.url_name) for d in DIMENSIONES if d.disponible or d.url_name]
+
+    assert disponibles == [("asistencia", "asistencia:hoy")]
 
 
 def test_toda_dimension_disponible_resuelve_su_pantalla():
@@ -59,7 +63,9 @@ def test_cada_dimension_tiene_su_icono_y_su_miniatura():
 
 
 def test_sin_ninguna_disponible_abre_en_la_primera():
-    assert tarjeta_inicial(DIMENSIONES) == "sesiones"
+    sin_disponibles = [replace(d, disponible=False) for d in DIMENSIONES]
+
+    assert tarjeta_inicial(sin_disponibles) == "sesiones"
 
 
 def test_abre_en_la_primera_disponible_en_el_orden_de_las_tarjetas():

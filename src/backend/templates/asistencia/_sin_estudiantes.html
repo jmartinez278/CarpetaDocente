@@ -1,0 +1,5 @@
+{% comment %}Sección sin estudiantes activos (spec "Sección sin estudiantes"): el aviso lleva a la lista de la sección.{% endcomment %}
+<div class="controles"><div class="franja-jornada">{% include "asistencia/_selector.html" %}</div></div>
+<div class="zona-lista">
+  <div class="mensaje mensaje--aviso" role="status">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>Tu sección aún no tiene estudiantes</p><p>Agrégalos para poder tomar asistencia.</p><a class="enlace-estudiantes" href="{% url 'estudiantes:lista' seccion.pk %}">Ver estudiantes</a></div></div>
+</div>

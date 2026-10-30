@@ -18,6 +18,7 @@ from cuentas.tests.e2e import (
     envejecer_sesion,
     ingresar,
     revisar_con_axe,
+    saludo_de,
 )
 
 pytestmark = pytest.mark.e2e
@@ -48,6 +49,8 @@ def dialogo(page):
 
 
 def abrir(page):
+    # Recién ingresada, la portada puede no tener HTMX aún: el clic abriría la página completa.
+    page.wait_for_url("**/docente/")
     ver_estudiantes(page).click()
     expect(dialogo(page)).to_be_visible()
 
@@ -94,7 +97,7 @@ def test_atras_cierra_el_dialogo_y_la_portada_sigue(live_server, portada):
 
     expect(dialogo(portada)).to_be_hidden()
     expect(portada).to_have_url(f"{live_server.url}/docente/")
-    expect(portada.get_by_role("heading", name="Hola, Ana Quispe")).to_be_visible()
+    expect(portada.get_by_role("heading", name=saludo_de("Ana Quispe"))).to_be_visible()
 
 
 def test_cerrar_consume_la_entrada_del_historial_y_se_puede_volver_a_abrir(portada):
@@ -666,3 +669,52 @@ def test_quitar_vaciar_y_los_bloqueos_pasan_axe(
     esperar_animaciones(page)
     revisar_con_axe(page, f"vaciar-bloqueo-{ancho}-{tema}")
     assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= ancho
+
+
+# --- Paso siguiente tras importar (US-030; spec "Pegar lista", "Paso siguiente tras importar") ---
+
+
+def tomar_asistencia(page):
+    return dialogo(page).get_by_role("link", name="Tomar la asistencia de hoy")
+
+
+def test_tomar_la_asistencia_abre_la_asistencia_como_pagina_completa(live_server, portada, seccion):
+    abrir_pegar(portada)
+    importar(portada, LISTA_25)
+    expect(dialogo(portada)).to_contain_text("25 estudiantes importados")
+    alto = tomar_asistencia(portada).bounding_box()["height"]
+    assert alto >= 44, alto
+
+    tomar_asistencia(portada).click()
+
+    expect(portada).to_have_url(f"{live_server.url}/docente/secciones/{seccion.pk}/asistencia/")
+    expect(portada.get_by_role("heading", level=1)).to_have_text("Asistencia · 2.º A")
+    expect(portada.locator("dialog")).to_have_count(0)
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_la_lista_con_el_aviso_de_importados_pasa_axe(
+    live_server, page, docente_con_seccion, clave, ancho, tema
+):
+    con_pantalla(page, ancho, tema)
+    ingresar(page, live_server, docente_con_seccion, clave)
+    abrir_pegar(page)
+    importar(page, LISTA_25)
+    expect(tomar_asistencia(page)).to_be_visible()
+    esperar_animaciones(page)
+
+    revisar_con_axe(page, f"lista-importados-{ancho}-{tema}")
+
+
+def test_a_320_la_lista_con_el_aviso_no_se_desplaza_en_horizontal(
+    live_server, page, docente_con_seccion, clave
+):
+    con_pantalla(page, 320, "light")
+    ingresar(page, live_server, docente_con_seccion, clave)
+    abrir_pegar(page)
+    importar(page, LISTA_25)
+    expect(tomar_asistencia(page)).to_be_visible()
+
+    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= 320
+    assert page.evaluate("document.documentElement.scrollWidth") <= 320
