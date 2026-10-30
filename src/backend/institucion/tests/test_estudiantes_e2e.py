@@ -49,6 +49,8 @@ def dialogo(page):
 
 
 def abrir(page):
+    # Recién ingresada, la portada puede no tener HTMX aún: el clic abriría la página completa.
+    page.wait_for_url("**/docente/")
     ver_estudiantes(page).click()
     expect(dialogo(page)).to_be_visible()
 

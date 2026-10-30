@@ -41,7 +41,7 @@ avisos. Celular: una columna con la franja fija arriba. PC (960 px): la lista a 
       <div class="lista-superficie">
         <div class="lista-cabecera"><span>{{ lista.total }} estudiante{{ lista.total|pluralize }} activo{{ lista.total|pluralize }}</span><span>Hoy</span></div>
         <ol class="estudiantes" aria-label="Asistencia de hoy">
-          {% for fila in lista.filas %}{% include "asistencia/_fila.html" %}
+          {% for fila in lista.filas %}<li class="estudiante fila-asistencia" id="fila-{{ fila.estudiante.pk }}" data-estudiante="{{ fila.estudiante.pk }}" data-estado="{{ fila.estado|default_if_none:"" }}">{% include "asistencia/_fila.html" %}</li>
           {% endfor %}
         </ol>
         {% if lista.no_activos %}

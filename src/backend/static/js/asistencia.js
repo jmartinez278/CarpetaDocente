@@ -300,7 +300,7 @@
   function encolar(fila) {
     if (saliendo || fila.lote || fila.enCurso || !pendiente(fila)) return;
     clearTimeout(fila.reintento);
-    enviar(fila);
+    void enviar(fila);
   }
 
   async function enviar(fila) {
@@ -389,7 +389,7 @@
     if (!cuenta || saliendo) return;
     envioLote = { filas: [...cuenta.filas], ...nuevoReintento() };
     cerrarBarra();
-    enviarLote(keepalive);
+    void enviarLote(keepalive);
   }
 
   // Como en las filas, un solo envío del lote en la red: el reintento y el evento online esperan a que termine.
@@ -492,7 +492,7 @@
     for (const fila of filas) encolar(fila);
     if (lote.length) {
       envioLote = { filas: lote, ...nuevoReintento() };
-      enviarLote();
+      void enviarLote();
     }
   }
 
@@ -578,7 +578,7 @@
     if (envioLote && !envioLote.enCurso && !saliendo) {
       clearTimeout(envioLote.reintento);
       envioLote.intentos = 0;
-      enviarLote();
+      void enviarLote();
     }
   });
 

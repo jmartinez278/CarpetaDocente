@@ -213,9 +213,13 @@ def test_la_nota_se_guarda_sola_al_dejar_de_escribir(abrir_asistencia, veinticin
     estudiante = veinticinco[3]
     tocar(page, estudiante, 4)
     esperar_guardado(page)
+    # Retenida, "Guardando…" no depende de cuánto tarde el servidor en responder.
+    retenidas = []
+    page.route("**/estudiantes/*/", lambda route: retenidas.append(route))
 
     page.locator(f"#nota-{estudiante.pk}").press_sequentially("Constancia")
     expect(guardado(page)).to_have_text("Guardando…")
+    retenidas[0].continue_()
     esperar_guardado(page)
 
     assert Asistencia.objects.get(estudiante=estudiante).nota_justificacion == "Constancia"
