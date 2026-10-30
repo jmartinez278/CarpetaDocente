@@ -20,9 +20,9 @@
 
 ### Parte B: áreas de cada institución y panel
 
-- [ ] 1.4 Prueba primero, `catalogo/tests/test_servicios.py`: crear una institución le da 11 filas y solo Castellano como segunda lengua sin trabajar; `asegurar_areas` repetido no duplica ni cambia un `se_trabaja` editado; guardar de nuevo una institución existente no crea filas. Luego `catalogo/servicios.py`, `signals.py` y `apps.py` (D4). Verificar: rojo y luego verde; la suite completa sigue en verde (toda institución de prueba nace ahora con sus áreas)
-- [ ] 1.5 Prueba primero, `catalogo/tests/test_admin.py` (cliente de Django con un Administrador): las tres listas abren con 200; sin botón ni URL de agregar (403); sin acción «eliminar» ni URL de borrado (403); en la ficha del área, código, nombre y marcas son de solo lectura y `orden` se guarda; desmarcar «activa» deja la competencia inactiva y existente; `se_trabaja` se cambia desde la lista; Docente y Dirección que abren `/admin/catalogo/area/` llegan a su inicio. Luego `catalogo/admin.py` (D5). Verificar: rojo y luego verde; `uv run pytest --cov` con 80 % o más
-- [ ] 1.6 Revisión de la parte y commit (reglas de arriba)
+- [x] 1.4 Prueba primero, `catalogo/tests/test_servicios.py`: crear una institución le da 11 filas y solo Castellano como segunda lengua sin trabajar; `asegurar_areas` repetido no duplica ni cambia un `se_trabaja` editado; guardar de nuevo una institución existente no crea filas. Luego `catalogo/servicios.py`, `signals.py` y `apps.py` (D4). Verificar: rojo y luego verde; la suite completa sigue en verde (toda institución de prueba nace ahora con sus áreas)
+- [x] 1.5 Prueba primero, `catalogo/tests/test_admin.py` (cliente de Django con un Administrador): las tres listas abren con 200; sin botón ni URL de agregar (403); sin acción «eliminar» ni URL de borrado (403); en la ficha del área, código, nombre y marcas son de solo lectura y `orden` se guarda; desmarcar «activa» deja la competencia inactiva y existente; `se_trabaja` se cambia desde la lista; Docente y Dirección que abren `/admin/catalogo/area/` llegan a su inicio. Luego `catalogo/admin.py` (D5). Verificar: rojo y luego verde; `uv run pytest --cov` con 80 % o más
+- [x] 1.6 Revisión de la parte y commit (reglas de arriba)
 
 ## 2. Datos de demostración (D6 a D9)
 
