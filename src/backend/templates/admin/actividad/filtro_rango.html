@@ -1,0 +1,24 @@
+{% comment %}
+Filtro "desde – hasta" del registro de actividad (design de US-008, D11). Envía las dos fechas por GET y
+conserva los demás filtros puestos.
+{% endcomment %}
+<details data-filter-title="{{ title }}" open>
+  <summary>Por {{ title }}</summary>
+  {% for choice in choices %}
+  <form method="get">
+    {% for nombre, valor in choice.ocultos %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
+    <ul>
+      <li>
+        <label for="id_{{ choice.parametro_desde }}">Desde</label>
+        <input type="date" id="id_{{ choice.parametro_desde }}" name="{{ choice.parametro_desde }}" value="{{ choice.desde }}">
+      </li>
+      <li>
+        <label for="id_{{ choice.parametro_hasta }}">Hasta</label>
+        <input type="date" id="id_{{ choice.parametro_hasta }}" name="{{ choice.parametro_hasta }}" value="{{ choice.hasta }}">
+      </li>
+      <li><button type="submit" class="button">Filtrar</button></li>
+      {% if choice.puesto %}<li><a href="{{ choice.limpiar|iriencode }}">Quitar el rango</a></li>{% endif %}
+    </ul>
+  </form>
+  {% endfor %}
+</details>

@@ -91,7 +91,7 @@ Vista del panel en `RegistroActividadAdmin.get_urls()` (`indicadores/`, envuelta
 - `activos`: participantes distintos con una operación de `CUENTAN_KPI_01` en la semana (`TruncWeek` con la zona de Lima);
 - `jornadas`: entradas REGISTRO_ASISTENCIA de la semana con usuario no demo y no vacío;
 - `sesiones` y `secciones_con_notas`: `None`, que la plantilla muestra como "—".
-Rango por defecto: 1 de enero del año ABIERTO a hoy (si hay más de uno, el más reciente; sin año abierto, el año en curso). Formulario `GET` con dos campos de fecha.
+Rango por defecto: 1 de enero del año ABIERTO a hoy (si hay más de uno, el más reciente; sin año abierto, el año en curso; si el año abierto aún no empieza, porque se abrió antes de enero, también el año en curso, para que la página no abra con el rango al revés). Formulario `GET` con dos campos de fecha.
 
 Datos para la tesis: KPI-01 sale de `registro_actividad.operacion` (marcada en `CUENTAN_KPI_01`), `usuario_id` y `fecha_hora`; las jornadas, de `operacion = REGISTRO_ASISTENCIA`. El tiempo de toma (VD – D3) sigue en `jornada.creado_en` y `asistencia.actualizado_en` (US-030).
 

@@ -8,8 +8,8 @@
 | **Producto** | CarpetaDocente (nombre temporal) |
 | **Integrantes** | Cuicapuza Remigio Nayely Nilda · Martinez Llanos Marco Jhair · Vera Zea Jhoanna Hade |
 | **Asesor** | Ing. Elvis Wilfredo Carmen Delgadillo |
-| **Fecha** | 29/10/2026 |
-| **Versión** | 1.4.0 |
+| **Fecha** | 30/10/2026 |
+| **Versión** | 1.5.0 |
 
 ---
 
@@ -40,6 +40,9 @@ Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/ba
 | `/admin/login/` | GET | `ingreso_panel` | `IngresoPanelView` | `cuentas` | Reemplaza el ingreso propio del panel. Sin sesión, a `/ingresar/` con `next`; con `is_staff`, al panel; otro rol, a su pantalla; Administrador sin `is_staff`, 403 | RF-001, RN-024 (US-001) | US-001 |
 | `/admin/logout/` | POST | `admin:logout` | `LogoutView` (la del panel) | Django (`django.contrib.admin`) | Cierra la sesión y lleva a `/ingresar/` (`LOGOUT_REDIRECT_URL`), no a la página "Sesión cerrada" del panel | RF-002 (US-002) | US-002 |
 | `/admin/` | GET, POST | `admin:*` | Panel de administración de Django | Django (`django.contrib.admin`) | Solo cuentas con `is_staff` (rol Administrador). Sin sesión, a `/ingresar/` pasando por `/admin/login/` | Panel interno del Administrador (documento 10, sección 4) | EN-01 |
+| `/admin/actividad/registroactividad/` | GET | `admin:actividad_registroactividad_changelist` | `RegistroActividadAdmin` (lista del panel) | `actividad` | Solo rol Administrador; otra cuenta con `is_staff`, 403; docente y dirección, a su pantalla. Solo lectura, sin "Agregar" ni acciones. Filtros por operación, usuario y rango de fechas (`fecha_hora__desde`, `fecha_hora__hasta`, días de Lima). La ficha (`…/<id>/change/`) se ve sin campos editables; agregar, cambiar y borrar responden 403 | RF-008, RNF-016 (US-008) | US-008 |
+| `/admin/actividad/registroactividad/exportar/` | POST | `admin:actividad_registroactividad_exportar` | `RegistroActividadAdmin.exportar_view` | `actividad` | Como la lista. Descarga en CSV (UTF-8 con BOM) lo que la lista tiene filtrado (los filtros van en la cadena de consulta) y deja REGISTRO_EXPORTADO. GET responde 405. Solo POST con token CSRF | RF-008 (US-008) | US-008 |
+| `/admin/actividad/registroactividad/indicadores/` | GET | `admin:actividad_registroactividad_indicadores` | `RegistroActividadAdmin.indicadores_view` | `actividad` | Como la lista. "Indicadores por semana" (KPI-01 y jornadas registradas, sin la demostración) entre `desde` y `hasta` (`AAAA-MM-DD`); sin fechas, del 1 de enero del año ABIERTO a hoy. Un rango al revés muestra su mensaje y ninguna fila | RF-008 (US-008) | US-008 |
 
 ## 3. Notas
 
@@ -60,5 +63,6 @@ Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/ba
 | 1.2.0 | 25/10/2026 | Equipo del proyecto | US-002: se agregan `/salir/` (solo POST) y `/admin/logout/`, que ahora lleva a `/ingresar/`; nota sobre el cierre por inactividad y la falta de caché en las pantallas con sesión. Se quita "su cierre de sesión propio sigue hasta US-002". |
 | 1.3.0 | 27/10/2026 | Equipo del proyecto | US-006: se agrega la lista de estudiantes de la sección (`/docente/secciones/<id>/estudiantes/`), Pegar lista (`…/pegar/`), Agregar (`…/agregar/`), Editar (`…/<id>/editar/`), Quitar (`…/<id>/quitar/`) y Vaciar (`…/vaciar/`); nota sobre las peticiones de HTMX y la sesión vencida. |
 | 1.4.0 | 29/10/2026 | Equipo del proyecto | US-030: se agregan la asistencia de hoy de la sección (`/docente/secciones/<id>/asistencia/`), el guardado de un estudiante (`…/<fecha>/estudiantes/<id>/`) y el de los restantes (`…/<fecha>/restantes/`); nota sobre sus guardados y la sesión vencida. |
+| 1.5.0 | 30/10/2026 | Equipo del proyecto | US-008: se agregan la consulta del registro de actividad en el panel (`/admin/actividad/registroactividad/`), su exportación a CSV (`…/exportar/`, solo POST) y los indicadores por semana (`…/indicadores/`). |
 
 [← Volver al README Principal](../../README.md)

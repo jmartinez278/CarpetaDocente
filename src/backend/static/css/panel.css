@@ -1,0 +1,17 @@
+/* Panel de administración (US-008, tarea 1.7): los enlaces de la guía-rastro se distinguen
+   del texto sin depender del color (axe link-in-text-block, WCAG 1.4.1). Django los pinta blancos
+   sobre un texto celeste, sin subrayado. */
+.breadcrumbs a {
+  text-decoration: underline;
+}
+
+/* "Indicadores por semana" a 360 px: con el relleno del panel, las cinco columnas miden 423 px y
+   la página se desplaza de lado (RNF-005). Menos relleno y separación silábica (lang="es-pe"). */
+@media (max-width: 767px) {
+  .tabla-indicadores th,
+  .tabla-indicadores td {
+    padding-left: 4px;
+    padding-right: 4px;
+    hyphens: auto;
+  }
+}

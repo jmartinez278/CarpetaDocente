@@ -1,0 +1,13 @@
+{% extends "admin/change_list.html" %}{% comment %}
+Lista del registro de actividad (design de US-008, D10): sin "Agregar"; enlaza a los indicadores (D9) y el botón exporta a CSV lo que la lista
+tiene filtrado. Va por POST porque deja una entrada REGISTRO_EXPORTADO.
+{% endcomment %}
+{% block object-tools-items %}
+<li><a href="{% url 'admin:actividad_registroactividad_indicadores' %}">Indicadores por semana</a></li>
+<li>
+  <form method="post" action="{% url 'admin:actividad_registroactividad_exportar' %}{{ cl.get_query_string }}">
+    {% csrf_token %}
+    <button type="submit" class="button">Exportar CSV</button>
+  </form>
+</li>
+{% endblock %}

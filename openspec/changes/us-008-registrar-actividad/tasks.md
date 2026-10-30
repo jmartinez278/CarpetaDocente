@@ -20,9 +20,9 @@
 
 ### Parte B: panel de solo lectura, exportación e indicadores
 
-- [ ] 1.4 Prueba primero, `actividad/tests/test_panel.py`: el Administrador ve la lista y la ficha sin campos editables ni botones de agregar, guardar o eliminar; POST a agregar, cambiar y borrar → 403 sin cambios; sin acciones; docente y dirección no entran a la lista, la ficha, `exportar/` ni `indicadores/` (Ruta Infeliz); filtros por usuario, operación y rango de fechas (escenario "Filtrar"), con hora de Lima en la lista. Luego `actividad/admin.py` y el filtro de rango (D8, D11). Verificar: rojo y luego verde
-- [ ] 1.5 Prueba primero, `actividad/tests/test_exportar.py`: con un filtro puesto, el CSV trae solo esas filas, con BOM, columnas de D10 y hora de Lima; una celda que empieza con `=`, `+`, `-`, `@` o espacio + `=` sale con `'`; queda REGISTRO_EXPORTADO con filtros y número de filas; GET → 405; otro rol, sin CSV. Luego el botón, `change_list.html` y la vista `exportar/` (D10). Verificar: rojo y luego verde
-- [ ] 1.6 Prueba primero, `actividad/tests/test_indicadores.py` (entradas creadas con `registrar` y `fecha_hora` fija):
+- [x] 1.4 Prueba primero, `actividad/tests/test_panel.py`: el Administrador ve la lista y la ficha sin campos editables ni botones de agregar, guardar o eliminar; POST a agregar, cambiar y borrar → 403 sin cambios; sin acciones; docente y dirección no entran a la lista, la ficha, `exportar/` ni `indicadores/` (Ruta Infeliz); filtros por usuario, operación y rango de fechas (escenario "Filtrar"), con hora de Lima en la lista. Luego `actividad/admin.py` y el filtro de rango (D8, D11). Verificar: rojo y luego verde
+- [x] 1.5 Prueba primero, `actividad/tests/test_exportar.py`: con un filtro puesto, el CSV trae solo esas filas, con BOM, columnas de D10 y hora de Lima; una celda que empieza con `=`, `+`, `-`, `@` o espacio + `=` sale con `'`; queda REGISTRO_EXPORTADO con filtros y número de filas; GET → 405; otro rol, sin CSV. Luego el botón, `change_list.html` y la vista `exportar/` (D10). Verificar: rojo y luego verde
+- [x] 1.6 Prueba primero, `actividad/tests/test_indicadores.py` (entradas creadas con `registrar` y `fecha_hora` fija):
   - semanas de lunes a domingo, todas con 0 si no hay actividad; domingo 23:30 de Lima en su semana; rango que corta una semana la muestra entera; rango al revés con su mensaje y sin filas; rango por defecto del 1 de enero del año ABIERTO a hoy;
   - participantes: Docente activa con sección en año ABIERTO; fuera la desactivada, la sin sección, la de un año CERRADO y la demo;
   - activos: solo inicio y cierre de sesión no cuenta; dos días de asistencia cuentan una vez; "3 / 5 (60 %)" y "0 / 0 (—)";
@@ -30,8 +30,8 @@
   - sesiones y secciones con notas: "—".
 
   Luego `indicadores_por_semana`, la URL `indicadores/`, la plantilla y el enlace desde la lista del registro (D9). Verificar: rojo y luego verde
-- [ ] 1.7 Prueba primero, `actividad/tests/test_panel_e2e.py`: axe de la lista del registro y de "Indicadores por semana" en ambos temas a 360 y 1280 px; la descarga del CSV desde el botón. Verificar: e2e en verde con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`
-- [ ] 1.8 Pantallas del panel vistas en claro/oscuro y celular/escritorio (la marca Marco). Revisión de la parte y commit (reglas de arriba); actualizar el Catálogo de rutas de `docs/03` (versión y fecha) en este commit
+- [x] 1.7 Prueba primero, `actividad/tests/test_panel_e2e.py`: axe de la lista del registro y de "Indicadores por semana" en ambos temas a 360 y 1280 px; la descarga del CSV desde el botón. Verificar: e2e en verde con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`
+- [x] 1.8 Pantallas del panel vistas en claro/oscuro y celular/escritorio (la marca Marco). Revisión de la parte y commit (reglas de arriba); actualizar el Catálogo de rutas de `docs/03` (versión y fecha) en este commit
 
 ## 2. Instrumentación de lo ya construido (D4 a D6)
 
@@ -63,7 +63,7 @@
 
 ## Workflow follow-up
 
-- **(equipo)** Push de `feature/US-008-registrar-actividad` y PR hacia `main` (`Closes #N` de US-008, verificando el número), con las verificaciones de EN-08 en verde. En "Para quien revise": el registro se escribe solo desde `actividad.servicios.registrar` dentro de la transacción de cada operación; se agregan seis operaciones al catálogo; el panel deja de permitir borrar instituciones y gestionar grupos; US-030 (servicios), US-001/002 (ingreso y cierre) y los admin de US-003, US-005 y EN-06 se tocan solo para registrar. En "## Deuda":
+- **(equipo)** Push de `feature/US-008-registrar-actividad` y PR hacia `main` (`Closes #N` de US-008, verificando el número), con las verificaciones de EN-08 en verde. En "Para quien revise": el registro se escribe solo desde `actividad.servicios.registrar` dentro de la transacción de cada operación; se agregan seis operaciones al catálogo; el panel deja de permitir borrar instituciones y gestionar grupos; `static/css/panel.css` subraya la guía-rastro en todas las pantallas del panel (axe `link-in-text-block`), no solo en las del registro; US-030 (servicios), US-001/002 (ingreso y cierre) y los admin de US-003, US-005 y EN-06 se tocan solo para registrar. En "## Deuda":
   - inicios fallidos y trigger que bloquee UPDATE/DELETE de `registro_actividad` en PostgreSQL → EN-04;
   - INTENTO_SIN_PERMISO en uso → US-004;
   - columnas "sesiones cargadas" y "secciones con notas" → US-010 y US-020 (agregan sus operaciones y su marca KPI-01); KPI-02 a KPI-04 → US-028 / US-040;
