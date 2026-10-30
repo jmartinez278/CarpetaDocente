@@ -1,4 +1,4 @@
-{% comment %}Fila de asistencia (DESIGN.md 0.4): número, nombre completo en mayúsculas que baja de línea, estado en palabras y el círculo de 44 px. El fallo lo muestra el JS; la nota se dibuja abierta si el estado guardado es Justificado (D7). El <li> lo pone hoy.html, para que la lista y sus filas queden en la misma plantilla.{% endcomment %}
+{% comment %}Fila de asistencia (DESIGN.md 0.4): número, nombre completo en mayúsculas que baja de línea, estado en palabras y el círculo de 44 px. El fallo lo muestra el JS; la nota se dibuja abierta si el estado guardado es Justificado (D7). El elemento de lista lo pone hoy.html, para que la lista y sus filas queden en la misma plantilla.{% endcomment %}
 {% with e=fila.estudiante %}
   <span class="estudiante__numero" aria-hidden="true">{{ fila.numero }}</span>
   <div class="nombre-estado"><span class="estudiante__nombre">{{ e.apellidos }}, {{ e.nombres }}</span><span class="etiqueta-estado" data-etiqueta>{{ fila.palabra }}</span></div>

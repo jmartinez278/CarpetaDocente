@@ -175,7 +175,8 @@ def test_guardado_sano(abrir_asistencia, veinticinco):
     tocar(page, veinticinco[0])
 
     expect(guardado(page)).to_have_text("Guardando…")
-    retenidas[0].continue_()
+    esperar_retenida(page, retenidas).continue_()
+    page.unroute("**/estudiantes/*/")
     esperar_guardado(page)
     expect(page.get_by_text("sin guardar")).to_have_count(0)
     expect(page.locator("[data-fallo]:visible")).to_have_count(0)
@@ -219,7 +220,8 @@ def test_la_nota_se_guarda_sola_al_dejar_de_escribir(abrir_asistencia, veinticin
 
     page.locator(f"#nota-{estudiante.pk}").press_sequentially("Constancia")
     expect(guardado(page)).to_have_text("Guardando…")
-    retenidas[0].continue_()
+    esperar_retenida(page, retenidas).continue_()
+    page.unroute("**/estudiantes/*/")
     esperar_guardado(page)
 
     assert Asistencia.objects.get(estudiante=estudiante).nota_justificacion == "Constancia"
