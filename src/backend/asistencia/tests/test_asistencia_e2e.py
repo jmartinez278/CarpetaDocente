@@ -636,6 +636,105 @@ def test_aviso_al_salir_con_una_marca_pendiente(abrir_asistencia, veinticinco):
     assert not page.is_closed()
 
 
+def test_aviso_al_salir_con_un_guardado_en_curso_que_vuelve_al_confirmado(
+    abrir_asistencia, veinticinco
+):
+    # A2: con Asistió confirmado, el guardado de Faltó sigue en camino y la docente completa el
+    # ciclo hasta Asistió. Si el servidor aplica Faltó y ella sale, la corrección no se enviaría:
+    # hay aviso.
+    page = abrir_asistencia()
+    tocar(page, veinticinco[0])
+    esperar_guardado(page)
+    dialogos = []
+
+    def descartar(dialogo):
+        dialogos.append(dialogo.type)
+        dialogo.dismiss()
+
+    page.on("dialog", descartar)
+    retenidas = []
+    page.route("**/estudiantes/*/", lambda route: retenidas.append(route))
+    tocar(page, veinticinco[0])
+    esperar_retenida(page, retenidas)
+    tocar(page, veinticinco[0], 3)
+    expect(etiqueta(page, veinticinco[0])).to_have_text("Asistió")
+
+    page.close(run_before_unload=True)
+    page.wait_for_timeout(500)
+    assert dialogos == ["beforeunload"]
+    assert not page.is_closed()
+
+
+def test_un_rechazo_no_descarta_las_marcas_pendientes_de_otras_filas(abrir_asistencia, veinticinco):
+    # A2: una fila espera su reintento y otra recibe 404 (por ejemplo, el estudiante se quitó en
+    # otra pestaña). La página se recarga, la marca pendiente vuelve y se guarda; la rechazada no
+    # se reenvía, así que no hay un bucle de recargas.
+    page = abrir_asistencia()
+    pendiente, rechazado = veinticinco[0], veinticinco[1]
+    red = {"caida": True}
+
+    def red_de_la_pendiente(route):
+        if red["caida"]:
+            route.abort()
+        else:
+            route.continue_()
+
+    page.route(f"**/estudiantes/{pendiente.pk}/", red_de_la_pendiente)
+    page.route(f"**/estudiantes/{rechazado.pk}/", lambda route: route.fulfill(status=404))
+    tocar(page, pendiente)
+    expect(fila(page, pendiente).locator("[data-fallo]")).to_be_visible()
+    cargas = []
+    page.on("load", lambda _: cargas.append(1))
+
+    tocar(page, rechazado)
+    page.wait_for_load_state("load")
+    expect(etiqueta(page, pendiente)).to_have_text("Asistió")
+    expect(etiqueta(page, rechazado)).to_have_text("Sin marcar")
+
+    red["caida"] = False
+    esperar_en_la_base(
+        page,
+        lambda: estados_en_la_base() == {pendiente.pk: "ASISTIO"},
+        "la marca pendiente no se guardó tras la recarga",
+    )
+    page.wait_for_timeout(1500)
+    assert cargas == [1], "una sola recarga"
+
+
+def test_un_rechazo_del_lote_no_descarta_la_fila_que_salio_de_el(abrir_asistencia, veinticinco):
+    # Revisión del grupo 3: la docente toca una fila mientras viaja el lote, así que sale de él;
+    # el lote recibe 404 y la página se recarga. La marca de esa fila vuelve y se guarda.
+    page = abrir_asistencia()
+    tocada = veinticinco[0]
+    retenidas = []
+    red = {"caida": True}
+
+    def red_de_la_tocada(route):
+        if red["caida"]:
+            route.abort()
+        else:
+            route.continue_()
+
+    page.route("**/restantes/", lambda route: retenidas.append(route))
+    page.route(f"**/estudiantes/{tocada.pk}/", red_de_la_tocada)
+    marcar_restantes(page)
+    lote = esperar_retenida(page, retenidas)
+    tocar(page, tocada)
+    expect(fila(page, tocada).locator("[data-fallo]")).to_be_visible()
+
+    lote.fulfill(status=404)
+    page.wait_for_load_state("load")
+    expect(etiqueta(page, tocada)).to_have_text("Faltó")
+    expect(etiqueta(page, veinticinco[1])).to_have_text("Sin marcar")
+
+    red["caida"] = False
+    esperar_en_la_base(
+        page,
+        lambda: estados_en_la_base() == {tocada.pk: "FALTO"},
+        "la fila que salió del lote no se guardó tras la recarga",
+    )
+
+
 def test_sin_nada_pendiente_se_sale_sin_aviso(abrir_asistencia, live_server, veinticinco):
     page = abrir_asistencia()
     dialogos = []

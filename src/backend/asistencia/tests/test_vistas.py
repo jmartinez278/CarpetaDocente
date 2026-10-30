@@ -21,6 +21,8 @@ pytestmark = pytest.mark.django_db
 HTMX = {"HTTP_HX_REQUEST": "true"}
 MIERCOLES = datetime.date(2026, 10, 28)
 SABADO = datetime.date(2026, 10, 31)
+# La de Django, antes de que el fixture de abajo la reemplace.
+LOCALDATE = timezone.localdate
 
 
 @pytest.fixture(autouse=True)
@@ -372,6 +374,22 @@ def test_la_cabecera_dice_la_seccion_y_la_fecha_de_hoy(cliente, seccion_docente,
     assert "Asistencia · 2.º A" in html
     assert 'data-dimension="asistencia"' in html
     assert "Miércoles 28 de octubre" in html
+
+
+def test_a_las_23_30_de_lima_es_el_dia_de_lima_y_no_el_de_utc(
+    monkeypatch, cliente, seccion_docente, lista
+):
+    """Escenario "Fecha de Lima": en UTC ya es jueves 29 a las 4:30."""
+    monkeypatch.setattr(timezone, "localdate", LOCALDATE)
+    jueves_utc = datetime.datetime(2026, 10, 29, 4, 30, tzinfo=datetime.UTC)
+    monkeypatch.setattr(timezone, "now", lambda: jueves_utc)
+
+    html = abrir(cliente, seccion_docente)
+    respuesta = cliente.post(url_marcar(seccion_docente, lista[0]), {"estado": "FALTO"})
+
+    assert "Miércoles 28 de octubre" in html
+    assert respuesta.status_code == 204
+    assert Jornada.objects.get().fecha == MIERCOLES
 
 
 def test_el_selector_tiene_hoy_como_unico_dia_activo(cliente, seccion_docente, lista):

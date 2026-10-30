@@ -12,7 +12,7 @@
 ## Riesgos y zonas delicadas (primero)
 
 - **[Toque perdido o duplicado con red inestable, RNF-011]** → D3: estado de destino, inserción con `ON CONFLICT`, una sola petición en curso por fila y nunca abortada, reintentos con espera creciente. Prueba de 10 cortes en Playwright (`context.set_offline`) que cuenta filas en la base.
-- **[Respuesta vieja que pisa una nueva]** → D3: como la petición en curso no se aborta, la siguiente de esa fila sale solo cuando la anterior terminó; en una pestaña no puede llegar al servidor una marca vieja después de una nueva. Con dos pestañas o dos equipos, gana la última que llega (fuera de alcance).
+- **[Respuesta vieja que pisa una nueva]** → D3: como la petición en curso no se aborta, la siguiente de esa fila sale solo cuando la anterior terminó. Queda un caso, que va a la deuda: si la red se corta después de que el servidor aceptó un POST, el cliente lo da por fallido y reintenta, y el POST original puede terminar después del reintento y dejar la marca vieja mientras la pantalla dice "Guardado" (revisión A2). La solución es un `origen` por pestaña y una `secuencia` por fila, y que el servidor rechace las anteriores. Con dos pestañas o dos equipos, gana la última que llega (fuera de alcance).
 - **[El lote se pierde al cerrar la pestaña]** → D5: `fetch` con `keepalive` en `pagehide` y en `visibilitychange` (oculta). La prueba e2e cierra la página durante la cuenta y revisa la base.
 - **[Sesión vencida a medio pasar lista]** → D6: el guardado recibe `HX-Redirect`; las marcas pendientes se guardan en `sessionStorage` y se reenvían al volver a abrir la asistencia de ese día.
 - **[Migraciones]** → `institucion/0004` agrega columnas con valor por defecto (ACTIVO) a una tabla con datos; `asistencia/0001` crea tablas nuevas. Tramo de alto riesgo: grupo 1, solo.
@@ -65,7 +65,7 @@ Cada función recibe `hoy` (por defecto `timezone.localdate()`), así las prueba
 - **Reintentos (decisión 16):** 1 s, 2 s, 4 s, 8 s y luego cada 15 s, por fila; el evento `online` reintenta todas de inmediato. Un guardado bueno reinicia la espera de su fila.
 - **"Sin conexión":** un contador de fallos seguidos de la pantalla (cualquier fila); al llegar a 3 aparece el Mensaje de error una sola vez; el primer guardado bueno lo quita y pone el contador en 0.
 - **La fila con fallo** muestra "<Estado> · sin guardar. Reintentando…" desde el primer fallo; "N sin guardar" cuenta las filas cuyo último intento falló.
-- **Alternativas descartadas:** `hx-sync="this:queue last"` de HTMX da la cola por fila, pero no reintentos ni la interfaz optimista, que igual exigen JS propio; un número de versión por toque en la base resolvería también dos pestañas, pero agrega un campo y reloj del cliente para un caso fuera de alcance.
+- **Alternativas descartadas:** `hx-sync="this:queue last"` de HTMX da la cola por fila, pero no reintentos ni la interfaz optimista, que igual exigen JS propio; un número de versión por toque en la base resolvería también dos pestañas y el POST viejo que termina después del reintento (riesgo anterior), pero agrega campos y su prueba; va a la deuda (decisión de Marco tras la A2, 29-10).
 
 ### D4. JavaScript: un `static/js/asistencia.js` propio, sin HTMX ni Alpine
 

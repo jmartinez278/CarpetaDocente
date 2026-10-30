@@ -67,8 +67,8 @@
 
 ## 3. Revisión final y verificación
 
-- [ ] 3.1 Con la revisión final A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio y en RNF-011), corregir los Critical e Important, con la prueba primero en cada caso. Los Minor van a `verificacion.md`. Verificar: `uv run pytest --cov`, las e2e y `verificar.py --antes-del-commit` en verde
-- [ ] 3.2 `verificacion.md` corto: tabla escenario → prueba de los tres specs del cambio y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit del grupo (reglas de arriba)
+- [x] 3.1 Con la revisión final A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio y en RNF-011), corregir los Critical e Important, con la prueba primero en cada caso. Los Minor van a `verificacion.md`. Verificar: `uv run pytest --cov`, las e2e y `verificar.py --antes-del-commit` en verde
+- [x] 3.2 `verificacion.md` corto: tabla escenario → prueba de los tres specs del cambio y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit del grupo (reglas de arriba)
 
 ## Workflow follow-up
 
@@ -77,6 +77,7 @@
   - historial, totales por periodo e ingresos tardíos (RN-012) → US-033; exportación → US-034;
   - pantalla para cambiar el estado del estudiante → según la I.E. (Nayely); cabeceras con franjas de Sesiones y Notas;
   - dos pestañas o equipos sobre la misma fila (gana la última); sin JavaScript no se marca;
+  - RNF-011, hallazgo 2 de la A2: con un corte después de que el servidor aceptó un POST, el original puede terminar después del reintento y dejar la marca vieja con "Guardado" en pantalla (`servicios.marcar` hace el upsert sin mirar el orden). Arreglo: `origen` por pestaña y `secuencia` por fila en cada POST (también en reintentos y en el lote), rechazo atómico de las anteriores en el servidor y una prueba que retenga el POST aceptado hasta después del reintento (estimado: 2 a 3 h). Ordena solo los POST de una pestaña; para dos pestañas haría falta además un orden entre ellas (una versión en la base);
   - P2 F de la crítica r3 (bloque de guardado junto al avance en PC) → pulido;
   - recomendación de pulido (US-006, idea de Marco del 29-10): "Quitar estudiante" y "Vaciar lista" como **popup de confirmación** (preferido por Marco: más rápido e intuitivo), con el bloqueo "No se puede quitar…" como resultado dentro del mismo popup. Variante: al pie del popup, una nota en `--color-texto-suave` con "*" ("* No puedes quitar ni vaciar si ya hay registros"). Implica: diálogo encima del diálogo de la lista (Esc, Atrás y foco en `estudiantes.js`), `alertdialog`, el componente en DESIGN.md (solo en el pulido) y conservar la vista actual sin JavaScript. Hoy Editar y Vaciar ya dicen la condición en texto de ayuda; revisar que no se repita;
   - contradicciones: doc 11 (`asistencia.estudiante_id` en cascada → `RESTRICT`; `actualizado_en` agregado); doc 06/02 ("Marcar todos como Asistió"; nota de justificación de RF-031 en US-030).

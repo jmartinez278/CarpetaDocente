@@ -7,7 +7,8 @@
 //   una petición en curso, el toque solo cambia lo deseado; al terminar la petición se envía lo deseado si cambió. Nunca
 //   hay dos de la misma fila en la red y gana el último toque.
 // - Respuestas: 204 guardado; 200 con HX-Redirect, sesión vencida: las marcas sin guardar van a sessionStorage y se
-//   reenvían al volver a abrir el mismo día (D6); 400, 404 y 409, la página se recarga para mostrar lo que hay en la base;
+//   reenvían al volver a abrir el mismo día (D6); 400, 404 y 409, la página se recarga para mostrar lo que hay en la base,
+//   y las marcas pendientes de las otras filas pasan por sessionStorage (la rechazada no, así no hay bucle de recargas);
 //   red caída u otro código, la fila dice "sin guardar. Reintentando…" y se reintenta a 1, 2, 4 y 8 s y luego cada 15 s,
 //   o en cuanto vuelve la red. Tras 3 fallos seguidos (de cualquier fila) aparece "Sin conexión" una vez.
 // - Lote (D5): "Marcar los N restantes" pone en Asistió a los Sin marcar sin enviar nada y abre la barra con su cuenta de
@@ -105,9 +106,10 @@
   }
 
   // Tras un fallo no se sabe qué guardó el servidor (la respuesta pudo perderse): la fila sigue pendiente hasta un 204,
-  // aunque la pantalla vuelva al último estado confirmado.
+  // aunque la pantalla vuelva al último estado confirmado. Lo mismo con un guardado en camino: el servidor puede aplicar
+  // un estado que ya no es el que se ve.
   function pendiente(fila) {
-    return fila.fallida || !iguales(fila.deseado, fila.guardado);
+    return fila.enCurso || fila.fallida || !iguales(fila.deseado, fila.guardado);
   }
 
   function visible(elementos) {
@@ -256,8 +258,8 @@
     }
   }
 
-  // "guardado", "fallo" o "salir" (sesión vencida o la página se recarga).
-  function resolver(respuesta) {
+  // "guardado", "fallo" o "salir" (sesión vencida o la página se recarga). Las filas rechazadas no se recuerdan.
+  function resolver(respuesta, rechazadas) {
     const redireccion = respuesta?.headers.get("HX-Redirect");
     if (redireccion) {
       recordarPendientes();
@@ -266,6 +268,7 @@
       return "salir";
     }
     if (respuesta && RECARGAR.has(respuesta.status)) {
+      recordarPendientes(rechazadas);
       saliendo = true;
       window.location.reload();
       return "salir";
@@ -307,7 +310,7 @@
     const url = urlMarcar.replace(/\/0\/$/, `/${fila.id}/`);
     const respuesta = await pedir(url, new URLSearchParams({ estado: envio.estado, nota: envio.nota }));
     fila.enCurso = false;
-    const resultado = resolver(respuesta);
+    const resultado = resolver(respuesta, [fila]);
     if (resultado === "salir") return;
     if (resultado === "guardado") {
       fila.guardado = envio;
@@ -403,7 +406,9 @@
     lote.enCurso = true;
     const respuesta = await pedir(urlRestantes, cuerpo, keepalive);
     lote.enCurso = false;
-    const resultado = resolver(respuesta);
+    // Con un rechazo, solo las que siguen en el lote se dan por perdidas; las tocadas en el camino
+    // pasan por sessionStorage.
+    const resultado = resolver(respuesta, enLote.filter((fila) => fila.lote));
     if (resultado === "salir") return;
     // Las filas tocadas mientras viajaba el lote salieron de él y se guardan solas.
     const enviadas = enLote.filter((fila) => fila.lote);
@@ -427,14 +432,15 @@
     actualizar();
   }
 
-  // --- Sesión vencida (D6) ---
+  // --- Sesión vencida y recarga (D6) ---
 
-  function recordarPendientes() {
+  function recordarPendientes(excluidas = []) {
     if (cuenta) clearInterval(cuenta.reloj);
     cuenta = null;
     const marcas = {};
     const lote = [];
     for (const fila of filas) {
+      if (excluidas.includes(fila)) continue;
       if (fila.lote) lote.push(fila.id);
       else if (pendiente(fila)) marcas[fila.id] = fila.deseado;
     }
