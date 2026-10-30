@@ -13,7 +13,7 @@ import random
 from dataclasses import dataclass, field
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import connection, transaction
 from django.utils import timezone
 
 from asistencia.models import Asistencia, Jornada
@@ -21,8 +21,8 @@ from cuentas.models import Usuario
 from institucion import servicios
 from institucion.models import AnioEscolar, Estudiante, Seccion
 
-# Una cuenta por sección, de 1.º A a 2.º D, en formato R-11 (D8). Es una lista cerrada: un
-# usuario real que empiece con «demo» nunca se toma por demo.
+# Una cuenta por sección, de 1.º A a 2.º D, en formato R-11 (D8). La lista solo da los nombres:
+# una cuenta es demo por ``Usuario.es_demo``, que pone la carga.
 CUENTAS_DEMO = (
     "demounoa",
     "demounob",
@@ -37,6 +37,8 @@ SECCIONES_DEMO = len(CUENTAS_DEMO)
 MIN_ESTUDIANTES = 1
 DIAS_DEMO = 10
 HORA_TOMA = datetime.time(8)
+# Llave del bloqueo de PostgreSQL que pone en fila a ``cargar_demo`` y ``quitar_demo`` (D7, D9).
+BLOQUEO_DEMO = 6006
 NOTA_JUSTIFICADO = "Cita médica"
 # Asistió 85 %, Tarde 6 %, Faltó 6 % y Justificado 3 % (D7).
 ESTADOS = (
@@ -149,13 +151,13 @@ def _fechas(anio, hoy):
 
 def _validar_cuentas(institucion):
     ajenas = Usuario.objects.filter(username__in=CUENTAS_DEMO).exclude(
-        rol=Usuario.Rol.DOCENTE, institucion=institucion
+        es_demo=True, rol=Usuario.Rol.DOCENTE, institucion=institucion
     )
     nombres = sorted(ajenas.values_list("username", flat=True))
     if nombres:
         raise ValidationError(
-            f"Las cuentas {', '.join(nombres)} ya existen con otro rol u otra institución: "
-            "no se carga la demostración."
+            f"Las cuentas {', '.join(nombres)} ya existen y no son cuentas demo de esta "
+            "institución: no se carga la demostración."
         )
 
 
@@ -179,9 +181,10 @@ def planear_demo(institucion, estudiantes, hoy, clave):
     for seccion, usuario in zip(
         secciones.order_by("grado", "nombre")[:SECCIONES_DEMO], CUENTAS_DEMO, strict=False
     ):
-        if seccion.docente is not None and seccion.docente.username == usuario:
+        docente = seccion.docente
+        if docente is not None and docente.es_demo and docente.username == usuario:
             plan.ya_cargadas.append(seccion)
-        elif seccion.docente is None and not seccion.estudiantes.exists():
+        elif docente is None and not seccion.estudiantes.exists():
             plan.cargadas.append((seccion, usuario))
         else:
             ocupadas.append(servicios.texto_seccion_corto(seccion))
@@ -209,6 +212,7 @@ def _cuenta(usuario, institucion, clave, azar):
             password=clave,
             rol=Usuario.Rol.DOCENTE,
             institucion=institucion,
+            es_demo=True,
             first_name=nombre,
             last_name=apellidos,
         )
@@ -257,6 +261,16 @@ def _asistencia(seccion, cuenta, fechas, azar):
         Asistencia.objects.filter(jornada=jornada).update(actualizado_en=toma)
 
 
+def _en_fila():
+    """Una carga y un retiro a la vez esperan uno al otro hasta el fin de la transacción.
+
+    Bloquear filas no basta: en la primera carga, el retiro no encuentra secciones demo que
+    bloquear y desactivaría las cuentas que la carga acaba de confirmar.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [BLOQUEO_DEMO])
+
+
 def cargar_demo(institucion, estudiantes, hoy, clave):
     """Llena las 8 primeras secciones del año ABIERTO, todo o nada (D6 a D8).
 
@@ -264,6 +278,7 @@ def cargar_demo(institucion, estudiantes, hoy, clave):
     la misma carga da los mismos nombres y estados.
     """
     with transaction.atomic():
+        _en_fila()
         plan = planear_demo(institucion, estudiantes, hoy, clave)
         for seccion in plan.ya_cargadas:
             _poner_clave(seccion.docente, clave)
@@ -330,9 +345,9 @@ def _borrar(secciones):
 
 
 def secciones_demo():
-    """Secciones de años ABIERTOS cuya docente es una cuenta de ``CUENTAS_DEMO`` (D9)."""
+    """Secciones de años ABIERTOS cuya docente tiene la marca ``es_demo`` (D9)."""
     return Seccion.objects.filter(
-        anio_escolar__estado=AnioEscolar.Estado.ABIERTO, docente__username__in=CUENTAS_DEMO
+        anio_escolar__estado=AnioEscolar.Estado.ABIERTO, docente__es_demo=True
     )
 
 
@@ -342,7 +357,7 @@ def conteos_demo():
     return ResumenQuitar(
         **vars(_conteos(secciones)),
         secciones=len(secciones),
-        cuentas=Usuario.objects.filter(username__in=CUENTAS_DEMO, is_active=True).count(),
+        cuentas=Usuario.objects.filter(es_demo=True, is_active=True).count(),
     )
 
 
@@ -352,13 +367,14 @@ def quitar_demo():
     ``jornada.registrado_por`` es ``PROTECT``: las cuentas no se podrían borrar aunque se quisiera.
     """
     with transaction.atomic():
-        resumen = conteos_demo()
+        _en_fila()
         secciones = list(secciones_demo().select_for_update(of=("self",)))
+        resumen = conteos_demo()
         _borrar(secciones)
         for seccion in secciones:
             seccion.docente = None
             seccion.save()
-        Usuario.objects.filter(username__in=CUENTAS_DEMO, is_active=True).update(is_active=False)
+        Usuario.objects.filter(es_demo=True, is_active=True).update(is_active=False)
     return resumen
 
 

@@ -45,18 +45,22 @@ La carga SHALL negarse, sin crear nada, si alguna de las 8 secciones tiene una d
 - **THEN** el comando dice qué haría, termina con un error y no crea nada
 
 ### Requirement: Cuentas demo identificables
-Las cuentas demo SHALL tener un usuario fijo de una lista conocida, con rol Docente, la institución de la carga, y la contraseña que el equipo da por variable de entorno; no se les pide cambiarla. Sin esa variable, la carga no crea nada.
+Las cuentas demo SHALL tener un usuario fijo de una lista conocida y una marca de cuenta demo que solo pone la carga, con rol Docente, la institución de la carga, y la contraseña que el equipo da por variable de entorno; no se les pide cambiarla. Sin esa variable, la carga no crea nada.
 
 #### Scenario: Ingreso con una cuenta demo
 - **WHEN** se ingresa con el usuario demo de 1.° A y la contraseña de la variable
 - **THEN** se llega a la portada de 1.° A sin pasar por el cambio de contraseña
+
+#### Scenario: Cuenta real con un usuario de la lista
+- **WHEN** una Docente real de la institución, sin la marca demo, tiene el usuario demo de 1.° A y se ejecuta la carga
+- **THEN** el comando termina con un error que nombra ese usuario, no crea nada y la contraseña de esa cuenta no cambia
 
 #### Scenario: Sin contraseña configurada
 - **WHEN** se ejecuta la carga sin la variable de la contraseña demo
 - **THEN** el comando termina con un error y no crea nada
 
 ### Requirement: Quitar la demostración
-Un comando del equipo SHALL borrar la asistencia, las jornadas y los estudiantes de las secciones cuya docente es una cuenta demo, dejarlas sin docente y desactivar las cuentas demo, sin borrarlas (RN-023). Pide confirmación explícita y no toca otras secciones.
+Un comando del equipo SHALL borrar la asistencia, las jornadas y los estudiantes de las secciones cuya docente es una cuenta con la marca demo, dejarlas sin docente y desactivar esas cuentas, sin borrarlas (RN-023). Pide confirmación explícita y no toca otras secciones.
 
 #### Scenario: Secciones liberadas
 - **WHEN** se quita la demostración con la confirmación
@@ -65,6 +69,14 @@ Un comando del equipo SHALL borrar la asistencia, las jornadas y los estudiantes
 #### Scenario: Otras secciones intactas
 - **WHEN** 3.° A tiene una docente real con su lista y asistencia, y se quita la demostración
 - **THEN** 3.° A no cambia
+
+#### Scenario: Cuenta real con un usuario de la lista intacta
+- **WHEN** 3.° A tiene como docente una cuenta real sin la marca demo cuyo usuario está en la lista demo, y se quita la demostración
+- **THEN** 3.° A no cambia y esa cuenta sigue activa
+
+#### Scenario: Carga y retiro a la vez
+- **WHEN** se quita la demostración mientras una carga, primera o repetida, está en curso
+- **THEN** al terminar las dos, o la demostración queda completa o queda quitada: ninguna cuenta demo queda activa sin su sección ni una sección demo queda con su cuenta inactiva
 
 #### Scenario: Cuenta demo inactiva
 - **WHEN** se intenta ingresar con una cuenta demo después de quitar la demostración

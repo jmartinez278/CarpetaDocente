@@ -15,7 +15,8 @@
 - **[Pruebas transaccionales borran el catálogo]** → las pruebas con `transactional_db` (las e2e con `live_server`) vacían las tablas al terminar, también las que cargó la migración. Ninguna prueba de EN-06 lo necesita; se deja una fixture `catalogo` en `conftest.py` que vuelve a correr la carga de `0002` (D3), para US-027 y las notas.
 - **[Demo sobre secciones reales]** → D7: se niega si una de las 8 secciones tiene docente no demo o estudiantes sin docente demo; todo en una transacción. Antes de cargar datos reales se ejecuta `quitar_demo`.
 - **[Descarte en producción]** → `descartar_seccion` borra registros reales de una sección, y los datos del piloto son los que mide la tesis. Pide `--confirmar`, primero dice qué borraría y solo actúa en el año ABIERTO (D9). Se usa solo con la decisión del equipo y después de un respaldo de Neon; va en el README.
-- **[Cuenta demo con nombre de una real]** → las cuentas demo se reconocen por una lista cerrada de usuarios, no por «empieza con demo» (D8): un usuario real como `demontes` nunca entra. Si una cuenta de esa lista ya existe con otro rol u otra institución, la carga se niega.
+- **[Cuenta demo con nombre de una real]** → las cuentas demo se reconocen por la marca `usuario.es_demo`, que solo pone la carga, y no por el nombre (D8): una cuenta real nunca entra, aunque su usuario esté en la lista. Si una cuenta de la lista ya existe sin la marca, o con otro rol u otra institución, la carga se niega y no la toca (A2).
+- **[Carga y retiro a la vez]** → `cargar_demo` y `quitar_demo` toman al empezar el mismo bloqueo de PostgreSQL (`pg_advisory_xact_lock`), que dura hasta el fin de su transacción: la segunda espera a la primera y decide con lo ya confirmado. Bloquear solo filas no basta: en la primera carga el retiro no encuentra secciones demo que bloquear (D7, D9; A2 y revisión del grupo 3).
 - **[Datos de la tesis]** → EN-06 no guarda datos que mida la tesis. Las jornadas demo los imitan (`jornada.creado_en`, `asistencia.actualizado_en`); se distinguen por `jornada.registrado_por` (cuenta demo) y desaparecen con `quitar_demo`, que va antes del piloto.
 
 ## Goals / Non-Goals
@@ -71,7 +72,8 @@
 
 ### D7. Qué secciones y cuándo se niega
 
-- Las 8 primeras del año ABIERTO por `grado, nombre`. Por sección: si su docente es su cuenta demo, ya está cargada y se salta; si no tiene docente ni estudiantes, se carga; en otro caso, la carga entera se niega y el error nombra las secciones.
+- Antes de decidir, `cargar_demo` toma el bloqueo de la demo (`pg_advisory_xact_lock`, compartido con `quitar_demo`) y lee el estado de las secciones ya en fila (A2).
+- Las 8 primeras del año ABIERTO por `grado, nombre`. Por sección: si su docente es su cuenta demo (con la marca), ya está cargada y se salta; si no tiene docente ni estudiantes, se carga; en otro caso, la carga entera se niega y el error nombra las secciones.
 - Docente: `Seccion.save()`, que vuelve a validar la asignación.
 - Fechas: los 10 días de lunes a viernes anteriores a `hoy` (`timezone.localdate()`) que caen en el año del año escolar; si hay menos, se usan los que hay y el resumen lo dice.
 - Estados, con un `random.Random` de semilla fija por sección (mismo resultado en cada carga): Asistió 85 %, Tarde 6 %, Faltó 6 % y Justificado 3 % con la nota «Cita médica». `creado_en` y `actualizado_en` se ponen con `QuerySet.update()` a las 8:00 de cada fecha (Lima), para que el historial no muestre las tomas en la hora de la carga.
@@ -81,11 +83,12 @@
 ### D8. Cuentas demo
 
 - Lista cerrada de usuarios, uno por sección: `demounoa`, `demounob`, `demounoc`, `demounod`, `demodosa`, `demodosb`, `demodosc`, `demodosd` (formato R-11). Rol Docente, institución de la carga, `debe_cambiar_password` falso.
+- Marca `Usuario.es_demo` (booleano, falso por defecto, no editable en el panel; `cuentas/0002`): la pone solo `cargar_demo` al crear la cuenta. Una cuenta de la lista sin la marca niega la carga (A2).
 - Contraseña: variable de entorno `DEMO_CLAVE` (en `.env.example` sin valor). Sin ella, error antes de escribir. Si la cuenta ya existe inactiva, se reactiva y se le pone la clave actual.
 
 ### D9. Quitar y descartar
 
-- `quitar_demo --confirmar`: en las secciones de años ABIERTOS cuya docente está en la lista de D8, borra las jornadas (la asistencia cae en cascada) y luego los estudiantes, deja `docente` vacío y desactiva las cuentas de la lista (`is_active` falso, sin borrar: RN-023 y `jornada.registrado_por` es `PROTECT`).
+- `quitar_demo --confirmar`: toma el bloqueo de la demo de D7, bloquea las secciones de años ABIERTOS cuya docente tiene la marca de D8 y, ya bloqueadas, las cuenta; borra las jornadas (la asistencia cae en cascada) y luego los estudiantes, deja `docente` vacío y desactiva las cuentas con la marca (`is_active` falso, sin borrar: RN-023 y `jornada.registrado_por` es `PROTECT`).
 - `descartar_seccion --seccion <id> --confirmar`: lo mismo en una sección, pero conserva la docente; se niega si el año no está ABIERTO. Sin `--confirmar` dice cuántos estudiantes, jornadas y estados borraría y termina con error.
 - Orden jornadas → estudiantes: con `RESTRICT` en `asistencia.estudiante`, borrar primero a los estudiantes fallaría. US-020 agrega las notas antes de los estudiantes (decisión 10).
 

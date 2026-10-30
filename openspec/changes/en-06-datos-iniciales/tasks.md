@@ -37,18 +37,20 @@
 
 ## 3. Revisión final y verificación
 
-- [ ] 3.1 Con la revisión final A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio, la migración `0002` y los comandos que borran), corregir los Critical e Important, con la prueba primero en cada caso. Los Minor van a `verificacion.md`. Verificar: `uv run pytest --cov` y `verificar.py --antes-del-commit` en verde
-- [ ] 3.2 `verificacion.md` corto: tabla escenario → prueba de los dos specs del cambio y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit del grupo (reglas de arriba)
+- [x] 3.1 Con la revisión final A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio, la migración `0002` y los comandos que borran), corregir los Critical e Important, con la prueba primero en cada caso. Los Minor van a `verificacion.md`. Verificar: `uv run pytest --cov` y `verificar.py --antes-del-commit` en verde
+  - 3.1a [high] Cuenta real con usuario de la lista: prueba primero en `test_demo.py` (Docente real `demounoa` de la institución: la carga se niega, no crea nada y su clave no cambia; `quitar_demo` con esa cuenta como docente de 3.° A no toca la sección ni la cuenta). Luego `Usuario.es_demo` y `cuentas/0002` (D8), y `demo.py` reconoce las cuentas por la marca. Las pruebas que crean a mano una cuenta de la lista le ponen la marca
+  - 3.1b [medium] Carga y retiro a la vez: prueba primero con dos conexiones (`django_db(transaction=True, serialized_rollback=True)`, dos hilos): con la demo cargada, una recarga se detiene después de planear y un `quitar_demo` corre; al terminar, ninguna cuenta demo activa sin sección. Otra con la primera carga confirmando mientras el retiro está en curso (Minor de la revisión del grupo, corregido por decisión de Marco). Luego el bloqueo de D7 y D9
+- [x] 3.2 `verificacion.md` corto: tabla escenario → prueba de los dos specs del cambio y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit del grupo (reglas de arriba)
 
 ## Workflow follow-up
 
-- **(equipo)** Push de `feature/EN-06-datos-iniciales` y PR hacia `main` (`Closes #N` de EN-06, verificando el número), con las verificaciones de EN-08 en verde. En "Para quien revise": el catálogo lo carga la migración (también en Neon, en el build de Vercel); 11 áreas del SIAGIE y no 10; Castellano como segunda lengua sin trabajar por defecto en toda institución (D4); las cuentas demo son una lista cerrada (D8). En "## Deuda":
+- **(equipo)** Push de `feature/EN-06-datos-iniciales` y PR hacia `main` (`Closes #N` de EN-06, verificando el número), con las verificaciones de EN-08 en verde. En "Para quien revise": el catálogo lo carga la migración (también en Neon, en el build de Vercel); 11 áreas del SIAGIE y no 10; Castellano como segunda lengua sin trabajar por defecto en toda institución (D4); las cuentas demo se reconocen por la marca `usuario.es_demo` (`cuentas/0002`), no por el nombre (D8, A2). En "## Deuda":
   - pantalla del catálogo y alta de áreas o competencias → US-027; mensaje «La competencia tiene notas registradas; solo puede desactivarse» (RF-027) → con las notas;
   - periodos en `cargar_demo` y `descartar_seccion` → US-028; notas → US-020 (decisión 10);
   - desactivar la cuenta del piloto → US-003; exportar al SIAGIE → historia de exportación;
   - conclusión descriptiva en B frente a la RN-003 → US-021;
   - fixture `catalogo` para pruebas transaccionales: usarla en las e2e de US-027 y de notas;
   - RN-018 sigue con [FUENTE PENDIENTE] (reglamento de la Ley 29733); liberar una sección para la lista real exige la autorización de la I.E. (RES-02);
-  - contradicciones para la pasada de docs (`insumos/pendientes.md`): doc 09 §3 y doc 11 §6 (10 áreas → 11 bloques del SIAGIE, nombres, orden y texto de las competencias); doc 11 (`codigo_siagie` nuevo); doc 02 EN-06 («se ejecuta la carga» → la migración); doc 11 §6 (`institucion_area` [DATO I.E. PENDIENTE] cerrado por la decisión 5).
+  - contradicciones para la pasada de docs (`insumos/pendientes.md`): doc 09 §3 y doc 11 §6 (10 áreas → 11 bloques del SIAGIE, nombres, orden y texto de las competencias); doc 11 (`codigo_siagie` y `usuario.es_demo` nuevos); doc 02 EN-06 («se ejecuta la carga» → la migración); doc 11 §6 (`institucion_area` [DATO I.E. PENDIENTE] cerrado por la decisión 5).
 - **(equipo)** Aprobación del PR por otra integrante (DoD 3).
 - Después de la fusión: `/opsx:archive` con "Sync now". La siguiente historia sale de `main` y su primer commit es este archivo.

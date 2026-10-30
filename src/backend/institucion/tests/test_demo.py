@@ -247,6 +247,18 @@ def test_cuenta_de_la_lista_ajena_niega_la_carga(cargar, crear_usuario, otra_ins
     assert Usuario.objects.filter(username__in=DEMO).count() == 1
 
 
+def test_cuenta_real_con_usuario_de_la_lista_niega_la_carga(cargar, crear_usuario, clave):
+    real = crear_usuario("demounoa")
+
+    with pytest.raises(ValidationError) as error:
+        cargar(clave="otra-clave-ficticia")  # noqa: S106
+
+    assert "demounoa" in " ".join(error.value.messages)
+    assert not Estudiante.objects.exists()
+    real.refresh_from_db()
+    assert real.check_password(clave)
+
+
 @pytest.mark.parametrize("clave_vacia", ["", None])
 def test_sin_clave_no_crea_nada(cargar, clave_vacia):
     with pytest.raises(ValidationError):
@@ -256,7 +268,7 @@ def test_sin_clave_no_crea_nada(cargar, clave_vacia):
 
 
 def test_cuenta_demo_inactiva_se_reactiva_con_la_clave(cargar, crear_usuario, anio, clave):
-    vieja = crear_usuario("demounoa", is_active=False, debe_cambiar_password=True)
+    vieja = crear_usuario("demounoa", is_active=False, debe_cambiar_password=True, es_demo=True)
     vieja.set_unusable_password()
     vieja.save()
 
@@ -338,6 +350,23 @@ def test_quitar_no_toca_otras_secciones(cargar, tres_a_real, docente):
     assert docente.is_active
 
 
+def test_quitar_no_toca_una_cuenta_real_con_usuario_de_la_lista(anio, crear_usuario):
+    real = crear_usuario("demounoa")
+    sec = seccion(anio, 3, "A")
+    sec.docente = real
+    sec.save()
+    servicios.importar_lista(sec, "QUISPE MAMANI, ANA")
+
+    resumen = demo.quitar_demo()
+
+    sec.refresh_from_db()
+    real.refresh_from_db()
+    assert sec.docente == real
+    assert sec.estudiantes.count() == 1
+    assert real.is_active
+    assert resumen.vacio
+
+
 def test_volver_a_quitar_no_cambia_nada(cargar):
     cargar()
     demo.quitar_demo()
@@ -410,7 +439,7 @@ def test_volver_a_cargar_pone_la_clave_nueva(cargar, client):
 
 
 def test_cuenta_demo_activa_sin_seccion_queda_sin_cambio_pendiente(cargar, crear_usuario, clave):
-    vieja = crear_usuario("demounoa", debe_cambiar_password=True)
+    vieja = crear_usuario("demounoa", debe_cambiar_password=True, es_demo=True)
     vieja.set_unusable_password()
     vieja.save()
 
