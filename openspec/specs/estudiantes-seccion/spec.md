@@ -6,7 +6,7 @@ Lista de estudiantes de cada sección: la docente de aula la carga pegando las f
 ## Requirements
 
 ### Requirement: Estudiantes de una sección
-Cada estudiante SHALL pertenecer a una sección y guardar solo sus apellidos y sus nombres (RN-015), de hasta 120 caracteres cada uno, en mayúsculas (conservando tildes y Ñ) y sin espacios al inicio, al final ni repetidos. Una sección MUST NOT tener dos estudiantes con los mismos apellidos y nombres, y la base de datos lo impide.
+Cada estudiante SHALL pertenecer a una sección y guardar solo sus apellidos y sus nombres (RN-015), de hasta 120 caracteres cada uno, en mayúsculas (conservando tildes y Ñ) y sin espacios al inicio, al final ni repetidos. Una sección MUST NOT tener dos estudiantes con los mismos apellidos y nombres, y la base de datos lo impide. Desde US-030, cada estudiante está en uno de tres estados, ACTIVO, TRASLADADO o RETIRADO, con la fecha de su último cambio (RN-027); un estudiante nuevo, importado o agregado, empieza ACTIVO y sin fecha de cambio. La base de datos solo admite esos tres estados.
 
 #### Scenario: Nombre guardado en mayúsculas
 - **WHEN** la docente guarda "  quispe   mamani " y "ana lucía"
@@ -19,6 +19,14 @@ Cada estudiante SHALL pertenecer a una sección y guardar solo sus apellidos y s
 #### Scenario: Mismo nombre en otra sección
 - **WHEN** dos secciones tienen un estudiante "QUISPE MAMANI, ANA"
 - **THEN** ambos se guardan
+
+#### Scenario: Estudiante nuevo
+- **WHEN** la docente importa o agrega un estudiante
+- **THEN** queda ACTIVO, sin fecha de cambio de estado
+
+#### Scenario: Estado desconocido
+- **WHEN** se intenta guardar un estudiante con un estado distinto de ACTIVO, TRASLADADO o RETIRADO, por cualquier vía
+- **THEN** no se guarda
 
 ### Requirement: Acceso solo a sus secciones
 Solo la docente de aula de una sección del año escolar ABIERTO SHALL ver y cambiar su lista. Otra docente recibe "no encontrada" (404); otro rol va a su pantalla de inicio; sin sesión, a `/ingresar/`. Un estudiante solo se alcanza a través de su propia sección.
@@ -62,7 +70,7 @@ La lista SHALL mostrar a los estudiantes ordenados por apellidos y nombres, con 
 - **THEN** la lista los muestra como 1 "AGUILAR FLORES, LUCIANA" y 2 "RAMOS HUAMÁN, VALENTÍN"
 
 ### Requirement: Pegar lista
-La docente SHALL pegar en un cuadro de texto una línea por estudiante con el formato "APELLIDOS, NOMBRES". Las líneas en blanco se ignoran, pero cuentan para numerar las líneas tal como se ven en el cuadro. Si todas las líneas son válidas, se guardan todos y la lista muestra "N estudiantes importados" / "Revisa los nombres; puedes corregirlos con Editar", sin que el aviso desaparezca solo.
+La docente SHALL pegar en un cuadro de texto una línea por estudiante con el formato "APELLIDOS, NOMBRES". Las líneas en blanco se ignoran, pero cuentan para numerar las líneas tal como se ven en el cuadro. Si todas las líneas son válidas, se guardan todos y la lista muestra "N estudiantes importados" / "Revisa los nombres; puedes corregirlos con Editar", sin que el aviso desaparezca solo. Desde US-030, el aviso lleva además el enlace "Tomar la asistencia de hoy", de 44 px de alto como mínimo, que abre la asistencia de hoy de la sección.
 
 #### Scenario: Camino ideal
 - **WHEN** una docente con una sección asignada y sin estudiantes pega las filas copiadas de una hoja de cálculo, 25 líneas con apellidos y nombres completos, y toca "Importar"
@@ -71,6 +79,10 @@ La docente SHALL pegar en un cuadro de texto una línea por estudiante con el fo
 #### Scenario: Líneas en blanco
 - **WHEN** el texto tiene 25 estudiantes y líneas en blanco entre ellos y al final
 - **THEN** se importan los 25 y ninguna línea en blanco da error
+
+#### Scenario: Paso siguiente tras importar
+- **WHEN** la docente importa la lista y toca "Tomar la asistencia de hoy" en el aviso
+- **THEN** se abre la asistencia de hoy de su sección, como página completa
 
 ### Requirement: Pegar lista solo con la sección vacía
 Pegar lista SHALL estar disponible solo mientras la sección no tiene estudiantes. Con al menos un estudiante, la lista MUST NOT ofrecer "Pegar lista", la dirección de Pegar lista muestra "Tu sección ya tiene estudiantes" / "Agrega a los que falten con Agregar estudiante." sin el cuadro de texto, y un envío de texto pegado no guarda nada. Los estudiantes que falten se agregan uno por uno.

@@ -42,6 +42,9 @@ class Usuario(AbstractUser):
     debe_cambiar_password = models.BooleanField("debe cambiar la contraseña", default=False)
     intentos_fallidos = models.SmallIntegerField("intentos fallidos", default=0)
     bloqueado_hasta = models.DateTimeField("bloqueado hasta", null=True, blank=True)
+    # Solo la pone ``cargar_demo`` (EN-06, D8): el nombre de usuario no basta para saber
+    # que una cuenta es de demostración.
+    es_demo = models.BooleanField("cuenta de demostración", default=False, editable=False)
 
     objects = GestorUsuarios()
 
