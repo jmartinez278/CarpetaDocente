@@ -1,6 +1,7 @@
 """Configuración de pytest común a las pruebas de src/backend."""
 
 import os
+from importlib import import_module
 
 import pytest
 
@@ -18,3 +19,16 @@ def django_db_modify_db_settings(django_db_modify_db_settings_parallel_suffix):
     base = settings.DATABASES["default"]
     nombre = base.get("TEST", {}).get("NAME") or f"test_{base['NAME']}"
     base.setdefault("TEST", {})["NAME"] = f"{nombre}_{os.getpid()}"
+
+
+@pytest.fixture
+def catalogo(db):
+    """Vuelve a cargar el catálogo de la migración ``catalogo/0002`` (design de EN-06, D3).
+
+    La migración ya lo carga en la base de pruebas, pero las pruebas transaccionales (las e2e
+    con ``live_server``) vacían todas las tablas al terminar, y con ellas el catálogo. Repetir
+    la carga no duplica nada.
+    """
+    from django.apps import apps
+
+    import_module("catalogo.migrations.0002_catalogo_siagie").cargar_catalogo(apps, None)
