@@ -2,14 +2,26 @@
 
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AdminPasswordChangeForm,
+    UserChangeForm,
+    UserCreationForm,
+)
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from actividad.models import Operacion
+from actividad.panel import AGREGAR, CAMPOS_DEL_PANEL, RegistraEnPanel
 from cuentas import servicios
 from cuentas.models import Usuario
 
 ROLES_DEL_PANEL = (Usuario.Rol.DOCENTE, Usuario.Rol.DIRECCION)
+
+# El sistema no usa grupos (RF-003 ya los esconde de la ficha): fuera del panel, para que
+# no quede un camino de escritura sin registrar (US-008, D4).
+if admin.site.is_registered(Group):
+    admin.site.unregister(Group)
 
 
 def _limitar_rol(campo):
@@ -78,8 +90,11 @@ class FormularioEdicionUsuario(UserChangeForm):
 
 
 @admin.register(Usuario)
-class UsuarioAdmin(UserAdmin):
-    """Pantallas del Administrador para las cuentas de usuario."""
+class UsuarioAdmin(RegistraEnPanel, UserAdmin):
+    """Pantallas del Administrador para las cuentas de usuario.
+
+    Alta, edición, contraseña y desbloqueo quedan en el registro de actividad (US-008, D5).
+    """
 
     add_form = FormularioAltaUsuario
     form = FormularioEdicionUsuario
@@ -139,6 +154,31 @@ class UsuarioAdmin(UserAdmin):
         """Las cuentas se desactivan, no se eliminan (RN-023): tampoco el superusuario."""
         return False
 
+    def operacion_del_panel(self, request, obj, accion, campos):
+        """Desmarcar "activo" es CUENTA_DESACTIVADA; reactivar, desbloquear y la contraseña,
+        CUENTA_EDITADA con su campo (D3). Si al desactivar cambian otros campos, quedan las dos
+        entradas, como en ``SeccionAdmin``. La contraseña también es ``password`` cuando se
+        desactiva el ingreso con contraseña (``usable_password``)."""
+        if accion == AGREGAR:
+            return [(Operacion.CUENTA_CREADA, None)]
+        if "is_active" in campos and not obj.is_active:
+            otros = [campo for campo in campos if campo != "is_active"]
+            operaciones = [(Operacion.CUENTA_DESACTIVADA, None)]
+            if otros:
+                operaciones.append((Operacion.CUENTA_EDITADA, {"campos": otros}))
+            return operaciones
+        return [(Operacion.CUENTA_EDITADA, {"campos": campos})]
+
+    def campos_cambiados(self, form):
+        if isinstance(form, AdminPasswordChangeForm):
+            return ["password"]
+        return super().campos_cambiados(form)
+
+    def user_change_password(self, request, id, form_url=""):
+        """La de Django no abre transacción: la contraseña y su entrada van juntas (D5)."""
+        with transaction.atomic():
+            return super().user_change_password(request, id, form_url)
+
     def response_add(self, request, obj, post_url_continue=None):
         """Tras el alta, el mensaje de éxito es "Cuenta creada" (RF-003)."""
         request._cuenta_creada = True
@@ -162,6 +202,7 @@ class UsuarioAdmin(UserAdmin):
             with transaction.atomic():
                 desbloqueada = servicios.desbloquear(usuario)
                 if desbloqueada:
+                    setattr(request, CAMPOS_DEL_PANEL, ["desbloqueo"])
                     self.log_change(request, usuario, "Cuenta desbloqueada.")
             if desbloqueada:
                 desbloqueadas += 1

@@ -16,6 +16,8 @@ from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 from django.utils import timezone
 
+from actividad.models import Operacion
+from actividad.servicios import registrar
 from asistencia.models import Asistencia, Jornada
 from cuentas.models import Usuario
 from institucion import servicios
@@ -287,10 +289,22 @@ def cargar_demo(institucion, estudiantes, hoy, clave):
             cuenta = _cuenta(usuario, institucion, clave, azar)
             seccion.docente = cuenta
             seccion.save()
-            _, errores = servicios.importar_lista(seccion, _lista(azar, estudiantes))
+            _, errores = servicios.importar_lista_sin_registro(seccion, _lista(azar, estudiantes))
             if errores:
                 raise ValidationError([error.titulo for error in errores])
             _asistencia(seccion, cuenta, plan.fechas, azar)
+        # Una sola entrada para toda la carga, con el usuario vacío: la corre la consola (US-008).
+        registrar(
+            None,
+            Operacion.DEMO_CARGADA,
+            entidad="anio_escolar",
+            entidad_id=plan.anio_escolar,
+            detalle={
+                "secciones": len(plan.cargadas),
+                "estudiantes": plan.estudiantes,
+                "dias": plan.dias,
+            },
+        )
     return plan
 
 
@@ -375,6 +389,8 @@ def quitar_demo():
             seccion.docente = None
             seccion.save()
         Usuario.objects.filter(es_demo=True, is_active=True).update(is_active=False)
+        if not resumen.vacio:
+            registrar(None, Operacion.DEMO_QUITADA, detalle=vars(resumen))
     return resumen
 
 
@@ -401,4 +417,11 @@ def descartar_seccion(seccion):
             )
         conteos = conteos_seccion(seccion)
         _borrar([seccion])
+        registrar(
+            None,
+            Operacion.SECCION_DESCARTADA,
+            entidad="seccion",
+            entidad_id=seccion,
+            detalle=vars(conteos),
+        )
     return conteos

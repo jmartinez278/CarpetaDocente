@@ -15,6 +15,7 @@ env/
 .pytest_cache/
 .ruff_cache/
 .coverage
+.coverage.*
 coverage.xml
 htmlcov/
 # Salida completa de pytest que guarda scripts/verificar.py cuando falla

@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Count, ProtectedError, Q, RestrictedError
 
+from actividad.models import Operacion
+from actividad.servicios import registrar
 from cuentas.models import Usuario
 from institucion.models import AnioEscolar, Estudiante, Seccion
 
@@ -196,7 +198,8 @@ def cargar_secciones(institucion, anio):
 
     Es idempotente. Devuelve ``(anio_escolar, anio_creado, secciones_creadas)``. Si el año
     ya existe CERRADO, o la institución tiene otro año ABIERTO, lanza ``ValidationError``
-    y no crea nada.
+    y no crea nada. Lo corre un comando de consola: ANIO_CREADO y cada SECCION_CREADA
+    quedan con el usuario vacío (US-008).
     """
     with transaction.atomic():
         existente = AnioEscolar.objects.filter(institucion=institucion, anio=anio).first()
@@ -215,12 +218,16 @@ def cargar_secciones(institucion, anio):
         anio_escolar, anio_creado = AnioEscolar.objects.get_or_create(
             institucion=institucion, anio=anio, defaults={"estado": AnioEscolar.Estado.ABIERTO}
         )
+        if anio_creado:
+            registrar(None, Operacion.ANIO_CREADO, entidad="anio_escolar", entidad_id=anio_escolar)
         secciones_creadas = 0
         for grado in GRADOS:
             for nombre in NOMBRES_SECCION:
-                _, creada = Seccion.objects.get_or_create(
+                seccion, creada = Seccion.objects.get_or_create(
                     anio_escolar=anio_escolar, grado=grado, nombre=nombre
                 )
+                if creada:
+                    registrar(None, Operacion.SECCION_CREADA, entidad="seccion", entidad_id=seccion)
                 secciones_creadas += creada
     return anio_escolar, anio_creado, secciones_creadas
 
@@ -304,8 +311,29 @@ def _errores_de_filas(filas):
     return errores
 
 
-def importar_lista(seccion, texto):
+def importar_lista(seccion, texto, usuario=None):
+    """Importa el texto pegado a una sección vacía y deja ESTUDIANTES_IMPORTADOS (US-008).
+
+    Las reglas son las de ``importar_lista_sin_registro``; con errores no queda entrada.
+    """
+    with transaction.atomic():
+        cantidad, errores = importar_lista_sin_registro(seccion, texto)
+        if cantidad:
+            registrar(
+                usuario,
+                Operacion.ESTUDIANTES_IMPORTADOS,
+                entidad="seccion",
+                entidad_id=seccion,
+                detalle={"cantidad": cantidad},
+            )
+    return cantidad, errores
+
+
+def importar_lista_sin_registro(seccion, texto):
     """Importa el texto pegado a una sección vacía, todo o nada (D2).
+
+    Sin entrada de actividad: solo la usa ``demo.cargar_demo``, que se registra entera como
+    DEMO_CARGADA (US-008).
 
     Devuelve ``(cantidad, errores)``: con errores no guarda nada y la cantidad es 0. Si la
     sección ya tiene estudiantes lanza ``SeccionConEstudiantes`` sin leer el texto; la
@@ -356,42 +384,90 @@ def _guardar_estudiante(estudiante, existente=False):
     return estudiante
 
 
-def agregar_estudiante(seccion, apellidos, nombres):
-    """Agrega un estudiante normalizado a la sección; ``ValidationError`` si no es válido."""
+def agregar_estudiante(seccion, apellidos, nombres, usuario=None):
+    """Agrega un estudiante normalizado a la sección; ``ValidationError`` si no es válido.
+
+    Deja ESTUDIANTE_AGREGADO en la misma transacción (US-008).
+    """
     estudiante = Estudiante(
         seccion=seccion,
         apellidos=normalizar_nombre(apellidos),
         nombres=normalizar_nombre(nombres),
     )
-    return _guardar_estudiante(estudiante)
+    with transaction.atomic():
+        _guardar_estudiante(estudiante)
+        registrar(
+            usuario, Operacion.ESTUDIANTE_AGREGADO, entidad="estudiante", entidad_id=estudiante
+        )
+    return estudiante
 
 
-def editar_estudiante(estudiante, apellidos, nombres):
+def editar_estudiante(estudiante, apellidos, nombres, usuario=None):
     """Corrige apellidos y nombres con las reglas de ``agregar_estudiante``.
 
     Si el estudiante ya no existe (quitado en otra pestaña), lanza ``Estudiante.DoesNotExist``.
+    Deja ESTUDIANTE_EDITADO con los campos que cambiaron, nunca los nombres (US-008, RN-015);
+    sin cambios, no deja entrada. Compara con la fila guardada y bloqueada, no con ``estudiante``:
+    una copia vieja que revierte otra edición también es un cambio (RNF-016).
     """
-    estudiante.apellidos = normalizar_nombre(apellidos)
-    estudiante.nombres = normalizar_nombre(nombres)
-    return _guardar_estudiante(estudiante, existente=True)
+    nuevos = {"apellidos": normalizar_nombre(apellidos), "nombres": normalizar_nombre(nombres)}
+    estudiante.apellidos = nuevos["apellidos"]
+    estudiante.nombres = nuevos["nombres"]
+    with transaction.atomic():
+        guardado = (
+            Estudiante.objects.select_for_update().filter(pk=estudiante.pk).values(*nuevos).first()
+        )
+        if guardado is None:
+            raise Estudiante.DoesNotExist
+        campos = [campo for campo, valor in nuevos.items() if guardado[campo] != valor]
+        _guardar_estudiante(estudiante, existente=True)
+        if campos:
+            registrar(
+                usuario,
+                Operacion.ESTUDIANTE_EDITADO,
+                entidad="estudiante",
+                entidad_id=estudiante,
+                detalle={"campos": campos},
+            )
+    return estudiante
 
 
-def quitar_estudiante(estudiante):
+def quitar_estudiante(estudiante, usuario=None):
     """Borra al estudiante; con registros que lo referencian lanza ``ListaConRegistros``.
 
-    La regla no consulta tablas: la dan las FK ``RESTRICT`` (hoy, ``asistencia``).
+    La regla no consulta tablas: la dan las FK ``RESTRICT`` (hoy, ``asistencia``). Deja
+    ESTUDIANTE_QUITADO en la misma transacción (US-008).
     """
+    estudiante_id = estudiante.pk
     try:
         with transaction.atomic():
             estudiante.delete()
+            registrar(
+                usuario,
+                Operacion.ESTUDIANTE_QUITADO,
+                entidad="estudiante",
+                entidad_id=estudiante_id,
+            )
     except (RestrictedError, ProtectedError):
         raise ListaConRegistros from None
 
 
-def vaciar_lista(seccion):
-    """Borra a todos los estudiantes de la sección o a ninguno (``ListaConRegistros``)."""
+def vaciar_lista(seccion, usuario=None):
+    """Borra a todos los estudiantes de la sección o a ninguno (``ListaConRegistros``).
+
+    Deja LISTA_VACIADA con la cantidad borrada, en la misma transacción (US-008).
+    """
     try:
         with transaction.atomic():
-            seccion.estudiantes.all().delete()
+            _, borrados = seccion.estudiantes.all().delete()
+            cantidad = borrados.get(Estudiante._meta.label, 0)
+            if cantidad:  # una lista ya vacía no cambia nada
+                registrar(
+                    usuario,
+                    Operacion.LISTA_VACIADA,
+                    entidad="seccion",
+                    entidad_id=seccion,
+                    detalle={"cantidad": cantidad},
+                )
     except (RestrictedError, ProtectedError):
         raise ListaConRegistros from None

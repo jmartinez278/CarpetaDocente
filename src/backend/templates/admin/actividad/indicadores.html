@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}{% comment %}
+"Indicadores por semana" del registro de actividad (design de US-008, D9): solo el Administrador. Estilos del
+panel de Django, con sus temas claro y oscuro.
+{% endcomment %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Inicio</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:actividad_registroactividad_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; {{ title }}
+</div>
+{% endblock %}
+{% block content %}
+<div id="content-main">
+  <form method="get" class="module aligned">
+    {{ formulario.non_field_errors }}
+    {% for campo in formulario %}
+    <div class="form-row">
+      {{ campo.errors }}
+      {{ campo.label_tag }} {{ campo }}
+    </div>
+    {% endfor %}
+    <div class="submit-row">
+      <button type="submit" class="button default">Consultar</button>
+    </div>
+  </form>
+  {% if filas %}
+  <table class="tabla-indicadores">
+    <caption>Una fila por semana, de lunes a domingo (hora de Lima)</caption>
+    <thead>
+      <tr>
+        <th scope="col">Semana</th>
+        <th scope="col">Docentes activos / participantes</th>
+        <th scope="col">Jornadas registradas</th>
+        <th scope="col">Sesiones cargadas</th>
+        <th scope="col">Secciones con notas</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in filas %}
+      <tr>
+        <th scope="row">{{ fila.lunes|date:"d-m-Y" }} – {{ fila.domingo|date:"d-m-Y" }}</th>
+        <td>{{ fila.activos_texto }}</td>
+        <td>{{ fila.jornadas }}</td>
+        <td>{{ fila.sesiones|default_if_none:"—" }}</td>
+        <td>{{ fila.secciones_con_notas|default_if_none:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

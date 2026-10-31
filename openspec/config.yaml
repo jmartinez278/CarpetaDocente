@@ -22,21 +22,25 @@ rules:
     - Decisiones numeradas (D1, D2, ...) con su porqué; los riesgos y las zonas delicadas primero.
     - Si la historia guarda datos que mide la tesis, di qué campo los guarda.
   tasks:
-    - Máximo 3 grupos y unas 15 tareas.
+    - Agrupa por riesgo, no por cantidad: cada tramo de alto riesgo es una parte "(alto riesgo)" con su revisión y su commit; todo lo demás va junto en una parte "(normal)", sin revisión, con verificar.py y commit. Unas 15 tareas.
     - Cada tarea empieza por la prueba ("Prueba primero, <archivo>") y termina con "Verificar:" y lo que se comprueba.
-    - Los tramos de alto riesgo (modelos y restricciones, migraciones, seguridad, despliegue, workflows) van solos en su grupo o parte.
-    - Un commit por grupo (o por parte en un grupo grande), nunca por tarea; la casilla y la evidencia van en ese commit.
-    - El último grupo es la revisión final (A2) y verificacion.md.
+    - El "Verificar:" de cada tarea nombra solo pruebas de la app tocada. La regresión de otras historias la cubre verificar.py; las e2e de otras historias, solo en el cierre.
+    - Es de alto riesgo si toca: modelos, restricciones o migraciones; permisos y roles; transacciones o concurrencia; datos personales (RN-015); notas; seguridad, despliegue o workflows; o una "Zona de cuidado" de decisiones.md.
+    - Un commit por parte, nunca por tarea; la casilla va en ese commit.
+    - Al final, la parte de cierre: A2 y verificacion.md.
     - Al final, "Workflow follow-up" con la deuda.
+    - No repitas en tasks.md las reglas de config.yaml, CLAUDE.md ni CLAUDE.local.md: solo las tareas.
 
 operations:
   apply:
     guidance:
       - Pruebas primero; ante una falla inesperada, depuración sistemática.
-      - Antes de usar una API de Django, HTMX, Tailwind o Playwright, consulta su documentación actual (Context7).
-      - Revisión al cerrar cada grupo o parte, no por tarea. Critical e Important se corrigen; los Minor van a verificacion.md, "## Minor para la descripción del PR".
+      - Antes de usar una API de Django, HTMX, Tailwind o Playwright que el repo aún no usa, consulta su documentación actual (Context7). Si ya se usa en el repo, sigue ese código.
+      - Revisión (agente revisor, .claude/agents/revisor.md) solo al cerrar una parte "(alto riesgo)". Critical e Important se corrigen; Minor, máximo 3, una línea cada uno, a verificacion.md, "## Minor para la descripción del PR".
+      - Durante las tareas se corren solo las pruebas de la app tocada; la suite completa la corre verificar.py.
       - Antes de proponer un commit, lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit`. Commit solo con aprobación.
-      - verificacion.md corto - tabla escenario → prueba y DoD 1 a 9.
+      - verificacion.md se escribe una vez, en el cierre - tabla escenario → prueba y DoD 1 a 9. Sin evidencia por commit ni commits solo de docs.
+      - A2 (Codex) una vez al final, sin re-revisión del arreglo. Lo que no se puede provocar desde la interfaz va a la deuda.
   archive:
     guidance:
       - Se archiva con "Sync now", como primer commit de la rama de la historia siguiente.

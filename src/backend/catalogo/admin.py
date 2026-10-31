@@ -6,11 +6,19 @@ El catálogo lo carga la migración ``0002``: desde el panel no se agrega ni se 
 
 from django.contrib import admin
 
+from actividad.models import Operacion
+from actividad.panel import RegistraEnPanel
 from catalogo.models import Area, Competencia, InstitucionArea
 
 
-class CatalogoFijoAdmin(admin.ModelAdmin):
-    """Sin botón ni URL de agregar, y sin borrar uno por uno ni en lote."""
+class CatalogoFijoAdmin(RegistraEnPanel, admin.ModelAdmin):
+    """Sin botón ni URL de agregar, y sin borrar uno por uno ni en lote.
+
+    Cada cambio, desde la ficha o desde ``list_editable``, deja CATALOGO_EDITADO (US-008, D5).
+    """
+
+    def operacion_del_panel(self, request, obj, accion, campos):
+        return [(Operacion.CATALOGO_EDITADO, {"campos": campos})]
 
     def has_add_permission(self, request):
         return False
