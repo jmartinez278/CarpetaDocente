@@ -47,6 +47,7 @@ COMPETENCIAS_POR_AREA = {
 
 ANTES = ("catalogo", "0001_initial")
 DESPUES = ("catalogo", "0002_catalogo_siagie")
+A_CARGO = ("catalogo", "0003_institucionarea_a_cargo_docente_curso")
 
 
 def nombres_de(codigo):
@@ -149,6 +150,29 @@ def test_institucion_existente_al_migrar_recibe_sus_areas():
     ]
 
 
+def _comprobar_fk_diferidas():
+    """Sin esto, Postgres no deja el ``ALTER TABLE`` de ``0003`` en la misma transacción."""
+    with connection.cursor() as cursor:
+        cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
+
+def test_al_migrar_ninguna_area_queda_a_cargo_del_docente_de_curso():
+    executor = MigrationExecutor(connection)
+    executor.migrate([ANTES])
+    historicas = executor.loader.project_state([ANTES]).apps
+    institucion = historicas.get_model("institucion", "Institucion").objects.create(
+        nombre="I.E. Ficticia N.° 1"
+    )
+    MigrationExecutor(connection).migrate([DESPUES])
+    _comprobar_fk_diferidas()
+
+    MigrationExecutor(connection).migrate([A_CARGO])
+
+    filas = InstitucionArea.objects.filter(institucion_id=institucion.pk)
+    assert filas.count() == 11
+    assert not filas.filter(a_cargo_docente_curso=True).exists()
+
+
 def test_repetir_la_carga_no_cambia_las_areas_de_una_institucion():
     executor = MigrationExecutor(connection)
     executor.migrate([ANTES])
@@ -157,6 +181,9 @@ def test_repetir_la_carga_no_cambia_las_areas_de_una_institucion():
         nombre="I.E. Ficticia N.° 1"
     )
     MigrationExecutor(connection).migrate([DESPUES])
+    _comprobar_fk_diferidas()
+    # Hasta la última: ``cargar_catalogo`` usa los modelos de hoy (US-029 agrega una columna).
+    MigrationExecutor(connection).migrate([A_CARGO])
     InstitucionArea.objects.filter(
         institucion_id=institucion.pk, area__codigo_siagie="0002"
     ).update(se_trabaja=True)

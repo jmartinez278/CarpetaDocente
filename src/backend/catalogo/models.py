@@ -54,7 +54,11 @@ class Competencia(models.Model):
 
 
 class InstitucionArea(models.Model):
-    """Si una institución trabaja un área (RN-007); una fila por institución y área (D4)."""
+    """Si una institución trabaja un área (RN-007); una fila por institución y área (D4).
+
+    ``a_cargo_docente_curso`` (US-029, D2): la tutora no marca las competencias del área. Al
+    migrar y al crear la institución vale ``False``; lo pone el Administrador en el panel.
+    """
 
     institucion = models.ForeignKey(
         "institucion.Institucion",
@@ -69,6 +73,7 @@ class InstitucionArea(models.Model):
         verbose_name="área",
     )
     se_trabaja = models.BooleanField("se trabaja", default=True)
+    a_cargo_docente_curso = models.BooleanField("a cargo del docente de curso", default=False)
 
     class Meta:
         db_table = "institucion_area"

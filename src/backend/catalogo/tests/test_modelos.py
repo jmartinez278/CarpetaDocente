@@ -90,3 +90,17 @@ def test_area_de_institucion_nueva_se_trabaja(institucion, area):
 
     fila.refresh_from_db()
     assert fila.se_trabaja is True
+
+
+def test_area_de_institucion_nueva_no_esta_a_cargo_del_docente_de_curso(institucion, area):
+    fila = InstitucionArea.objects.create(institucion=institucion, area=area)
+
+    fila.refresh_from_db()
+    assert fila.a_cargo_docente_curso is False
+
+
+def test_institucion_nueva_nace_sin_areas_a_cargo_del_docente_de_curso(institucion):
+    filas = InstitucionArea.objects.filter(institucion=institucion)
+
+    assert filas.count() == Area.objects.count()
+    assert not filas.filter(a_cargo_docente_curso=True).exists()

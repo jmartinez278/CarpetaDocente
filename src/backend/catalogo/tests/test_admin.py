@@ -4,6 +4,7 @@ import pytest
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.urls import reverse
 
+from actividad.models import Operacion, RegistroActividad
 from catalogo.models import Area, Competencia, InstitucionArea
 from cuentas.models import Usuario
 from institucion.models import Institucion
@@ -139,6 +140,87 @@ def test_se_trabaja_se_cambia_desde_la_lista(admin_client, fila_castellano):
     assert respuesta.status_code == 302
     fila_castellano.refresh_from_db()
     assert fila_castellano.se_trabaja is True
+
+
+@pytest.fixture
+def fila_educacion_fisica(institucion):
+    return InstitucionArea.objects.get(institucion=institucion, area__codigo_siagie="031")
+
+
+def _detalle_del_cambio(fila):
+    (entrada,) = RegistroActividad.objects.filter(
+        operacion=Operacion.CATALOGO_EDITADO, entidad_id=str(fila.pk)
+    )
+    return entrada.detalle
+
+
+def test_a_cargo_del_docente_de_curso_se_marca_desde_la_lista(admin_client, fila_educacion_fisica):
+    respuesta = admin_client.post(
+        reverse("admin:catalogo_institucionarea_changelist"),
+        {
+            "form-TOTAL_FORMS": "1",
+            "form-INITIAL_FORMS": "1",
+            "form-0-id": fila_educacion_fisica.pk,
+            "form-0-se_trabaja": "on",
+            "form-0-a_cargo_docente_curso": "on",
+            "_save": "Guardar",
+        },
+    )
+
+    assert respuesta.status_code == 302
+    fila_educacion_fisica.refresh_from_db()
+    assert fila_educacion_fisica.a_cargo_docente_curso is True
+    assert fila_educacion_fisica.se_trabaja is True
+    assert _detalle_del_cambio(fila_educacion_fisica) == {"campos": ["a_cargo_docente_curso"]}
+
+
+def test_a_cargo_del_docente_de_curso_se_marca_desde_la_ficha(admin_client, fila_educacion_fisica):
+    url = reverse("admin:catalogo_institucionarea_change", args=[fila_educacion_fisica.pk])
+
+    ficha = admin_client.get(url).context["adminform"]
+    assert set(ficha.form.fields) == {"se_trabaja", "a_cargo_docente_curso"}
+    respuesta = admin_client.post(url, {"se_trabaja": "on", "a_cargo_docente_curso": "on"})
+
+    assert respuesta.status_code == 302
+    fila_educacion_fisica.refresh_from_db()
+    assert fila_educacion_fisica.a_cargo_docente_curso is True
+    assert _detalle_del_cambio(fila_educacion_fisica) == {"campos": ["a_cargo_docente_curso"]}
+
+
+def test_la_lista_muestra_a_cargo_del_docente_de_curso(admin_client, institucion):
+    respuesta = admin_client.get(reverse("admin:catalogo_institucionarea_changelist"))
+
+    assert "a_cargo_docente_curso" in respuesta.context["cl"].list_editable
+
+
+@pytest.mark.parametrize("rol", [Usuario.Rol.DOCENTE, Usuario.Rol.DIRECCION])
+def test_otro_rol_no_cambia_a_cargo_del_docente_de_curso(
+    client, institucion, fila_educacion_fisica, rol
+):
+    client.force_login(
+        Usuario.objects.create_user(username="cuentaficticia", rol=rol, institucion=institucion)
+    )
+    url = reverse("admin:catalogo_institucionarea_change", args=[fila_educacion_fisica.pk])
+
+    vista = client.get(url)
+    client.post(url, {"se_trabaja": "on", "a_cargo_docente_curso": "on"})
+    client.post(
+        reverse("admin:catalogo_institucionarea_changelist"),
+        {
+            "form-TOTAL_FORMS": "1",
+            "form-INITIAL_FORMS": "1",
+            "form-0-id": fila_educacion_fisica.pk,
+            "form-0-se_trabaja": "on",
+            "form-0-a_cargo_docente_curso": "on",
+            "_save": "Guardar",
+        },
+    )
+
+    assert vista.status_code == 302
+    assert b"a_cargo_docente_curso" not in vista.content
+    fila_educacion_fisica.refresh_from_db()
+    assert fila_educacion_fisica.a_cargo_docente_curso is False
+    assert not RegistroActividad.objects.filter(operacion=Operacion.CATALOGO_EDITADO).exists()
 
 
 @pytest.mark.parametrize(
