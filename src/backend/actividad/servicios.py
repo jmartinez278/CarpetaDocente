@@ -42,6 +42,11 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
         {"estudiante", "anterior", "nuevo", "nota_cambiada", "origen"}
     ),
     Operacion.CATALOGO_EDITADO: frozenset({"campos"}),
+    Operacion.DEMO_CARGADA: frozenset({"secciones", "estudiantes", "dias"}),
+    Operacion.DEMO_QUITADA: frozenset(
+        {"secciones", "cuentas", "estudiantes", "jornadas", "estados"}
+    ),
+    Operacion.SECCION_DESCARTADA: frozenset({"estudiantes", "jornadas", "estados"}),
     Operacion.REGISTRO_EXPORTADO: frozenset({"filtros", "filas"}),
 }
 

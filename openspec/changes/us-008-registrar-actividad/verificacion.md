@@ -61,6 +61,32 @@ Abreviaturas: `ses` = `actividad/tests/test_sesion.py`, `asi` = `asistencia/test
 
 Además: "Cerrar sesión" sin sesión no deja entrada (`ses::test_salir_sin_sesion_no_deja_entrada`). Como `force_login` también dispara `user_logged_in`, las pruebas del panel entran con `entrar()` (`actividad/tests/conftest.py`), que quita esa entrada de la preparación. Verde: suite unitaria y e2e de `cuentas` y `asistencia` (US-001, US-002 y US-030: 161) y del resto de apps (96). La revisión encontró rota la e2e de la lista del registro (parte 1B: el ingreso real deja INICIO_SESION); `en_el_panel` quita esa entrada con `quitar_inicio_de_sesion`.
 
+## Escenarios de `registro-actividad` (parte 2B)
+
+Abreviaturas: `est` = `institucion/tests/test_actividad.py`, `pin` = `actividad/tests/test_panel_instrumentado.py`, `cat` = `actividad/tests/test_catalogo.py`.
+
+| Spec | Escenario | Prueba |
+| --- | --- | --- |
+| registro-actividad | Comando de consola | `est::test_cargar_secciones_deja_seccion_creada_por_seccion_nueva`, `test_cargar_demo_deja_demo_cargada_con_usuario_vacio_y_conteos`, `test_quitar_demo_deja_demo_quitada_con_usuario_vacio_y_conteos`, `test_descartar_seccion_deja_seccion_descartada_y_conserva_la_asistencia` |
+| registro-actividad | Operación del panel | `pin::test_alta_de_cuenta_deja_cuenta_creada`, `test_editar_cuenta_deja_los_nombres_de_los_campos_sin_valores`, `test_alta_de_institucion_deja_institucion_creada`, `test_editar_institucion_deja_institucion_editada`, `test_alta_de_anio_deja_anio_creado`, `test_editar_anio_deja_anio_editado`, `test_alta_de_seccion_deja_seccion_creada`, `test_editar_seccion_deja_seccion_editada`, `test_editar_un_area_desde_la_ficha_deja_catalogo_editado`, `test_desactivar_una_competencia_deja_catalogo_editado`, `test_editar_desde_list_editable_deja_catalogo_editado`; además contraseña, desbloqueo y reactivar (`test_cambiar_la_contrasena_deja_cuenta_editada_con_password`, `test_desbloquear_deja_cuenta_editada_con_desbloqueo`, `test_reactivar_deja_cuenta_editada_con_is_active`) |
+| registro-actividad | Desactivar una cuenta | `pin::test_desmarcar_activo_deja_cuenta_desactivada`, `test_desactivar_y_cambiar_otro_campo_deja_dos_entradas` (agregada tras la revisión) |
+| registro-actividad | Asignar y liberar una sección | `pin::test_elegir_docente_deja_seccion_asignada`, `test_quitar_docente_deja_seccion_liberada`, `test_cambiar_docente_en_dos_pasos_deja_liberada_y_asignada`, `test_cambiar_nombre_y_docente_deja_dos_entradas` |
+| registro-actividad | Ningún camino del panel escribe sin registrar | `pin::test_cada_model_admin_que_escribe_usa_la_mezcla`, `test_borrar_una_institucion_responde_403`, `test_grupos_fuera_del_panel`, `test_el_historial_de_django_sigue_apareciendo` |
+| registro-actividad | Estudiante editado | `est::test_editar_deja_estudiante_editado_sin_los_nombres` |
+| registro-actividad | Sección descartada (Conservación) | `est::test_descartar_seccion_deja_seccion_descartada_y_conserva_la_asistencia` |
+| registro-actividad | La operación falla | `est::test_quitar_bloqueado_por_registros_no_deja_entrada`, `test_vaciar_bloqueado_por_registros_no_deja_entrada`, `test_importar_con_errores_no_deja_entrada`, `test_agregar_repetido_no_deja_entrada`, `test_vaciar_una_lista_ya_vacia_no_deja_entrada` (agregada tras la revisión) |
+| registro-actividad | El registro falla | `est::test_si_falla_el_registro_el_estudiante_no_se_agrega` |
+| registro-actividad | Una lectura no deja entrada | `est::test_abrir_la_lista_de_estudiantes_no_deja_entrada` |
+| registro-actividad | Cada operación tiene su prueba | `cat::test_la_tabla_cubre_el_catalogo_menos_las_reservadas` (rojo con REGISTRO_EXPORTADO fuera de la tabla, verde con la tabla completa), `test_cada_escenario_es_una_prueba_que_existe`; la tabla está en `actividad/tests/escenarios.py` |
+| registro-actividad | Detalle sin datos personales (recorrido) | fixture `escenario_de_operacion` de `src/backend/conftest.py`: al terminar cada prueba de la tabla, comprueba que dejó su operación y que ningún detalle trae nombres ficticios de estudiantes ni texto de notas (se vio fallar apuntando una operación a una prueba que no la genera) |
+
+Notas:
+- Cambiar de docente en un paso no existe: US-005 obliga a vaciar la sección y luego elegir a la otra docente (D3 de US-005). "Cambiar" deja SECCION_LIBERADA y luego SECCION_ASIGNADA.
+- `user_change_password` de Django no abre transacción (D5 suponía que sí): `UsuarioAdmin` la envuelve en `atomic()` para que la contraseña y su entrada vayan juntas.
+- `cargar_secciones` también deja ANIO_CREADO cuando crea el año (escritura de consola, "Toda escritura queda registrada"). `cargar_demo` deja una sola DEMO_CARGADA, sin ESTUDIANTES_IMPORTADOS por sección (`importar_lista_sin_registro`).
+- Verde: `uv run pytest --cov` (1233, 98,43 %) y e2e de `cuentas`, `institucion`, `catalogo`, `actividad` y `config` (US-003, US-005, US-006 y EN-06: 198).
+- Los campos del detalle son los nombres de `form.changed_data` (p. ej. `first_name`), que es lo que Django usa para armar el `change_message`, no sus etiquetas. Guardar una ficha sin cambios no deja entrada.
+
 ## Minor para la descripción del PR
 
 Parte 1A (revisión de la parte):
@@ -89,3 +115,11 @@ Parte 2A (revisión de la parte; corregido antes del commit: la e2e de la lista 
 - `_registrar_si_completa` hace hasta 4 consultas por toque (cuenta los activos dos veces y luego busca JORNADA_COMPLETA); cada toque suma de 4 a 6 consultas.
 - El `select_for_update` sobre `asistencia` en `marcar` y `marcar_restantes` es redundante con el bloqueo de la jornada (D6 lo pide; inofensivo).
 - Si la jornada queda completa porque se retira a un estudiante, el siguiente reintento sin cambios deja JORNADA_COMPLETA.
+
+Parte 2B (revisión de la parte; corregidos antes del commit: desactivar una cuenta y cambiar otro campo en el mismo guardado deja CUENTA_DESACTIVADA y CUENTA_EDITADA; vaciar una lista ya vacía no deja entrada; `_docente_anterior` sale siempre de `request`):
+
+- El fixture `escenario_de_operacion` reconoce las pruebas por `módulo::nombre`: si cambia cómo pytest nombra los módulos (`--import-mode=importlib`, otra raíz), deja de revisar sin avisar. Falta un aviso de sesión si no visitó ningún escenario.
+- El fixture pide `db`: chocaría con una prueba de la tabla que use `transactional_db` o `live_server` (hoy ninguna). Si la prueba ya falló, su revisión agrega un segundo error en el teardown.
+- "Dejó su operación" acepta cualquier entrada de esa operación, también una creada por un fixture; hoy cada escenario la comprueba por su cuenta. Contar antes y después lo haría más estricto.
+- La lista de nombres prohibidos del fixture tiene los apellidos de las pruebas pero no todos los nombres de pila ("ANA", "LUIS"); la prueba de editar sí los busca.
+- `cargar_demo` sobre una demo ya cargada deja DEMO_CARGADA con `secciones: 0` (reescribe las contraseñas de las cuentas demo, que sí es una escritura).

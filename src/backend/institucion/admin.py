@@ -4,20 +4,31 @@ from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 
+from actividad.models import Operacion
+from actividad.panel import AGREGAR, RegistraEnPanel
 from institucion import servicios
 from institucion.models import AnioEscolar, Institucion, Seccion
 
 
 @admin.register(Institucion)
-class InstitucionAdmin(admin.ModelAdmin):
+class InstitucionAdmin(RegistraEnPanel, admin.ModelAdmin):
     """Pantalla del Administrador para las instituciones."""
 
     list_display = ["nombre", "codigo_modular", "organizacion_periodos", "creado_en"]
     search_fields = ["nombre", "codigo_modular"]
 
+    def has_delete_permission(self, request, obj=None):
+        """Borrar una institución borraría en cascada todo lo suyo (RN-023; US-008, D4)."""
+        return False
+
+    def operacion_del_panel(self, request, obj, accion, campos):
+        if accion == AGREGAR:
+            return [(Operacion.INSTITUCION_CREADA, None)]
+        return [(Operacion.INSTITUCION_EDITADA, {"campos": campos})]
+
 
 @admin.register(AnioEscolar)
-class AnioEscolarAdmin(admin.ModelAdmin):
+class AnioEscolarAdmin(RegistraEnPanel, admin.ModelAdmin):
     """Años escolares: institución, año y estado (US-005, D1); sin los campos de RF-009."""
 
     fields = ["institucion", "anio", "estado"]
@@ -28,6 +39,11 @@ class AnioEscolarAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         """Borrar un año borraría en cascada sus secciones (RN-023; el cierre es RF-009)."""
         return False
+
+    def operacion_del_panel(self, request, obj, accion, campos):
+        if accion == AGREGAR:
+            return [(Operacion.ANIO_CREADO, None)]
+        return [(Operacion.ANIO_EDITADO, {"campos": campos})]
 
 
 class FormularioFichaSeccion(forms.ModelForm):
@@ -62,7 +78,7 @@ class FormularioFichaSeccion(forms.ModelForm):
 
 
 @admin.register(Seccion)
-class SeccionAdmin(admin.ModelAdmin):
+class SeccionAdmin(RegistraEnPanel, admin.ModelAdmin):
     """Secciones del año: el alta no tiene docente; se elige en la ficha (US-005, D4)."""
 
     list_display = ["__str__", "anio_escolar", "docente"]
@@ -103,3 +119,29 @@ class SeccionAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         """Borrar una sección borraría en cascada sus registros (RN-023)."""
         return False
+
+    def save_model(self, request, obj, form, change):
+        """Guarda en ``request`` el docente anterior para SECCION_ASIGNADA o LIBERADA (D5)."""
+        if change:
+            request._docente_anterior = form.initial.get("docente")
+        super().save_model(request, obj, form, change)
+
+    def operacion_del_panel(self, request, obj, accion, campos):
+        """El docente da SECCION_ASIGNADA (elegido o cambiado) o SECCION_LIBERADA (quitado); el
+        grado o el nombre, SECCION_EDITADA. Si cambian los dos, quedan dos entradas."""
+        if accion == AGREGAR:
+            return [(Operacion.SECCION_CREADA, None)]
+        anterior = request.__dict__.pop("_docente_anterior", None)
+        operaciones = []
+        otros = [campo for campo in campos if campo != "docente"]
+        if otros:
+            operaciones.append((Operacion.SECCION_EDITADA, {"campos": otros}))
+        if "docente" in campos:
+            docentes = {
+                "docente_anterior": anterior,
+                "docente_nuevo": obj.docente_id,
+            }
+            asignada = obj.docente_id is not None
+            operacion = Operacion.SECCION_ASIGNADA if asignada else Operacion.SECCION_LIBERADA
+            operaciones.append((operacion, docentes))
+        return operaciones

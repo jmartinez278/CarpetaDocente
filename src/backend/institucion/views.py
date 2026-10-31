@@ -91,7 +91,7 @@ class PegarView(SeccionDocenteMixin, View):
         formulario.is_valid()
         texto = formulario.cleaned_data.get("lista", "")
         try:
-            cantidad, errores = servicios.importar_lista(self.seccion, texto)
+            cantidad, errores = servicios.importar_lista(self.seccion, texto, usuario=request.user)
         except servicios.SeccionConEstudiantes:
             return self.responder(request, "_pegar_con_estudiantes")
         if errores:
@@ -123,7 +123,9 @@ class AgregarView(SeccionDocenteMixin, View):
         formulario = EstudianteForm(request.POST)
         if formulario.is_valid():
             try:
-                servicios.agregar_estudiante(self.seccion, **formulario.cleaned_data)
+                servicios.agregar_estudiante(
+                    self.seccion, **formulario.cleaned_data, usuario=request.user
+                )
             except ValidationError as error:
                 formulario.add_error(None, error)
             else:
@@ -147,7 +149,9 @@ class EditarView(SeccionDocenteMixin, View):
         formulario = EstudianteForm(request.POST)
         if formulario.is_valid():
             try:
-                servicios.editar_estudiante(self.estudiante, **formulario.cleaned_data)
+                servicios.editar_estudiante(
+                    self.estudiante, **formulario.cleaned_data, usuario=request.user
+                )
             except Estudiante.DoesNotExist:
                 raise Http404 from None
             except ValidationError as error:
@@ -171,7 +175,7 @@ class QuitarView(SeccionDocenteMixin, View):
 
     def post(self, request, seccion_id, estudiante_id):
         try:
-            servicios.quitar_estudiante(self.estudiante)
+            servicios.quitar_estudiante(self.estudiante, usuario=request.user)
         except servicios.ListaConRegistros:
             contexto = {"estudiante": self.estudiante, "bloqueado": True}
             return self.responder(request, "_quitar", contexto)
@@ -189,7 +193,7 @@ class VaciarView(SeccionDocenteMixin, View):
 
     def post(self, request, seccion_id):
         try:
-            servicios.vaciar_lista(self.seccion)
+            servicios.vaciar_lista(self.seccion, usuario=request.user)
         except servicios.ListaConRegistros:
             return self.responder(request, "_vaciar", {"bloqueado": True})
         return ver_otra(reverse("estudiantes:lista", args=[self.seccion.pk]))
