@@ -7,13 +7,13 @@ La pantalla arma, con los servicios de D3, D4, D6 y D7, el contexto que dibuja l
 ``timezone.localdate``.
 """
 
+import datetime
 import json
 import re
 
 import pytest
 from django.test import Client
 from django.urls import reverse
-from django.utils import timezone
 
 from institucion.models import Institucion
 from notas import servicios
@@ -26,7 +26,6 @@ from notas.tests.conftest import (
     MAR_2,
     MATEMATICA,
     NOV_20,
-    OCT_30,
     ids_de,
 )
 
@@ -34,23 +33,9 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
-def hoy(monkeypatch):
-    """Hoy es el 30 de octubre en Lima, sin tocar el reloj; ``hoy["valor"]`` lo cambia."""
-    dia = {"valor": OCT_30}
-    monkeypatch.setattr(timezone, "localdate", lambda *args, **kwargs: dia["valor"])
-    return dia
-
-
-@pytest.fixture
-def cliente(client, docente, seccion_tutora):
-    client.force_login(docente)
-    return client
-
-
-@pytest.fixture
-def ie(seccion_tutora, bimestres, universo_ie):
-    """La I.E. del spec: 4 bimestres y Educación Física e Inglés a cargo del docente de curso."""
-    return universo_ie
+def hoy(hoy):
+    """Todas las pruebas de las vistas corren el 30 de octubre (fixture de conftest)."""
+    return hoy
 
 
 def marcar(seccion, periodo, ids):
@@ -301,6 +286,80 @@ def test_con_notas_va_la_competencia_de_cada_periodo_editable(
     periodos = datos(abrir(cliente, seccion_tutora))["periodos"]
 
     assert [p["con_notas"] for p in periodos] == [[], [elegida], [], []]
+
+
+# --- Lo que la plantilla necesita (D9) ---
+
+
+def test_la_palabra_del_periodo_y_los_elegibles(cliente, seccion_tutora, ie):
+    respuesta = abrir(cliente, seccion_tutora)
+
+    assert respuesta.context["palabra_periodo"] == "bimestre"
+    assert respuesta.context["periodos_elegibles"] == "B1, B2 y B3"
+
+
+def test_con_trimestres_la_palabra_es_trimestre(cliente, institucion, seccion_tutora, ie):
+    institucion.organizacion_periodos = Institucion.OrganizacionPeriodos.TRIMESTRE
+    institucion.save()
+
+    respuesta = abrir(cliente, seccion_tutora)
+
+    assert respuesta.context["palabra_periodo"] == "trimestre"
+    assert respuesta.context["periodos_elegibles"] == "T1, T2 y T3"
+
+
+def test_en_vacaciones_los_elegibles_son_los_ya_pasados(cliente, seccion_tutora, ie, hoy):
+    hoy["valor"] = AGO_1
+
+    assert abrir(cliente, seccion_tutora).context["periodos_elegibles"] == "B1 y B2"
+
+
+def test_con_un_solo_elegible_va_sin_conjuncion(cliente, seccion_tutora, ie, hoy):
+    hoy["valor"] = datetime.date(2027, 3, 20)
+
+    assert abrir(cliente, seccion_tutora).context["periodos_elegibles"] == "B1"
+
+
+def test_sin_periodos_o_antes_del_primero_no_hay_elegibles(cliente, seccion_tutora, ie, hoy):
+    hoy["valor"] = MAR_2
+
+    respuesta = abrir(cliente, seccion_tutora)
+
+    assert respuesta.context["periodos_elegibles"] == ""
+
+
+def test_sin_periodos_la_palabra_es_periodo(cliente, seccion_tutora, universo_ie):
+    respuesta = abrir(cliente, seccion_tutora)
+
+    assert respuesta.context["palabra_periodo"] == "periodo"
+    assert respuesta.context["periodos_elegibles"] == ""
+
+
+def test_los_bloqueos_iniciales_son_los_del_periodo_que_abre(
+    cliente, seccion_tutora, bimestres, ie, hoy, monkeypatch
+):
+    faltan = sorted(ie)[:5]
+    for periodo in bimestres[:3]:
+        marcar(seccion_tutora, periodo, ie - set(faltan))
+    hoy["valor"] = NOV_20
+    elegida = max(ie)
+    monkeypatch.setattr(
+        servicios, "tiene_notas", lambda seccion, periodo, competencia: competencia == elegida
+    )
+
+    respuesta = abrir(cliente, seccion_tutora)
+
+    assert respuesta.context["obligatorias_iniciales"] == set(faltan)
+    assert respuesta.context["con_notas_iniciales"] == {elegida}
+
+
+def test_sin_periodo_inicial_no_hay_bloqueos_iniciales(cliente, seccion_tutora, ie, hoy):
+    hoy["valor"] = AGO_1
+
+    respuesta = abrir(cliente, seccion_tutora)
+
+    assert respuesta.context["obligatorias_iniciales"] == set()
+    assert respuesta.context["con_notas_iniciales"] == set()
 
 
 # --- Guardado (spec "Guardar las competencias del periodo", D8) ---

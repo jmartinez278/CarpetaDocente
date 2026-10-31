@@ -114,3 +114,18 @@ def test_el_universo_son_las_21_que_marca_la_tutora(docente, seccion_tutora, uni
 
 def test_el_universo_de_otra_docente_esta_vacio(otra_docente, seccion_tutora):
     assert servicios.universo(otra_docente, seccion_tutora) == set()
+
+
+def test_el_universo_de_las_areas_no_vuelve_a_consultar(
+    docente, seccion_tutora, universo_ie, django_assert_num_queries
+):
+    areas = servicios.areas_de_la_seccion(docente, seccion_tutora)
+
+    with django_assert_num_queries(0):
+        assert servicios.universo_de_las_areas(areas) == universo_ie
+
+
+def test_universo_es_el_de_las_areas_de_la_seccion(docente, seccion_tutora):
+    areas = servicios.areas_de_la_seccion(docente, seccion_tutora)
+
+    assert servicios.universo(docente, seccion_tutora) == servicios.universo_de_las_areas(areas)

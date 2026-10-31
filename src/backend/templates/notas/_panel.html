@@ -1,0 +1,16 @@
+{% comment %}Resumen y guardado (D9). En PC es el panel "Tu selección" a la derecha; en el celular solo queda el guardado, fijo abajo. El servidor dibuja el total del periodo que abre; competencias.js lo mantiene y pinta el estado del guardado.{% endcomment %}
+<aside class="comp-panel" aria-label="Resumen y guardado">
+  <div class="comp-resumen">
+    <h2>Tu selección</h2>
+    <p><strong data-conteo>{{ marcadas_iniciales|length }} de {{ total }} seleccionadas</strong><span data-conteo-periodo>{% if periodo_inicial %}competencias para {{ periodo_inicial.nombre }}{% endif %}</span></p>
+    <p class="comp-ayuda">Las áreas del docente de curso no se incluyen.</p>
+    <dl class="comp-bloqueos" data-resumen-bloqueos>{% if con_notas_iniciales %}<div><dt>Con notas registradas</dt><dd>{{ con_notas_iniciales|length }}</dd></div>{% endif %}{% if obligatorias_iniciales %}<div><dt>Por cierre de año</dt><dd>{{ obligatorias_iniciales|length }}</dd></div>{% endif %}</dl>
+  </div>
+  <div class="comp-guardado" data-guardado>
+    <div class="comp-guardado__estado"><span data-icono-estado>{% include "iconos/clock.svg" %}</span><p data-texto-guardado>Sin guardar</p></div>
+    <p class="comp-ayuda comp-guardado__ayuda" data-ayuda-guardado></p>
+    <button id="guardar" class="boton-principal comp-guardar" type="button" aria-disabled="true" aria-describedby="alcance-guardado">Guardar</button>
+    <span id="alcance-guardado" class="sr-only">Guarda la selección de todas las áreas del {{ palabra_periodo }}.</span>
+    <button id="deshacer" class="comp-deshacer" type="button" hidden>Deshacer cambios</button>
+  </div>
+</aside>

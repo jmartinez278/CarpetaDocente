@@ -3,6 +3,7 @@
 import datetime
 
 import pytest
+from django.utils import timezone
 
 from catalogo.models import Competencia, InstitucionArea
 from institucion.models import Institucion, Periodo
@@ -85,3 +86,23 @@ def universo_ie(areas_a_cargo):
         .exclude(area__codigo_siagie__in=[CASTELLANO, INGLES, EDUCACION_FISICA])
         .values_list("pk", flat=True)
     )
+
+
+@pytest.fixture
+def hoy(monkeypatch):
+    """Hoy es el 30 de octubre en Lima, sin tocar el reloj; ``hoy["valor"]`` lo cambia."""
+    dia = {"valor": OCT_30}
+    monkeypatch.setattr(timezone, "localdate", lambda *args, **kwargs: dia["valor"])
+    return dia
+
+
+@pytest.fixture
+def cliente(client, docente, seccion_tutora):
+    client.force_login(docente)
+    return client
+
+
+@pytest.fixture
+def ie(seccion_tutora, bimestres, universo_ie):
+    """La I.E. del spec: 4 bimestres y Educación Física e Inglés a cargo del docente de curso."""
+    return universo_ie

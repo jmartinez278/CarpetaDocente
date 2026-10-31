@@ -107,17 +107,20 @@ def areas_de_la_seccion(usuario, seccion):
     ]
 
 
+def universo_de_las_areas(areas):
+    """Los id de las competencias activas de las áreas marcables, sin volver a consultar.
+
+    ``areas`` es lo que devuelve ``areas_de_la_seccion``; es la única regla del universo.
+    """
+    return {competencia.pk for area in areas if area.marcable for competencia in area.competencias}
+
+
 def universo(usuario, seccion):
     """Los id de las competencias activas que ``usuario`` marca en ``seccion``.
 
     Es el conjunto que el guardado valida, compara y borra (D5).
     """
-    return {
-        competencia.pk
-        for area in areas_de_la_seccion(usuario, seccion)
-        if area.marcable
-        for competencia in area.competencias
-    }
+    return universo_de_las_areas(areas_de_la_seccion(usuario, seccion))
 
 
 # --- D4. Periodos ---
@@ -226,6 +229,16 @@ class CambiosMarcas:
 
     agregadas: list[int] = field(default_factory=list)
     quitadas: list[int] = field(default_factory=list)
+
+
+def estado_inicial(permitido, guardadas, obligatorias):
+    """Las marcas con que abre un periodo: lo guardado, o todo ``permitido`` si no tiene marcas.
+
+    ``guardadas`` es ``None`` (sin marcas dentro del universo) o la lista de id guardados; a eso se
+    suman las ``obligatorias`` (spec «Estado inicial del periodo»; no cuentan como cambio).
+    """
+    base = set(permitido) if guardadas is None else set(guardadas)
+    return base | set(obligatorias)
 
 
 def marcas_por_periodo(seccion, permitido):

@@ -9,10 +9,9 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import dateformat, timezone
 from django.views import View
 
-from asistencia.servicios import MESES
 from institucion.models import Periodo
 from institucion.servicios import texto_seccion_corto
 from institucion.views import SeccionDocenteMixin
@@ -26,7 +25,13 @@ SIN_VIGENTE = "Hoy no hay un periodo vigente"
 
 
 def _dia_y_mes_corto(fecha):
-    return f"{fecha.day} {MESES[fecha.month - 1][:3]}."
+    """«9 mar.» (el idioma de la pantalla es LANGUAGE_CODE, es-pe)."""
+    return f"{dateformat.format(fecha, 'j b')}."
+
+
+def _dia_y_mes(fecha):
+    """«9 de marzo»."""
+    return dateformat.format(fecha, r"j \d\e F")
 
 
 def _aviso(periodos):
@@ -36,16 +41,27 @@ def _aviso(periodos):
     if any(p.estado == servicios.VIGENTE for p in periodos):
         return None
     if any(p.editable for p in periodos):
-        plural = periodos[0].nombre_largo.split()[0].lower() + "s"
-        texto = f"Elige uno de los {plural} ya pasados para revisar sus competencias."
+        texto = (
+            f"Elige uno de los {_palabra_periodo(periodos)}s ya pasados "
+            "para revisar sus competencias."
+        )
     else:
         primero = periodos[0]
-        inicio = primero.fecha_inicio
-        texto = (
-            f"El {primero.nombre_largo.lower()} empieza el "
-            f"{inicio.day} de {MESES[inicio.month - 1]}."
-        )
+        texto = f"El {primero.nombre_largo.lower()} empieza el {_dia_y_mes(primero.fecha_inicio)}."
     return {"titulo": SIN_VIGENTE, "texto": texto}
+
+
+def _palabra_periodo(periodos):
+    """«bimestre» o «trimestre»; «periodo» si el año no tiene periodos."""
+    return periodos[0].nombre_largo.split()[0].lower() if periodos else "periodo"
+
+
+def _nombres_elegibles(periodos):
+    """Los periodos que se marcan, en lista de lectura: «B1», «B1 y B2», «B1, B2 y B3»."""
+    nombres = [p.nombre for p in periodos if p.editable]
+    if len(nombres) < 2:
+        return "".join(nombres)
+    return f"{', '.join(nombres[:-1])} y {nombres[-1]}"
 
 
 def _periodo_inicial(periodos, pedido):
@@ -68,7 +84,7 @@ class CompetenciasView(SeccionDocenteMixin, View):
         seccion = self.seccion
         usuario = request.user
         areas = servicios.areas_de_la_seccion(usuario, seccion)
-        permitido = {c.pk for a in areas if a.marcable for c in a.competencias}
+        permitido = servicios.universo_de_las_areas(areas)
         periodos = servicios.periodos_de_la_seccion(seccion, timezone.localdate())
         marcas = servicios.marcas_por_periodo(seccion, permitido)
         inicial = _periodo_inicial(periodos, request.GET.get("periodo", ""))
@@ -102,13 +118,14 @@ class CompetenciasView(SeccionDocenteMixin, View):
                     "obligatorias": obligatorias,
                 }
             )
-        marcadas_iniciales = set()
+        marcadas_iniciales, con_notas_iniciales, obligatorias_iniciales = set(), set(), set()
         if inicial is not None:
             dato = por_periodo[periodos.index(inicial)]
-            guardadas = dato["marcadas"]
-            marcadas_iniciales = (permitido if guardadas is None else set(guardadas)) | set(
-                dato["obligatorias"]
+            marcadas_iniciales = servicios.estado_inicial(
+                permitido, dato["marcadas"], dato["obligatorias"]
             )
+            con_notas_iniciales = set(dato["con_notas"])
+            obligatorias_iniciales = set(dato["obligatorias"])
         contexto = {
             "seccion": seccion,
             "seccion_corta": texto_seccion_corto(seccion),
@@ -118,6 +135,10 @@ class CompetenciasView(SeccionDocenteMixin, View):
             "aviso": _aviso(periodos),
             "total": len(permitido),
             "marcadas_iniciales": marcadas_iniciales,
+            "con_notas_iniciales": con_notas_iniciales,
+            "obligatorias_iniciales": obligatorias_iniciales,
+            "palabra_periodo": _palabra_periodo(periodos),
+            "periodos_elegibles": _nombres_elegibles(periodos),
             "datos": {
                 "inicial": inicial.numero if inicial else None,
                 "total": len(permitido),

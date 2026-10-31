@@ -16,6 +16,4 @@
 
 ### Parte C: vistas, rutas y permisos
 
-- `notas/views.py`, `CompetenciasView`: `permitido` repite en la vista la regla de `servicios.universo` (D3); si US-020 o la historia de docentes de curso cambian `universo`, pantalla y guardado se separarían. Sacar del servicio el universo a partir de las `areas` ya calculadas.
-- `notas/views.py`, `CompetenciasView`: el estado inicial (sin marcas → todo el universo, más las obligatorias) vive en la vista y no en `servicios.py`.
 - `notas/tests/test_vistas_acceso.py`, «Portada sin cambios»: supone que Notas es la segunda tarjeta; buscar el `<article>` con `id="ins-notas"`.
