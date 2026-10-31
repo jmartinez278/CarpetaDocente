@@ -34,12 +34,16 @@ from notas.tests.conftest import (
 )
 
 # live_server usa una base transaccional que vacía las tablas al terminar cada prueba, y con ellas
-# el catálogo que carga la migración de catalogo (áreas y competencias): serialized_rollback lo
-# restaura.
-pytestmark = [
-    pytest.mark.e2e,
-    pytest.mark.django_db(transaction=True, serialized_rollback=True),
-]
+# el catálogo que carga la migración de catalogo (áreas y competencias). No se usa
+# serialized_rollback: tras otra e2e que vació la base, restaurar vuelve a insertar los tipos de
+# contenido que post_migrate ya recreó y choca. La fixture ``catalogo`` solo repone el catálogo.
+pytestmark = [pytest.mark.e2e, pytest.mark.django_db(transaction=True)]
+
+
+@pytest.fixture(autouse=True)
+def _catalogo_cargado(catalogo):
+    """El catálogo debe estar antes de crear la institución, que copia sus áreas."""
+
 
 LIMA = ZoneInfo("America/Lima")
 MENSAJE_NOTAS = "La competencia tiene notas registradas en este periodo"
