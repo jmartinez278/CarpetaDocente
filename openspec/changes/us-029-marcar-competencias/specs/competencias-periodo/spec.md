@@ -97,7 +97,7 @@ Si la sección no tiene marcas en un periodo, la pantalla SHALL abrirlo con toda
 - **THEN** ve marcadas esas 18 y las otras 3 sin marcar
 
 ### Requirement: Guardar las competencias del periodo
-«Guardar» SHALL guardar, en un solo envío y todo o nada, el conjunto completo de las competencias marcadas del periodo visible, con todas sus áreas: crea las marcas nuevas y borra las desmarcadas. Repetir el mismo envío no cambia nada. Un conjunto vacío no se guarda y se muestra «Marca al menos una competencia para guardar.».
+«Guardar» SHALL guardar, en un solo envío y todo o nada, el conjunto completo de las competencias marcadas del periodo visible, con todas sus áreas: crea las marcas nuevas y borra las desmarcadas. Repetir el mismo envío no cambia nada. Un conjunto vacío no se guarda y se muestra «Marca al menos una competencia para guardar.». Si las competencias que la tutora puede marcar cambiaron desde que abrió la pantalla, no se guarda nada y se muestra «Las competencias enviadas no son válidas. Recarga la página.».
 
 #### Scenario: Camino ideal
 - **WHEN** la tutora, con el bimestre 3 vigente, deja marcadas solo las competencias de Matemática y de Comunicación que trabajó y pulsa «Guardar»
@@ -118,6 +118,10 @@ Si la sección no tiene marcas en un periodo, la pantalla SHALL abrirlo con toda
 #### Scenario: Conjunto vacío
 - **WHEN** la tutora desmarca todas las competencias y pulsa «Guardar»
 - **THEN** no se guarda nada y ve «Marca al menos una competencia para guardar.»
+
+#### Scenario: Catálogo cambiado al guardar
+- **WHEN** el Administrador reactiva una competencia que estaba marcada en el bimestre 2 mientras la tutora tiene la pantalla abierta sin ella, y la tutora desmarca otra y pulsa «Guardar»
+- **THEN** no se guarda nada, la marca de la competencia reactivada sigue y ve «Las competencias enviadas no son válidas. Recarga la página.»
 
 ### Requirement: No desmarcar una competencia con notas
 Una competencia que ya tiene notas registradas en el periodo SHALL quedar marcada, con su motivo junto a ella. Si la tutora intenta desmarcarla, la marca no cambia y se muestra «La competencia tiene notas registradas en este periodo». Un guardado que la quita no guarda nada.

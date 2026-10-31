@@ -142,6 +142,8 @@ class CompetenciasView(SeccionDocenteMixin, View):
             "datos": {
                 "inicial": inicial.numero if inicial else None,
                 "total": len(permitido),
+                # El JS lo devuelve al guardar: si el universo cambió, no se guarda (D5).
+                "universo": sorted(permitido),
                 # El JS cambia el 0 por el número del periodo que guarda.
                 "url_guardar": reverse("competencias:guardar", args=[seccion.pk, 0]),
                 "periodos": por_periodo,
@@ -153,6 +155,8 @@ class CompetenciasView(SeccionDocenteMixin, View):
 class GuardarView(SeccionDocenteMixin, View):
     """El conjunto completo del periodo (POST ``competencia`` repetido), todo o nada (D5).
 
+    ``universo`` (repetido) es el universo que mostró la pantalla; si cambió, 400.
+
     204 guardado; 400 con ``mensaje`` (conjunto no válido o vacío); 404 periodo que no existe;
     409 con ``mensaje`` (periodo que no se marca) o con ``mensaje`` y ``competencias`` (con notas).
     """
@@ -160,10 +164,11 @@ class GuardarView(SeccionDocenteMixin, View):
     def post(self, request, seccion_id, numero):
         try:
             ids = [int(valor) for valor in request.POST.getlist("competencia")]
+            visto = [int(valor) for valor in request.POST.getlist("universo")]
         except ValueError:
             return JsonResponse({"mensaje": servicios.CONJUNTO_NO_VALIDO}, status=400)
         try:
-            servicios.guardar_marcas(request.user, self.seccion, numero, ids)
+            servicios.guardar_marcas(request.user, self.seccion, numero, ids, visto=visto)
         except Periodo.DoesNotExist:
             return HttpResponse(status=404)
         except servicios.PeriodoNoMarcable as error:

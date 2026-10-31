@@ -17,3 +17,9 @@
 ### Parte C: vistas, rutas y permisos
 
 - `notas/tests/test_vistas_acceso.py`, «Portada sin cambios»: supone que Notas es la segunda tarjeta; buscar el `<article>` con `id="ins-notas"`.
+
+### A2 (Codex, adversarial)
+
+- Corregido (alto): una competencia reactivada con la pantalla abierta perdía su marca al guardar. Ahora el POST lleva el universo que se mostró y, si cambió, responde 400 sin guardar (escenario «Catálogo cambiado al guardar», design D5).
+- Deuda (medio), `static/js/competencias.js`, `pendiente()`: con B1={X,Y} y B4={Y} guardados, quitar X del B1 la vuelve obligatoria en el B4; `base()` y `borrador()` la suman, `cambios()` da 0 y «Guardar» queda deshabilitado, aunque X no tiene marca en ningún periodo del año. El servidor la agrega en el próximo guardado del B4. Arreglo propuesto: `pendiente()` verdadero si falta una obligatoria en `guardado`.
+- Corregido (medio), `catalogo/0003`: `db_default=False` en el campo y en la migración (es el Minor de la parte A). Un INSERT sin la columna, como el de `main`, la deja en `False`.

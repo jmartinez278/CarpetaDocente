@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='institucionarea',
             name='a_cargo_docente_curso',
-            field=models.BooleanField(default=False, verbose_name='a cargo del docente de curso'),
+            field=models.BooleanField(db_default=False, default=False, verbose_name='a cargo del docente de curso'),
         ),
     ]

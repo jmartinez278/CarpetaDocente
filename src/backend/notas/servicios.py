@@ -267,13 +267,18 @@ def _marcas_existentes(seccion, periodo, permitido):
     )
 
 
-def guardar_marcas(usuario, seccion, numero, ids, hoy=None):
+def guardar_marcas(usuario, seccion, numero, ids, hoy=None, *, visto):
     """Guarda el conjunto completo de marcas del periodo ``numero``, todo o nada (D5).
 
     Bloquea la sección: dos guardados del mismo periodo van en fila y el segundo compara con lo
     que dejó el primero. Compara, crea y borra solo dentro del ``universo`` de ``usuario``; las
     obligatorias del último periodo se agregan aunque no vengan. Deja COMPETENCIAS_MARCADAS si
     algo cambió (D10). Devuelve ``CambiosMarcas``.
+
+    ``visto`` es el universo que mostró la pantalla. Si ya no es el de ahora (el Administrador
+    activó o desactivó una competencia con la pantalla abierta), no se guarda nada: el envío
+    omitiría una marca que la tutora no vio y el guardado la borraría (escenario «Catálogo
+    cambiado al guardar»).
 
     Lanza ``PeriodoNoMarcable`` (año CERRADO o periodo que no empezó), ``Periodo.DoesNotExist``
     (no hay ese número en el año de la sección), ``ValidationError`` con ``CONJUNTO_NO_VALIDO``
@@ -293,7 +298,7 @@ def guardar_marcas(usuario, seccion, numero, ids, hoy=None):
         if periodo.fecha_inicio > hoy:
             raise PeriodoNoMarcable
         permitido = universo(usuario, seccion)
-        if not ids <= permitido:
+        if set(visto) != permitido or not ids <= permitido:
             raise ValidationError(CONJUNTO_NO_VALIDO)
         nuevo = ids | competencias_obligatorias(usuario, seccion, periodo, permitido)
         if not nuevo:

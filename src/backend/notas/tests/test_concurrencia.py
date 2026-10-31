@@ -33,6 +33,7 @@ def test_dos_guardados_a_la_vez_dejan_uno_de_los_dos_completo(
 ):
     con_comunicacion = ids_de(MATEMATICA, COMUNICACION)
     solo_matematica = ids_de(MATEMATICA)
+    visto = servicios.universo(docente, seccion_tutora)
     leido, seguir = threading.Event(), threading.Event()
     existentes = servicios._marcas_existentes
 
@@ -48,12 +49,16 @@ def test_dos_guardados_a_la_vez_dejan_uno_de_los_dos_completo(
     errores = []
     primero = en_hilo(
         "primero",
-        lambda: servicios.guardar_marcas(docente, seccion_tutora, 3, con_comunicacion, OCT_30),
+        lambda: servicios.guardar_marcas(
+            docente, seccion_tutora, 3, con_comunicacion, OCT_30, visto=visto
+        ),
         errores,
     )
     segundo = en_hilo(
         "segundo",
-        lambda: servicios.guardar_marcas(docente, seccion_tutora, 3, solo_matematica, OCT_30),
+        lambda: servicios.guardar_marcas(
+            docente, seccion_tutora, 3, solo_matematica, OCT_30, visto=visto
+        ),
         errores,
     )
 

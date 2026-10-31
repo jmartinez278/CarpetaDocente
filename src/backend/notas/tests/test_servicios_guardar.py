@@ -23,8 +23,11 @@ from notas.tests.conftest import (
 pytestmark = pytest.mark.django_db
 
 
-def guardar(usuario, seccion, numero, ids, hoy=OCT_30):
-    return servicios.guardar_marcas(usuario, seccion, numero, ids, hoy=hoy)
+def guardar(usuario, seccion, numero, ids, hoy=OCT_30, visto=None):
+    """``visto`` es el universo que mostró la pantalla; por defecto, el de ahora."""
+    if visto is None:
+        visto = servicios.universo(usuario, seccion)
+    return servicios.guardar_marcas(usuario, seccion, numero, ids, hoy=hoy, visto=visto)
 
 
 def marcas(seccion, numero):
@@ -267,3 +270,40 @@ def test_la_marca_de_un_area_a_cargo_sigue_tras_guardar(
 
     assert marcas(seccion_tutora, 3) == siete | {de_ingles}
     assert de_ingles not in cambios.quitadas
+
+
+# --- Universo que cambió con la pantalla abierta (escenario «Catálogo cambiado al guardar») ---
+
+
+def test_una_competencia_reactivada_con_la_pantalla_abierta_no_pierde_su_marca(
+    docente, seccion_tutora, bimestres, universo_ie
+):
+    guardar(docente, seccion_tutora, 2, universo_ie)
+    reactivada = Competencia.objects.get(area__codigo_siagie=MATEMATICA, orden=1)
+    reactivada.activa = False
+    reactivada.save()
+    visto = servicios.universo(docente, seccion_tutora)  # La pantalla abre sin ella.
+    reactivada.activa = True
+    reactivada.save()
+
+    with pytest.raises(ValidationError) as error:
+        guardar(docente, seccion_tutora, 2, visto - {max(visto)}, visto=visto)
+
+    assert error.value.messages == [servicios.CONJUNTO_NO_VALIDO]
+    assert marcas(seccion_tutora, 2) == universo_ie
+    assert len(entradas()) == 1
+
+
+def test_una_competencia_desactivada_con_la_pantalla_abierta_no_guarda_nada(
+    docente, seccion_tutora, bimestres, universo_ie, siete
+):
+    visto = servicios.universo(docente, seccion_tutora)
+    desactivada = Competencia.objects.get(area__codigo_siagie=COMUNICACION, orden=1)
+    desactivada.activa = False
+    desactivada.save()
+
+    with pytest.raises(ValidationError) as error:
+        guardar(docente, seccion_tutora, 3, siete - {desactivada.pk}, visto=visto)
+
+    assert error.value.messages == [servicios.CONJUNTO_NO_VALIDO]
+    assert not CompetenciaPeriodo.objects.exists()

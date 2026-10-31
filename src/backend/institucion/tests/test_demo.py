@@ -654,7 +654,14 @@ def test_quitar_borra_las_marcas_demo_y_no_las_de_tres_a(
     cargar, anio, con_bimestres, tres_a_real, docente
 ):
     cargar(hoy=OCT_15)
-    notas.guardar_marcas(docente, tres_a_real, 2, notas.universo(docente, tres_a_real), hoy=OCT_15)
+    notas.guardar_marcas(
+        docente,
+        tres_a_real,
+        2,
+        notas.universo(docente, tres_a_real),
+        hoy=OCT_15,
+        visto=notas.universo(docente, tres_a_real),
+    )
 
     resumen = demo.quitar_demo()
 
@@ -668,7 +675,14 @@ def test_quitar_borra_las_marcas_demo_y_no_las_de_tres_a(
 
 def test_descartar_borra_las_marcas_y_las_cuenta(anio, con_bimestres, tres_a_real, docente):
     servicios.guardar_periodos(anio, demo.bimestres_ejemplo(2027))
-    notas.guardar_marcas(docente, tres_a_real, 2, notas.universo(docente, tres_a_real), hoy=OCT_15)
+    notas.guardar_marcas(
+        docente,
+        tres_a_real,
+        2,
+        notas.universo(docente, tres_a_real),
+        hoy=OCT_15,
+        visto=notas.universo(docente, tres_a_real),
+    )
 
     conteos = demo.descartar_seccion(tres_a_real)
 

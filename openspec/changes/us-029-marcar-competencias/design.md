@@ -44,7 +44,7 @@
 
 ### D2. `a_cargo_docente_curso` (`catalogo/models.py`, migración `0003`)
 
-- `BooleanField("a cargo del docente de curso", default=False)` en `InstitucionArea`. `asegurar_areas` no cambia (el valor por defecto basta).
+- `BooleanField("a cargo del docente de curso", default=False, db_default=False)` en `InstitucionArea`: el `DEFAULT false` queda en la base, así el despliegue anterior inserta sin la columna mientras Vercel migra (A2). `asegurar_areas` no cambia (el valor por defecto basta).
 - Panel: el campo entra en `fields`, `list_display` y `list_editable` de `InstitucionAreaAdmin`; `RegistraEnPanel` ya deja CATALOGO_EDITADO con el nombre del campo.
 - No hay restricción con `se_trabaja`: un área que no se trabaja no aparece, tenga o no la marca.
 
@@ -60,13 +60,13 @@
 - Casos de la pantalla (spec «Sin periodo para marcar»): sin periodos; sin vigente con algún anterior (hueco); sin vigente ni anterior (antes del primero, con la fecha de inicio del periodo 1).
 - `hoy` es `timezone.localdate()` en la vista; el servicio lo recibe para que las pruebas fijen la fecha.
 
-### D5. Guardado: `guardar_marcas(usuario, seccion, numero, ids)`
+### D5. Guardado: `guardar_marcas(usuario, seccion, numero, ids, *, visto)`
 
 En `transaction.atomic()`:
 
 1. La sección con `select_for_update()` y su año. Año CERRADO → `PeriodoNoMarcable`.
 2. El periodo del año por `numero` (`Periodo.DoesNotExist` si no hay). `fecha_inicio > hoy` → `PeriodoNoMarcable`.
-3. `ids` fuera del `universo` → `ValidationError(CONJUNTO_NO_VALIDO)`.
+3. `visto` (el universo que mostró la pantalla, que el JS devuelve en el POST) distinto del `universo` de ahora, o `ids` fuera del `universo` → `ValidationError(CONJUNTO_NO_VALIDO)`. Sin esa comparación, una competencia reactivada con la pantalla abierta no viene en el envío y el paso 5 borraría su marca (A2).
 4. `nuevo = ids ∪ competencias_obligatorias(...)` (D7). Vacío → `ValidationError(SIN_MARCAS)` («Marca al menos una competencia para guardar.»): sin una fila de «periodo guardado» (D1), guardar vacío dejaría el periodo como si nunca se hubiera guardado y volvería a abrir con todo marcado (decisión 4).
 5. `existentes` = las marcas del periodo dentro del `universo`. `quitadas = existentes − nuevo`; si alguna `tiene_notas` → `CompetenciaConNotas(ids)` con `MENSAJE_CON_NOTAS`, sin guardar nada.
 6. `agregadas = nuevo − existentes`: `bulk_create`; `quitadas`: `delete()`. Si hubo cambios, COMPETENCIAS_MARCADAS (D10).

@@ -469,6 +469,8 @@
       .filter((id) => seleccion.has(id))
       .sort((a, b) => Number(a) - Number(b))
       .forEach((id) => cuerpo.append("competencia", id));
+    // El universo que se mostró: si cambió en el servidor, no guarda y pide recargar (D5).
+    datos.universo.forEach((id) => cuerpo.append("universo", id));
     const respuesta = await pedir(datos.url_guardar.replace(/\/0\/$/, `/${numero}/`), cuerpo);
     const redireccion = respuesta?.headers.get("HX-Redirect");
 

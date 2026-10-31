@@ -73,7 +73,10 @@ class InstitucionArea(models.Model):
         verbose_name="área",
     )
     se_trabaja = models.BooleanField("se trabaja", default=True)
-    a_cargo_docente_curso = models.BooleanField("a cargo del docente de curso", default=False)
+    # ``db_default``: el despliegue anterior inserta sin la columna mientras Vercel migra (A2).
+    a_cargo_docente_curso = models.BooleanField(
+        "a cargo del docente de curso", default=False, db_default=False
+    )
 
     class Meta:
         db_table = "institucion_area"

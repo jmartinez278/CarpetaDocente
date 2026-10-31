@@ -58,9 +58,13 @@ def datos(respuesta):
     return json.loads(encontrado.group(1))
 
 
-def guardar(cliente, seccion, numero, ids):
+def guardar(cliente, seccion, numero, ids, visto=None):
+    """``visto`` es el universo que mostró la pantalla; por defecto, el de ahora."""
+    if visto is None:
+        visto = sorted(servicios.universo(seccion.docente, seccion))
     return cliente.post(
-        reverse("competencias:guardar", args=[seccion.pk, numero]), {"competencia": ids}
+        reverse("competencias:guardar", args=[seccion.pk, numero]),
+        {"competencia": ids, "universo": visto},
     )
 
 
@@ -83,6 +87,10 @@ def test_el_json_lleva_la_url_del_guardado_con_el_numero_por_cambiar(cliente, se
     url = datos(abrir(cliente, seccion_tutora))["url_guardar"]
 
     assert url == f"/docente/secciones/{seccion_tutora.pk}/competencias/0/"
+
+
+def test_el_json_lleva_el_universo_que_la_pantalla_devuelve_al_guardar(cliente, seccion_tutora, ie):
+    assert datos(abrir(cliente, seccion_tutora))["universo"] == sorted(ie)
 
 
 # --- Periodos (spec "Periodos que se marcan") ---
@@ -464,4 +472,26 @@ def test_un_guardado_sin_token_csrf_se_rechaza(docente, seccion_tutora, ie):
     respuesta = guardar(cliente, seccion_tutora, 3, sorted(ids_de(MATEMATICA)))
 
     assert respuesta.status_code == 403
+    assert not CompetenciaPeriodo.objects.exists()
+
+
+def test_un_universo_distinto_al_actual_responde_400_sin_guardar(
+    cliente, seccion_tutora, bimestres, ie
+):
+    """Escenario "Catálogo cambiado al guardar"."""
+    siete = sorted(ids_de(MATEMATICA, COMUNICACION))
+
+    respuesta = guardar(cliente, seccion_tutora, 3, siete, visto=siete)
+
+    assert respuesta.status_code == 400
+    assert respuesta.json() == {"mensaje": servicios.CONJUNTO_NO_VALIDO}
+    assert not CompetenciaPeriodo.objects.exists()
+
+
+@pytest.mark.parametrize("visto", [[], ["x"]])
+def test_sin_universo_o_con_uno_que_no_es_numero_responde_400(cliente, seccion_tutora, ie, visto):
+    respuesta = guardar(cliente, seccion_tutora, 3, sorted(ids_de(MATEMATICA)), visto=visto)
+
+    assert respuesta.status_code == 400
+    assert respuesta.json() == {"mensaje": servicios.CONJUNTO_NO_VALIDO}
     assert not CompetenciaPeriodo.objects.exists()
