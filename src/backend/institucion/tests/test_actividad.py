@@ -134,6 +134,21 @@ def test_editar_sin_cambios_no_deja_entrada(cliente, estudiante, seccion_docente
     assert sin_sesion() == []
 
 
+def test_editar_con_una_copia_vieja_deja_estudiante_editado(docente, estudiante):
+    """Otra pestaña cambió los apellidos: volver a los de la copia vieja también es un cambio."""
+    vieja = Estudiante.objects.get(pk=estudiante.pk)
+    servicios.editar_estudiante(estudiante, "QUISPE MAMANÍ", "ANA", usuario=docente)
+
+    servicios.editar_estudiante(vieja, "QUISPE MAMANI", "ANA", usuario=docente)
+
+    estudiante.refresh_from_db()
+    assert estudiante.apellidos == "QUISPE MAMANI"
+    assert [entrada.detalle for entrada in entradas(Operacion.ESTUDIANTE_EDITADO)] == [
+        {"campos": ["apellidos"]},
+        {"campos": ["apellidos"]},
+    ]
+
+
 def test_quitar_deja_estudiante_quitado(cliente, docente, estudiante, seccion_docente):
     cliente.post(url("quitar", seccion_docente, estudiante.pk))
 

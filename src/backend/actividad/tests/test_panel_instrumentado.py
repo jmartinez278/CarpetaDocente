@@ -10,7 +10,9 @@ from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.test import RequestFactory
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -362,6 +364,56 @@ def test_el_historial_de_django_sigue_apareciendo(panel, institucion):
 
     banderas = set(LogEntry.objects.values_list("action_flag", flat=True))
     assert banderas == {ADDITION, CHANGE}
+
+
+def bloquea(tabla, peticion):
+    """La fila se lee con ``FOR UPDATE``: lo que se compara con el formulario es lo guardado."""
+    with CaptureQueriesContext(connection) as consultas:
+        peticion()
+    return any(
+        "FOR UPDATE" in consulta["sql"] and f'"{tabla}"' in consulta["sql"]
+        for consulta in consultas.captured_queries
+    )
+
+
+def test_la_ficha_bloquea_la_fila_antes_de_comparar(panel, docente):
+    assert bloquea(
+        Usuario._meta.db_table,
+        lambda: panel.post(url("cuentas_usuario", "change", docente.pk), datos_cuenta(docente)),
+    )
+
+
+def test_el_cambio_de_contrasena_bloquea_la_fila(panel, docente):
+    assert bloquea(
+        Usuario._meta.db_table,
+        lambda: panel.post(
+            reverse("admin:auth_user_password_change", args=[docente.pk]),
+            {"password1": CLAVE_NUEVA, "password2": CLAVE_NUEVA, "usable_password": "true"},
+        ),
+    )
+
+
+def test_list_editable_bloquea_las_filas(panel, institucion):
+    fila = InstitucionArea.objects.filter(institucion=institucion).first()
+
+    assert bloquea(
+        InstitucionArea._meta.db_table,
+        lambda: panel.post(
+            url("catalogo_institucionarea", "changelist"),
+            {
+                "form-TOTAL_FORMS": "1",
+                "form-INITIAL_FORMS": "1",
+                "form-0-id": fila.pk,
+                "_save": "Guardar",
+            },
+        ),
+    )
+
+
+def test_ver_la_ficha_no_bloquea(panel, docente):
+    assert not bloquea(
+        Usuario._meta.db_table, lambda: panel.get(url("cuentas_usuario", "change", docente.pk))
+    )
 
 
 def test_grupos_fuera_del_panel(panel):

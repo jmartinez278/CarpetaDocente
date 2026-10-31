@@ -123,3 +123,17 @@ Parte 2B (revisión de la parte; corregidos antes del commit: desactivar una cue
 - "Dejó su operación" acepta cualquier entrada de esa operación, también una creada por un fixture; hoy cada escenario la comprueba por su cuenta. Contar antes y después lo haría más estricto.
 - La lista de nombres prohibidos del fixture tiene los apellidos de las pruebas pero no todos los nombres de pila ("ANA", "LUIS"); la prueba de editar sí los busca.
 - `cargar_demo` sobre una demo ya cargada deja DEMO_CARGADA con `secciones: 0` (reescribe las contraseñas de las cuentas demo, que sí es una escritura).
+
+Revisión final A2 (Codex; corregido: un guardado que revierte un cambio ajeno ya deja su entrada. `editar_estudiante` compara con la fila bloqueada y la ficha, el cambio de contraseña y `list_editable` del panel releen la fila con `FOR UPDATE`. Las dos medias quedan como deuda por decisión del equipo):
+
+- **[media, deuda]** CIERRE_SESION se confirma antes de borrar la sesión: Django emite `user_logged_out` antes de `session.flush()` y el receptor abre su propio `atomic()`. Si falla el borrado de `django_session`, queda la entrada y la sesión sigue válida. Corrección propuesta: envolver `logout()` completo en un `atomic()` en la salida normal, la del panel y la de inactividad, con una prueba que haga fallar `Session.delete`.
+- **[media, deuda]** La guardia de solo lectura de `RegistroActividad.save()` usa `_state.adding`: una instancia nueva con la PK de una entrada existente pasa la guardia y Django hace UPDATE. Solo es alcanzable desde código, no desde la interfaz. Corrección propuesta: forzar INSERT en la primera persistencia (`force_insert`) y una prueba que construya otra instancia con el mismo id.
+- La prueba del bloqueo en el panel comprueba que la lectura lleva `FOR UPDATE`, no reproduce dos peticiones con hilos.
+
+Revisión del arreglo de A2 (sin Critical ni Important; los Minor quedan aquí):
+
+- `editar_estudiante` compara `apellidos` y `nombres` con la fila bloqueada, pero `_guardar_estudiante` guarda la instancia entera: una copia vieja revertiría `estado`, `fecha_estado` o `seccion` sin entrada. Hoy no hay forma de llegar a eso (ningún servicio cambia `estado`); hay que corregirlo antes de US-030 con `update_fields=["apellidos", "nombres"]`.
+- `RegistraEnPanel.get_object` se salta el bloqueo en silencio si un POST llega sin transacción (en las pruebas nunca pasa) y usa la conexión por defecto en vez de `router.db_for_write`.
+- Las pruebas del panel comprueban que la consulta lleva `FOR UPDATE`, no el comportamiento; una prueba por admin con `get_object` devolviendo una copia vieja lo cerraría.
+- El `atomic()` del POST del changelist también cubre las acciones: "Desbloquear cuenta" pasa a ser una sola transacción con puntos de guardado, y su docstring ("una transacción por cuenta") ya no lo describe exactamente.
+- `SeccionAdmin.get_object` sustituye a la de la mezcla sin llamar a `super()` (ya bloquea con una sola lectura); falta decirlo en su docstring.

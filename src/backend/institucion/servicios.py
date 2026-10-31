@@ -407,13 +407,19 @@ def editar_estudiante(estudiante, apellidos, nombres, usuario=None):
 
     Si el estudiante ya no existe (quitado en otra pestaña), lanza ``Estudiante.DoesNotExist``.
     Deja ESTUDIANTE_EDITADO con los campos que cambiaron, nunca los nombres (US-008, RN-015);
-    sin cambios, no deja entrada.
+    sin cambios, no deja entrada. Compara con la fila guardada y bloqueada, no con ``estudiante``:
+    una copia vieja que revierte otra edición también es un cambio (RNF-016).
     """
     nuevos = {"apellidos": normalizar_nombre(apellidos), "nombres": normalizar_nombre(nombres)}
-    campos = [campo for campo, valor in nuevos.items() if getattr(estudiante, campo) != valor]
     estudiante.apellidos = nuevos["apellidos"]
     estudiante.nombres = nuevos["nombres"]
     with transaction.atomic():
+        guardado = (
+            Estudiante.objects.select_for_update().filter(pk=estudiante.pk).values(*nuevos).first()
+        )
+        if guardado is None:
+            raise Estudiante.DoesNotExist
+        campos = [campo for campo, valor in nuevos.items() if guardado[campo] != valor]
         _guardar_estudiante(estudiante, existente=True)
         if campos:
             registrar(

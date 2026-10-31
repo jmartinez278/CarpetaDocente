@@ -7,8 +7,12 @@ historial del panel sigue igual) y luego a ``registrar`` con lo que devuelve
 contraseña), el ``ModelAdmin`` abre el suyo.
 
 Los campos salen de ``construct_change_message`` (los nombres de ``form.changed_data``), nunca
-de sus valores (RN-015).
+de sus valores (RN-015). ``changed_data`` compara con la fila leída al recibir el POST: la mezcla
+la lee con ``FOR UPDATE`` para que nadie la cambie entre esa lectura y el guardado. Si no, un
+guardado podría revertir un cambio ajeno sin que conste (RNF-016).
 """
+
+from django.db import connection, router, transaction
 
 from actividad.servicios import registrar
 
@@ -32,6 +36,23 @@ class RegistraEnPanel:
 
     def campos_cambiados(self, form):
         return list(form.changed_data)
+
+    def get_object(self, request, object_id, from_field=None):
+        """En un POST, la ficha y el cambio de contraseña usan la fila releída y bloqueada."""
+        obj = super().get_object(request, object_id, from_field)
+        if obj is None or request.method != "POST" or not connection.in_atomic_block:
+            return obj
+        return self.get_queryset(request).select_for_update(of=("self",)).filter(pk=obj.pk).first()
+
+    def changelist_view(self, request, extra_context=None):
+        """Django lee las filas de ``list_editable`` fuera de su ``atomic()``: aquí van dentro."""
+        if request.method != "POST":
+            return super().changelist_view(request, extra_context)
+        with transaction.atomic(using=router.db_for_write(self.model)):
+            return super().changelist_view(request, extra_context)
+
+    def _get_list_editable_queryset(self, request, prefix):
+        return super()._get_list_editable_queryset(request, prefix).select_for_update(of=("self",))
 
     def construct_change_message(self, request, form, formsets, add=False):
         setattr(request, CAMPOS_DEL_PANEL, self.campos_cambiados(form))
