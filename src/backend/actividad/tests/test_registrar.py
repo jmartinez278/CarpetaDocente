@@ -93,8 +93,12 @@ def test_la_operacion_falla_y_no_queda_entrada(docente):
 
 
 def test_el_registro_falla_y_la_operacion_no_se_guarda(docente):
-    with pytest.raises(ValueError), transaction.atomic():
-        Institucion.objects.create(nombre="I.E. Ficticia N.° 9")
-        registrar(docente, "OPERACION_INVENTADA")
+    def crear_y_registrar():
+        with transaction.atomic():
+            Institucion.objects.create(nombre="I.E. Ficticia N.° 9")
+            registrar(docente, "OPERACION_INVENTADA")
+
+    with pytest.raises(ValueError):
+        crear_y_registrar()
 
     assert not Institucion.objects.filter(nombre="I.E. Ficticia N.° 9").exists()

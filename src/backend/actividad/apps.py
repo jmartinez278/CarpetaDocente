@@ -6,4 +6,5 @@ class ActividadConfig(AppConfig):
     name = "actividad"
 
     def ready(self):
-        from actividad import signals  # noqa: F401  (inicio y cierre de sesión, D4)
+        # Señales de inicio y cierre de sesión (D4).
+        from actividad import signals  # noqa: F401
