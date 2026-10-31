@@ -10,7 +10,7 @@ from django.utils import timezone
 from asistencia.models import Asistencia, Jornada
 from cuentas.models import Usuario
 from institucion import demo, servicios
-from institucion.models import Estudiante, Seccion
+from institucion.models import Estudiante, Institucion, Periodo, Seccion
 
 pytestmark = pytest.mark.django_db
 
@@ -64,6 +64,28 @@ def test_cargar_demo_imprime_el_resumen(institucion, anio, settings):
     assert "1.º A" in salida and "2.º D" in salida
     assert "3 estudiantes por sección" in salida
     assert Estudiante.objects.count() == 24
+
+
+def test_cargar_demo_nombra_los_bimestres_en_el_resumen(institucion, anio, settings):
+    settings.DEBUG = True
+    institucion.organizacion_periodos = Institucion.OrganizacionPeriodos.BIMESTRE
+    institucion.save()
+
+    salida = correr("cargar_demo", institucion=institucion.pk, estudiantes=3)
+
+    assert "Bimestres 1 a 4" in salida
+    assert Periodo.objects.count() == 4
+
+
+def test_cargar_demo_sin_organizacion_dice_que_se_configuran_en_el_panel(
+    institucion, anio, settings
+):
+    settings.DEBUG = True
+
+    salida = correr("cargar_demo", institucion=institucion.pk, estudiantes=3)
+
+    assert "se configuran en el panel" in salida
+    assert not Periodo.objects.exists()
 
 
 def test_cargar_demo_con_confirmar_fuera_de_desarrollo(institucion, anio):

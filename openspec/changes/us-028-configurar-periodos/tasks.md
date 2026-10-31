@@ -25,9 +25,10 @@
 
 ## 3. Demo y pantalla (normal)
 
-- [ ] 3.1 Prueba primero, `institucion/tests/test_demo.py` y `test_comandos_demo.py`: con BIMESTRE y año sin periodos, la carga crea los 4 bimestres de ejemplo, el resumen los nombra y queda PERIODOS_CONFIGURADOS con usuario vacío; año con periodos → no cambian; organización vacía o TRIMESTRE → sin periodos y el resumen dice que se configuran en el panel; volver a cargar sin periodos crea solo los periodos; `quitar_demo` y `descartar_seccion` no tocan los periodos; si la carga falla después de los periodos, no queda ninguno (todo o nada). Luego D7 en `demo.py`. Verificar: rojo y luego verde; las pruebas de EN-06 siguen en verde
-- [ ] 3.2 Prueba primero, `institucion/tests/test_periodos_e2e.py`: el Administrador llena los 4 bimestres en la ficha y guarda; un cruce muestra el mensaje junto a la fila; axe de la ficha con filas vacías, con el error y de solo lectura (año CERRADO), en ambos temas a 360 y 1280 px; 360 px sin desplazamiento horizontal de la página. Verificar: e2e en verde con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`
-- [ ] 3.3 Ficha vista en claro/oscuro y celular/escritorio (la marca Marco). `verificar.py` y commit
+- [x] 3.0 Prueba primero, `test_admin_periodos.py`: en la ficha de un año con periodos, `institucion` es de solo lectura, y un POST que la cambia no la cambia. Luego `get_readonly_fields` de `AnioEscolarAdmin`. Verificar: rojo y luego verde (resuelve el Minor de la Parte 2B)
+- [x] 3.1 Prueba primero, `institucion/tests/test_demo.py` y `test_comandos_demo.py`: con BIMESTRE y año sin periodos, la carga crea los 4 bimestres de ejemplo, el resumen los nombra y queda PERIODOS_CONFIGURADOS con usuario vacío; año con periodos → no cambian; organización vacía o TRIMESTRE → sin periodos y el resumen dice que se configuran en el panel; volver a cargar sin periodos crea solo los periodos; `quitar_demo` y `descartar_seccion` no tocan los periodos; si la carga falla después de los periodos, no queda ninguno (todo o nada). Luego D7 en `demo.py`. Verificar: rojo y luego verde; las pruebas de EN-06 siguen en verde
+- [x] 3.2 Prueba primero, `institucion/tests/test_periodos_e2e.py`: el Administrador llena los 4 bimestres en la ficha y guarda; un cruce muestra el mensaje junto a la fila; axe de la ficha con filas vacías, con el error y de solo lectura (año CERRADO), en ambos temas a 360 y 1280 px; 360 px sin desplazamiento horizontal de la página. Verificar: e2e en verde con el CSS compilado y `DJANGO_ALLOW_ASYNC_UNSAFE=true`
+- [x] 3.3 Ficha vista en claro/oscuro y celular/escritorio (la marca Marco). `verificar.py` y commit
 
 ## 4. Cierre
 

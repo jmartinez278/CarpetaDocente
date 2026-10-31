@@ -9,10 +9,11 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+from actividad.models import Operacion, RegistroActividad
 from asistencia.models import Asistencia, Jornada
 from cuentas.models import Usuario
 from institucion import demo, servicios
-from institucion.models import AnioEscolar, Estudiante, Seccion
+from institucion.models import AnioEscolar, Estudiante, Institucion, Periodo, Seccion
 
 pytestmark = pytest.mark.django_db
 
@@ -53,6 +54,116 @@ def nada_creado():
         and not Usuario.objects.filter(username__in=DEMO).exists()
         and not Seccion.objects.filter(docente__isnull=False).exists()
     )
+
+
+# --- Bimestres de ejemplo (US-028, D7) ---
+
+BIMESTRES_2027 = [
+    (datetime.date(2027, 3, 16), datetime.date(2027, 5, 15)),
+    (datetime.date(2027, 5, 25), datetime.date(2027, 7, 24)),
+    (datetime.date(2027, 8, 10), datetime.date(2027, 10, 9)),
+    (datetime.date(2027, 10, 19), datetime.date(2027, 12, 18)),
+]
+
+
+def con_organizacion(institucion, organizacion):
+    institucion.organizacion_periodos = organizacion
+    institucion.save()
+
+
+def fechas_de(anio):
+    return [(p.fecha_inicio, p.fecha_fin) for p in anio.periodos.order_by("numero")]
+
+
+def entradas_periodos():
+    return RegistroActividad.objects.filter(operacion=Operacion.PERIODOS_CONFIGURADOS)
+
+
+def test_con_bimestres_y_sin_periodos_crea_los_cuatro_de_ejemplo(cargar, anio, institucion):
+    con_organizacion(institucion, Institucion.OrganizacionPeriodos.BIMESTRE)
+
+    resumen = cargar()
+
+    assert fechas_de(anio) == BIMESTRES_2027
+    assert "Bimestres 1 a 4" in resumen.texto()
+    entrada = entradas_periodos().get()
+    assert entrada.usuario is None
+    assert entrada.detalle == {"periodos": 4}
+
+
+def test_con_periodos_la_carga_no_los_cambia(cargar, anio, institucion):
+    con_organizacion(institucion, Institucion.OrganizacionPeriodos.BIMESTRE)
+    for numero, (inicio, fin) in enumerate(BIMESTRES_2027, start=1):
+        Periodo.objects.create(
+            anio_escolar=anio,
+            numero=numero,
+            fecha_inicio=inicio + datetime.timedelta(days=1),
+            fecha_fin=fin,
+        )
+    antes = fechas_de(anio)
+
+    resumen = cargar()
+
+    assert fechas_de(anio) == antes
+    assert not entradas_periodos().exists()
+    assert "ya los tiene" in resumen.texto()
+
+
+@pytest.mark.parametrize("organizacion", [None, Institucion.OrganizacionPeriodos.TRIMESTRE])
+def test_sin_bimestres_no_crea_periodos_y_lo_dice(cargar, anio, institucion, organizacion):
+    con_organizacion(institucion, organizacion)
+
+    resumen = cargar()
+
+    assert not Periodo.objects.exists()
+    assert not entradas_periodos().exists()
+    assert len(resumen.cargadas) == 8
+    assert "se configuran en el panel" in resumen.texto()
+
+
+def test_volver_a_cargar_sin_periodos_crea_solo_los_periodos(cargar, anio, institucion):
+    cargar()
+    conteos = (Estudiante.objects.count(), Jornada.objects.count(), Asistencia.objects.count())
+    con_organizacion(institucion, Institucion.OrganizacionPeriodos.BIMESTRE)
+
+    resumen = cargar()
+
+    assert fechas_de(anio) == BIMESTRES_2027
+    assert resumen.cargadas == []
+    assert "Bimestres 1 a 4" in resumen.texto()
+    assert conteos == (
+        Estudiante.objects.count(),
+        Jornada.objects.count(),
+        Asistencia.objects.count(),
+    )
+
+
+def test_quitar_demo_y_descartar_seccion_no_tocan_los_periodos(cargar, anio, institucion):
+    con_organizacion(institucion, Institucion.OrganizacionPeriodos.BIMESTRE)
+    cargar()
+
+    demo.descartar_seccion(seccion(anio, 1, "A"))
+    demo.quitar_demo()
+
+    assert fechas_de(anio) == BIMESTRES_2027
+
+
+def test_si_la_carga_falla_despues_de_los_periodos_no_queda_ninguno(
+    cargar, anio, institucion, monkeypatch
+):
+    con_organizacion(institucion, Institucion.OrganizacionPeriodos.BIMESTRE)
+
+    def falla(*args, **kwargs):
+        raise ValidationError("falla")
+
+    monkeypatch.setattr(demo, "registrar", falla)
+
+    with pytest.raises(ValidationError):
+        cargar()
+
+    assert not Periodo.objects.exists()
+    assert not entradas_periodos().exists()
+    assert nada_creado()
 
 
 # --- Cargar la demostración ---

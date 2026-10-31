@@ -280,6 +280,41 @@ def test_anio_cerrado_un_post_que_cambia_las_fechas_no_las_cambia(admin_client, 
     assert not operaciones_de_periodos()
 
 
+def test_con_periodos_la_institucion_del_anio_es_de_solo_lectura(admin_client, anio_con_periodos):
+    respuesta = admin_client.get(url_anio(anio_con_periodos))
+
+    assert "institucion" not in respuesta.context["adminform"].form.fields
+
+
+def test_con_periodos_un_post_que_cambia_la_institucion_no_la_cambia(
+    admin_client, anio_con_periodos
+):
+    otra = Institucion.objects.create(nombre="Otra I.E. ficticia")
+    original = anio_con_periodos.institucion_id
+
+    admin_client.post(
+        url_anio(anio_con_periodos),
+        datos_anio(anio_con_periodos, BIMESTRES, institucion=otra.pk),
+    )
+
+    anio_con_periodos.refresh_from_db()
+    assert anio_con_periodos.institucion_id == original
+
+
+def test_sin_periodos_la_institucion_del_anio_sigue_editable(admin_client, anio):
+    respuesta = admin_client.get(url_anio(anio))
+
+    assert "institucion" in respuesta.context["adminform"].form.fields
+
+
+def test_cada_fecha_de_la_ficha_tiene_su_etiqueta_para_el_lector_de_pantalla(admin_client, anio):
+    respuesta = admin_client.get(url_anio(anio))
+
+    html = respuesta.content.decode()
+    assert 'aria-label="Periodo 1: fecha de inicio"' in html
+    assert 'aria-label="Periodo 4: fecha de fin"' in html
+
+
 # --- Organización de la institución ---
 
 

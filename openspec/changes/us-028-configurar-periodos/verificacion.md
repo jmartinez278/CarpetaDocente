@@ -16,6 +16,10 @@
 
 ### Parte 2B: ficha del año y de la institución en el panel
 
-- `AnioEscolarAdmin`: `institucion` sigue editable en la ficha. Mover a otra institución un año con periodos se salta la organización fija (D5); si además cambian las fechas, `validar_periodos` da `ValueError` (500). Solo pasa con más de una institución: deuda, o `institucion` de solo lectura cuando el año tiene periodos.
+- `AnioEscolarAdmin`: `institucion` sigue editable en la ficha. Resuelto en la tarea 3.0: de solo lectura cuando el año tiene periodos.
 - `test_admin_periodos.py`: falta la prueba de un POST que cierra el año y cambia periodos a la vez (se rechaza con "El año escolar está cerrado…" y no guarda nada).
 - `FormsetPeriodos.poner_error`: un `error_dict` del guardado con claves que no son números de fila daría 500; hoy `guardar_periodos` no lo produce.
+
+### Parte 3: demo y pantalla
+
+- `AnioEscolarAdmin.get_readonly_fields`: `obj.periodos.exists()` suma una consulta por cada vista de la ficha. Inocuo.

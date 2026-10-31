@@ -93,6 +93,13 @@ class FormsetPeriodos(BaseInlineFormSet):
         super().add_fields(form, index)
         if index is not None and form.instance.numero is None:
             form.instance.numero = index + 1
+        # La tabla da el nombre de la columna, no el de cada campo: sin esto, las fechas no
+        # tienen etiqueta para el lector de pantalla (axe ``label``).
+        numero = index + 1 if index is not None else "nuevo"
+        form.fields["fecha_inicio"].widget.attrs["aria-label"] = (
+            f"Periodo {numero}: fecha de inicio"
+        )
+        form.fields["fecha_fin"].widget.attrs["aria-label"] = f"Periodo {numero}: fecha de fin"
 
     def filas(self):
         return [
@@ -168,6 +175,14 @@ class AnioEscolarAdmin(RegistraEnPanel, admin.ModelAdmin):
     list_display = ["anio", "institucion", "estado"]
     list_filter = ["estado", "institucion"]
     list_select_related = ["institucion"]
+
+    def get_readonly_fields(self, request, obj=None):
+        """Con periodos guardados el año no cambia de institución: saltaría la organización fija
+        (D5) y dejaría periodos de otra organización."""
+        campos = list(super().get_readonly_fields(request, obj))
+        if obj is not None and obj.periodos.exists():
+            campos.append("institucion")
+        return campos
 
     def get_fields(self, request, obj=None):
         if obj is not None and not obj.institucion.organizacion_periodos:
