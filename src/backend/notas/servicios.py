@@ -228,6 +228,23 @@ class CambiosMarcas:
     quitadas: list[int] = field(default_factory=list)
 
 
+def marcas_por_periodo(seccion, permitido):
+    """Por id de periodo, los id marcados en la sección dentro de ``permitido``, ordenados.
+
+    Un periodo sin marcas dentro de ``permitido`` no aparece: la pantalla lo abre con todo
+    marcado (spec «Estado inicial del periodo»). Una consulta.
+    """
+    marcas = {}
+    filas = (
+        CompetenciaPeriodo.objects.filter(seccion=seccion, competencia_id__in=permitido)
+        .order_by("periodo_id", "competencia_id")
+        .values_list("periodo_id", "competencia_id")
+    )
+    for periodo_id, competencia_id in filas:
+        marcas.setdefault(periodo_id, []).append(competencia_id)
+    return marcas
+
+
 def _marcas_existentes(seccion, periodo, permitido):
     """Los id marcados en el periodo dentro de ``permitido``; las demás marcas no se leen."""
     return set(

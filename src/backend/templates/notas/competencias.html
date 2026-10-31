@@ -1,0 +1,14 @@
+{% extends "marco.html" %}
+{% comment %}
+Competencias desarrolladas en el periodo (design de US-029, D8 y D9). El servidor dibuja la lista y
+pasa por json_script el estado de cada periodo; competencias.js agrega el marcado y el guardado.
+{% endcomment %}
+
+{% block titulo %}Competencias · {{ seccion_corta }} · CarpetaDocente{% endblock %}
+
+{% block principal %}
+<main class="vista-competencias" data-dimension="notas">
+  <h1>Competencias · {{ seccion_corta }}</h1>
+  {{ datos|json_script:"datos-competencias" }}
+</main>
+{% endblock %}
