@@ -82,7 +82,7 @@ Abreviaturas: `est` = `institucion/tests/test_actividad.py`, `pin` = `actividad/
 
 Notas:
 - Cambiar de docente en un paso no existe: US-005 obliga a vaciar la sección y luego elegir a la otra docente (D3 de US-005). "Cambiar" deja SECCION_LIBERADA y luego SECCION_ASIGNADA.
-- `user_change_password` de Django no abre transacción (D5 suponía que sí): `UsuarioAdmin` la envuelve en `atomic()` para que la contraseña y su entrada vayan juntas.
+- `user_change_password` de Django no abre transacción (como dice D5): `UsuarioAdmin` la envuelve en `atomic()` para que la contraseña y su entrada vayan juntas.
 - `cargar_secciones` también deja ANIO_CREADO cuando crea el año (escritura de consola, "Toda escritura queda registrada"). `cargar_demo` deja una sola DEMO_CARGADA, sin ESTUDIANTES_IMPORTADOS por sección (`importar_lista_sin_registro`).
 - Verde: `uv run pytest --cov` (1233, 98,43 %) y e2e de `cuentas`, `institucion`, `catalogo`, `actividad` y `config` (US-003, US-005, US-006 y EN-06: 198).
 - Los campos del detalle son los nombres de `form.changed_data` (p. ej. `first_name`), que es lo que Django usa para armar el `change_message`, no sus etiquetas. Guardar una ficha sin cambios no deja entrada.
@@ -110,7 +110,7 @@ Parte 1B (revisión de la parte; corregidos antes del commit: las fechas del for
 
 Parte 2A (revisión de la parte; corregido antes del commit: la e2e de la lista del registro):
 
-- El reinicio de intentos de RN-024 se confirma en `authenticate()` (`intentar_ingreso`, su propio `atomic()`), antes de `form_valid`: si INICIO_SESION falla, `last_login` se revierte pero el contador queda en 0. D4 pedía los tres juntos; la contraseña era correcta, así que no cambia nada para la docente.
+- El reinicio de intentos de RN-024 se confirma en `authenticate()` (`intentar_ingreso`, su propio `atomic()`), antes de `form_valid`: si INICIO_SESION falla, `last_login` se revierte pero el contador queda en 0. La contraseña era correcta, así que no cambia nada para la docente (D4).
 - Sin pruebas de concurrencia de D6 (dos toques finales a la vez → un JORNADA_COMPLETA; primer toque doble → un REGISTRO_ASISTENCIA): lo garantiza el bloqueo de la jornada, sin prueba con hilos. Tampoco se prueba que un lote con un id de otra sección no deje entrada.
 - `_registrar_si_completa` hace hasta 4 consultas por toque (cuenta los activos dos veces y luego busca JORNADA_COMPLETA); cada toque suma de 4 a 6 consultas.
 - El `select_for_update` sobre `asistencia` en `marcar` y `marcar_restantes` es redundante con el bloqueo de la jornada (D6 lo pide; inofensivo).
