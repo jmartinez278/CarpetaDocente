@@ -12,6 +12,7 @@ _SESION = "actividad.tests.test_sesion"
 _PANEL = "actividad.tests.test_panel_instrumentado"
 _ESTUDIANTES = "institucion.tests.test_actividad"
 _ASISTENCIA = "asistencia.tests.test_actividad"
+_PERIODOS = "institucion.tests.test_servicios_periodos"
 
 ESCENARIOS: dict[Operacion, str] = {
     Operacion.INICIO_SESION: f"{_SESION}::test_ingreso_correcto_deja_inicio_sesion",
@@ -27,6 +28,12 @@ ESCENARIOS: dict[Operacion, str] = {
     Operacion.INSTITUCION_EDITADA: f"{_PANEL}::test_editar_institucion_deja_institucion_editada",
     Operacion.ANIO_CREADO: f"{_PANEL}::test_alta_de_anio_deja_anio_creado",
     Operacion.ANIO_EDITADO: f"{_PANEL}::test_editar_anio_deja_anio_editado",
+    Operacion.PERIODOS_CONFIGURADOS: (
+        f"{_PERIODOS}::test_guardar_crea_los_periodos_y_deja_periodos_configurados"
+    ),
+    Operacion.PERIODO_EDITADO: (
+        f"{_PERIODOS}::test_editar_dos_periodos_deja_dos_periodo_editado_sin_cambiar_sus_id"
+    ),
     Operacion.SECCION_CREADA: f"{_PANEL}::test_alta_de_seccion_deja_seccion_creada",
     Operacion.SECCION_EDITADA: f"{_PANEL}::test_editar_seccion_deja_seccion_editada",
     Operacion.SECCION_ASIGNADA: f"{_PANEL}::test_elegir_docente_deja_seccion_asignada",

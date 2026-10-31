@@ -3,8 +3,13 @@
 ``servicios`` importa estos modelos; por eso los métodos lo importan dentro de su cuerpo.
 """
 
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import DateRangeField, RangeOperators
 from django.db import models, transaction
-from django.db.models import Q
+from django.db.models import Deferrable, F, Func, Q, Value
+
+# Aquí y no en ``servicios`` porque la restricción de la base lo usa (US-028, D3).
+MENSAJE_CRUCE = "Las fechas se cruzan con otro periodo"
 
 
 class Institucion(models.Model):
@@ -89,6 +94,61 @@ class AnioEscolar(models.Model):
 
     def __str__(self):
         return f"{self.anio} ({self.get_estado_display().lower()}) – {self.institucion}"
+
+
+class Periodo(models.Model):
+    """Bimestre o trimestre de un año escolar (documento 11, 3.1; design de US-028, D1).
+
+    ``ex_periodo_cruce`` es diferida: la comprueba ``servicios.guardar_periodos`` al final del
+    guardado, así el orden de los ``UPDATE`` de un mismo guardado no importa (D3).
+    """
+
+    anio_escolar = models.ForeignKey(
+        AnioEscolar,
+        on_delete=models.CASCADE,
+        related_name="periodos",
+        verbose_name="año escolar",
+    )
+    numero = models.PositiveSmallIntegerField("número")
+    fecha_inicio = models.DateField("fecha de inicio")
+    fecha_fin = models.DateField("fecha de fin")
+
+    class Meta:
+        db_table = "periodo"
+        verbose_name = "periodo"
+        verbose_name_plural = "periodos"
+        ordering = ["numero"]
+        constraints = [
+            models.UniqueConstraint(fields=["anio_escolar", "numero"], name="uq_periodo"),
+            models.CheckConstraint(
+                condition=Q(numero__gte=1, numero__lte=4), name="ck_periodo_numero"
+            ),
+            models.CheckConstraint(
+                condition=Q(fecha_fin__gt=F("fecha_inicio")), name="ck_periodo_fechas"
+            ),
+            ExclusionConstraint(
+                name="ex_periodo_cruce",
+                expressions=[
+                    # '[]': los dos bordes cuentan como parte del periodo.
+                    (
+                        Func(
+                            F("fecha_inicio"),
+                            F("fecha_fin"),
+                            Value("[]"),
+                            function="DATERANGE",
+                            output_field=DateRangeField(),
+                        ),
+                        RangeOperators.OVERLAPS,
+                    ),
+                    ("anio_escolar", RangeOperators.EQUAL),
+                ],
+                deferrable=Deferrable.DEFERRED,
+                violation_error_message=MENSAJE_CRUCE,
+            ),
+        ]
+
+    def __str__(self):
+        return f"Periodo {self.numero} – {self.anio_escolar.anio}"
 
 
 class Seccion(models.Model):

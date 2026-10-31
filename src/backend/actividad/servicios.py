@@ -31,6 +31,10 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
     Operacion.CUENTA_EDITADA: frozenset({"campos"}),
     Operacion.INSTITUCION_EDITADA: frozenset({"campos"}),
     Operacion.ANIO_EDITADO: frozenset({"campos"}),
+    Operacion.PERIODOS_CONFIGURADOS: frozenset({"periodos"}),
+    Operacion.PERIODO_EDITADO: frozenset(
+        {"numero", "inicio_antes", "fin_antes", "inicio_despues", "fin_despues"}
+    ),
     Operacion.SECCION_EDITADA: frozenset({"campos"}),
     Operacion.SECCION_ASIGNADA: frozenset({"docente_anterior", "docente_nuevo"}),
     Operacion.SECCION_LIBERADA: frozenset({"docente_anterior", "docente_nuevo"}),

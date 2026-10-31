@@ -21,7 +21,7 @@ from actividad.servicios import registrar
 from asistencia.models import Asistencia, Jornada
 from cuentas.models import Usuario
 from institucion import servicios
-from institucion.models import AnioEscolar, Estudiante, Seccion
+from institucion.models import AnioEscolar, Estudiante, Institucion, Seccion
 
 # Una cuenta por sección, de 1.º A a 2.º D, en formato R-11 (D8). La lista solo da los nombres:
 # una cuenta es demo por ``Usuario.es_demo``, que pone la carga.
@@ -50,6 +50,18 @@ ESTADOS = (
     Asistencia.Estado.JUSTIFICADO,
 )
 PESOS = (85, 6, 6, 3)
+# Bimestres de ejemplo (D7): (mes y día de inicio, mes y día de fin); las reales son
+# [DATO I.E. PENDIENTE].
+BIMESTRES_EJEMPLO = (
+    ((3, 16), (5, 15)),
+    ((5, 25), (7, 24)),
+    ((8, 10), (10, 9)),
+    ((10, 19), (12, 18)),
+)
+# Qué hace la carga con los periodos del año (``PlanDemo.periodos``).
+CREAR_PERIODOS = "crear"
+YA_TIENE_PERIODOS = "ya_tiene"
+SIN_PERIODOS = "sin_periodos"
 
 APELLIDOS = (
     "AGUILAR",
@@ -122,13 +134,29 @@ class PlanDemo:
     fechas: list[datetime.date]
     cargadas: list[tuple[Seccion, str]] = field(default_factory=list)
     ya_cargadas: list[Seccion] = field(default_factory=list)
+    periodos: str = SIN_PERIODOS
 
     @property
     def dias(self):
         return len(self.fechas)
 
+    def _texto_periodos(self):
+        if self.periodos == CREAR_PERIODOS:
+            fechas = ", ".join(
+                f"{i:02d}-{m:02d}" for inicio, fin in BIMESTRES_EJEMPLO for m, i in (inicio, fin)
+            )
+            return f"Bimestres 1 a 4 de ejemplo ({fechas})."
+        if self.periodos == YA_TIENE_PERIODOS:
+            return "Periodos: el año ya los tiene y no cambian."
+        return "Periodos: no se crearon; se configuran en el panel."
+
     def texto(self):
         if not self.cargadas:
+            if self.periodos == CREAR_PERIODOS:
+                return (
+                    "La demostración ya está cargada: solo se crearon los periodos. "
+                    + self._texto_periodos()
+                )
             return "La demostración ya está cargada: no se creó nada."
         secciones = ", ".join(servicios.texto_seccion_corto(s) for s, _ in self.cargadas)
         texto = (
@@ -137,7 +165,15 @@ class PlanDemo:
         )
         if self.dias < DIAS_DEMO:
             texto += f" (el año escolar solo tiene {self.dias} días antes de hoy)"
-        return texto + "."
+        return f"{texto}. {self._texto_periodos()}"
+
+
+def bimestres_ejemplo(anio):
+    """Las filas ``(número, inicio, fin)`` de los 4 bimestres de ejemplo de un año (D7)."""
+    return [
+        (numero, datetime.date(anio, *inicio), datetime.date(anio, *fin))
+        for numero, (inicio, fin) in enumerate(BIMESTRES_EJEMPLO, start=1)
+    ]
 
 
 def _fechas(anio, hoy):
@@ -178,6 +214,12 @@ def planear_demo(institucion, estudiantes, hoy, clave):
         raise ValidationError("La institución no tiene un año escolar abierto.")
     _validar_cuentas(institucion)
     plan = PlanDemo(anio_escolar, estudiantes, _fechas(anio_escolar.anio, hoy))
+    if institucion.organizacion_periodos != Institucion.OrganizacionPeriodos.BIMESTRE:
+        plan.periodos = SIN_PERIODOS
+    elif anio_escolar.periodos.exists():
+        plan.periodos = YA_TIENE_PERIODOS
+    else:
+        plan.periodos = CREAR_PERIODOS
     secciones = Seccion.objects.filter(anio_escolar=anio_escolar).select_related("docente")
     ocupadas = []
     for seccion, usuario in zip(
@@ -293,6 +335,8 @@ def cargar_demo(institucion, estudiantes, hoy, clave):
             if errores:
                 raise ValidationError([error.titulo for error in errores])
             _asistencia(seccion, cuenta, plan.fechas, azar)
+        if plan.periodos == CREAR_PERIODOS:
+            servicios.guardar_periodos(plan.anio_escolar, bimestres_ejemplo(plan.anio_escolar.anio))
         # Una sola entrada para toda la carga, con el usuario vacío: la corre la consola (US-008).
         registrar(
             None,
