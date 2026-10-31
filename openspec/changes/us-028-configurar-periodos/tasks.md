@@ -33,7 +33,7 @@
 ## 4. Cierre
 
 - [x] 4.1 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio y en el cruce bajo concurrencia), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde; la vista previa de Vercel del PR aplica `institucion/0005` en Neon
-- [ ] 4.2 `verificacion.md`: tabla escenario → prueba de los tres specs del cambio y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit
+- [x] 4.2 `verificacion.md`: tabla escenario → prueba de los tres specs del cambio y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit
 
 ## Ajustes del propose a decisiones.md
 
