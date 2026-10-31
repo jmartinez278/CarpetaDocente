@@ -24,6 +24,7 @@ rules:
   tasks:
     - Agrupa por riesgo, no por cantidad: cada tramo de alto riesgo es una parte "(alto riesgo)" con su revisión y su commit; todo lo demás va junto en una parte "(normal)", sin revisión, con verificar.py y commit. Unas 15 tareas.
     - Cada tarea empieza por la prueba ("Prueba primero, <archivo>") y termina con "Verificar:" y lo que se comprueba.
+    - El "Verificar:" de cada tarea nombra solo pruebas de la app tocada. La regresión de otras historias la cubre verificar.py; las e2e de otras historias, solo en el cierre.
     - Es de alto riesgo si toca: modelos, restricciones o migraciones; permisos y roles; transacciones o concurrencia; datos personales (RN-015); notas; seguridad, despliegue o workflows; o una "Zona de cuidado" de decisiones.md.
     - Un commit por parte, nunca por tarea; la casilla va en ese commit.
     - Al final, la parte de cierre: A2 y verificacion.md.
