@@ -1,6 +1,6 @@
 # Verificación: US-008 – Registrar la actividad de los usuarios
 
-Rama `feature/US-008-registrar-actividad`. Pruebas en `src/backend/actividad/tests/`. Abreviaturas: `mod` = `test_modelos.py`, `reg` = `test_registrar.py`. La tabla crece con cada parte; la tarea 3.2 la completa con los dos specs y la DoD 1 a 9.
+Rama `feature/US-008-registrar-actividad`. Pruebas en `src/backend/actividad/tests/`. Abreviaturas: `mod` = `test_modelos.py`, `reg` = `test_registrar.py`. Los 37 escenarios de los dos specs (28 de `registro-actividad` y 9 de `indicadores-adopcion`) tienen al menos una prueba: están en las tablas de cada parte y, el único que no tenía fila, en "Cierre (3.2)". La DoD 1 a 9 va al final de ese apartado.
 
 ## Escenarios de `registro-actividad` (parte 1A)
 
@@ -87,6 +87,26 @@ Notas:
 - Verde: `uv run pytest --cov` (1233, 98,43 %) y e2e de `cuentas`, `institucion`, `catalogo`, `actividad` y `config` (US-003, US-005, US-006 y EN-06: 198).
 - Los campos del detalle son los nombres de `form.changed_data` (p. ej. `first_name`), que es lo que Django usa para armar el `change_message`, no sus etiquetas. Guardar una ficha sin cambios no deja entrada.
 
+## Cierre (3.2)
+
+| Spec | Escenario | Prueba |
+| --- | --- | --- |
+| registro-actividad | Catálogo de esta historia | `mod::test_solo_las_operaciones_de_asistencia_cuentan_para_kpi_01`, `test_solo_intento_sin_permiso_esta_reservada`; las 26 operaciones restantes, una por una, en `cat::test_la_tabla_cubre_el_catalogo_menos_las_reservadas` (la tabla de `escenarios.py` nombra cada operación del spec) |
+
+### DoD 1 a 9
+
+| N.° | Estado | Evidencia |
+| --- | --- | --- |
+| 1 | Cumple en local; **pendiente del PR** | `verificar.py --antes-del-commit` del cierre: PASA, cobertura total 98,32 % (mínimo 80 %). La puerta Sonar way solo se ve en el PR |
+| 2 | Cumple en local; **pendiente del PR** | Ruff sin hallazgos (`check` y `format --check`, en `verificar.py`). CodeQL y SonarQube Cloud solo corren en el PR |
+| 3 | **Pendiente del PR (equipo)** | Aprobación de otra integrante |
+| 4 | **Pendiente del PR** | Vista previa de Vercel del PR, con `actividad/0001_initial` en su rama de Neon |
+| 5 | Cumple en local; **pendiente del PR** | Cada escenario con su prueba (tablas de arriba). E2E en verde tras el arreglo de A2 (corrida en esa sesión); ruta ideal en el navegador: `e2e::test_el_boton_descarga_el_csv_de_lo_filtrado`. El canal se ve en el PR |
+| 6 | Cumple | Las escrituras del registro pasan solo por `actividad.servicios.registrar`, dentro de la transacción de cada operación; RN-015 (sin datos personales en el detalle) con `DETALLE_PERMITIDO` y el recorrido del fixture `escenario_de_operacion`; la regla de KPI-01 y la exclusión de la demostración, en `ind::` |
+| 7 | Cumple | La lista del registro y los indicadores por semana pasan axe en claro y oscuro, a 360 y 1280 px (`e2e::test_la_lista_del_registro_pasa_axe`, `test_los_indicadores_por_semana_pasan_axe`) |
+| 8 | Cumple | Solo nombres ficticios; el fixture `escenario_de_operacion` comprueba que ningún detalle trae nombres de estudiantes ni texto de notas |
+| 9 | Cumple | Este cambio en OpenSpec (design ajustado en D4 y D5), docstrings y el Catálogo de rutas de `docs/03` (versión 1.5.0: lista, exportar e indicadores). El README no cambia |
+
 ## Minor para la descripción del PR
 
 Parte 1A (revisión de la parte):
@@ -132,7 +152,7 @@ Revisión final A2 (Codex; corregido: un guardado que revierte un cambio ajeno y
 
 Revisión del arreglo de A2 (sin Critical ni Important; los Minor quedan aquí):
 
-- `editar_estudiante` compara `apellidos` y `nombres` con la fila bloqueada, pero `_guardar_estudiante` guarda la instancia entera: una copia vieja revertiría `estado`, `fecha_estado` o `seccion` sin entrada. Hoy no hay forma de llegar a eso (ningún servicio cambia `estado`); hay que corregirlo antes de US-030 con `update_fields=["apellidos", "nombres"]`.
+- `editar_estudiante` compara `apellidos` y `nombres` con la fila bloqueada, pero `_guardar_estudiante` guarda la instancia entera: una copia vieja revertiría `estado`, `fecha_estado` o `seccion` sin entrada. Hoy no hay forma de llegar a eso (ningún servicio cambia `estado`); hay que corregirlo en US-031 con `update_fields=["apellidos", "nombres"]`.
 - `RegistraEnPanel.get_object` se salta el bloqueo en silencio si un POST llega sin transacción (en las pruebas nunca pasa) y usa la conexión por defecto en vez de `router.db_for_write`.
 - Las pruebas del panel comprueban que la consulta lleva `FOR UPDATE`, no el comportamiento; una prueba por admin con `get_object` devolviendo una copia vieja lo cerraría.
 - El `atomic()` del POST del changelist también cubre las acciones: "Desbloquear cuenta" pasa a ser una sola transacción con puntos de guardado, y su docstring ("una transacción por cuenta") ya no lo describe exactamente.
