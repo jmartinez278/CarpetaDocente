@@ -22,14 +22,14 @@ rules:
     - Decisiones numeradas (D1, D2, ...) con su porqué; los riesgos y las zonas delicadas primero.
     - Si la historia guarda datos que mide la tesis, di qué campo los guarda.
   tasks:
-    - Agrupa por riesgo, no por cantidad: cada tramo de alto riesgo es una parte "(alto riesgo)" con su revisión y su commit; todo lo demás va junto en una parte "(normal)", sin revisión, con verificar.py y commit. Unas 15 tareas.
+    - 'Agrupa por riesgo, no por cantidad: cada tramo de alto riesgo es una parte "(alto riesgo)" con su revisión y su commit; todo lo demás va junto en una parte "(normal)", sin revisión, con verificar.py y commit. Unas 15 tareas.'
     - Cada tarea empieza por la prueba ("Prueba primero, <archivo>") y termina con "Verificar:" y lo que se comprueba.
     - El "Verificar:" de cada tarea nombra solo pruebas de la app tocada. La regresión de otras historias la cubre verificar.py; las e2e de otras historias, solo en el cierre.
-    - Es de alto riesgo si toca: modelos, restricciones o migraciones; permisos y roles; transacciones o concurrencia; datos personales (RN-015); notas; seguridad, despliegue o workflows; o una "Zona de cuidado" de decisiones.md.
+    - 'Es de alto riesgo si toca: modelos, restricciones o migraciones; permisos y roles; transacciones o concurrencia; datos personales (RN-015); notas; seguridad, despliegue o workflows; o una "Zona de cuidado" de decisiones.md.'
     - Un commit por parte, nunca por tarea; la casilla va en ese commit.
-    - Al final, la parte de cierre: A2 y verificacion.md.
+    - 'Al final, la parte de cierre: A2 y verificacion.md.'
     - Al final, "Workflow follow-up" con la deuda.
-    - No repitas en tasks.md las reglas de config.yaml, CLAUDE.md ni CLAUDE.local.md: solo las tareas.
+    - 'No repitas en tasks.md las reglas de config.yaml, CLAUDE.md ni CLAUDE.local.md: solo las tareas.'
 
 operations:
   apply:
