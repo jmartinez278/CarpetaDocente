@@ -4,13 +4,21 @@ import unicodedata
 from dataclasses import dataclass
 
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError, IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, connection, transaction
 from django.db.models import Count, ProtectedError, Q, RestrictedError
+from django.utils import timezone
 
 from actividad.models import Operacion
 from actividad.servicios import registrar
 from cuentas.models import Usuario
-from institucion.models import AnioEscolar, Estudiante, Seccion
+from institucion.models import (
+    MENSAJE_CRUCE,
+    AnioEscolar,
+    Estudiante,
+    Institucion,
+    Periodo,
+    Seccion,
+)
 
 SECCION_OCUPADA = "La sección ya tiene un docente asignado"
 SIN_SECCION = "Tu sección aparecerá cuando el administrador la asigne."
@@ -471,3 +479,200 @@ def vaciar_lista(seccion, usuario=None):
                 )
     except (RestrictedError, ProtectedError):
         raise ListaConRegistros from None
+
+
+# --- Periodos del año escolar (US-028, D2, D4, D6 y D8) ---
+
+PERIODOS_POR_ORGANIZACION = {
+    Institucion.OrganizacionPeriodos.BIMESTRE: 4,
+    Institucion.OrganizacionPeriodos.TRIMESTRE: 3,
+}
+ANIO_CERRADO = "El año escolar está cerrado: sus periodos no cambian."
+SIN_ORGANIZACION = (
+    "Define la organización de periodos de la institución antes de configurar sus periodos."
+)
+ORGANIZACION_FIJA = (
+    "La organización de periodos ya no cambia: la institución tiene periodos guardados."
+)
+FIN_ANTES_DEL_INICIO = "La fecha de fin debe ser posterior a la de inicio."
+# MENSAJE_CRUCE viene de ``models``: también lo usa la restricción de la base.
+
+
+def mensaje_incompletas(cantidad):
+    return f"Completa las fechas de los {cantidad} periodos."
+
+
+def mensaje_fuera_del_anio(anio):
+    return f"Las fechas deben estar dentro de {anio}."
+
+
+def mensaje_orden(numero):
+    """Para el periodo ``numero`` que empieza antes de que termine el anterior."""
+    return f"El periodo {numero} debe empezar después de que termina el periodo {numero - 1}."
+
+
+@dataclass(frozen=True)
+class CambiosPeriodos:
+    """Lo que dejó ``guardar_periodos``: los periodos creados y el detalle de cada editado."""
+
+    creados: list
+    editados: list
+
+
+def validar_periodos(anio, filas):
+    """Valida las filas nuevas ``(numero, inicio, fin)`` de un año, todas juntas (D2).
+
+    Usa ``anio.estado`` y la organización de ``anio.institucion`` tal como vienen: quien guarda
+    los pasa releídos y bloqueados. Los errores de una fila van en un diccionario por número
+    (``message_dict``); los del conjunto, sin número. En este orden: año CERRADO, organización
+    vacía, filas incompletas, fechas de cada fila, cruce (en la fila de número mayor) y orden.
+    Todas las filas vacías es válido si el año aún no tiene periodos (nada que guardar).
+    """
+    if anio.estado == AnioEscolar.Estado.CERRADO:
+        raise ValidationError(ANIO_CERRADO)
+    cantidad = PERIODOS_POR_ORGANIZACION.get(anio.institucion.organizacion_periodos)
+    if cantidad is None:
+        raise ValidationError(SIN_ORGANIZACION)
+    por_numero = {numero: (inicio, fin) for numero, inicio, fin in filas}
+    if set(por_numero) - set(range(1, cantidad + 1)):
+        raise ValueError(f"Las filas deben ir numeradas de 1 a {cantidad}.")
+    fechas = [por_numero.get(numero, (None, None)) for numero in range(1, cantidad + 1)]
+    vacias = all(inicio is None and fin is None for inicio, fin in fechas)
+    if vacias and not anio.periodos.exists():
+        return
+    if any(inicio is None or fin is None for inicio, fin in fechas):
+        raise ValidationError(mensaje_incompletas(cantidad))
+
+    errores = {}
+    for numero, (inicio, fin) in enumerate(fechas, start=1):
+        if fin <= inicio:
+            errores[numero] = FIN_ANTES_DEL_INICIO
+        elif inicio.year != anio.anio or fin.year != anio.anio:
+            errores[numero] = mensaje_fuera_del_anio(anio.anio)
+    if errores:
+        raise ValidationError(errores)
+
+    # Con los bordes incluidos: se cruzan si cada uno empieza a más tardar el día en que el
+    # otro termina.
+    for numero in range(2, cantidad + 1):
+        inicio, fin = fechas[numero - 1]
+        if any(
+            inicio <= otro_fin and otro_inicio <= fin
+            for otro_inicio, otro_fin in fechas[: numero - 1]
+        ):
+            errores[numero] = MENSAJE_CRUCE
+    if errores:
+        raise ValidationError(errores)
+
+    for numero in range(2, cantidad + 1):
+        if fechas[numero - 1][0] <= fechas[numero - 2][1]:
+            errores[numero] = mensaje_orden(numero)
+    if errores:
+        raise ValidationError(errores)
+
+
+def guardar_periodos(anio, filas, usuario=None):
+    """Única escritura de periodos: crea o corrige las N filas de un año, todas o ninguna (D4).
+
+    Bloquea la institución y el año (en ese orden) y valida con lo releído: dos guardados del
+    mismo año van en fila, y el segundo edita lo que dejó el primero. Crea o actualiza por
+    número, sin borrar y sin cambiar el id de un periodo. Al final comprueba ``ex_periodo_cruce``
+    (diferida, D3): un cruce que solo ve la base da ``ValidationError(MENSAJE_CRUCE)``. Deja
+    PERIODOS_CONFIGURADOS si el año pasa de cero periodos a N y un PERIODO_EDITADO por periodo
+    cambiado (D6). Devuelve ``CambiosPeriodos``.
+    """
+    with transaction.atomic():
+        institucion = Institucion.objects.select_for_update().get(pk=anio.institucion_id)
+        anio = AnioEscolar.objects.select_for_update().get(pk=anio.pk)
+        anio.institucion = institucion
+        validar_periodos(anio, filas)
+        guardados = {periodo.numero: periodo for periodo in anio.periodos.select_for_update()}
+        creados, editados = [], []
+        for numero, inicio, fin in sorted(filas, key=lambda fila: fila[0]):
+            if inicio is None:
+                continue  # todas vacías y el año sin periodos: nada que guardar
+            periodo = guardados.get(numero)
+            if periodo is None:
+                creados.append(
+                    Periodo.objects.create(
+                        anio_escolar=anio, numero=numero, fecha_inicio=inicio, fecha_fin=fin
+                    )
+                )
+            elif (periodo.fecha_inicio, periodo.fecha_fin) != (inicio, fin):
+                editados.append(
+                    {
+                        "numero": numero,
+                        "inicio_antes": periodo.fecha_inicio.isoformat(),
+                        "fin_antes": periodo.fecha_fin.isoformat(),
+                        "inicio_despues": inicio.isoformat(),
+                        "fin_despues": fin.isoformat(),
+                    }
+                )
+                periodo.fecha_inicio, periodo.fecha_fin = inicio, fin
+                periodo.save(update_fields=["fecha_inicio", "fecha_fin"])
+        _comprobar_cruce()
+        if creados and not guardados:
+            registrar(
+                usuario,
+                Operacion.PERIODOS_CONFIGURADOS,
+                entidad="anio_escolar",
+                entidad_id=anio,
+                detalle={"periodos": len(creados)},
+            )
+        for detalle in editados:
+            registrar(
+                usuario,
+                Operacion.PERIODO_EDITADO,
+                entidad="periodo",
+                entidad_id=guardados[detalle["numero"]],
+                detalle=detalle,
+            )
+    return CambiosPeriodos(creados, editados)
+
+
+def _comprobar_cruce():
+    """Adelanta la comprobación de ``ex_periodo_cruce`` y la vuelve a diferir (D3).
+
+    En un punto de guardado: si falla, el error sale aquí y no en el ``COMMIT``. Solo el
+    ``IntegrityError`` de esa restricción se traduce.
+    """
+    try:
+        with transaction.atomic(), connection.cursor() as cursor:
+            cursor.execute("SET CONSTRAINTS ex_periodo_cruce IMMEDIATE")
+            cursor.execute("SET CONSTRAINTS ex_periodo_cruce DEFERRED")
+    except IntegrityError as error:
+        restriccion = getattr(getattr(error.__cause__, "diag", None), "constraint_name", None)
+        if restriccion != "ex_periodo_cruce":
+            raise
+        raise ValidationError(MENSAJE_CRUCE) from None
+
+
+def validar_organizacion(institucion):
+    """La organización de periodos no cambia si algún año de la institución tiene periodos (D5).
+
+    Compara ``institucion`` con la fila guardada. Quien guarda la tiene bloqueada (el panel la
+    relee con ``FOR UPDATE``), así no se cruza con un ``guardar_periodos`` del mismo momento.
+    """
+    if institucion.pk is None:
+        return
+    guardada = (
+        Institucion.objects.filter(pk=institucion.pk)
+        .values_list("organizacion_periodos", flat=True)
+        .first()
+    )
+    cambia = guardada != institucion.organizacion_periodos
+    if cambia and Periodo.objects.filter(anio_escolar__institucion_id=institucion.pk).exists():
+        raise ValidationError({"organizacion_periodos": ORGANIZACION_FIJA})
+
+
+def periodo_vigente(origen, fecha=None):
+    """El periodo que contiene ``fecha`` (bordes incluidos), o ``None`` si no hay (D8).
+
+    ``origen`` es una ``Seccion`` o un ``AnioEscolar``; sin ``fecha``, hoy en hora de Lima. Una
+    consulta. Es la única forma de obtener el periodo de una fecha (US-020 la usa).
+    """
+    anio_id = origen.anio_escolar_id if isinstance(origen, Seccion) else origen.pk
+    fecha = fecha or timezone.localdate()
+    return Periodo.objects.filter(
+        anio_escolar_id=anio_id, fecha_inicio__lte=fecha, fecha_fin__gte=fecha
+    ).first()

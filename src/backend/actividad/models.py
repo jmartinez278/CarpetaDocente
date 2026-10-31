@@ -24,6 +24,8 @@ class Operacion(models.TextChoices):
     INSTITUCION_EDITADA = "INSTITUCION_EDITADA", "Institución editada"
     ANIO_CREADO = "ANIO_CREADO", "Año escolar creado"
     ANIO_EDITADO = "ANIO_EDITADO", "Año escolar editado"
+    PERIODOS_CONFIGURADOS = "PERIODOS_CONFIGURADOS", "Periodos configurados"
+    PERIODO_EDITADO = "PERIODO_EDITADO", "Periodo editado"
     SECCION_CREADA = "SECCION_CREADA", "Sección creada"
     SECCION_EDITADA = "SECCION_EDITADA", "Sección editada"
     SECCION_ASIGNADA = "SECCION_ASIGNADA", "Sección asignada"
