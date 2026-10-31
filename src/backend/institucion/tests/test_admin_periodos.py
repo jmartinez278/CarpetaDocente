@@ -307,6 +307,30 @@ def test_sin_periodos_la_institucion_del_anio_sigue_editable(admin_client, anio)
     assert "institucion" in respuesta.context["adminform"].form.fields
 
 
+def test_con_periodos_el_anio_calendario_es_de_solo_lectura(admin_client, anio_con_periodos):
+    respuesta = admin_client.get(url_anio(anio_con_periodos))
+
+    assert "anio" not in respuesta.context["adminform"].form.fields
+
+
+def test_con_periodos_un_post_que_cambia_solo_el_anio_no_lo_cambia(admin_client, anio_con_periodos):
+    """Sin cambios en el formset, nada revalida las fechas: quedarían fuera del año nuevo."""
+    datos = datos_anio(anio_con_periodos, BIMESTRES)
+    datos["anio"] = 2028
+
+    admin_client.post(url_anio(anio_con_periodos), datos)
+
+    anio_con_periodos.refresh_from_db()
+    assert anio_con_periodos.anio == 2027
+    assert fechas(anio_con_periodos) == BIMESTRES
+
+
+def test_sin_periodos_el_anio_calendario_sigue_editable(admin_client, anio):
+    respuesta = admin_client.get(url_anio(anio))
+
+    assert "anio" in respuesta.context["adminform"].form.fields
+
+
 def test_cada_fecha_de_la_ficha_tiene_su_etiqueta_para_el_lector_de_pantalla(admin_client, anio):
     respuesta = admin_client.get(url_anio(anio))
 

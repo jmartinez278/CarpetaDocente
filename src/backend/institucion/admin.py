@@ -177,11 +177,12 @@ class AnioEscolarAdmin(RegistraEnPanel, admin.ModelAdmin):
     list_select_related = ["institucion"]
 
     def get_readonly_fields(self, request, obj=None):
-        """Con periodos guardados el año no cambia de institución: saltaría la organización fija
-        (D5) y dejaría periodos de otra organización."""
+        """Con periodos guardados el año no cambia de institución ni de año calendario: lo
+        primero saltaría la organización fija (D5); lo segundo dejaría las fechas fuera del año,
+        porque sin cambios en el formset nada las revalida."""
         campos = list(super().get_readonly_fields(request, obj))
         if obj is not None and obj.periodos.exists():
-            campos.append("institucion")
+            campos += ["institucion", "anio"]
         return campos
 
     def get_fields(self, request, obj=None):

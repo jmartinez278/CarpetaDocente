@@ -23,3 +23,11 @@
 ### Parte 3: demo y pantalla
 
 - `AnioEscolarAdmin.get_readonly_fields`: `obj.periodos.exists()` suma una consulta por cada vista de la ficha. Inocuo.
+
+## Revisión adversarial (A2, Codex)
+
+- Corregido: con periodos guardados, el año calendario de la ficha era editable. Si solo cambiaba el año, el formset no cambiaba y nada revalidaba las fechas, así que los periodos quedaban fuera del año nuevo y `periodo_vigente` dejaba de encontrarlos. Ahora `anio` es de solo lectura cuando hay periodos, como `institucion`.
+
+## Deuda
+
+- `cargar_demo` (`demo.py`): `planear_demo` decide `CREAR_PERIODOS` bajo el bloqueo advisory, que solo hace esperar a otra carga o retiro de la demo, no al panel. Si un administrador guarda periodos entre esa decisión y la llamada a `guardar_periodos`, la carga actualiza esos periodos con las fechas de ejemplo, contra el spec `datos-demostracion` ("solo si el año aún no tiene periodos"). Arreglo: antes de crear los periodos, bloquear la institución y el año (el orden de D4), volver a revisar si hay periodos y, si los hay, no tocarlos y mostrar `YA_TIENE_PERIODOS` en el resumen. Se deja porque solo pasa si alguien guarda periodos en el panel justo mientras corre la carga desde la consola.
