@@ -7,8 +7,9 @@ from institucion import demo
 
 class Command(BaseCommand):
     help = (
-        "Borra estudiantes, jornadas y asistencia de las secciones demo, las deja sin docente "
-        "y desactiva las cuentas demo. Se ejecuta antes de cargar las listas del piloto."
+        "Borra estudiantes, asistencia y marcas de competencias de las secciones demo, las deja "
+        "sin docente y desactiva las cuentas demo. Se ejecuta antes de cargar las listas del "
+        "piloto."
     )
 
     def add_arguments(self, parser):

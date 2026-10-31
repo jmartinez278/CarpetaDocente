@@ -1,8 +1,8 @@
 """Datos de demostración: cargar, quitar y descartar (spec datos-demostracion; EN-06, D6 a D9).
 
-Reúne cuentas, estudiantes y asistencia; por eso va aparte de ``servicios.py``. Cada función
-corre en una transacción y devuelve un resumen. Los comandos de ``management/commands`` solo
-leen las opciones, piden la confirmación y escriben el resumen.
+Reúne cuentas, estudiantes, asistencia y marcas de competencias; por eso va aparte de
+``servicios.py``. Cada función corre en una transacción y devuelve un resumen. Los comandos
+de ``management/commands`` solo leen las opciones, piden la confirmación y escriben el resumen.
 
 Solo nombres ficticios (RN-018): los estudiantes y las docentes salen de ``APELLIDOS`` y
 ``NOMBRES``.
@@ -21,7 +21,9 @@ from actividad.servicios import registrar
 from asistencia.models import Asistencia, Jornada
 from cuentas.models import Usuario
 from institucion import servicios
-from institucion.models import AnioEscolar, Estudiante, Institucion, Seccion
+from institucion.models import AnioEscolar, Estudiante, Institucion, Periodo, Seccion
+from notas import servicios as notas
+from notas.models import CompetenciaPeriodo
 
 # Una cuenta por sección, de 1.º A a 2.º D, en formato R-11 (D8). La lista solo da los nombres:
 # una cuenta es demo por ``Usuario.es_demo``, que pone la carga.
@@ -337,6 +339,12 @@ def cargar_demo(institucion, estudiantes, hoy, clave):
             _asistencia(seccion, cuenta, plan.fechas, azar)
         if plan.periodos == CREAR_PERIODOS:
             servicios.guardar_periodos(plan.anio_escolar, bimestres_ejemplo(plan.anio_escolar.anio))
+        # Los periodos ya empezados, solo los que la sección no tiene marcados (US-029, D11).
+        empezados = list(
+            Periodo.objects.filter(anio_escolar=plan.anio_escolar, fecha_inicio__lte=hoy)
+        )
+        for seccion in [*plan.ya_cargadas, *(seccion for seccion, _ in plan.cargadas)]:
+            notas.marcar_todo_sin_registro(seccion, empezados)
         # Una sola entrada para toda la carga, con el usuario vacío: la corre la consola (US-008).
         registrar(
             None,
@@ -359,11 +367,12 @@ class Conteos:
     estudiantes: int = 0
     jornadas: int = 0
     estados: int = 0
+    marcas: int = 0
 
     def texto(self):
         return (
-            f"{self.estudiantes} estudiantes, {self.jornadas} jornadas "
-            f"y {self.estados} estados de asistencia"
+            f"{self.estudiantes} estudiantes, {self.jornadas} jornadas, "
+            f"{self.estados} estados de asistencia y {self.marcas} marcas de competencias"
         )
 
 
@@ -390,14 +399,17 @@ def _conteos(secciones):
         estudiantes=Estudiante.objects.filter(seccion__in=secciones).count(),
         jornadas=Jornada.objects.filter(seccion__in=secciones).count(),
         estados=Asistencia.objects.filter(jornada__seccion__in=secciones).count(),
+        marcas=CompetenciaPeriodo.objects.filter(seccion__in=secciones).count(),
     )
 
 
 def _borrar(secciones):
     """Jornadas antes que estudiantes: ``asistencia.estudiante`` es ``RESTRICT`` (D9).
 
-    US-020 agrega aquí las notas, antes de los estudiantes (decisión 10).
+    Las marcas de competencias también van antes (US-029, D11). US-020 agrega aquí las notas,
+    antes de los estudiantes (decisión 10).
     """
+    CompetenciaPeriodo.objects.filter(seccion__in=secciones).delete()
     Jornada.objects.filter(seccion__in=secciones).delete()
     Estudiante.objects.filter(seccion__in=secciones).delete()
 
@@ -444,7 +456,7 @@ def conteos_seccion(seccion):
 
 
 def descartar_seccion(seccion):
-    """Borra estudiantes, jornadas y estados de una sección del año ABIERTO; conserva la docente.
+    """Borra estudiantes, asistencia y marcas de una sección del año ABIERTO; conserva la docente.
 
     Es el camino para borrar una lista con registros, que «Vaciar lista» no permite (D9).
     """

@@ -6,7 +6,7 @@
 La carga de la demostración SHALL marcar, en la misma transacción, todas las competencias que la tutora puede marcar en los periodos ya empezados (los pasados y el vigente) de cada sección demo, solo en los periodos que la sección aún no tiene marcados. Quitar la demostración y descartar una sección borran las marcas de esas secciones. No cambia qué áreas están a cargo del docente de curso.
 
 #### Scenario: Demostración con periodos
-- **WHEN** se carga la demostración el 30 de octubre en un año con los 4 bimestres de ejemplo
+- **WHEN** se carga la demostración el 15 de octubre (entre el bimestre 3 y el 4) en un año con los 4 bimestres de ejemplo
 - **THEN** cada sección demo tiene marcadas sus competencias en los bimestres 1, 2 y 3, y ninguna en el 4
 
 #### Scenario: Sin periodos

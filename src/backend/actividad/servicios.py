@@ -45,12 +45,13 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
     Operacion.ASISTENCIA_CAMBIADA: frozenset(
         {"estudiante", "anterior", "nuevo", "nota_cambiada", "origen"}
     ),
+    Operacion.COMPETENCIAS_MARCADAS: frozenset({"periodo", "agregadas", "quitadas"}),
     Operacion.CATALOGO_EDITADO: frozenset({"campos"}),
     Operacion.DEMO_CARGADA: frozenset({"secciones", "estudiantes", "dias"}),
     Operacion.DEMO_QUITADA: frozenset(
-        {"secciones", "cuentas", "estudiantes", "jornadas", "estados"}
+        {"secciones", "cuentas", "estudiantes", "jornadas", "estados", "marcas"}
     ),
-    Operacion.SECCION_DESCARTADA: frozenset({"estudiantes", "jornadas", "estados"}),
+    Operacion.SECCION_DESCARTADA: frozenset({"estudiantes", "jornadas", "estados", "marcas"}),
     Operacion.REGISTRO_EXPORTADO: frozenset({"filtros", "filas"}),
 }
 

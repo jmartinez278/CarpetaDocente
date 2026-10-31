@@ -38,6 +38,7 @@ class Operacion(models.TextChoices):
     REGISTRO_ASISTENCIA = "REGISTRO_ASISTENCIA", "Registro de asistencia"
     ASISTENCIA_CAMBIADA = "ASISTENCIA_CAMBIADA", "Asistencia cambiada"
     JORNADA_COMPLETA = "JORNADA_COMPLETA", "Jornada completa"
+    COMPETENCIAS_MARCADAS = "COMPETENCIAS_MARCADAS", "Competencias marcadas"
     CATALOGO_EDITADO = "CATALOGO_EDITADO", "Catálogo editado"
     DEMO_CARGADA = "DEMO_CARGADA", "Demostración cargada"
     DEMO_QUITADA = "DEMO_QUITADA", "Demostración quitada"

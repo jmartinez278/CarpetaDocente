@@ -13,6 +13,7 @@ _PANEL = "actividad.tests.test_panel_instrumentado"
 _ESTUDIANTES = "institucion.tests.test_actividad"
 _ASISTENCIA = "asistencia.tests.test_actividad"
 _PERIODOS = "institucion.tests.test_servicios_periodos"
+_MARCAS = "notas.tests.test_servicios_guardar"
 
 ESCENARIOS: dict[Operacion, str] = {
     Operacion.INICIO_SESION: f"{_SESION}::test_ingreso_correcto_deja_inicio_sesion",
@@ -52,6 +53,9 @@ ESCENARIOS: dict[Operacion, str] = {
     ),
     Operacion.ASISTENCIA_CAMBIADA: f"{_ASISTENCIA}::test_nota_cambiada_lo_dice_sin_el_texto",
     Operacion.JORNADA_COMPLETA: f"{_ASISTENCIA}::test_jornada_completa_al_marcar_al_ultimo_activo",
+    Operacion.COMPETENCIAS_MARCADAS: (
+        f"{_MARCAS}::test_primer_guardado_crea_las_marcas_y_deja_competencias_marcadas"
+    ),
     Operacion.CATALOGO_EDITADO: (
         f"{_PANEL}::test_editar_desde_list_editable_deja_catalogo_editado"
     ),

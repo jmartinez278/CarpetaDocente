@@ -74,3 +74,40 @@ def test_solo_las_operaciones_de_asistencia_cuentan_para_kpi_01():
 
 def test_solo_intento_sin_permiso_esta_reservada():
     assert RESERVADAS == {Operacion.INTENTO_SIN_PERMISO}
+
+
+def test_el_catalogo_de_esta_historia():
+    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-029)."""
+    assert set(Operacion.values) == {
+        "INICIO_SESION",
+        "CIERRE_SESION",
+        "CUENTA_CREADA",
+        "CUENTA_EDITADA",
+        "CUENTA_DESACTIVADA",
+        "INSTITUCION_CREADA",
+        "INSTITUCION_EDITADA",
+        "ANIO_CREADO",
+        "ANIO_EDITADO",
+        "PERIODOS_CONFIGURADOS",
+        "PERIODO_EDITADO",
+        "SECCION_CREADA",
+        "SECCION_EDITADA",
+        "SECCION_ASIGNADA",
+        "SECCION_LIBERADA",
+        "ESTUDIANTES_IMPORTADOS",
+        "ESTUDIANTE_AGREGADO",
+        "ESTUDIANTE_EDITADO",
+        "ESTUDIANTE_QUITADO",
+        "LISTA_VACIADA",
+        "REGISTRO_ASISTENCIA",
+        "ASISTENCIA_CAMBIADA",
+        "JORNADA_COMPLETA",
+        "COMPETENCIAS_MARCADAS",
+        "CATALOGO_EDITADO",
+        "DEMO_CARGADA",
+        "DEMO_QUITADA",
+        "SECCION_DESCARTADA",
+        "INTENTO_SIN_PERMISO",
+        "REGISTRO_EXPORTADO",
+    }
+    assert Operacion.COMPETENCIAS_MARCADAS not in CUENTAN_KPI_01
