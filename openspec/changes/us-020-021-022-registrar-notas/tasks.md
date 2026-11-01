@@ -22,9 +22,9 @@
 
 ### Parte C: vistas, rutas, permisos y bandera (alto riesgo)
 
-- [ ] 3.1 Prueba primero, `notas/tests/test_vistas_hoja_acceso.py` y `cuentas/tests/test_dimensiones.py`: escenarios de «Acceso a la hoja de notas» (GET y POST, sin notas guardadas en los de error; `HX-Request` sin sesión → `HX-Redirect`); «Notas con una sección» y «Notas sin sección única»; «Bandera activa sin pantalla» sigue en verde con Notas. Luego `HojaView`, `GuardarHojaView`, `notas/urls_hoja.py`, su `include` y `dimensiones.py`. Verificar: rojo y luego verde
-- [ ] 3.2 Prueba primero, `notas/tests/test_vistas_hoja.py`: contexto y `json_script` de cada caso de «Periodo de la hoja» y «Sin periodo vigente», `?area=` válida, inválida y ausente; «Bimestre sin marcas» → 302 a Competencias con `periodo`, `area` y `desde=notas`; POST 200 con `faltantes`; 400 con «Valor no válido. Use un nivel de la escala de calificación» y las celdas (envío manipulado, zona de cuidado de US-022); 400 conclusión; 400 estructura y JSON mal formado; 404 periodo o área; 409 periodo futuro; 409 con `cambiadas`; ningún cuerpo trae el texto de una excepción. Verificar: rojo y luego verde; `uv run pytest src/backend/notas src/backend/cuentas` en verde
-- [ ] 3.3 Revisión de la parte (agente `revisor`) y commit
+- [x] 3.1 Prueba primero, `notas/tests/test_vistas_hoja_acceso.py` y `cuentas/tests/test_dimensiones.py`: escenarios de «Acceso a la hoja de notas» (GET y POST, sin notas guardadas en los de error; `HX-Request` sin sesión → `HX-Redirect`); «Notas con una sección» y «Notas sin sección única»; «Bandera activa sin pantalla» sigue en verde con Notas. Luego `HojaView`, `GuardarHojaView`, `notas/urls_hoja.py`, su `include` y `dimensiones.py`. Verificar: rojo y luego verde
+- [x] 3.2 Prueba primero, `notas/tests/test_vistas_hoja.py`: contexto y `json_script` de cada caso de «Periodo de la hoja» y «Sin periodo vigente», `?area=` válida, inválida y ausente; «Bimestre sin marcas» → 302 a Competencias con `periodo`, `area` y `desde=notas`; POST 200 con `faltantes`; 400 con «Valor no válido. Use un nivel de la escala de calificación» y las celdas (envío manipulado, zona de cuidado de US-022); 400 conclusión; 400 estructura y JSON mal formado; 404 periodo o área; 409 periodo futuro; 409 con `cambiadas`; ningún cuerpo trae el texto de una excepción. Verificar: rojo y luego verde; `uv run pytest src/backend/notas src/backend/cuentas` en verde
+- [x] 3.3 Revisión de la parte (agente `revisor`) y commit
 
 ## 4. Pantalla (normal)
 

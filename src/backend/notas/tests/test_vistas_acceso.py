@@ -155,11 +155,12 @@ def test_con_la_sesion_vencida_un_guardado_con_htmx_recibe_hx_redirect(
 # --- Portada sin cambios ---
 
 
-def test_la_portada_sigue_con_notas_en_proximamente(entrar, docente, seccion_tutora, bimestres):
-    """Escenario "Portada sin cambios"."""
+def test_la_portada_lleva_a_la_hoja_y_no_a_las_competencias(
+    entrar, docente, seccion_tutora, bimestres
+):
+    """Escenario "Portada sin cambios" (desde US-020): la tarjeta Notas lleva a la hoja."""
     html = entrar(docente).get(reverse("docente:portada")).content.decode()
 
     tarjetas = re.findall(r"<article\b.*?</article>", html, re.DOTALL)
-    assert re.search(r'<p class="insignia" id="ins-notas">Próximamente</p>', tarjetas[1])
-    assert "<a " not in tarjetas[1]
+    assert f'href="/docente/secciones/{seccion_tutora.pk}/notas/"' in tarjetas[1]
     assert "/competencias/" not in html

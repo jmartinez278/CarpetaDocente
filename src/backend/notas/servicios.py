@@ -266,6 +266,16 @@ class HojaDelArea:
     solo_lectura: list[Estudiante] = field(default_factory=list)
     notas: dict[tuple[int, int], tuple[str, str]] = field(default_factory=dict)
 
+    @property
+    def faltantes(self):
+        """Celdas sin nota de las filas activas en las columnas: la regla de ``notas_faltantes``
+        (D4) sobre lo ya leído, sin otra consulta. Sin columnas (docente de curso), cero."""
+        return sum(
+            (fila.pk, columna.competencia.pk) not in self.notas
+            for fila in self.filas
+            for columna in self.columnas
+        )
+
 
 def _columnas(area, marcadas):
     """Las competencias activas de ``area`` que están en ``marcadas``, con su número."""

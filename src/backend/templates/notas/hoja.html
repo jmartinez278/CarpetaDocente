@@ -1,0 +1,15 @@
+{% extends "marco.html" %}
+{% comment %}
+Hoja de notas por área y periodo (design de US-020, D9). Marco mínimo de la parte C: título, aviso de periodo y el json_script
+que leerá notas.js. La pantalla completa (tira de áreas, rejilla, barra de guardar, diálogo de salida) llega en la parte 4.
+{% endcomment %}
+
+{% block titulo %}Notas · {{ seccion_corta }} · CarpetaDocente{% endblock %}
+
+{% block principal %}
+<main class="vista-notas" data-dimension="notas">
+  <h1>Notas · {{ seccion_corta }}</h1>
+  {% if aviso %}<div class="mensaje mensaje--aviso"><div class="mensaje__texto"><p>{{ aviso.titulo }}</p><p>{{ aviso.texto }}</p></div></div>{% endif %}
+  {% if datos %}{{ datos|json_script:"datos-notas" }}{% endif %}
+</main>
+{% endblock %}

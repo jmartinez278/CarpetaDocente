@@ -617,10 +617,9 @@ def test_con_una_seccion_asistencia_lleva_a_la_asistencia_de_hoy(portada_con):
     assert f'href="{url_asistencia(Seccion.objects.get())}"' in enlace
     assert '<p class="dimension__accion" id="acc-asistencia">Registrar asistencia' in tarjeta
     assert "Próximamente" not in tarjeta
-    assert "carrusel__item--inicial" in tarjeta
-    for otra in tarjetas(html)[:2]:
-        assert "Próximamente" in otra
-        assert "<a " not in otra
+    sesiones = tarjetas(html)[0]
+    assert "Próximamente" in sesiones
+    assert "<a " not in sesiones
 
 
 @pytest.mark.parametrize("secciones", [[], [(2, "A"), (3, "B")]], ids=["sin-seccion", "dos"])
@@ -632,6 +631,36 @@ def test_sin_seccion_unica_asistencia_es_proximamente(portada_con, secciones):
     assert "<a " not in tarjeta
     assert "href" not in tarjeta
     assert "Hoy: pendiente" not in tarjeta
+
+
+# --- Tarjeta Notas (US-020; spec pantallas-de-inicio, D15) ---
+
+
+def tarjeta_notas(html):
+    return tarjetas(html)[1]
+
+
+def test_con_una_seccion_notas_lleva_a_la_hoja_de_notas(portada_con):
+    """Escenario "Notas con una sección": la hoja resuelve el periodo (o lleva a Competencias)."""
+    html = portada_con((2, "A"))
+    tarjeta = tarjeta_notas(html)
+
+    enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
+    assert f'href="/docente/secciones/{Seccion.objects.get().pk}/notas/"' in enlace
+    assert '<p class="dimension__accion" id="acc-notas">Registrar notas' in tarjeta
+    assert "Próximamente" not in tarjeta
+    assert "carrusel__item--inicial" in tarjeta, "Notas es la primera disponible"
+    assert "/competencias/" not in html, "la portada no enlaza directo a las competencias"
+
+
+@pytest.mark.parametrize("secciones", [[], [(2, "A"), (3, "B")]], ids=["sin-seccion", "dos"])
+def test_sin_seccion_unica_notas_es_proximamente(portada_con, secciones):
+    """Escenario "Notas sin sección única"."""
+    tarjeta = tarjeta_notas(portada_con(*secciones))
+
+    assert re.search(r'<p class="insignia" id="ins-notas">Próximamente</p>', tarjeta)
+    assert "<a " not in tarjeta
+    assert "href" not in tarjeta
 
 
 def pildora(tarjeta):

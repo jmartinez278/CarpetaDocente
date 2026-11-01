@@ -252,6 +252,26 @@ def test_cuenta_notas_y_no_estudiantes(
     )
 
 
+def test_la_hoja_cuenta_los_mismos_faltantes_sin_otra_consulta(
+    docente, seccion_tutora, ie, bimestres, lista
+):
+    """``HojaDelArea.faltantes`` aplica la regla de ``notas_faltantes`` a lo ya leído (D4):
+    el trasladado con notas, a la vista en solo lectura, no cuenta."""
+    activos, trasladado, _ = lista
+    ids = [competencia(MATEMATICA, n).pk for n in (1, 2, 3, 4)]
+    marcar(seccion_tutora, bimestres[2], ids)
+    poner_nota(activos[0], ids[0], bimestres[2])
+    poner_nota(trasladado, ids[1], bimestres[2])
+    area = area_institucion(seccion_tutora, MATEMATICA)
+    hojas = servicios.hoja_de_notas(docente, seccion_tutora, bimestres[2])
+    hoja = next(h for h in hojas if h.area.codigo_siagie == MATEMATICA)
+
+    esperado = len(servicios.notas_faltantes(docente, seccion_tutora, bimestres[2], area))
+    assert hoja.solo_lectura == [trasladado]
+    assert hoja.faltantes == esperado == len(activos) * 4 - 1
+    assert all(h.faltantes == 0 for h in hojas if not h.columnas)
+
+
 def test_el_trasladado_sin_nivel_no_cuenta(docente, seccion_tutora, ie, bimestres, lista):
     """Escenario «Trasladado sin nivel»."""
     activos, trasladado, _ = lista

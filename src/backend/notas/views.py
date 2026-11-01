@@ -5,13 +5,17 @@ Solo leen la petición y llaman a ``notas.servicios``. El acceso es el de la asi
 sesión, ``RolRequeridoMixin``, con ``HX-Redirect`` cuando el guardado llega con ``HX-Request``.
 """
 
+import json
+
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import dateformat, timezone
+from django.utils.http import urlencode
 from django.views import View
 
+from catalogo.models import InstitucionArea
 from institucion.models import Periodo
 from institucion.servicios import texto_seccion_corto
 from institucion.views import SeccionDocenteMixin
@@ -181,3 +185,156 @@ class GuardarView(SeccionDocenteMixin, View):
         except ValidationError as error:
             return JsonResponse({"mensaje": error.messages[0]}, status=400)
         return HttpResponse(status=204)
+
+
+# --- Hoja de notas (design de US-020, D3, D8, D9) ---
+
+
+# Prefijo de la clave del borrador de un área (D10); notas.js le suma el código SIAGIE del área.
+CLAVE_BORRADOR = "cd:notas:v1:u{usuario}:s{seccion}:p{numero}:a"
+
+
+def _nombre(estudiante):
+    return f"{estudiante.apellidos}, {estudiante.nombres}"
+
+
+def _area_inicial(hojas, pedida):
+    """El área de ``?area=`` si la institución la trabaja; si no, la primera con columnas (D3)."""
+    if any(hoja.area.codigo_siagie == pedida for hoja in hojas):
+        return pedida
+    return next((hoja.area.codigo_siagie for hoja in hojas if hoja.columnas), None)
+
+
+def _ir_a_competencias(seccion, periodo, hojas, pedida):
+    """302 a Competencias del periodo, con el área y ``desde=notas`` (D3; spec «Bimestre sin
+    marcas»). El área es la pedida si la institución la trabaja; si no, la primera que se marca."""
+    if not any(hoja.area.codigo_siagie == pedida for hoja in hojas):
+        pedida = next((hoja.area.codigo_siagie for hoja in hojas if hoja.marcable), "")
+    consulta = {"periodo": periodo.numero, "area": pedida, "desde": "notas"}
+    if not pedida:
+        del consulta["area"]
+    return redirect(f"{reverse('competencias:pantalla', args=[seccion.pk])}?{urlencode(consulta)}")
+
+
+def _datos_del_area(hoja, seccion, periodo):
+    """Lo que ``notas.js`` necesita para dibujar y guardar la hoja de un área (D2, D4, D9)."""
+    codigo = hoja.area.codigo_siagie
+    return {
+        "codigo": codigo,
+        "nombre": hoja.area.nombre,
+        "a_cargo": hoja.a_cargo,
+        "marcable": hoja.marcable,
+        "total": hoja.total,
+        "columnas": [
+            {
+                "id": columna.competencia.pk,
+                "etiqueta": columna.etiqueta,
+                "nombre": columna.competencia.nombre,
+            }
+            for columna in hoja.columnas
+        ],
+        "filas": [{"id": e.pk, "nombre": _nombre(e)} for e in hoja.filas],
+        "solo_lectura": [
+            {"id": e.pk, "nombre": _nombre(e), "estado": e.estado} for e in hoja.solo_lectura
+        ],
+        "notas": {
+            f"{estudiante}-{competencia}": {"nivel": nivel, "conclusion": conclusion}
+            for (estudiante, competencia), (nivel, conclusion) in hoja.notas.items()
+        },
+        "faltantes": hoja.faltantes,
+        "url_guardar": reverse("notas:guardar", args=[seccion.pk, periodo.numero, codigo]),
+    }
+
+
+class HojaView(SeccionDocenteMixin, View):
+    """La hoja de notas de la sección en el periodo de D3; abrirla no guarda nada.
+
+    Sin periodo que abrir (sin periodos o antes del primero), solo el aviso. Sin competencias
+    guardadas del periodo, lleva a Competencias. Si no, el marco de la plantilla y, en
+    ``json_script``, las áreas con sus columnas, filas, notas y faltantes.
+    """
+
+    def get(self, request, seccion_id):
+        seccion, usuario = self.seccion, request.user
+        periodos = servicios.periodos_de_la_seccion(seccion, timezone.localdate())
+        periodo = servicios.periodo_de_la_hoja(periodos, request.GET.get("periodo", ""))
+        contexto = {
+            "seccion": seccion,
+            "seccion_corta": texto_seccion_corto(seccion),
+            "periodo": periodo,
+            "aviso": _aviso(periodos),
+        }
+        if periodo is None:
+            return render(request, "notas/hoja.html", contexto)
+        areas = servicios.areas_de_la_seccion(usuario, seccion)
+        hojas = servicios.hoja_de_notas(usuario, seccion, periodo.periodo, areas)
+        pedida = request.GET.get("area", "")
+        if not any(hoja.columnas for hoja in hojas):
+            return _ir_a_competencias(seccion, periodo, hojas, pedida)
+        inicial = _area_inicial(hojas, pedida)
+        contexto.update(
+            {
+                "hojas": hojas,
+                "area_inicial": inicial,
+                "datos": {
+                    "periodo": {
+                        "numero": periodo.numero,
+                        "nombre": periodo.nombre,
+                        "estado": periodo.estado,
+                    },
+                    "area_inicial": inicial,
+                    "clave_borrador": CLAVE_BORRADOR.format(
+                        usuario=usuario.pk, seccion=seccion.pk, numero=periodo.numero
+                    ),
+                    "areas": [_datos_del_area(hoja, seccion, periodo) for hoja in hojas],
+                },
+            }
+        )
+        return render(request, "notas/hoja.html", contexto)
+
+
+def _leer_cuerpo(request):
+    """Las celdas del cuerpo JSON, o ``HojaCambiada`` si no es un objeto con ``celdas``."""
+    try:
+        cuerpo = json.loads(request.body)
+    except ValueError as error:  # JSON mal formado o bytes que no son UTF-8
+        raise servicios.HojaCambiada from error
+    if not isinstance(cuerpo, dict) or "celdas" not in cuerpo:
+        raise servicios.HojaCambiada
+    return cuerpo["celdas"]
+
+
+class GuardarHojaView(SeccionDocenteMixin, View):
+    """Las celdas de la hoja de un área en un periodo, en un cuerpo JSON, todo o nada (D5, D8).
+
+    200 ``faltantes``; 400 ``mensaje`` con ``no_validas`` y ``sin_conclusion`` (escala o
+    conclusión) o solo ``mensaje`` (estructura o JSON mal formado); 404 periodo o área que no
+    existen; 409 ``mensaje`` (periodo no editable) o ``mensaje`` y ``cambiadas`` (D7). Los mensajes
+    son constantes del servicio, nunca el texto de la excepción.
+    """
+
+    def post(self, request, seccion_id, numero, area):
+        try:
+            celdas = _leer_cuerpo(request)
+            resultado = servicios.guardar_hoja(request.user, self.seccion, numero, area, celdas)
+        except (Periodo.DoesNotExist, InstitucionArea.DoesNotExist):
+            return HttpResponse(status=404)
+        except servicios.HojaCambiada:
+            return JsonResponse({"mensaje": servicios.HOJA_CAMBIADA}, status=400)
+        except servicios.HojaConErrores as error:
+            mensaje = servicios.VALOR_NO_VALIDO if error.no_validas else servicios.FALTA_CONCLUSION
+            return JsonResponse(
+                {
+                    "mensaje": mensaje,
+                    "no_validas": [list(par) for par in error.no_validas],
+                    "sin_conclusion": [list(par) for par in error.sin_conclusion],
+                },
+                status=400,
+            )
+        except servicios.PeriodoNoEditable:
+            return JsonResponse({"mensaje": servicios.PERIODO_NO_EDITABLE}, status=409)
+        except servicios.NotasCambiadas as error:
+            return JsonResponse(
+                {"mensaje": servicios.NOTAS_CAMBIADAS, "cambiadas": error.cambiadas}, status=409
+            )
+        return JsonResponse({"faltantes": resultado.faltantes})
