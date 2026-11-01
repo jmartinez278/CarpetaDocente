@@ -9,7 +9,6 @@ import re
 import pytest
 from django.urls import reverse
 
-from notas import servicios
 from notas.models import CompetenciaPeriodo
 from notas.tests.conftest import (
     AGO_1,
@@ -20,6 +19,7 @@ from notas.tests.conftest import (
     MAR_2,
     MATEMATICA,
     NOV_20,
+    con_notas,
     ids_de,
 )
 
@@ -226,12 +226,10 @@ def test_con_trimestres_los_botones_dicen_t(cliente, institucion, seccion_tutora
 
 
 def test_una_competencia_con_notas_va_marcada_bloqueada_con_su_motivo(
-    cliente, seccion_tutora, ie, monkeypatch
+    cliente, seccion_tutora, bimestres, ie
 ):
     elegida = min(ie)
-    monkeypatch.setattr(
-        servicios, "tiene_notas", lambda seccion, periodo, competencia: competencia == elegida
-    )
+    con_notas(seccion_tutora, bimestres[2], [elegida])
 
     html = pagina(cliente, seccion_tutora)
 
@@ -250,6 +248,7 @@ def test_las_obligatorias_del_ultimo_periodo_dicen_su_motivo(
     faltan = sorted(ie)[:5]
     for periodo in bimestres[:3]:
         marcar(seccion_tutora, periodo, ie - set(faltan))
+        con_notas(seccion_tutora, periodo, ie - set(faltan))
     hoy["valor"] = NOV_20
 
     html = pagina(cliente, seccion_tutora)

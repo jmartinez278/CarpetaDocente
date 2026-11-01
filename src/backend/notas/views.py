@@ -93,7 +93,7 @@ class CompetenciasView(SeccionDocenteMixin, View):
             con_notas, obligatorias = [], []
             if periodo.editable:
                 con_notas = sorted(
-                    c for c in permitido if servicios.tiene_notas(seccion, periodo.periodo, c)
+                    permitido & servicios.competencias_con_notas(seccion, periodo.periodo)
                 )
                 obligatorias = sorted(
                     servicios.competencias_obligatorias(

@@ -9,8 +9,8 @@ from institucion.models import Seccion
 
 class Command(BaseCommand):
     help = (
-        "Borra estudiantes, asistencia y marcas de competencias de una sección del año ABIERTO y "
-        "conserva su docente. Hacer antes un respaldo de la base."
+        "Borra estudiantes, asistencia, marcas de competencias y notas de una sección del año "
+        "ABIERTO y conserva su docente. Hacer antes un respaldo de la base."
     )
 
     def add_arguments(self, parser):

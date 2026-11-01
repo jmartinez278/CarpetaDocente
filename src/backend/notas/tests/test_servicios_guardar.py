@@ -17,6 +17,7 @@ from notas.tests.conftest import (
     MATEMATICA,
     NOV_20,
     OCT_30,
+    con_notas,
     ids_de,
 )
 
@@ -196,6 +197,7 @@ def test_en_el_bimestre_4_las_obligatorias_se_agregan_aunque_falten_en_el_envio(
     faltan = set(sorted(universo_ie)[:5])
     for numero in (1, 2, 3):
         guardar(docente, seccion_tutora, numero, universo_ie - faltan, hoy=NOV_20)
+        con_notas(seccion_tutora, bimestres[numero - 1], universo_ie - faltan)
     envio = {max(universo_ie)}
 
     cambios = guardar(docente, seccion_tutora, 4, envio, hoy=NOV_20)
@@ -210,6 +212,7 @@ def test_en_el_bimestre_4_un_envio_vacio_con_obligatorias_se_guarda(
     faltan = set(sorted(universo_ie)[:5])
     for numero in (1, 2, 3):
         guardar(docente, seccion_tutora, numero, universo_ie - faltan, hoy=NOV_20)
+        con_notas(seccion_tutora, bimestres[numero - 1], universo_ie - faltan)
 
     guardar(docente, seccion_tutora, 4, [], hoy=NOV_20)
 
@@ -220,25 +223,51 @@ def test_en_el_bimestre_4_un_envio_vacio_con_obligatorias_se_guarda(
 
 
 def test_quitar_una_competencia_con_notas_no_guarda_nada(
-    docente, seccion_tutora, bimestres, universo_ie, siete, monkeypatch
+    docente, seccion_tutora, bimestres, universo_ie, siete
 ):
     guardar(docente, seccion_tutora, 3, siete)
-    con_notas = min(siete)
-    monkeypatch.setattr(
-        servicios,
-        "tiene_notas",
-        lambda seccion, periodo, competencia: competencia == con_notas,
-    )
+    con_nota = min(siete)
+    con_notas(seccion_tutora, bimestres[2], [con_nota])
     otra_nueva = min(universo_ie - siete)
 
     with pytest.raises(servicios.CompetenciaConNotas) as error:
-        guardar(docente, seccion_tutora, 3, (siete - {con_notas}) | {otra_nueva})
+        guardar(docente, seccion_tutora, 3, (siete - {con_nota}) | {otra_nueva})
 
-    assert error.value.competencias == [con_notas]
+    assert error.value.competencias == [con_nota]
     assert str(error.value) == servicios.MENSAJE_CON_NOTAS
     assert servicios.MENSAJE_CON_NOTAS == "La competencia tiene notas registradas en este periodo"
     assert marcas(seccion_tutora, 3) == siete
     assert len(entradas()) == 1
+
+
+def test_con_notas_en_otro_periodo_se_puede_quitar(docente, seccion_tutora, bimestres, siete):
+    """Escenario «Notas de otro periodo»: C1 con notas en el bimestre 2 y ninguna en el 3."""
+    c1 = min(siete)
+    guardar(docente, seccion_tutora, 2, siete)
+    guardar(docente, seccion_tutora, 3, siete)
+    con_notas(seccion_tutora, bimestres[1], [c1])
+
+    guardar(docente, seccion_tutora, 3, siete - {c1})
+
+    assert marcas(seccion_tutora, 3) == siete - {c1}
+
+
+def test_el_guardado_lee_las_notas_del_periodo_una_vez(
+    docente, seccion_tutora, bimestres, siete, monkeypatch
+):
+    guardar(docente, seccion_tutora, 3, siete)
+    llamadas = []
+    original = servicios.competencias_con_notas
+
+    def contar(seccion, periodo):
+        llamadas.append(periodo.numero)
+        return original(seccion, periodo)
+
+    monkeypatch.setattr(servicios, "competencias_con_notas", contar)
+
+    guardar(docente, seccion_tutora, 3, set(sorted(siete)[:3]))
+
+    assert llamadas == [3]
 
 
 # --- Marcas que la tutora no ve ---

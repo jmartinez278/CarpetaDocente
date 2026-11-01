@@ -198,10 +198,70 @@ def test_demo_cargada_no_cuenta(participante, crear_usuario, con_seccion):
     assert (fila["activos_texto"], fila["jornadas"]) == ("1 / 1 (100 %)", 1)
 
 
-def test_sesiones_y_secciones_con_notas_quedan_sin_dato():
-    fila = semana()
+def test_sesiones_queda_sin_dato():
+    """Escenario «Columnas aún sin datos»."""
+    assert semana()["sesiones"] is None
 
-    assert (fila["sesiones"], fila["secciones_con_notas"]) == (None, None)
+
+# --- Secciones con notas (US-020, D13) -------------------------------------------------------
+
+
+def notas_guardadas(usuario, seccion, fecha_hora, area="063"):
+    return entrada(
+        usuario,
+        Operacion.NOTAS_GUARDADAS,
+        fecha_hora,
+        entidad="seccion",
+        entidad_id=seccion,
+        detalle={"area": area, "periodo": 1, "creadas": 1, "cambiadas": []},
+    )
+
+
+def seccion_de(usuario, anio, nombre):
+    return Seccion.objects.create(anio_escolar=anio, grado=3, nombre=nombre, docente=usuario)
+
+
+def test_secciones_con_notas_cuenta_secciones_distintas(docente, otra_docente, anio_abierto):
+    """Escenario «Secciones con notas»: Matemática y Comunicación de una, y otra sección."""
+    suya = seccion_de(docente, anio_abierto, "A")
+    otra = seccion_de(otra_docente, anio_abierto, "B")
+    notas_guardadas(docente, suya, MARTES_2, area="063")
+    notas_guardadas(docente, suya, JUEVES_4, area="0005")
+    notas_guardadas(otra_docente, otra, JUEVES_4)
+
+    assert semana()["secciones_con_notas"] == 2
+
+
+def test_semana_sin_notas_dice_cero(participante):
+    """Escenario «Semana sin notas»."""
+    entrada(participante, Operacion.REGISTRO_ASISTENCIA, MARTES_2)
+
+    assert semana()["secciones_con_notas"] == 0
+
+
+def test_las_notas_de_la_demostracion_no_cuentan(docente, crear_usuario, anio_abierto):
+    """Escenario «Notas de la demostración»; tampoco una entrada sin usuario."""
+    demo = crear_usuario("demo.docente1", es_demo=True)
+    notas_guardadas(demo, seccion_de(demo, anio_abierto, "A"), MARTES_2)
+    notas_guardadas(None, seccion_de(None, anio_abierto, "B"), MARTES_2)
+    notas_guardadas(docente, seccion_de(docente, anio_abierto, "C"), JUEVES_4)
+
+    assert semana()["secciones_con_notas"] == 1
+
+
+def test_las_notas_cuentan_en_su_semana(docente, anio_abierto):
+    suya = seccion_de(docente, anio_abierto, "A")
+    notas_guardadas(docente, suya, MARTES_2)
+
+    primera, segunda = indicadores_por_semana(LUNES_1, LUNES_8)
+
+    assert (primera["secciones_con_notas"], segunda["secciones_con_notas"]) == (1, 0)
+
+
+def test_guardar_notas_cuenta_como_docente_activa(participante, anio_abierto):
+    notas_guardadas(participante, Seccion.objects.get(docente=participante), MARTES_2)
+
+    assert semana()["activos"] == 1
 
 
 # --- Página del panel ------------------------------------------------------------------------
@@ -231,8 +291,8 @@ def test_la_pagina_muestra_las_semanas_del_rango_elegido(panel, participante):
         "Secciones con notas",
     ):
         assert f'<th scope="col">{encabezado}</th>' in html
-    # "—" en las dos columnas sin dato de cada fila.
-    assert html.count("<td>—</td>") == 4
+    # "—" solo en «Sesiones cargadas» de cada fila (US-020 llena «Secciones con notas»).
+    assert html.count("<td>—</td>") == 2
     for campo in ("desde", "hasta"):
         assert f'for="id_{campo}"' in html
 

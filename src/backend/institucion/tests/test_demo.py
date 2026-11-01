@@ -11,12 +11,12 @@ from django.utils import timezone
 
 from actividad.models import Operacion, RegistroActividad
 from asistencia.models import Asistencia, Jornada
-from catalogo.models import InstitucionArea
+from catalogo.models import Competencia, InstitucionArea
 from cuentas.models import Usuario
 from institucion import demo, servicios
 from institucion.models import AnioEscolar, Estudiante, Institucion, Periodo, Seccion
 from notas import servicios as notas
-from notas.models import CompetenciaPeriodo
+from notas.models import Calificacion, CompetenciaPeriodo
 
 pytestmark = pytest.mark.django_db
 
@@ -668,7 +668,7 @@ def test_quitar_borra_las_marcas_demo_y_no_las_de_tres_a(
     assert not CompetenciaPeriodo.objects.filter(seccion__in=secciones_demo(anio)).exists()
     assert set(marcas_por_periodo(tres_a_real)) == {2}
     assert resumen.marcas == 8 * 3 * 27
-    assert "648 marcas de competencias" in resumen.texto()
+    assert "648 marcas de competencias y 0 notas" in resumen.texto()
     entrada = RegistroActividad.objects.get(operacion=Operacion.DEMO_QUITADA)
     assert entrada.detalle["marcas"] == 8 * 3 * 27
 
@@ -688,6 +688,75 @@ def test_descartar_borra_las_marcas_y_las_cuenta(anio, con_bimestres, tres_a_rea
 
     assert not CompetenciaPeriodo.objects.exists()
     assert conteos.marcas == 27
-    assert "27 marcas de competencias" in conteos.texto()
+    assert "27 marcas de competencias y 0 notas" in conteos.texto()
     entrada = RegistroActividad.objects.get(operacion=Operacion.SECCION_DESCARTADA)
     assert entrada.detalle["marcas"] == 27
+
+
+# --- Notas al quitar o descartar (US-020, D14) ---
+
+
+def notas_de(sec, periodo, competencias):
+    """Una «A» de cada estudiante de ``sec`` en cada competencia, directo en la base."""
+    Calificacion.objects.bulk_create(
+        Calificacion(estudiante=estudiante, competencia_id=c, periodo=periodo, nivel="A")
+        for estudiante in sec.estudiantes.all()
+        for c in competencias
+    )
+
+
+def test_cargar_la_demostracion_no_crea_notas(cargar, con_bimestres):
+    """Escenario «Cargar la demostración»."""
+    cargar(hoy=OCT_15)
+
+    assert not Calificacion.objects.exists()
+
+
+def test_quitar_la_demostracion_con_notas(cargar, anio, con_bimestres, tres_a_real, docente):
+    """Escenario «Quitar la demostración con notas»: la cuenta demo guarda con la hoja."""
+    cargar(hoy=OCT_15)
+    uno_a = seccion(anio, 1, "A")
+    matematica = sorted(
+        CompetenciaPeriodo.objects.filter(
+            seccion=uno_a, periodo__numero=3, competencia__area__codigo_siagie="063"
+        ).values_list("competencia_id", flat=True)
+    )
+    celdas = [
+        {"estudiante": e.pk, "competencia": c, "nivel": "A", "conclusion": "", "base": None}
+        for e in uno_a.estudiantes.all()[:2]
+        for c in matematica
+    ]
+    notas.guardar_hoja(uno_a.docente, uno_a, 3, "063", celdas, hoy=OCT_15)
+    periodo_2 = Periodo.objects.get(anio_escolar=anio, numero=2)
+    notas_de(tres_a_real, periodo_2, matematica[:1])
+
+    resumen = demo.quitar_demo()
+
+    assert not Calificacion.objects.filter(estudiante__seccion=uno_a).exists()
+    assert not uno_a.estudiantes.exists()
+    assert Calificacion.objects.filter(estudiante__seccion=tres_a_real).count() == 2
+    assert resumen.notas == 2 * len(matematica)
+    assert f"y {2 * len(matematica)} notas" in resumen.texto()
+    entrada = RegistroActividad.objects.get(operacion=Operacion.DEMO_QUITADA)
+    assert entrada.detalle["notas"] == 2 * len(matematica)
+
+
+def test_descartar_una_seccion_con_notas(anio, con_bimestres, tres_a_real):
+    """Escenario «Descartar una sección con notas»: 3.° A con 40 notas en el bimestre 2."""
+    servicios.guardar_periodos(anio, demo.bimestres_ejemplo(2027))
+    periodo_2 = Periodo.objects.get(anio_escolar=anio, numero=2)
+    veinte = (
+        Competencia.objects.filter(activa=True).order_by("pk").values_list("pk", flat=True)[:20]
+    )
+    notas_de(tres_a_real, periodo_2, list(veinte))
+    assert Calificacion.objects.count() == 40
+
+    assert demo.conteos_seccion(tres_a_real).notas == 40
+    conteos = demo.descartar_seccion(tres_a_real)
+
+    assert not Calificacion.objects.exists()
+    assert not tres_a_real.estudiantes.exists()
+    assert conteos.notas == 40
+    assert "y 40 notas" in conteos.texto()
+    entrada = RegistroActividad.objects.get(operacion=Operacion.SECCION_DESCARTADA)
+    assert entrada.detalle["notas"] == 40

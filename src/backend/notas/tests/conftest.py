@@ -6,8 +6,9 @@ import pytest
 from django.utils import timezone
 
 from catalogo.models import Competencia, InstitucionArea
-from institucion.models import Institucion, Periodo
+from institucion.models import Estudiante, Institucion, Periodo
 from institucion.tests.conftest import *  # noqa: F403 - fixtures compartidas
+from notas.models import Calificacion, CompetenciaPeriodo
 
 # Códigos SIAGIE de las áreas que usan las pruebas (catalogo/0002).
 MATEMATICA = "063"
@@ -36,6 +37,61 @@ def ids_de(*codigos):
         Competencia.objects.filter(area__codigo_siagie__in=codigos, activa=True).values_list(
             "pk", flat=True
         )
+    )
+
+
+def competencia(codigo, orden):
+    """La competencia ``orden`` (1…n) del área ``codigo``."""
+    return Competencia.objects.get(area__codigo_siagie=codigo, orden=orden)
+
+
+# Una conclusión ficticia válida (de 10 a 500 caracteres), sin nombres.
+CONCLUSION = "Necesita apoyo para explicar sus procedimientos."
+
+
+def crear_estudiantes(seccion, *nombres, estado=Estudiante.Estado.ACTIVO):
+    """Estudiantes ficticios de ``seccion``; cada nombre es «APELLIDOS, NOMBRES»."""
+    creados = []
+    for completo in nombres:
+        apellidos, nombres_ = (parte.strip() for parte in completo.split(","))
+        creados.append(
+            Estudiante.objects.create(
+                seccion=seccion, apellidos=apellidos, nombres=nombres_, estado=estado
+            )
+        )
+    return creados
+
+
+def poner_nota(estudiante, competencia_id, periodo, nivel="A", conclusion=None):
+    """Guarda una nota directo en la base; en B y C, con ``CONCLUSION`` si no se da otra."""
+    if conclusion is None:
+        conclusion = CONCLUSION if nivel in ("B", "C") else ""
+    return Calificacion.objects.create(
+        estudiante=estudiante,
+        competencia_id=getattr(competencia_id, "pk", competencia_id),
+        periodo=periodo,
+        nivel=nivel,
+        conclusion_descriptiva=conclusion,
+    )
+
+
+def con_notas(seccion, periodo, ids, nivel="A"):
+    """Una nota en cada competencia ``ids`` del periodo, de un estudiante ficticio de la sección.
+
+    Usa el primer estudiante de la sección o crea uno.
+    """
+    estudiante = seccion.estudiantes.order_by("pk").first()
+    if estudiante is None:
+        (estudiante,) = crear_estudiantes(seccion, "PAREDES, NOA")
+    for competencia_id in ids:
+        poner_nota(estudiante, competencia_id, periodo, nivel)
+    return estudiante
+
+
+def marcar(seccion, periodo, ids):
+    """Marca ``ids`` en el periodo directo en la base, sin entrada de actividad."""
+    CompetenciaPeriodo.objects.bulk_create(
+        CompetenciaPeriodo(seccion=seccion, periodo=periodo, competencia_id=i) for i in ids
     )
 
 
