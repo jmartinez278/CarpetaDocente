@@ -171,11 +171,12 @@ class GuardarView(SeccionDocenteMixin, View):
             servicios.guardar_marcas(request.user, self.seccion, numero, ids, visto=visto)
         except Periodo.DoesNotExist:
             return HttpResponse(status=404)
-        except servicios.PeriodoNoMarcable as error:
-            return JsonResponse({"mensaje": str(error)}, status=409)
+        except servicios.PeriodoNoMarcable:
+            return JsonResponse({"mensaje": servicios.PERIODO_NO_MARCABLE}, status=409)
         except servicios.CompetenciaConNotas as error:
             return JsonResponse(
-                {"mensaje": str(error), "competencias": error.competencias}, status=409
+                {"mensaje": servicios.MENSAJE_CON_NOTAS, "competencias": error.competencias},
+                status=409,
             )
         except ValidationError as error:
             return JsonResponse({"mensaje": error.messages[0]}, status=400)
