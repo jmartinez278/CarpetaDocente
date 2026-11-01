@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from playwright.sync_api import expect
 
+from actividad.tests.intentos import SIN_PERMISO, motivos, pasar_a_otra_docente
 from cuentas.tests.e2e import (
     ANCHOS,
     TEMAS,
@@ -454,6 +455,27 @@ def test_con_la_sesion_vencida_no_guarda_y_ofrece_volver_a_ingresar(abrir_compet
     expect(enlace).to_be_visible()
     expect(enlace).to_have_attribute("href", re.compile(r"/ingresar/"))
     assert marcas_en_la_base(3) == set()
+
+
+def test_guardar_en_una_seccion_que_ya_no_es_suya_lleva_a_sin_permiso(
+    abrir_competencias, ie, seccion_tutora, otra_docente
+):
+    """Spec competencias-periodo y acceso-secciones: un guardado con 403 lleva a «sin permiso», no
+    a «Tu sesión venció», sin el aviso de salida y con una sola entrada (US-004, D6)."""
+    pagina = abrir_competencias()
+    alternar(pagina, min(ids_de(MATEMATICA)))
+    dialogos = []
+    pagina.on("dialog", lambda dialogo: (dialogos.append(dialogo.type), dialogo.dismiss()))
+    pasar_a_otra_docente(seccion_tutora, otra_docente)
+
+    guardar(pagina)
+
+    pagina.wait_for_url(re.compile(r"/docente/sin-permiso/$"))
+    expect(pagina.get_by_role("heading", name=SIN_PERMISO)).to_be_visible()
+    expect(pagina.get_by_text("Tu sesión venció")).to_have_count(0)
+    assert dialogos == []
+    assert marcas_en_la_base(3) == set()
+    assert motivos() == ["ajena"]
 
 
 # --- Salir sin guardar ---

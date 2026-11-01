@@ -13,6 +13,7 @@ import time
 import pytest
 from playwright.sync_api import expect
 
+from actividad.tests.intentos import SIN_PERMISO, motivos, pasar_a_otra_docente
 from cuentas.tests.e2e import (
     ANCHOS,
     TEMAS,
@@ -326,6 +327,41 @@ def test_con_la_sesion_vencida_no_guarda_y_ofrece_volver_a_ingresar(abrir_hoja, 
     enlace = pagina.get_by_role("link", name="Volver a ingresar")
     expect(enlace).to_have_attribute("href", re.compile(r"/ingresar/"))
     assert notas_en_la_base() == {}
+
+
+def borradores_de_la_seccion(page, seccion):
+    """Las claves de ``localStorage`` con borradores de esa sección (notas-borrador.js)."""
+    return page.evaluate(
+        "(marca) => Object.keys(localStorage)"
+        '.filter((k) => k.startsWith("cd:notas:") && k.includes(marca))',
+        f":s{seccion.pk}:",
+    )
+
+
+def test_guardar_en_una_seccion_que_ya_no_es_suya_lleva_a_sin_permiso(
+    abrir_hoja, estudiantes, seccion_tutora, otra_docente
+):
+    """Spec acceso-secciones, "Guardado de la hoja de notas" y "Un intento por HTMX deja una sola
+    entrada" (US-004, D6)."""
+    ana, _ = estudiantes
+    pagina = abrir_hoja()
+    entrada(pagina, ana, 1).focus()
+    pagina.keyboard.type("a")
+    expect(estado(pagina)).not_to_have_text("Sin cambios")
+    assert borradores_de_la_seccion(pagina, seccion_tutora)
+    dialogos = []
+    pagina.on("dialog", lambda dialogo: (dialogos.append(dialogo.type), dialogo.dismiss()))
+    pasar_a_otra_docente(seccion_tutora, otra_docente)
+
+    guardar(pagina)
+
+    pagina.wait_for_url(re.compile(r"/docente/sin-permiso/$"))
+    expect(pagina.get_by_role("heading", name=SIN_PERMISO)).to_be_visible()
+    expect(pagina.get_by_text("Tu sesión venció")).to_have_count(0)
+    assert dialogos == []
+    assert borradores_de_la_seccion(pagina, seccion_tutora) == []
+    assert notas_en_la_base() == {}
+    assert motivos() == ["ajena"]
 
 
 # --- Cambiar de área y volver a las notas ---

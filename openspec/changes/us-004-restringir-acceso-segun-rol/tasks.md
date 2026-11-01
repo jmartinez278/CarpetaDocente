@@ -15,11 +15,11 @@
 
 ### Parte B: 403 en los guardados de asistencia, competencias y notas, y matriz de permisos (alto riesgo)
 
-- [ ] 2.1 Prueba primero, `notas/tests/test_hoja_e2e.py`: con la hoja abierta y una nota escrita, la sección pasa a otra docente; «Guardar» lleva a la página de «sin permiso», sin «Tu sesión venció», sin el aviso de salida y sin borradores de esa sección en `localStorage`; queda una sola entrada. Luego D6 en `notas.js`. Verificar: rojo y luego verde; e2e de `notas` del archivo
-- [ ] 2.2 Prueba primero, `notas/tests/test_competencias_e2e.py` y `asistencia/tests/test_asistencia_e2e.py`: el mismo caso en «Guardar» de competencias (sin «Tu sesión venció» ni aviso de salida) y al marcar en asistencia (sin pendientes de esa sección en `sessionStorage`), una entrada cada uno. Luego D6 en `competencias.js` y `asistencia.js`. Verificar: rojo y luego verde; esos dos e2e
-- [ ] 2.3 Prueba primero, `institucion/tests/test_estudiantes_e2e.py`: con el diálogo de la portada abierto, la sección pasa a otra docente; «Agregar» lleva a la página completa de «sin permiso», sin nada pintado en el diálogo. Verificar: rojo si el diálogo pinta el 403, y luego verde
-- [ ] 2.4 Prueba primero, `cuentas/tests/test_matriz_permisos.py` (D8): la tabla de rutas × perfiles × método; propia entra; ajena 403 con una entrada más y nada escrito; dirección y Administrador a su inicio; sin sesión al ingreso; solo la propia guarda; ninguna entrada para los otros perfiles. Verificar: verde (la regla ya está; se ve fallar quitando el registro del mixin en local)
-- [ ] 2.5 Revisión de la parte (agente `revisor`) y commit
+- [x] 2.1 Prueba primero, `notas/tests/test_hoja_e2e.py`: con la hoja abierta y una nota escrita, la sección pasa a otra docente; «Guardar» lleva a la página de «sin permiso», sin «Tu sesión venció», sin el aviso de salida y sin borradores de esa sección en `localStorage`; queda una sola entrada. Luego D6 en `notas.js`. Verificar: rojo y luego verde; e2e de `notas` del archivo
+- [x] 2.2 Prueba primero, `notas/tests/test_competencias_e2e.py` y `asistencia/tests/test_asistencia_e2e.py`: el mismo caso en «Guardar» de competencias (sin «Tu sesión venció» ni aviso de salida) y al marcar en asistencia (sin pendientes de esa sección en `sessionStorage`), una entrada cada uno. Luego D6 en `competencias.js` y `asistencia.js`. Verificar: rojo y luego verde; esos dos e2e
+- [x] 2.3 Prueba primero, `institucion/tests/test_estudiantes_e2e.py`: con el diálogo de la portada abierto, la sección pasa a otra docente; «Agregar» lleva a la página completa de «sin permiso», sin nada pintado en el diálogo. Verificar: rojo si el diálogo pinta el 403, y luego verde
+- [x] 2.4 Prueba primero, `cuentas/tests/test_matriz_permisos.py` (D8): la tabla de rutas × perfiles × método; propia entra; ajena 403 con una entrada más y nada escrito; dirección y Administrador a su inicio; sin sesión al ingreso; solo la propia guarda; ninguna entrada para los otros perfiles. Verificar: verde (la regla ya está; se ve fallar quitando el registro del mixin en local)
+- [x] 2.5 Revisión de la parte (agente `revisor`) y commit
 
 ## 3. Pantalla y catálogo de rutas
 
