@@ -429,7 +429,7 @@
     const falta = invalida(c);
     const lectura = area().lista[r].lectura;
     const texto = falta ? "Falta conclusión" : lectura ? "Leer conclusión" : "Ver conclusión anotada";
-    return `<button type="button" class="notas-nota${falta ? " notas-pendiente" : ""}" data-nota="${r}:${k}" data-est="${area().lista[r].id}" data-comp="${columnas()[k].id}" aria-label="${texto} de ${escapar(area().lista[r].nombre)}, ${etiquetaDe(k)}${lectura ? ", solo lectura" : ""}" title="${texto}">${icono(falta ? "aviso" : "nota")}</button>`;
+    return `<button type="button" class="notas-nota${falta ? " notas-pendiente" : ""}" data-nota="${r}:${k}" data-est="${escapar(area().lista[r].id)}" data-comp="${escapar(columnas()[k].id)}" aria-label="${texto} de ${escapar(area().lista[r].nombre)}, ${escapar(etiquetaDe(k))}${lectura ? ", solo lectura" : ""}" title="${texto}">${icono(falta ? "aviso" : "nota")}</button>`;
   }
 
   function botonMovil(r, k, c, etiqueta) {
@@ -437,7 +437,7 @@
     const rechazo = a.rechazos.get(idCelda(r, k));
     const nivel = escapar(rechazo ?? c.nivel) || "—";
     const marca = requiere(c) ? `<span class="${invalida(c) ? "notas-pendiente" : ""}">${icono(invalida(c) ? "aviso" : "nota")}</span>` : "";
-    return `<button class="notas-celda-movil" type="button" data-r="${r}" data-k="${k}" data-est="${a.lista[r].id}" data-comp="${columnas()[k].id}" data-etiqueta="${escapar(etiquetaDe(k))}" aria-label="${escapar(etiqueta)}${a.lista[r].lectura ? ", solo lectura" : ""}">${nivel}${marca}</button>`;
+    return `<button class="notas-celda-movil" type="button" data-r="${r}" data-k="${k}" data-est="${escapar(a.lista[r].id)}" data-comp="${escapar(columnas()[k].id)}" data-etiqueta="${escapar(etiquetaDe(k))}" aria-label="${escapar(etiqueta)}${a.lista[r].lectura ? ", solo lectura" : ""}">${nivel}${marca}</button>`;
   }
 
   function celdaConError(r, k, c) {
@@ -460,7 +460,7 @@
         const error = celdaConError(r, k, c);
         const etiqueta = etiquetaCelda(r, k, c);
         const rechazo = a.rechazos.get(idCelda(r, k));
-        return `<td role="gridcell" class="${error ? "notas-invalida" : ""}"${persona.lectura ? ' aria-readonly="true"' : ""}><div class="notas-celda"><input class="notas-nivel" type="text" maxlength="2" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="none" aria-haspopup="listbox" aria-expanded="false" aria-controls="lista-niveles"${requiere(c) ? ' aria-keyshortcuts="Alt+Enter"' : ""} data-r="${r}" data-k="${k}" data-est="${persona.id}" data-comp="${columna.id}" aria-label="${escapar(etiqueta)}" value="${escapar(rechazo ?? c.nivel)}" placeholder="—"${persona.lectura ? ' readonly tabindex="-1"' : ""}${error ? ' aria-invalid="true"' : ""}>${indicadorNota(r, k, c)}${botonMovil(r, k, c, etiqueta)}</div></td>`;
+        return `<td role="gridcell" class="${error ? "notas-invalida" : ""}"${persona.lectura ? ' aria-readonly="true"' : ""}><div class="notas-celda"><input class="notas-nivel" type="text" maxlength="2" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="none" aria-haspopup="listbox" aria-expanded="false" aria-controls="lista-niveles"${requiere(c) ? ' aria-keyshortcuts="Alt+Enter"' : ""} data-r="${r}" data-k="${k}" data-est="${escapar(persona.id)}" data-comp="${escapar(columna.id)}" aria-label="${escapar(etiqueta)}" value="${escapar(rechazo ?? c.nivel)}" placeholder="—"${persona.lectura ? ' readonly tabindex="-1"' : ""}${error ? ' aria-invalid="true"' : ""}>${indicadorNota(r, k, c)}${botonMovil(r, k, c, etiqueta)}</div></td>`;
       })
       .join("");
     return `${encabezado}<tr role="row" data-fila="${r}" class="${persona.lectura ? "notas-inactiva" : ""}${completa ? " notas-fila-completa" : ""}"><th scope="row" role="rowheader" class="notas-nombre"><span class="notas-nombre__texto"><span class="notas-numero" aria-hidden="true">${r + 1}</span><span>${escapar(persona.nombre)}</span></span>${persona.lectura ? `<span class="notas-estado-fila">${escapar(persona.estado)} · Solo lectura</span>` : ""}${filtro ? `<span class="notas-completa-marca"${completa ? "" : " hidden"}>${icono("check")}Completa</span>` : ""}</th>${celdas}</tr>`;
@@ -561,7 +561,8 @@
     const completa = !f && !nv && !n && !guardando && !errorRed;
     const estado = $("estado-guardado");
     estado.className = `notas-estado${errorRed ? " notas-estado--error" : exito ? " notas-estado--exito" : ""}`;
-    estado.innerHTML = `${icono(guardando || n ? "reloj" : "check")}${guardando ? "Guardando…" : errorRed ? "No se pudo guardar" : n ? `${n} ${n === 1 ? "cambio" : "cambios"} sin guardar` : "Sin cambios"}`;
+    const textoEstado = guardando ? "Guardando…" : errorRed ? "No se pudo guardar" : n ? `${n} ${n === 1 ? "cambio" : "cambios"} sin guardar` : "Sin cambios";
+    estado.innerHTML = `${icono(guardando || n ? "reloj" : "check")}${escapar(textoEstado)}`;
     const teniaFoco = document.activeElement === $("faltantes");
     $("cierre-area").hidden = !completa;
     estado.parentElement.hidden = completa;

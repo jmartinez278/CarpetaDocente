@@ -160,7 +160,6 @@ class CompetenciasView(SeccionDocenteMixin, View):
             "datos": {
                 "inicial": inicial.numero if inicial else None,
                 "area_inicial": area_inicial,
-                "url_notas": reverse("notas:hoja", args=[seccion.pk]),
                 "total": len(permitido),
                 # El JS lo devuelve al guardar: si el universo cambió, no se guarda (D5).
                 "universo": sorted(permitido),

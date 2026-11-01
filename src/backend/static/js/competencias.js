@@ -309,7 +309,8 @@
     enlace.hidden = actual === null;
     if (actual === null) return;
     enlace.querySelector("[data-nombre-periodo]").textContent = periodos.get(actual).nombre;
-    enlace.href = `${datos.url_notas}?periodo=${actual}&area=${encodeURIComponent(areas[areaActual].dataset.area)}`;
+    // La ruta la pone el servidor en el href; aquí solo cambia la consulta, así el enlace no puede tomar otro esquema.
+    enlace.search = new URLSearchParams({ periodo: String(actual), area: areas[areaActual].dataset.area }).toString();
   }
 
   function pintarNavegacion() {
