@@ -11,9 +11,12 @@ from django.utils import timezone
 
 from actividad.models import Operacion, RegistroActividad
 from asistencia.models import Asistencia, Jornada
+from catalogo.models import InstitucionArea
 from cuentas.models import Usuario
 from institucion import demo, servicios
 from institucion.models import AnioEscolar, Estudiante, Institucion, Periodo, Seccion
+from notas import servicios as notas
+from notas.models import CompetenciaPeriodo
 
 pytestmark = pytest.mark.django_db
 
@@ -559,3 +562,132 @@ def test_cuenta_demo_activa_sin_seccion_queda_sin_cambio_pendiente(cargar, crear
     cuenta = Usuario.objects.get(username="demounoa")
     assert cuenta.check_password(clave)
     assert not cuenta.debe_cambiar_password
+
+
+# --- Competencias marcadas de ejemplo (US-029, D11) ---
+
+# Entre el bimestre 3 de ejemplo (hasta el 9-10) y el 4 (desde el 19-10): 1 a 3 ya empezaron.
+OCT_15 = datetime.date(2027, 10, 15)
+NOV_2 = datetime.date(2027, 11, 2)
+
+
+def marcas_por_periodo(sec):
+    """{número de periodo: id de competencias marcadas} de una sección."""
+    resultado = {}
+    for numero, competencia in CompetenciaPeriodo.objects.filter(seccion=sec).values_list(
+        "periodo__numero", "competencia_id"
+    ):
+        resultado.setdefault(numero, set()).add(competencia)
+    return resultado
+
+
+@pytest.fixture
+def con_bimestres(institucion):
+    con_organizacion(institucion, Institucion.OrganizacionPeriodos.BIMESTRE)
+
+
+def test_la_carga_marca_el_universo_en_los_periodos_ya_empezados(cargar, anio, con_bimestres):
+    cargar(hoy=OCT_15)
+
+    for sec in secciones_demo(anio):
+        universo = notas.universo(sec.docente, sec)
+        assert len(universo) == 27
+        assert marcas_por_periodo(sec) == {1: universo, 2: universo, 3: universo}
+
+
+def test_sin_periodos_la_carga_no_marca_nada(cargar, institucion):
+    con_organizacion(institucion, Institucion.OrganizacionPeriodos.TRIMESTRE)
+
+    cargar(hoy=OCT_15)
+
+    assert not CompetenciaPeriodo.objects.exists()
+
+
+def test_volver_a_cargar_sin_marcas_marca_los_periodos_ya_empezados(cargar, anio, institucion):
+    cargar(hoy=OCT_15)
+    assert not CompetenciaPeriodo.objects.exists()
+    con_organizacion(institucion, Institucion.OrganizacionPeriodos.BIMESTRE)
+
+    cargar(hoy=OCT_15)
+
+    assert all(set(marcas_por_periodo(sec)) == {1, 2, 3} for sec in secciones_demo(anio))
+
+
+def test_volver_a_cargar_solo_marca_los_periodos_sin_marcas(cargar, anio, con_bimestres):
+    cargar(hoy=OCT_15)
+    uno_a = seccion(anio, 1, "A")
+    corregida = min(marcas_por_periodo(uno_a)[1])
+    CompetenciaPeriodo.objects.filter(
+        seccion=uno_a, periodo__numero=1, competencia_id=corregida
+    ).delete()
+
+    cargar(hoy=NOV_2)
+
+    marcadas = marcas_por_periodo(uno_a)
+    assert corregida not in marcadas[1]
+    assert set(marcadas) == {1, 2, 3, 4}
+    assert CompetenciaPeriodo.objects.count() == 8 * 4 * 27 - 1
+
+
+def test_la_carga_no_cambia_las_areas_a_cargo_del_docente_de_curso(
+    cargar, anio, institucion, con_bimestres
+):
+    InstitucionArea.objects.filter(institucion=institucion, area__codigo_siagie="031").update(
+        a_cargo_docente_curso=True
+    )
+
+    cargar(hoy=OCT_15)
+
+    a_cargo = InstitucionArea.objects.filter(institucion=institucion, a_cargo_docente_curso=True)
+    assert list(a_cargo.values_list("area__codigo_siagie", flat=True)) == ["031"]
+    marcadas = set(
+        CompetenciaPeriodo.objects.values_list("competencia__area__codigo_siagie", flat=True)
+    )
+    assert marcadas
+    assert "031" not in marcadas
+    assert all(
+        len(m) == 24 for sec in secciones_demo(anio) for m in marcas_por_periodo(sec).values()
+    )
+
+
+def test_quitar_borra_las_marcas_demo_y_no_las_de_tres_a(
+    cargar, anio, con_bimestres, tres_a_real, docente
+):
+    cargar(hoy=OCT_15)
+    notas.guardar_marcas(
+        docente,
+        tres_a_real,
+        2,
+        notas.universo(docente, tres_a_real),
+        hoy=OCT_15,
+        visto=notas.universo(docente, tres_a_real),
+    )
+
+    resumen = demo.quitar_demo()
+
+    assert not CompetenciaPeriodo.objects.filter(seccion__in=secciones_demo(anio)).exists()
+    assert set(marcas_por_periodo(tres_a_real)) == {2}
+    assert resumen.marcas == 8 * 3 * 27
+    assert "648 marcas de competencias" in resumen.texto()
+    entrada = RegistroActividad.objects.get(operacion=Operacion.DEMO_QUITADA)
+    assert entrada.detalle["marcas"] == 8 * 3 * 27
+
+
+def test_descartar_borra_las_marcas_y_las_cuenta(anio, con_bimestres, tres_a_real, docente):
+    servicios.guardar_periodos(anio, demo.bimestres_ejemplo(2027))
+    notas.guardar_marcas(
+        docente,
+        tres_a_real,
+        2,
+        notas.universo(docente, tres_a_real),
+        hoy=OCT_15,
+        visto=notas.universo(docente, tres_a_real),
+    )
+
+    conteos = demo.descartar_seccion(tres_a_real)
+
+    assert not CompetenciaPeriodo.objects.exists()
+    assert conteos.marcas == 27
+    assert "27 marcas de competencias" in conteos.texto()
+    entrada = RegistroActividad.objects.get(operacion=Operacion.SECCION_DESCARTADA)
+    assert entrada.detalle["marcas"] == 27

@@ -49,12 +49,13 @@ class CompetenciaAdmin(CatalogoFijoAdmin):
 
 @admin.register(InstitucionArea)
 class InstitucionAreaAdmin(CatalogoFijoAdmin):
-    """Áreas que trabaja cada institución (RN-007): «se trabaja» se cambia desde la lista."""
+    """Áreas que trabaja cada institución (RN-007) y las que están a cargo del docente de curso
+    (US-029, D2): las dos marcas se cambian desde la lista y desde la ficha."""
 
-    fields = ["institucion", "area", "se_trabaja"]
+    fields = ["institucion", "area", "se_trabaja", "a_cargo_docente_curso"]
     readonly_fields = ["institucion", "area"]
-    list_display = ["institucion", "area", "se_trabaja"]
+    list_display = ["institucion", "area", "se_trabaja", "a_cargo_docente_curso"]
     list_display_links = ["area"]
-    list_editable = ["se_trabaja"]
+    list_editable = ["se_trabaja", "a_cargo_docente_curso"]
     list_filter = ["institucion"]
     list_select_related = ["institucion", "area"]

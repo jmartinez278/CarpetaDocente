@@ -1,5 +1,6 @@
 """Pruebas de los comandos de la demostración (spec datos-demostracion; EN-06, D6 a D9)."""
 
+import datetime
 from io import StringIO
 
 import pytest
@@ -8,9 +9,11 @@ from django.core.management.base import CommandError
 from django.utils import timezone
 
 from asistencia.models import Asistencia, Jornada
+from catalogo.models import Competencia
 from cuentas.models import Usuario
 from institucion import demo, servicios
 from institucion.models import Estudiante, Institucion, Periodo, Seccion
+from notas.models import CompetenciaPeriodo
 
 pytestmark = pytest.mark.django_db
 
@@ -162,17 +165,36 @@ def test_descartar_sin_confirmar_dice_lo_que_borraria(tres_a):
     with pytest.raises(CommandError) as error:
         correr("descartar_seccion", seccion=tres_a.pk)
 
-    assert "2 estudiantes, 1 jornadas y 2 estados" in str(error.value)
+    assert "2 estudiantes, 1 jornadas, 2 estados de asistencia y 0 marcas de competencias" in str(
+        error.value
+    )
     assert tres_a.estudiantes.count() == 2
 
 
 def test_descartar_con_confirmar(tres_a, docente):
     salida = correr("descartar_seccion", seccion=tres_a.pk, confirmar=True)
 
-    assert "2 estudiantes, 1 jornadas y 2 estados" in salida
+    assert "2 estudiantes, 1 jornadas, 2 estados de asistencia y 0 marcas" in salida
     tres_a.refresh_from_db()
     assert tres_a.docente == docente
     assert not tres_a.estudiantes.exists()
+
+
+def test_descartar_borra_las_marcas_y_las_nombra(tres_a, anio):
+    periodo = Periodo.objects.create(
+        anio_escolar=anio,
+        numero=1,
+        fecha_inicio=datetime.date(anio.anio, 3, 9),
+        fecha_fin=datetime.date(anio.anio, 5, 15),
+    )
+    CompetenciaPeriodo.objects.create(
+        seccion=tres_a, periodo=periodo, competencia=Competencia.objects.first()
+    )
+
+    salida = correr("descartar_seccion", seccion=tres_a.pk, confirmar=True)
+
+    assert "y 1 marcas de competencias borrados" in salida
+    assert not CompetenciaPeriodo.objects.exists()
 
 
 def test_descartar_seccion_inexistente(db):

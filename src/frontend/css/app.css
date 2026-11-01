@@ -2399,3 +2399,804 @@ body:has(.vista-asistencia) {
     transform: scaleX(0);
   }
 }
+
+/* Competencias del periodo (US-029, D9; DESIGN.md 0.4), desde pantalla.css del prototipo aprobado con los tokens de arriba.
+   Las clases llevan el prefijo comp- para no chocar con las de asistencia y estudiantes. El fondo de trabajo va fuera de las
+   capas: debe ganarle a la utilidad bg-fondo del <body>. */
+body:has(.vista-competencias) {
+  background: var(--color-fondo-trabajo);
+}
+
+@layer components {
+  .vista-competencias {
+    --tinte-cabecera: var(--color-tinte-notas);
+    flex: 1;
+    width: 100%;
+    max-width: 1120px;
+    min-width: 0;
+    margin-inline: auto;
+    padding: --spacing(5) --spacing(4) --spacing(6);
+  }
+
+  /* Cabecera: ícono de Notas junto al título y las franjas cortas del uniforme en dorado. */
+  .comp-cabecera {
+    margin-bottom: --spacing(4);
+  }
+
+  .comp-cabecera h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 600 var(--text-heading) / 30px var(--font-display);
+    color: var(--color-primario);
+  }
+
+  .comp-franjas {
+    display: block;
+    width: 48px;
+    height: 11px;
+    margin: --spacing(2) 0;
+    border-top: 3px solid var(--tinte-cabecera);
+    border-bottom: 2px solid var(--tinte-cabecera);
+  }
+
+  .comp-seccion {
+    margin-bottom: --spacing(2);
+  }
+
+  .comp-instruccion {
+    max-width: 65ch;
+    color: var(--color-texto-suave);
+  }
+
+  .comp-instruccion__pc {
+    display: none;
+  }
+
+  .comp-ayuda {
+    font-size: var(--text-caption);
+    line-height: 20px;
+    color: var(--color-texto-suave);
+  }
+
+  .comp-aviso,
+  .comp-nota {
+    max-width: 696px;
+    margin-bottom: --spacing(4);
+  }
+
+  /* Aviso neutro de la pantalla (periodo anterior o último): sin el color de estado del Mensaje. */
+  .comp-nota {
+    color: var(--color-texto-suave);
+  }
+
+  .comp-nota .icono {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+  }
+
+  /* Periodos: cuatro botones que caben a 320 px sin carrusel. */
+  .comp-periodos {
+    max-width: 696px;
+    margin-bottom: --spacing(3);
+  }
+
+  .comp-periodos__etiqueta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin-bottom: --spacing(2);
+  }
+
+  .comp-periodos__etiqueta h2 {
+    font: 600 var(--text-caption) / 20px var(--font-sans);
+  }
+
+  .comp-periodos__botones {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: --spacing(2);
+  }
+
+  .comp-periodo {
+    min-height: 48px;
+    padding: 3px 2px;
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-campo);
+    background: var(--color-superficie);
+    color: var(--color-texto);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .comp-periodo strong {
+    display: block;
+    font-size: var(--text-body);
+    font-weight: 600;
+    line-height: 22px;
+  }
+
+  .comp-periodo [data-estado-periodo] {
+    display: block;
+    font-size: var(--text-caption);
+    line-height: 18px;
+    color: var(--color-texto-suave);
+  }
+
+  .comp-periodo:not(:disabled):hover {
+    background: var(--color-fondo);
+  }
+
+  .comp-periodo[aria-pressed="true"] {
+    padding: 2px 1px;
+    border: 2px solid var(--color-primario);
+    background: var(--color-fondo);
+    color: var(--color-primario);
+  }
+
+  .comp-periodo:disabled {
+    border-color: var(--color-linea);
+    background: transparent;
+    color: var(--color-justificado);
+    cursor: not-allowed;
+  }
+
+  .comp-periodo:disabled [data-estado-periodo] {
+    color: var(--color-justificado);
+  }
+
+  .comp-periodo:focus-visible,
+  .comp-capsula :focus-visible,
+  .comp-deshacer:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 2px;
+  }
+
+  .comp-periodos__ayuda {
+    display: none;
+    margin-top: --spacing(2);
+  }
+
+  /* Estado vacío (DESIGN.md, Estado vacío): sin periodos, o en un hueco antes de elegir uno. */
+  .comp-vacio {
+    max-width: 696px;
+    padding: --spacing(10) --spacing(6) --spacing(12);
+    background: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-tarjeta);
+    text-align: center;
+  }
+
+  .comp-vacio > .icono {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto --spacing(4);
+    color: var(--color-texto-suave);
+  }
+
+  .comp-vacio h2 {
+    font: 600 20px / 28px var(--font-display);
+    text-wrap: balance;
+  }
+
+  .comp-vacio p {
+    max-width: 46ch;
+    margin: 12px auto 0;
+    color: var(--color-texto-suave);
+  }
+
+  /* Lista y panel. Celular: una columna, la cápsula de áreas fija bajo la barra y Guardar fijo abajo. */
+  .comp-distribucion {
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(6);
+    min-width: 0;
+  }
+
+  .comp-zona-lista {
+    min-width: 0;
+  }
+
+  /* El título de la lista solo se ve en PC; en el celular lo reemplaza la cápsula, pero queda para el lector. */
+  .comp-lista-intro {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .comp-lista-intro h2 {
+    font: 600 var(--text-subheading) / 26px var(--font-sans);
+  }
+
+  .comp-navegacion {
+    position: sticky;
+    top: 56px;
+    z-index: 6;
+    padding: --spacing(2) 0 --spacing(3);
+    background: var(--color-fondo-trabajo);
+  }
+
+  .comp-navegacion__contexto {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: --spacing(3);
+    margin-bottom: --spacing(2);
+    font-size: var(--text-caption);
+    line-height: 20px;
+  }
+
+  .comp-navegacion__contexto label {
+    font-weight: 600;
+  }
+
+  .comp-navegacion__contexto span {
+    color: var(--color-texto-suave);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .comp-capsula {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 3px;
+    background: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-pill);
+  }
+
+  .comp-capsula button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-primario);
+    cursor: pointer;
+  }
+
+  .comp-capsula button:not(:disabled):hover {
+    background: var(--color-fondo);
+  }
+
+  .comp-capsula button:not(:disabled):active {
+    background: var(--color-dimension);
+  }
+
+  .comp-capsula button:disabled {
+    color: var(--color-justificado);
+    cursor: not-allowed;
+  }
+
+  .comp-capsula select {
+    flex: 1;
+    min-width: 0;
+    max-width: calc(100% - 88px);
+    min-height: 44px;
+    padding: 8px 6px;
+    background: var(--color-superficie);
+    color: var(--color-primario);
+    border: 0;
+    border-radius: 8px;
+    font: 600 var(--text-body) / 24px var(--font-sans);
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+
+  .comp-capsula select:disabled {
+    color: var(--color-justificado);
+    cursor: progress;
+  }
+
+  .comp-capsula select option {
+    font-weight: 400;
+    color: var(--color-texto);
+  }
+
+  .comp-capsula :focus-visible {
+    outline-offset: -2px;
+  }
+
+  .comp-areas {
+    overflow: hidden;
+    background: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-tarjeta);
+  }
+
+  .comp-area {
+    padding: --spacing(5) --spacing(4) --spacing(1);
+  }
+
+  .comp-area__cabecera {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: --spacing(4);
+    margin-bottom: 6px;
+  }
+
+  .comp-area h3 {
+    font: 600 var(--text-subheading) / 26px var(--font-sans);
+    text-wrap: pretty;
+  }
+
+  .comp-area__cuenta {
+    font-size: var(--text-caption);
+    white-space: nowrap;
+    color: var(--color-texto-suave);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .comp-area__subtitulo {
+    margin: 2px 0 --spacing(2);
+    font-size: var(--text-caption);
+    line-height: 20px;
+    color: var(--color-texto-suave);
+  }
+
+  .comp-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .comp-competencia + .comp-competencia {
+    border-top: 1px solid color-mix(in srgb, var(--color-linea) 55%, var(--color-superficie));
+  }
+
+  /* La fila entera es el objetivo táctil: la casilla de 24 px y su texto, de al menos 60 px de alto. */
+  .comp-competencia label {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: --spacing(3);
+    align-items: start;
+    min-height: 60px;
+    padding: --spacing(4) 0;
+    cursor: pointer;
+  }
+
+  .comp-competencia input {
+    appearance: none;
+    display: grid;
+    place-content: center;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    background: var(--color-superficie);
+    border: 1.5px solid var(--color-borde);
+    border-radius: 5px;
+    color: var(--color-sobre-primario);
+    cursor: pointer;
+  }
+
+  .comp-competencia input:checked {
+    background: var(--color-primario);
+    border-color: var(--color-primario);
+  }
+
+  /* La marca es el check de Lucide, con el mismo trazo que los demás íconos. */
+  .comp-competencia input:checked::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  .comp-competencia label:hover input:not(:disabled):not([aria-disabled="true"]) {
+    outline: 2px solid var(--color-borde);
+    outline-offset: 2px;
+  }
+
+  .comp-competencia input:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 3px;
+  }
+
+  .comp-competencia input[aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  .comp-competencia--notas input:checked {
+    background: var(--color-texto-suave);
+    border-color: var(--color-texto-suave);
+  }
+
+  .comp-competencia--anual input:checked {
+    background: var(--color-aviso);
+    border-color: var(--color-aviso);
+  }
+
+  /* El motivo del bloqueo va junto a la competencia, con ícono: no depende del color. */
+  .comp-motivos:empty {
+    display: none;
+  }
+
+  .comp-motivo {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: var(--text-caption);
+    line-height: 20px;
+    color: var(--color-texto-suave);
+  }
+
+  .comp-motivo .icono {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+  }
+
+  .comp-competencia--anual .comp-motivo {
+    color: var(--color-aviso);
+  }
+
+  /* Áreas del docente de curso: el gris cálido del token de Justificado, sin marcar ni contar. */
+  .comp-area--curso,
+  .comp-area--curso .comp-area__subtitulo {
+    color: var(--color-justificado);
+  }
+
+  .comp-area--curso .comp-competencia label {
+    cursor: default;
+  }
+
+  .comp-area--curso .comp-competencia input {
+    background: var(--color-fondo);
+    border-color: var(--color-justificado);
+    cursor: default;
+  }
+
+  /* Panel de resumen y guardado. Celular: sin resumen y con el guardado fijo abajo. */
+  .comp-resumen {
+    display: none;
+  }
+
+  .comp-guardado {
+    position: fixed;
+    z-index: 8;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px;
+    column-gap: --spacing(3);
+    align-items: center;
+    padding: 10px --spacing(4) max(12px, env(safe-area-inset-bottom));
+    background: var(--color-superficie);
+    border-top: 1px solid var(--color-linea);
+  }
+
+  .comp-guardado__estado {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-caption);
+    line-height: 20px;
+  }
+
+  .comp-guardado__estado .icono {
+    width: 18px;
+    height: 18px;
+    color: var(--color-texto-suave);
+  }
+
+  .comp-guardado__ayuda {
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: 2px;
+  }
+
+  .comp-guardado .comp-guardar {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    width: auto;
+    min-height: 48px;
+    padding: 10px 12px;
+  }
+
+  /* Sin cambios que guardar: aria-disabled, no disabled, para que el botón siga en el orden del teclado. */
+  .comp-guardar[aria-disabled="true"] {
+    background: var(--color-fondo);
+    color: var(--color-texto-suave);
+    box-shadow: inset 0 0 0 1px var(--color-borde);
+    cursor: default;
+    transform: none;
+  }
+
+  .comp-guardar.boton-principal--enviando {
+    box-shadow: none;
+  }
+
+  .comp-deshacer {
+    grid-column: 1 / -1;
+    justify-self: start;
+    min-height: 44px;
+    padding: 8px 0;
+    background: transparent;
+    border: 0;
+    color: var(--color-primario);
+    font: inherit;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+
+  .comp-guardado--exito .comp-guardado__estado,
+  .comp-guardado--exito .comp-guardado__estado .icono {
+    color: var(--color-exito);
+  }
+
+  .comp-guardado--fallo .comp-guardado__estado,
+  .comp-guardado--fallo .comp-guardado__estado .icono {
+    color: var(--color-error);
+  }
+
+  /* Con el guardado fijo, la última competencia y el pie quedan por encima de él. */
+  body:has(.comp-distribucion:not([hidden])) .vista-competencias {
+    padding-bottom: 104px;
+  }
+
+  body:has(.comp-deshacer:not([hidden])) .vista-competencias {
+    padding-bottom: 148px;
+  }
+
+  /* Diálogo de salida: el <dialog> nativo, con el velo de los diálogos de estudiantes. */
+  .comp-dialogo {
+    width: 440px;
+    max-width: calc(100% - 32px);
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: --spacing(6);
+    overflow: auto;
+    background: var(--color-superficie);
+    color: var(--color-texto);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-tarjeta);
+  }
+
+  .comp-dialogo::backdrop {
+    background: color-mix(in srgb, var(--color-fondo) 72%, transparent);
+  }
+
+  .comp-dialogo h2 {
+    font: 600 var(--text-heading) / 30px var(--font-display);
+    color: var(--color-primario);
+    text-wrap: balance;
+  }
+
+  .comp-dialogo p {
+    margin-top: --spacing(3);
+    line-height: 24px;
+  }
+
+  .comp-dialogo__acciones {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: --spacing(2);
+    margin-top: --spacing(6);
+  }
+
+  body:has(.comp-dialogo[open]) {
+    overflow: hidden;
+  }
+
+  @media (min-width: 480px) {
+    .comp-dialogo__acciones {
+      grid-template-columns: 1fr 1fr;
+      gap: --spacing(3);
+    }
+  }
+
+  @media (max-width: 359px) {
+    .comp-guardado {
+      grid-template-columns: minmax(0, 1fr) 104px;
+      column-gap: --spacing(2);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .comp-periodo,
+    .comp-capsula button {
+      transition: background-color 120ms ease-out;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .comp-competencia input {
+      appearance: auto;
+    }
+
+    .comp-competencia input:checked::before {
+      display: none;
+    }
+
+    .comp-periodo[aria-pressed="true"] {
+      outline: 2px solid Highlight;
+    }
+
+    .comp-competencia input[aria-disabled="true"] {
+      outline: 1px dashed GrayText;
+    }
+  }
+
+  /* PC (960 px): la lista completa a la izquierda y el panel "Tu selección" a la derecha, fijo al bajar. */
+  @media (min-width: 960px) {
+    .vista-competencias {
+      padding: --spacing(8) --spacing(6) --spacing(12);
+    }
+
+    body:has(.comp-distribucion:not([hidden])) .vista-competencias,
+    body:has(.comp-deshacer:not([hidden])) .vista-competencias {
+      padding-bottom: --spacing(12);
+    }
+
+    .comp-cabecera {
+      margin-bottom: --spacing(7);
+    }
+
+    .comp-instruccion__pc {
+      display: inline;
+    }
+
+    .comp-instruccion__movil {
+      display: none;
+    }
+
+    .comp-periodos {
+      max-width: calc((100% - 32px) * 2 / 3);
+      margin-bottom: --spacing(7);
+    }
+
+    .comp-periodo {
+      min-height: 56px;
+      padding: 7px 2px;
+    }
+
+    .comp-periodo[aria-pressed="true"] {
+      padding: 6px 1px;
+    }
+
+    .comp-periodos__ayuda {
+      display: block;
+    }
+
+    .comp-aviso,
+    .comp-nota,
+    .comp-vacio {
+      max-width: 100%;
+    }
+
+    .comp-distribucion {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(296px, 1fr);
+      gap: --spacing(8);
+      align-items: start;
+    }
+
+    .comp-lista-intro {
+      position: static;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: --spacing(4);
+      width: auto;
+      height: auto;
+      margin: 0 0 --spacing(3);
+      overflow: visible;
+      clip-path: none;
+      white-space: normal;
+    }
+
+    .comp-navegacion {
+      display: none;
+    }
+
+    .comp-area {
+      padding: --spacing(6) --spacing(6) --spacing(2);
+    }
+
+    .comp-area + .comp-area {
+      border-top: 1px solid var(--color-linea);
+    }
+
+    .comp-panel {
+      position: sticky;
+      top: 80px;
+      padding-left: --spacing(6);
+      border-left: 1px solid var(--color-linea);
+    }
+
+    .comp-resumen {
+      display: block;
+    }
+
+    .comp-resumen h2 {
+      margin-bottom: --spacing(4);
+      font: 600 20px / 28px var(--font-display);
+    }
+
+    .comp-resumen p > strong {
+      display: block;
+      font-size: var(--text-subheading);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .comp-resumen > .comp-ayuda {
+      margin-top: --spacing(3);
+    }
+
+    .comp-bloqueos {
+      margin-top: --spacing(4);
+      font-size: var(--text-caption);
+      line-height: 20px;
+    }
+
+    .comp-bloqueos > div {
+      display: flex;
+      justify-content: space-between;
+      gap: --spacing(3);
+      padding: 4px 0;
+    }
+
+    .comp-bloqueos dd {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .comp-guardado {
+      position: static;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      margin-top: --spacing(6);
+      padding: 20px 0 0;
+      background: transparent;
+      border-top: 1px solid var(--color-linea);
+    }
+
+    .comp-guardado__estado {
+      font-size: var(--text-body);
+      line-height: 24px;
+    }
+
+    .comp-guardado__estado .icono {
+      width: 20px;
+      height: 20px;
+    }
+
+    .comp-guardado__ayuda {
+      min-height: 40px;
+      margin-top: --spacing(2);
+    }
+
+    .comp-guardado .comp-guardar {
+      width: 100%;
+      margin-top: --spacing(4);
+    }
+
+    .comp-deshacer {
+      align-self: center;
+      margin-top: --spacing(1);
+    }
+  }
+}
