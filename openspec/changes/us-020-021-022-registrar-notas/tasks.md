@@ -44,8 +44,8 @@
 
 ## 6. Cierre
 
-- [ ] 6.1 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio, el guardado todo o nada, D7 y los borradores), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde; la vista previa de Vercel aplica `notas/0002` y `actividad/0004` en Neon
-- [ ] 6.2 `verificacion.md`: tabla escenario → prueba de los seis specs del cambio y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit
+- [x] 6.1 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio, el guardado todo o nada, D7 y los borradores), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde; la vista previa de Vercel aplica `notas/0002` y `actividad/0004` en Neon
+- [x] 6.2 `verificacion.md`: tabla escenario → prueba de los seis specs del cambio y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit
 
 ## Ajustes del propose a decisiones.md
 
