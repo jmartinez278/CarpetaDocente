@@ -12,6 +12,7 @@ import re
 import pytest
 from django.urls import reverse
 
+from actividad.tests.intentos import intentos
 from catalogo.models import Competencia
 from notas import servicios
 from notas.models import Calificacion, CompetenciaPeriodo
@@ -456,6 +457,7 @@ def test_un_periodo_que_no_existe_da_404(cliente, seccion_tutora, matematica, es
 
     assert respuesta.status_code == 404
     assert sin_notas()
+    assert intentos() == []
 
 
 @pytest.mark.parametrize("area", ["999", "matematica"])
@@ -468,6 +470,7 @@ def test_un_area_que_no_es_de_la_institucion_da_404(
 
     assert respuesta.status_code == 404
     assert sin_notas()
+    assert intentos() == []
 
 
 def test_un_periodo_futuro_da_409(cliente, seccion_tutora, matematica, estudiantes, bimestres):

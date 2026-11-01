@@ -15,6 +15,7 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
+from actividad.tests.intentos import intentos
 from institucion.models import Institucion
 from notas import servicios
 from notas.models import CompetenciaPeriodo
@@ -449,6 +450,7 @@ def test_un_numero_de_periodo_que_no_existe_responde_404(cliente, seccion_tutora
 
     assert respuesta.status_code == 404
     assert not CompetenciaPeriodo.objects.exists()
+    assert intentos() == []
 
 
 def test_un_periodo_futuro_responde_409(cliente, seccion_tutora, ie):

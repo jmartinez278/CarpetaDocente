@@ -1,8 +1,9 @@
 """Acceso a la hoja de notas (spec registro-notas, "Acceso a la hoja de notas"; design D8).
 
-Las dos rutas usan ``SeccionDocenteMixin``, como las competencias: otra docente o un año CERRADO
-es 404 en GET y POST antes de llegar al servicio; otro rol y sin sesión, ``RolRequeridoMixin``.
-Ningún caso de error guarda notas. El día se fija con el fixture ``hoy`` (30 de octubre).
+Las dos rutas usan ``SeccionDocenteMixin``, como las competencias: otra docente, un año CERRADO o
+una sección inexistente es 403 con registro (US-004) en GET y POST antes de llegar al servicio;
+otro rol y sin sesión, ``RolRequeridoMixin``. Ningún caso de error guarda notas. El día se fija con
+el fixture ``hoy`` (30 de octubre).
 """
 
 import datetime
@@ -11,6 +12,7 @@ import json
 import pytest
 from django.urls import reverse
 
+from actividad.tests.intentos import es_sin_permiso, intentos, motivos
 from institucion.models import AnioEscolar, Periodo, Seccion
 from notas.models import Calificacion
 from notas.tests.conftest import MATEMATICA, competencia, crear_estudiantes, ids_de, marcar
@@ -107,16 +109,24 @@ def test_abrir_la_hoja_no_guarda_notas(entrar, docente, seccion_tutora, hoja_lis
     assert not Calificacion.objects.exists()
 
 
-def test_otra_docente_recibe_404_y_no_guarda(entrar, otra_docente, seccion_tutora, hoja_lista):
-    """Escenario "Sección de otra docente"."""
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_otra_docente_recibe_403_y_no_guarda(
+    entrar, otra_docente, seccion_tutora, hoja_lista, cabeceras
+):
+    """Escenario "Sección de otra docente" (y "Intento registrado" de acceso-secciones)."""
     cliente = entrar(otra_docente)
 
-    assert cliente.get(url_hoja(seccion_tutora)).status_code == 404
-    assert guardar(cliente, seccion_tutora, hoja_lista.pk).status_code == 404
+    assert es_sin_permiso(cliente.get(url_hoja(seccion_tutora), **cabeceras))
+    assert es_sin_permiso(guardar(cliente, seccion_tutora, hoja_lista.pk, **cabeceras))
     assert not Calificacion.objects.exists()
+    seccion = str(seccion_tutora.pk)
+    assert intentos() == [
+        (seccion, f"/docente/secciones/{seccion}/notas/", "ajena"),
+        (seccion, url_guardar(seccion_tutora), "ajena"),
+    ]
 
 
-def test_la_seccion_de_un_anio_cerrado_da_404_y_no_guarda(entrar, docente, institucion):
+def test_la_seccion_de_un_anio_cerrado_da_403_y_no_guarda(entrar, docente, institucion):
     """Escenario "Sección de un año cerrado"."""
     anio = AnioEscolar.objects.create(institucion=institucion, anio=2026, estado="CERRADO")
     cerrada = Seccion.objects.create(anio_escolar=anio, grado=2, nombre="A", docente=docente)
@@ -130,15 +140,24 @@ def test_la_seccion_de_un_anio_cerrado_da_404_y_no_guarda(entrar, docente, insti
     (ana,) = crear_estudiantes(cerrada, "QUISPE, ANA")
     cliente = entrar(docente)
 
-    assert cliente.get(url_hoja(cerrada)).status_code == 404
-    assert guardar(cliente, cerrada, ana.pk, numero=1).status_code == 404
+    assert es_sin_permiso(cliente.get(url_hoja(cerrada)))
+    assert es_sin_permiso(guardar(cliente, cerrada, ana.pk, numero=1))
     assert not Calificacion.objects.exists()
+    assert motivos() == ["anio_cerrado", "anio_cerrado"]
 
 
-def test_una_seccion_que_no_existe_da_404(entrar, docente, seccion_tutora):
+def test_una_seccion_que_no_existe_da_403(entrar, docente, seccion_tutora, hoja_lista):
     cliente = entrar(docente)
 
-    assert cliente.get(reverse("notas:hoja", args=[99999])).status_code == 404
+    assert es_sin_permiso(cliente.get(reverse("notas:hoja", args=[99999])))
+    assert motivos() == ["inexistente"]
+
+
+def test_la_consulta_no_va_en_la_ruta_registrada(entrar, otra_docente, seccion_tutora, hoja_lista):
+    """Escenario "Intento sin permiso" de registro-actividad: solo la ruta, sin la consulta."""
+    entrar(otra_docente).get(f"{url_hoja(seccion_tutora)}?area=QUISPE")
+
+    assert intentos() == [(str(seccion_tutora.pk), url_hoja(seccion_tutora), "ajena")]
 
 
 def test_la_direccion_llega_a_su_pantalla(entrar, direccion, seccion_tutora, hoja_lista):

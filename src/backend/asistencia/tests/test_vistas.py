@@ -1,7 +1,8 @@
 """Vistas de la asistencia de hoy (spec asistencia-jornada; design de US-030, D3 y D10).
 
-Rutas y acceso (la docente de la sección, otra docente, año CERRADO, otro rol, sin sesión y HTMX),
-CSRF, las respuestas sin cuerpo de los guardados (204, 400, 404 y 409) y el HTML que dibuja el
+Rutas y acceso (la docente de la sección; otra docente, año CERRADO o inexistente, 403 con registro
+desde US-004; otro rol, sin sesión y HTMX), CSRF, las respuestas sin cuerpo de los guardados (204,
+400, 404 y 409) y el HTML que dibuja el
 servidor (D10). El día se fija parcheando ``timezone.localdate``.
 """
 
@@ -13,6 +14,7 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
+from actividad.tests.intentos import es_sin_permiso, intentos, motivos
 from asistencia.models import Asistencia, Jornada
 from institucion.models import AnioEscolar, Estudiante, Seccion
 
@@ -102,22 +104,52 @@ def test_abrir_la_asistencia_no_crea_la_jornada(cliente, seccion_docente, estudi
     assert not Jornada.objects.exists()
 
 
-def test_otra_docente_recibe_404_y_no_guarda(entrar, otra_docente, seccion_docente, estudiante):
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_otra_docente_recibe_403_y_no_guarda(
+    entrar, otra_docente, seccion_docente, estudiante, cabeceras
+):
     cliente = entrar(otra_docente)
+    url_m = url_marcar(seccion_docente, estudiante)
+    url_r = url_restantes(seccion_docente)
 
-    assert cliente.get(url_hoy(seccion_docente)).status_code == 404
-    marcar = cliente.post(url_marcar(seccion_docente, estudiante), {"estado": "ASISTIO"})
-    restantes = cliente.post(url_restantes(seccion_docente), {"estudiante": [estudiante.pk]})
+    hoy = cliente.get(url_hoy(seccion_docente), **cabeceras)
+    marcar = cliente.post(url_m, {"estado": "ASISTIO"}, **cabeceras)
+    restantes = cliente.post(url_r, {"estudiante": [estudiante.pk]}, **cabeceras)
 
-    assert (marcar.status_code, restantes.status_code) == (404, 404)
+    assert all(es_sin_permiso(r) for r in (hoy, marcar, restantes))
     assert not Jornada.objects.exists()
+    seccion = str(seccion_docente.pk)
+    assert intentos() == [
+        (seccion, url_hoy(seccion_docente), "ajena"),
+        (seccion, url_m, "ajena"),
+        (seccion, url_r, "ajena"),
+    ]
 
 
-def test_una_seccion_del_anio_cerrado_da_404(entrar, docente, institucion):
+def test_una_seccion_del_anio_cerrado_da_403_y_no_guarda(
+    entrar, docente, institucion, hoy_miercoles
+):
     anio = AnioEscolar.objects.create(institucion=institucion, anio=2026, estado="CERRADO")
     cerrada = Seccion.objects.create(anio_escolar=anio, grado=2, nombre="A", docente=docente)
+    (estudiante,) = [Estudiante.objects.create(seccion=cerrada, apellidos="ROJAS", nombres="LUIS")]
+    cliente = entrar(docente)
 
-    assert entrar(docente).get(url_hoy(cerrada)).status_code == 404
+    assert es_sin_permiso(cliente.get(url_hoy(cerrada)))
+    assert es_sin_permiso(cliente.post(url_marcar(cerrada, estudiante), {"estado": "ASISTIO"}))
+    assert es_sin_permiso(cliente.post(url_restantes(cerrada), {"estudiante": [estudiante.pk]}))
+    assert not Jornada.objects.exists()
+    assert motivos() == ["anio_cerrado"] * 3
+
+
+def test_una_seccion_que_no_existe_da_403_y_no_guarda(entrar, docente):
+    cliente = entrar(docente)
+    base = "/docente/secciones/999999/asistencia/"
+
+    assert es_sin_permiso(cliente.get(base))
+    assert es_sin_permiso(cliente.post(f"{base}2026-10-28/estudiantes/1/", {"estado": "ASISTIO"}))
+    assert es_sin_permiso(cliente.post(f"{base}2026-10-28/restantes/", {"estudiante": [1]}))
+    assert not Jornada.objects.exists()
+    assert motivos() == ["inexistente"] * 3
 
 
 def test_la_direccion_llega_a_su_pantalla(entrar, direccion, seccion_docente, estudiante):
@@ -211,14 +243,19 @@ def test_un_estado_o_una_nota_que_no_valen_responden_400(
     assert not Jornada.objects.exists()
 
 
-def test_un_estudiante_de_otra_seccion_responde_404(cliente, seccion_docente, anio_abierto):
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_un_estudiante_de_otra_seccion_responde_403(
+    cliente, seccion_docente, anio_abierto, cabeceras
+):
     otra = Seccion.objects.create(anio_escolar=anio_abierto, grado=3, nombre="B")
     ajeno = Estudiante.objects.create(seccion=otra, apellidos="ROJAS", nombres="LUIS")
+    url = url_marcar(seccion_docente, ajeno)
 
-    respuesta = cliente.post(url_marcar(seccion_docente, ajeno), {"estado": "ASISTIO"})
+    respuesta = cliente.post(url, {"estado": "ASISTIO"}, **cabeceras)
 
-    assert respuesta.status_code == 404
+    assert es_sin_permiso(respuesta)
     assert not Jornada.objects.exists()
+    assert intentos() == [(str(seccion_docente.pk), url, "estudiante")]
 
 
 def test_un_estudiante_retirado_responde_404(cliente, seccion_docente, estudiante):
@@ -229,6 +266,7 @@ def test_un_estudiante_retirado_responde_404(cliente, seccion_docente, estudiant
 
     assert respuesta.status_code == 404
     assert respuesta.content == b""
+    assert intentos() == []
 
 
 def test_un_guardado_de_otro_dia_responde_409(cliente, seccion_docente, estudiante):
@@ -285,6 +323,8 @@ def test_restantes_con_un_id_ajeno_responde_404_sin_guardar(
 
     assert respuesta.status_code == 404
     assert not Asistencia.objects.exists()
+    # D7 de US-004: un id ajeno en el cuerpo no es un intento sin permiso.
+    assert intentos() == []
 
 
 def test_restantes_con_un_id_que_no_es_numero_responde_400(cliente, seccion_docente, tres):

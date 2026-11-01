@@ -13,7 +13,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from asistencia import servicios as asistencia
 from cuentas import dimensiones
-from cuentas.acceso import RolRequeridoMixin, pantalla_de_inicio
+from cuentas.acceso import PLANTILLA_SIN_PERMISO, RolRequeridoMixin, pantalla_de_inicio
 from cuentas.forms import FormularioIngreso
 from cuentas.models import Usuario
 from institucion import servicios
@@ -79,6 +79,16 @@ class IngresoPanelView(View):
         if destino == reverse("admin:index"):
             raise PermissionDenied
         return redirect(destino)
+
+
+class SinPermisoView(RolRequeridoMixin, TemplateView):
+    """Destino de la redirección de un 403 por HTMX o ``fetch`` (US-004, D3).
+
+    Responde 200 y no registra: el 403 y su entrada ya los dejó la petición negada.
+    """
+
+    rol_requerido = Usuario.Rol.DOCENTE
+    template_name = PLANTILLA_SIN_PERMISO
 
 
 class PortadaDocenteView(RolRequeridoMixin, TemplateView):

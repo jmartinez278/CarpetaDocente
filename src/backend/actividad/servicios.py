@@ -57,6 +57,8 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
     Operacion.SECCION_DESCARTADA: frozenset(
         {"estudiantes", "jornadas", "estados", "marcas", "notas"}
     ),
+    # Ruta pedida, sin la consulta, y el motivo (US-004, D5).
+    Operacion.INTENTO_SIN_PERMISO: frozenset({"ruta", "motivo"}),
     Operacion.REGISTRO_EXPORTADO: frozenset({"filtros", "filas"}),
 }
 

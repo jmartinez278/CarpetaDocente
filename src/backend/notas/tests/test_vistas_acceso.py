@@ -1,9 +1,9 @@
 """Acceso a la pantalla de competencias (spec competencias-periodo, "Acceso a las competencias de su
 sección"; design de US-029, D8).
 
-Las dos rutas usan ``SeccionDocenteMixin``, como la asistencia: otra docente o un año CERRADO es 404
-en GET y POST antes de llegar al servicio; otro rol y sin sesión, ``RolRequeridoMixin``. El día se
-fija parcheando ``timezone.localdate``.
+Las dos rutas usan ``SeccionDocenteMixin``, como la asistencia: otra docente, un año CERRADO o una
+sección inexistente es 403 con registro (US-004) en GET y POST antes de llegar al servicio;
+otro rol y sin sesión, ``RolRequeridoMixin``. El día se fija parcheando ``timezone.localdate``.
 """
 
 import datetime
@@ -13,6 +13,7 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
+from actividad.tests.intentos import es_sin_permiso, intentos, motivos
 from institucion.models import AnioEscolar, Periodo, Seccion
 from notas.models import CompetenciaPeriodo
 from notas.tests.conftest import OCT_30, ids_de
@@ -80,16 +81,24 @@ def test_abrir_la_pantalla_no_guarda_marcas(entrar, docente, seccion_tutora, bim
     assert not CompetenciaPeriodo.objects.exists()
 
 
-def test_otra_docente_recibe_404_y_no_guarda(entrar, otra_docente, seccion_tutora, bimestres):
+@pytest.mark.parametrize("cabeceras", [{}, HTMX])
+def test_otra_docente_recibe_403_y_no_guarda(
+    entrar, otra_docente, seccion_tutora, bimestres, cabeceras
+):
     """Escenario "Sección de otra docente"."""
     cliente = entrar(otra_docente)
 
-    assert cliente.get(url_pantalla(seccion_tutora)).status_code == 404
-    assert guardar(cliente, seccion_tutora).status_code == 404
+    assert es_sin_permiso(cliente.get(url_pantalla(seccion_tutora), **cabeceras))
+    assert es_sin_permiso(guardar(cliente, seccion_tutora, **cabeceras))
     assert not CompetenciaPeriodo.objects.exists()
+    seccion = str(seccion_tutora.pk)
+    assert intentos() == [
+        (seccion, url_pantalla(seccion_tutora), "ajena"),
+        (seccion, url_guardar(seccion_tutora), "ajena"),
+    ]
 
 
-def test_la_seccion_de_un_anio_cerrado_da_404_y_no_guarda(entrar, docente, institucion):
+def test_la_seccion_de_un_anio_cerrado_da_403_y_no_guarda(entrar, docente, institucion):
     """Escenario "Sección de un año cerrado"."""
     anio = AnioEscolar.objects.create(institucion=institucion, anio=2026, estado="CERRADO")
     cerrada = Seccion.objects.create(anio_escolar=anio, grado=2, nombre="A", docente=docente)
@@ -101,15 +110,18 @@ def test_la_seccion_de_un_anio_cerrado_da_404_y_no_guarda(entrar, docente, insti
     )
     cliente = entrar(docente)
 
-    assert cliente.get(url_pantalla(cerrada)).status_code == 404
-    assert guardar(cliente, cerrada, numero=1).status_code == 404
+    assert es_sin_permiso(cliente.get(url_pantalla(cerrada)))
+    assert es_sin_permiso(guardar(cliente, cerrada, numero=1))
     assert not CompetenciaPeriodo.objects.exists()
+    assert motivos() == ["anio_cerrado", "anio_cerrado"]
 
 
-def test_una_seccion_que_no_existe_da_404(entrar, docente, seccion_tutora):
+def test_una_seccion_que_no_existe_da_403(entrar, docente, seccion_tutora):
     cliente = entrar(docente)
 
-    assert cliente.get(reverse("competencias:pantalla", args=[99999])).status_code == 404
+    assert es_sin_permiso(cliente.get(reverse("competencias:pantalla", args=[99999])))
+    assert es_sin_permiso(cliente.post(reverse("competencias:guardar", args=[99999, 3])))
+    assert motivos() == ["inexistente", "inexistente"]
 
 
 def test_la_direccion_llega_a_su_pantalla(entrar, direccion, seccion_tutora, bimestres):

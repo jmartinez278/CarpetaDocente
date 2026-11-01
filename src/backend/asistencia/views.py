@@ -1,10 +1,11 @@
 """Vistas de la asistencia de hoy (design de US-030, D3 y D10).
 
 Solo leen la petición y llaman a ``asistencia.servicios``. El acceso es el de la lista de
-estudiantes (``SeccionDocenteMixin``): otra docente o un año CERRADO, 404; otro rol y sin sesión,
+estudiantes (``SeccionDocenteMixin``): sección ajena, inexistente o de un año CERRADO, o un
+estudiante de la ruta que no es de ella, 403 con registro (US-004); otro rol y sin sesión,
 ``RolRequeridoMixin``, con ``HX-Redirect`` cuando el guardado llega con ``HX-Request``.
 Los guardados responden sin cuerpo: 204 guardado, 400 estado o nota que no valen, 404 estudiante
-que no es activo de la sección y 409 fecha que no es hoy o no es día de clases (D3).
+de la sección que no está activo y 409 fecha que no es hoy o no es día de clases (D3).
 """
 
 from django.core.exceptions import ValidationError

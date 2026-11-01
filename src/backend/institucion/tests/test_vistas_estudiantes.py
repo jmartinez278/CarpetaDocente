@@ -1,6 +1,7 @@
 """Pruebas de las vistas de la lista de estudiantes (spec estudiantes-seccion; design de US-006).
 
-Acceso (D4), una respuesta para el diálogo y para la página completa (D5) y la lista vacía.
+Acceso (403 con registro desde US-004), una respuesta para el diálogo y para la página completa
+(D5) y la lista vacía.
 """
 
 import re
@@ -10,6 +11,8 @@ from urllib.parse import quote
 import pytest
 from django.urls import reverse
 
+from actividad.models import Operacion, RegistroActividad
+from actividad.tests.intentos import es_sin_permiso, intentos, motivos
 from institucion.models import AnioEscolar, Estudiante, Seccion
 
 pytestmark = pytest.mark.django_db
@@ -69,24 +72,51 @@ def test_la_docente_de_la_seccion_ve_la_lista(entrar, docente, seccion_docente):
     assert respuesta.status_code == 200
 
 
-def test_otra_docente_recibe_404_y_no_ve_nombres(entrar, otra_docente, seccion_docente):
+def test_otra_docente_recibe_403_sin_nombres_y_queda_el_intento(
+    entrar, otra_docente, seccion_docente
+):
     Estudiante.objects.create(seccion=seccion_docente, apellidos="QUISPE", nombres="ANA")
+    url = url_lista(seccion_docente)
 
-    respuesta = entrar(otra_docente).get(url_lista(seccion_docente))
+    respuesta = entrar(otra_docente).get(url)
 
-    assert respuesta.status_code == 404
+    assert es_sin_permiso(respuesta)
     assert "QUISPE" not in respuesta.content.decode()
+    assert intentos() == [(str(seccion_docente.pk), url, "ajena")]
+    entrada = RegistroActividad.objects.get(operacion=Operacion.INTENTO_SIN_PERMISO)
+    assert entrada.usuario == otra_docente
 
 
-def test_una_seccion_del_anio_cerrado_da_404(entrar, docente, institucion):
+def test_una_seccion_del_anio_cerrado_da_403_anio_cerrado(entrar, docente, institucion):
     cerrado = AnioEscolar.objects.create(institucion=institucion, anio=2026, estado="CERRADO")
     vieja = Seccion.objects.create(anio_escolar=cerrado, grado=2, nombre="A", docente=docente)
 
-    assert entrar(docente).get(url_lista(vieja)).status_code == 404
+    assert es_sin_permiso(entrar(docente).get(url_lista(vieja)))
+    assert motivos() == ["anio_cerrado"]
 
 
-def test_una_seccion_que_no_existe_da_404(entrar, docente):
-    assert entrar(docente).get("/docente/secciones/999999/estudiantes/").status_code == 404
+def test_una_seccion_que_no_existe_da_403_inexistente(entrar, docente):
+    url = "/docente/secciones/999999/estudiantes/"
+
+    assert es_sin_permiso(entrar(docente).get(url))
+    assert intentos() == [("999999", url, "inexistente")]
+
+
+def test_con_htmx_la_seccion_ajena_da_403_con_hx_redirect(entrar, otra_docente, seccion_docente):
+    respuesta = entrar(otra_docente).get(url_lista(seccion_docente), **HTMX)
+
+    assert respuesta.status_code == 403
+    assert respuesta["HX-Redirect"] == "/docente/sin-permiso/"
+    assert respuesta.content == b""
+    assert len(intentos()) == 1
+
+
+def test_la_consulta_no_va_en_la_ruta_registrada(entrar, otra_docente, seccion_docente):
+    url = url_lista(seccion_docente)
+
+    entrar(otra_docente).get(f"{url}?q=QUISPE")
+
+    assert intentos() == [(str(seccion_docente.pk), url, "ajena")]
 
 
 def test_la_direccion_llega_a_su_pantalla(entrar, direccion, seccion_docente):
@@ -94,6 +124,7 @@ def test_la_direccion_llega_a_su_pantalla(entrar, direccion, seccion_docente):
 
     assert respuesta.status_code == 302
     assert respuesta["Location"] == "/direccion/"
+    assert intentos() == []
 
 
 def test_sin_sesion_va_a_ingresar_con_next(client, seccion_docente):
@@ -481,8 +512,9 @@ def test_el_aviso_de_exito_es_un_estado_que_no_se_va_solo(entrar, docente, secci
 def test_otra_docente_no_puede_pegar_en_la_seccion(entrar, otra_docente, seccion_docente):
     respuesta = entrar(otra_docente).post(url_pegar(seccion_docente), {"lista": LISTA_VALIDA})
 
-    assert respuesta.status_code == 404
+    assert es_sin_permiso(respuesta)
     assert seccion_docente.estudiantes.count() == 0
+    assert motivos() == ["ajena"]
 
 
 # --- Agregar y Editar (spec "Agregar un estudiante" y "Editar un estudiante") ---
@@ -754,11 +786,12 @@ def test_editar_un_estudiante_quitado_mientras_se_enviaba_da_404_sin_recrearlo(
 
     assert respuesta.status_code == 404
     assert seccion_docente.estudiantes.count() == 0
+    assert intentos() == []
 
 
 @pytest.mark.parametrize("ruta", ["editar", "quitar"])
 @pytest.mark.parametrize("metodo", ["get", "post"])
-def test_un_estudiante_de_otra_seccion_da_404(
+def test_un_estudiante_de_otra_seccion_da_403_estudiante(
     entrar, docente, seccion_docente, anio_abierto, otra_docente, ruta, metodo
 ):
     otra = Seccion.objects.create(
@@ -769,10 +802,11 @@ def test_un_estudiante_de_otra_seccion_da_404(
 
     respuesta = getattr(entrar(docente), metodo)(url, {"apellidos": "X", "nombres": "Y"})
 
-    assert respuesta.status_code == 404
+    assert es_sin_permiso(respuesta)
     assert "ROJAS" not in respuesta.content.decode()
     ajeno.refresh_from_db()
     assert ajeno.apellidos == "ROJAS"
+    assert intentos() == [(str(seccion_docente.pk), url, "estudiante")]
 
 
 def test_otra_docente_no_puede_agregar_en_la_seccion(entrar, otra_docente, seccion_docente):
@@ -780,8 +814,25 @@ def test_otra_docente_no_puede_agregar_en_la_seccion(entrar, otra_docente, secci
 
     respuesta = entrar(otra_docente).post(url_agregar(seccion_docente), datos)
 
-    assert respuesta.status_code == 404
+    assert es_sin_permiso(respuesta)
     assert seccion_docente.estudiantes.count() == 0
+    assert motivos() == ["ajena"]
+
+
+@pytest.mark.parametrize("ruta", ["editar", "quitar"])
+@pytest.mark.parametrize("metodo", ["get", "post"])
+def test_otra_docente_no_puede_editar_ni_quitar(
+    entrar, otra_docente, seccion_docente, ana_lucia, ruta, metodo
+):
+    url = reverse(f"estudiantes:{ruta}", args=[seccion_docente.pk, ana_lucia.pk])
+
+    respuesta = getattr(entrar(otra_docente), metodo)(url, {"apellidos": "X", "nombres": "Y"})
+
+    assert es_sin_permiso(respuesta)
+    assert "QUISPE" not in respuesta.content.decode()
+    ana_lucia.refresh_from_db()
+    assert ana_lucia.apellidos == "QUISPE MAMANI"
+    assert intentos() == [(str(seccion_docente.pk), url, "ajena")]
 
 
 def test_ya_no_hay_vistas_pendientes():
@@ -952,5 +1003,6 @@ def test_otra_docente_no_puede_vaciar_la_seccion(
 ):
     respuesta = entrar(otra_docente).post(url_vaciar(seccion_docente))
 
-    assert respuesta.status_code == 404
+    assert es_sin_permiso(respuesta)
     assert seccion_docente.estudiantes.count() == 3
+    assert motivos() == ["ajena"]

@@ -7,12 +7,12 @@ diálogo de la portada, más el aviso de la portada fuera de banda; sin ella, la
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.template.defaultfilters import pluralize
 from django.urls import reverse
 from django.views import View
 
-from cuentas.acceso import RolRequeridoMixin, es_htmx
+from cuentas.acceso import RolRequeridoMixin, es_htmx, sin_permiso
 from cuentas.models import Usuario
 from institucion import servicios
 from institucion.forms import EstudianteForm, ListaPegadaForm
@@ -30,24 +30,28 @@ def ver_otra(destino):
 
 
 class SeccionDocenteMixin(RolRequeridoMixin):
-    """Carga la sección de la docente: de otra docente o de un año CERRADO es un 404 (D4).
+    """Único punto de acceso a ``/docente/secciones/<id>/…`` (US-004, D2).
 
-    La denegación con mensaje y registro es de US-004. Otro rol o sin sesión se resuelven
-    antes, en ``RolRequeridoMixin``, sin consultar la sección.
+    Carga ``self.seccion`` (y ``self.estudiante`` si la ruta lo trae) solo si la sección es de la
+    docente en el año ABIERTO y el estudiante es de ella. Si no, registra el intento y responde el
+    403 de «sin permiso», el mismo para sección ajena, inexistente, de año cerrado o estudiante de
+    otra sección, sin pasar a la vista. Otro rol o sin sesión se resuelven antes, en
+    ``RolRequeridoMixin``, sin consultar la sección ni registrar.
     """
 
     rol_requerido = Usuario.Rol.DOCENTE
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.rol == self.rol_requerido:
-            self.seccion = get_object_or_404(
-                servicios.secciones_docente(request.user), pk=kwargs["seccion_id"]
-            )
-            if "estudiante_id" in kwargs:
-                # Un estudiante solo se alcanza a través de su propia sección (D4).
-                self.estudiante = get_object_or_404(
-                    self.seccion.estudiantes, pk=kwargs["estudiante_id"]
+            try:
+                self.seccion, self.estudiante = servicios.seccion_de_la_docente(
+                    request.user, kwargs["seccion_id"], kwargs.get("estudiante_id")
                 )
+            except servicios.SinPermiso as error:
+                servicios.registrar_intento_sin_permiso(
+                    request.user, kwargs["seccion_id"], request.path, error.motivo
+                )
+                return sin_permiso(request)
         return super().dispatch(request, *args, **kwargs)
 
     def responder(self, request, parcial, contexto=None, status=200):
