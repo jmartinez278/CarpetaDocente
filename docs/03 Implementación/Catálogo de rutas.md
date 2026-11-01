@@ -8,8 +8,8 @@
 | **Producto** | CarpetaDocente (nombre temporal) |
 | **Integrantes** | Cuicapuza Remigio Nayely Nilda · Martinez Llanos Marco Jhair · Vera Zea Jhoanna Hade |
 | **Asesor** | Ing. Elvis Wilfredo Carmen Delgadillo |
-| **Fecha** | 31/10/2026 |
-| **Versión** | 1.6.0 |
+| **Fecha** | 01/11/2026 |
+| **Versión** | 1.7.0 |
 
 ---
 
@@ -17,7 +17,7 @@
 
 El sistema genera sus páginas en el servidor y no expone una API pública, así que, según el criterio 9 de la DoD (documento 01 de planificación, sección 7), la documentación de rutas reemplaza a OpenAPI/Swagger. Cada historia que agrega o cambia rutas actualiza este catálogo en su mismo Pull Request.
 
-Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/backend/cuentas/urls.py` (namespace `docente`), `src/backend/direccion/urls.py` (namespace `direccion`), `src/backend/institucion/urls.py` (namespace `estudiantes`, bajo `/docente/secciones/<id>/estudiantes/`) `src/backend/asistencia/urls.py` (namespace `asistencia`, bajo `/docente/secciones/<id>/asistencia/`) y `src/backend/notas/urls.py` (namespace `competencias`, bajo `/docente/secciones/<id>/competencias/`).
+Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/backend/cuentas/urls.py` (namespace `docente`), `src/backend/direccion/urls.py` (namespace `direccion`), `src/backend/institucion/urls.py` (namespace `estudiantes`, bajo `/docente/secciones/<id>/estudiantes/`) `src/backend/asistencia/urls.py` (namespace `asistencia`, bajo `/docente/secciones/<id>/asistencia/`) `src/backend/notas/urls.py` (namespace `competencias`, bajo `/docente/secciones/<id>/competencias/`) y `src/backend/notas/urls_hoja.py` (namespace `notas`, bajo `/docente/secciones/<id>/notas/`).
 
 ## 2. Rutas
 
@@ -36,8 +36,10 @@ Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/ba
 | `/docente/secciones/<id>/asistencia/` | GET | `asistencia:hoy` | `HoyView` | `asistencia` | Como `estudiantes:lista`. La asistencia de hoy (fecha de Lima) de la sección; abrirla no crea la jornada | RF-030, RF-032 (US-030) | US-030 |
 | `/docente/secciones/<id>/asistencia/<AAAA-MM-DD>/estudiantes/<id>/` | POST | `asistencia:marcar` | `MarcarView` | `asistencia` | Como `asistencia:hoy`. Guarda el estado de destino de un estudiante (`estado` y `nota`); repetirlo deja lo mismo. Responde sin cuerpo: 204 guardado; 400 estado o nota que no valen; 404 estudiante que no es activo de la sección; 409 fecha que no es hoy o no es día de clases. Solo POST con token CSRF | RF-030, RNF-011 (US-030) | US-030 |
 | `/docente/secciones/<id>/asistencia/<AAAA-MM-DD>/restantes/` | POST | `asistencia:restantes` | `RestantesView` | `asistencia` | Como `asistencia:marcar`. Guarda Asistió para los estudiantes enviados (`estudiante` repetido) que aún no tienen estado hoy; nunca pisa uno ya puesto. Un id que no es activo de la sección, 404 sin guardar ninguno; un id que no es número, 400 | RF-030 (US-030) | US-030 |
-| `/docente/secciones/<id>/competencias/` | GET | `competencias:pantalla` | `CompetenciasView` | `notas` | Como `estudiantes:lista`. Las competencias de las áreas que la tutora marca, por periodo; `?periodo=N` abre un periodo que ya empezó y, si no, abre el vigente. Abrirla no guarda nada. Sin enlace desde la portada: se llega por su dirección hasta US-020 | RF-029 (US-029) | US-029 |
+| `/docente/secciones/<id>/competencias/` | GET | `competencias:pantalla` | `CompetenciasView` | `notas` | Como `estudiantes:lista`. Las competencias de las áreas que la tutora marca, por periodo; `?periodo=N` abre un periodo que ya empezó y, si no, abre el vigente. Abrirla no guarda nada. Acepta `?area=<código SIAGIE>` (abre esa área) y `?desde=notas` (avisa que el periodo aún no tiene competencias confirmadas); desde ella, «Registrar notas de B*n*» vuelve a la hoja de notas | RF-029 (US-029) | US-029 |
 | `/docente/secciones/<id>/competencias/<N>/` | POST | `competencias:guardar` | `GuardarView` | `notas` | Como `competencias:pantalla`. Guarda el conjunto completo de las competencias marcadas del periodo `N` (`competencia` repetido), todo o nada; repetirlo deja lo mismo. Responde sin cuerpo 204 guardado; 400 con `mensaje` (conjunto que no vale o vacío); 404 periodo que no existe; 409 con `mensaje` (periodo que no empezó) o con `mensaje` y `competencias` (quita competencias con notas). Solo POST con token CSRF | RF-029, RN-005 (US-029) | US-029 |
+| `/docente/secciones/<id>/notas/` | GET | `notas:hoja` | `HojaView` | `notas` | Como `estudiantes:lista`. La hoja de notas por área y periodo de la sección; `?periodo=N` abre un periodo que ya empezó y, si no, el vigente (sin vigente, el último ya pasado); `?area=<código SIAGIE>` abre esa área. Sin competencias marcadas en el periodo, 302 a `competencias:pantalla` con `periodo`, `area` y `desde=notas`. Abrirla no guarda nada | RF-020, RF-021, RF-022 (US-020, US-021, US-022) | US-020, US-021, US-022 |
+| `/docente/secciones/<id>/notas/<N>/<código>/` | POST | `notas:guardar` | `GuardarHojaView` | `notas` | Como `notas:hoja`. Guarda las celdas del área `<código>` (código SIAGIE) en el periodo `N`, todo o nada, desde un cuerpo JSON `{"celdas": [{"estudiante", "competencia", "nivel", "conclusion", "base"}]}`; repetirlo deja lo mismo. Responde 200 con `faltantes`; 400 con `mensaje`, `no_validas` y `sin_conclusion` (escala o conclusión) o solo `mensaje` (estructura o JSON mal formado); 404 periodo o área que no existen; 409 con `mensaje` (periodo no editable) o con `mensaje` y `cambiadas` (notas cambiadas desde otro dispositivo). Solo POST con token CSRF | RF-020, RF-021, RF-022, RN-001, RN-023, RNF-011 (US-020, US-021, US-022) | US-020, US-021, US-022 |
 | `/direccion/` | GET | `direccion:inicio` | `InicioDireccionView` | `direccion` | Solo rol Dirección. Sin sesión, a `/ingresar/?next=…`; otro rol, a su pantalla | RF-001 (US-001) | US-001 |
 | `/admin/login/` | GET | `ingreso_panel` | `IngresoPanelView` | `cuentas` | Reemplaza el ingreso propio del panel. Sin sesión, a `/ingresar/` con `next`; con `is_staff`, al panel; otro rol, a su pantalla; Administrador sin `is_staff`, 403 | RF-001, RN-024 (US-001) | US-001 |
 | `/admin/logout/` | POST | `admin:logout` | `LogoutView` (la del panel) | Django (`django.contrib.admin`) | Cierra la sesión y lleva a `/ingresar/` (`LOGOUT_REDIRECT_URL`), no a la página "Sesión cerrada" del panel | RF-002 (US-002) | US-002 |
@@ -56,6 +58,7 @@ Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/ba
 - **Peticiones de HTMX (US-006):** con la cabecera `HX-Request`, la sesión vencida, la falta de sesión o un rol distinto responden 200 con `HX-Redirect` (a `/ingresar/?next=/docente/` o a la pantalla del rol), para que la página completa cambie y el formulario de ingreso no aparezca dentro del diálogo. Sin la cabecera, el 302 de siempre.
 - **Guardados de la asistencia (US-030):** la pantalla de asistencia envía cada guardado con `HX-Request` (sin cargar HTMX), así que la sesión vencida o la falta de sesión responden igual, con `HX-Redirect`. Una fecha mal escrita o que no existe (`2026-02-30`) no es una ruta: 404.
 - **Guardados de las competencias (US-029):** la pantalla de competencias envía su guardado con `HX-Request` (sin cargar HTMX), así que la sesión vencida o la falta de sesión responden con `HX-Redirect` y la pantalla ofrece volver a ingresar. Un número de periodo que no es entero no es una ruta: 404.
+- **Guardados de las notas (US-020, US-021, US-022):** la hoja envía su guardado con `HX-Request` (sin cargar HTMX) y un cuerpo JSON, así que la sesión vencida o la falta de sesión responden con `HX-Redirect` y la hoja ofrece volver a ingresar. Los mensajes de error son fijos; ninguna respuesta lleva el texto de una excepción. Un número de periodo que no es entero no es una ruta: 404.
 
 ## Historial de cambios
 
@@ -68,5 +71,6 @@ Las rutas se definen en `src/backend/config/urls.py`, que incluye las de `src/ba
 | 1.4.0 | 29/10/2026 | Equipo del proyecto | US-030: se agregan la asistencia de hoy de la sección (`/docente/secciones/<id>/asistencia/`), el guardado de un estudiante (`…/<fecha>/estudiantes/<id>/`) y el de los restantes (`…/<fecha>/restantes/`); nota sobre sus guardados y la sesión vencida. |
 | 1.5.0 | 30/10/2026 | Equipo del proyecto | US-008: se agregan la consulta del registro de actividad en el panel (`/admin/actividad/registroactividad/`), su exportación a CSV (`…/exportar/`, solo POST) y los indicadores por semana (`…/indicadores/`). |
 | 1.6.0 | 31/10/2026 | Equipo del proyecto | US-029: se agregan las competencias de la sección (`/docente/secciones/<id>/competencias/`) y su guardado por periodo (`…/<N>/`); nota sobre sus guardados y la sesión vencida. |
+| 1.7.0 | 01/11/2026 | Equipo del proyecto | US-020, US-021, US-022: se agregan la hoja de notas de la sección (`/docente/secciones/<id>/notas/`) y su guardado por área y periodo (`…/<N>/<código>/`, JSON); Competencias acepta `?area=` y `?desde=notas`; nota sobre sus guardados y la sesión vencida. |
 
 [← Volver al README Principal](../../README.md)

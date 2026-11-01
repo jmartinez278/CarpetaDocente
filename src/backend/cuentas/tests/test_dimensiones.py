@@ -34,10 +34,14 @@ def test_las_tres_dimensiones_en_orden_con_sus_textos():
     ]
 
 
-def test_desde_us_030_solo_asistencia_esta_disponible():
+def test_desde_us_020_notas_y_asistencia_estan_disponibles():
     disponibles = [(d.clave, d.url_name) for d in DIMENSIONES if d.disponible or d.url_name]
 
-    assert disponibles == [("asistencia", "asistencia:hoy")]
+    assert disponibles == [("notas", "notas:hoja"), ("asistencia", "asistencia:hoy")]
+
+
+def test_notas_y_asistencia_son_pantallas_de_la_seccion():
+    assert {"notas", "asistencia"} <= POR_SECCION
 
 
 def test_toda_dimension_disponible_resuelve_su_pantalla():
@@ -70,7 +74,11 @@ def test_sin_ninguna_disponible_abre_en_la_primera():
 
 def test_abre_en_la_primera_disponible_en_el_orden_de_las_tarjetas():
     sesiones, notas, asistencia = DIMENSIONES
-    solo_asistencia = (sesiones, notas, replace(asistencia, disponible=True))
+    solo_asistencia = (
+        sesiones,
+        replace(notas, disponible=False),
+        replace(asistencia, disponible=True),
+    )
     notas_y_asistencia = (
         sesiones,
         replace(notas, disponible=True),

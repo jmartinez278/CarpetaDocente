@@ -21,9 +21,11 @@ de áreas del celular, los borradores, el guardado y el diálogo de salida. Sin 
   <div class="comp-vacio">{% include "iconos/inbox.svg" %}<h2>{{ aviso.titulo }}</h2><p>{{ aviso.texto }}</p></div>
   {% else %}
   {% if aviso %}<div class="mensaje mensaje--aviso comp-aviso" data-aviso>{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>{{ aviso.titulo }}</p><p>{{ aviso.texto }}</p></div></div>{% endif %}
+  {% if sin_marcas_de %}<div class="mensaje mensaje--aviso comp-aviso" data-aviso-sin-marcas>{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>{{ sin_marcas_de.nombre }} aún no tiene competencias confirmadas</p><p>Confirma las que trabajaste para empezar a registrar los niveles de logro.</p></div></div>{% endif %}
   <div class="mensaje comp-nota" data-nota-periodo hidden></div>
   {% include "notas/_periodos.html" %}
   {% if periodos_elegibles %}
+  <p class="comp-notas"><a class="boton-secundario" data-registrar-notas href="{{ url_notas }}{% if periodo_inicial %}?periodo={{ periodo_inicial.numero }}&amp;area={{ area_inicial }}{% endif %}"{% if not periodo_inicial %} hidden{% endif %}>Registrar notas de <span data-nombre-periodo>{{ periodo_inicial.nombre }}</span>{% include "iconos/arrow-right.svg" %}</a></p>
   <noscript><p class="mensaje mensaje--aviso comp-aviso">Activa JavaScript para guardar las competencias.</p></noscript>
   {% if not periodo_inicial %}<div class="comp-vacio" data-vacio>{% include "iconos/clipboard-list.svg" %}<h2>Elige un {{ palabra_periodo }} anterior</h2><p>Puedes revisar y corregir las competencias de {{ periodos_elegibles }}.</p></div>{% endif %}
   <div class="comp-distribucion" data-trabajo{% if not periodo_inicial %} hidden{% endif %}>

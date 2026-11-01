@@ -9,7 +9,6 @@ import re
 import pytest
 from django.urls import reverse
 
-from notas import servicios
 from notas.models import CompetenciaPeriodo
 from notas.tests.conftest import (
     AGO_1,
@@ -20,6 +19,7 @@ from notas.tests.conftest import (
     MAR_2,
     MATEMATICA,
     NOV_20,
+    con_notas,
     ids_de,
 )
 
@@ -226,12 +226,10 @@ def test_con_trimestres_los_botones_dicen_t(cliente, institucion, seccion_tutora
 
 
 def test_una_competencia_con_notas_va_marcada_bloqueada_con_su_motivo(
-    cliente, seccion_tutora, ie, monkeypatch
+    cliente, seccion_tutora, bimestres, ie
 ):
     elegida = min(ie)
-    monkeypatch.setattr(
-        servicios, "tiene_notas", lambda seccion, periodo, competencia: competencia == elegida
-    )
+    con_notas(seccion_tutora, bimestres[2], [elegida])
 
     html = pagina(cliente, seccion_tutora)
 
@@ -250,6 +248,7 @@ def test_las_obligatorias_del_ultimo_periodo_dicen_su_motivo(
     faltan = sorted(ie)[:5]
     for periodo in bimestres[:3]:
         marcar(seccion_tutora, periodo, ie - set(faltan))
+        con_notas(seccion_tutora, periodo, ie - set(faltan))
     hoy["valor"] = NOV_20
 
     html = pagina(cliente, seccion_tutora)
@@ -412,3 +411,64 @@ def test_antes_del_primer_periodo_el_aviso_con_la_fecha_y_nada_que_elegir(
     assert "data-trabajo" not in html
     assert "Desmarca" not in html
     assert "Puedes revisar y corregir" not in html
+
+
+# --- Vuelta a las notas (design de US-029 / US-020, D15) ---
+
+
+def test_registrar_notas_lleva_el_periodo_y_el_area(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, area=MATEMATICA)
+
+    enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>.*?</a>", html, re.DOTALL).group(0)
+    base = reverse("notas:hoja", args=[seccion_tutora.pk])
+    assert f'href="{base}?periodo=3&amp;area={MATEMATICA}"' in enlace
+    assert "Registrar notas de B3" in " ".join(re.sub(r"<[^>]+>", " ", enlace).split())
+    assert " hidden" not in enlace
+
+
+def test_registrar_notas_sin_area_pedida_usa_la_primera(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora)
+
+    enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>", html).group(0)
+    assert f"area={ARTE}" in enlace
+
+
+def test_el_periodo_pedido_cambia_el_enlace_de_notas(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, periodo="2")
+
+    enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>.*?</a>", html, re.DOTALL).group(0)
+    assert "periodo=2" in enlace
+    assert "Registrar notas de B2" in " ".join(re.sub(r"<[^>]+>", " ", enlace).split())
+
+
+def test_en_vacaciones_el_enlace_de_notas_va_oculto_hasta_elegir(cliente, seccion_tutora, ie, hoy):
+    hoy["valor"] = AGO_1
+
+    html = pagina(cliente, seccion_tutora)
+
+    assert re.search(r"<a [^>]*data-registrar-notas[^>]* hidden", html)
+
+
+def test_con_desde_notas_avisa_que_el_bimestre_no_tiene_competencias(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, desde="notas", periodo="3", area=MATEMATICA)
+
+    assert "B3 aún no tiene competencias confirmadas" in html
+    assert "Confirma las que trabajaste para empezar a registrar los niveles de logro." in html
+
+
+def test_sin_desde_notas_no_hay_aviso_de_confirmar(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, periodo="3")
+
+    assert "aún no tiene competencias confirmadas" not in html
+
+
+def test_el_area_pedida_va_en_los_datos(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, area=MATEMATICA)
+
+    assert f'"area_inicial": "{MATEMATICA}"' in html
+
+
+def test_un_area_pedida_que_no_existe_se_ignora(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, area="xxxx")
+
+    assert f'"area_inicial": "{ARTE}"' in html

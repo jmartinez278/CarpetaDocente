@@ -270,6 +270,7 @@ def test_quitar_demo_deja_demo_quitada_con_usuario_vacio_y_conteos(institucion, 
         "jornadas": 8 * dias,
         "estados": 24 * dias,
         "marcas": 0,
+        "notas": 0,
     }
 
 
@@ -297,7 +298,13 @@ def test_descartar_seccion_deja_seccion_descartada_y_conserva_la_asistencia(anio
     (entrada,) = entradas(Operacion.SECCION_DESCARTADA)
     assert entrada.usuario is None
     assert (entrada.entidad, entrada.entidad_id) == ("seccion", str(seccion.pk))
-    assert entrada.detalle == {"estudiantes": 1, "jornadas": 1, "estados": 1, "marcas": 0}
+    assert entrada.detalle == {
+        "estudiantes": 1,
+        "jornadas": 1,
+        "estados": 1,
+        "marcas": 0,
+        "notas": 0,
+    }
     # Conservación: las entradas de asistencia de la sección descartada siguen.
     assert not Jornada.objects.filter(seccion=seccion).exists()
     assert (

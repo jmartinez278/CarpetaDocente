@@ -1,6 +1,6 @@
 """Datos de demostración: cargar, quitar y descartar (spec datos-demostracion; EN-06, D6 a D9).
 
-Reúne cuentas, estudiantes, asistencia y marcas de competencias; por eso va aparte de
+Reúne cuentas, estudiantes, asistencia, marcas de competencias y notas; por eso va aparte de
 ``servicios.py``. Cada función corre en una transacción y devuelve un resumen. Los comandos
 de ``management/commands`` solo leen las opciones, piden la confirmación y escriben el resumen.
 
@@ -23,7 +23,7 @@ from cuentas.models import Usuario
 from institucion import servicios
 from institucion.models import AnioEscolar, Estudiante, Institucion, Periodo, Seccion
 from notas import servicios as notas
-from notas.models import CompetenciaPeriodo
+from notas.models import Calificacion, CompetenciaPeriodo
 
 # Una cuenta por sección, de 1.º A a 2.º D, en formato R-11 (D8). La lista solo da los nombres:
 # una cuenta es demo por ``Usuario.es_demo``, que pone la carga.
@@ -368,11 +368,13 @@ class Conteos:
     jornadas: int = 0
     estados: int = 0
     marcas: int = 0
+    notas: int = 0
 
     def texto(self):
         return (
             f"{self.estudiantes} estudiantes, {self.jornadas} jornadas, "
-            f"{self.estados} estados de asistencia y {self.marcas} marcas de competencias"
+            f"{self.estados} estados de asistencia, {self.marcas} marcas de competencias "
+            f"y {self.notas} notas"
         )
 
 
@@ -400,15 +402,17 @@ def _conteos(secciones):
         jornadas=Jornada.objects.filter(seccion__in=secciones).count(),
         estados=Asistencia.objects.filter(jornada__seccion__in=secciones).count(),
         marcas=CompetenciaPeriodo.objects.filter(seccion__in=secciones).count(),
+        notas=Calificacion.objects.filter(estudiante__seccion__in=secciones).count(),
     )
 
 
 def _borrar(secciones):
-    """Jornadas antes que estudiantes: ``asistencia.estudiante`` es ``RESTRICT`` (D9).
+    """Jornadas y notas antes que estudiantes: ``asistencia.estudiante`` y
+    ``calificacion.estudiante`` son ``RESTRICT`` (D9; US-020, D14).
 
-    Las marcas de competencias también van antes (US-029, D11). US-020 agrega aquí las notas,
-    antes de los estudiantes (decisión 10).
+    Las marcas de competencias también van antes (US-029, D11).
     """
+    Calificacion.objects.filter(estudiante__seccion__in=secciones).delete()
     CompetenciaPeriodo.objects.filter(seccion__in=secciones).delete()
     Jornada.objects.filter(seccion__in=secciones).delete()
     Estudiante.objects.filter(seccion__in=secciones).delete()
@@ -456,9 +460,10 @@ def conteos_seccion(seccion):
 
 
 def descartar_seccion(seccion):
-    """Borra estudiantes, asistencia y marcas de una sección del año ABIERTO; conserva la docente.
+    """Borra estudiantes, asistencia, marcas y notas de una sección del año ABIERTO.
 
-    Es el camino para borrar una lista con registros, que «Vaciar lista» no permite (D9).
+    Conserva la docente. Es el camino para borrar una lista con registros, que «Vaciar lista»
+    no permite (D9).
     """
     with transaction.atomic():
         seccion = (

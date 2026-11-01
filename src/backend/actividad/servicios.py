@@ -46,12 +46,17 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
         {"estudiante", "anterior", "nuevo", "nota_cambiada", "origen"}
     ),
     Operacion.COMPETENCIAS_MARCADAS: frozenset({"periodo", "agregadas", "quitadas"}),
+    # Código SIAGIE del área, número del periodo, cuántas se crearon y los pares
+    # [estudiante, competencia] cambiados, sin niveles ni conclusiones (US-020, D13).
+    Operacion.NOTAS_GUARDADAS: frozenset({"area", "periodo", "creadas", "cambiadas"}),
     Operacion.CATALOGO_EDITADO: frozenset({"campos"}),
     Operacion.DEMO_CARGADA: frozenset({"secciones", "estudiantes", "dias"}),
     Operacion.DEMO_QUITADA: frozenset(
-        {"secciones", "cuentas", "estudiantes", "jornadas", "estados", "marcas"}
+        {"secciones", "cuentas", "estudiantes", "jornadas", "estados", "marcas", "notas"}
     ),
-    Operacion.SECCION_DESCARTADA: frozenset({"estudiantes", "jornadas", "estados", "marcas"}),
+    Operacion.SECCION_DESCARTADA: frozenset(
+        {"estudiantes", "jornadas", "estados", "marcas", "notas"}
+    ),
     Operacion.REGISTRO_EXPORTADO: frozenset({"filtros", "filas"}),
 }
 
@@ -200,8 +205,9 @@ def indicadores_por_semana(desde: date, hasta: date) -> list[dict]:
     """Una fila por semana, del lunes de ``desde`` al domingo de ``hasta`` (D9).
 
     ``activos``: participantes con una operación de KPI-01 en la semana. ``jornadas``: entradas
-    REGISTRO_ASISTENCIA de cuentas reales. ``sesiones`` y ``secciones_con_notas`` quedan en
-    ``None`` hasta US-010 y US-020.
+    REGISTRO_ASISTENCIA de cuentas reales. ``secciones_con_notas``: secciones distintas con una
+    entrada NOTAS_GUARDADAS de una cuenta real (US-020, D13). ``sesiones`` queda en ``None``
+    hasta US-010.
     """
     primer_lunes = desde - timedelta(days=desde.weekday())
     ultimo_lunes = hasta - timedelta(days=hasta.weekday())
@@ -222,6 +228,14 @@ def indicadores_por_semana(desde: date, hasta: date) -> list[dict]:
         ),
         Count("id"),
     )
+    secciones_con_notas = _por_semana(
+        semana.filter(
+            operacion=Operacion.NOTAS_GUARDADAS,
+            usuario__isnull=False,
+            usuario__es_demo=False,
+        ),
+        Count("entidad_id", distinct=True),
+    )
 
     filas = []
     lunes = primer_lunes
@@ -236,7 +250,7 @@ def indicadores_por_semana(desde: date, hasta: date) -> list[dict]:
                 "activos_texto": texto_activos(n_activos, len(participantes)),
                 "jornadas": jornadas.get(lunes, 0),
                 "sesiones": None,
-                "secciones_con_notas": None,
+                "secciones_con_notas": secciones_con_notas.get(lunes, 0),
             }
         )
         lunes += timedelta(days=7)

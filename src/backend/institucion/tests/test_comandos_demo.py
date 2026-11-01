@@ -13,7 +13,7 @@ from catalogo.models import Competencia
 from cuentas.models import Usuario
 from institucion import demo, servicios
 from institucion.models import Estudiante, Institucion, Periodo, Seccion
-from notas.models import CompetenciaPeriodo
+from notas.models import Calificacion, CompetenciaPeriodo
 
 pytestmark = pytest.mark.django_db
 
@@ -165,8 +165,9 @@ def test_descartar_sin_confirmar_dice_lo_que_borraria(tres_a):
     with pytest.raises(CommandError) as error:
         correr("descartar_seccion", seccion=tres_a.pk)
 
-    assert "2 estudiantes, 1 jornadas, 2 estados de asistencia y 0 marcas de competencias" in str(
-        error.value
+    assert (
+        "2 estudiantes, 1 jornadas, 2 estados de asistencia, 0 marcas de competencias y 0 notas"
+        in str(error.value)
     )
     assert tres_a.estudiantes.count() == 2
 
@@ -174,7 +175,7 @@ def test_descartar_sin_confirmar_dice_lo_que_borraria(tres_a):
 def test_descartar_con_confirmar(tres_a, docente):
     salida = correr("descartar_seccion", seccion=tres_a.pk, confirmar=True)
 
-    assert "2 estudiantes, 1 jornadas, 2 estados de asistencia y 0 marcas" in salida
+    assert "2 estudiantes, 1 jornadas, 2 estados de asistencia, 0 marcas" in salida
     tres_a.refresh_from_db()
     assert tres_a.docente == docente
     assert not tres_a.estudiantes.exists()
@@ -193,8 +194,38 @@ def test_descartar_borra_las_marcas_y_las_nombra(tres_a, anio):
 
     salida = correr("descartar_seccion", seccion=tres_a.pk, confirmar=True)
 
-    assert "y 1 marcas de competencias borrados" in salida
+    assert "1 marcas de competencias y 0 notas borrados" in salida
     assert not CompetenciaPeriodo.objects.exists()
+
+
+def test_descartar_borra_las_notas_y_las_nombra(tres_a, anio):
+    periodo = Periodo.objects.create(
+        anio_escolar=anio,
+        numero=1,
+        fecha_inicio=datetime.date(anio.anio, 3, 9),
+        fecha_fin=datetime.date(anio.anio, 5, 15),
+    )
+    competencia = Competencia.objects.first()
+    for estudiante in tres_a.estudiantes.all():
+        Calificacion.objects.create(
+            estudiante=estudiante, competencia=competencia, periodo=periodo, nivel="AD"
+        )
+
+    with pytest.raises(CommandError) as error:
+        correr("descartar_seccion", seccion=tres_a.pk)
+    assert "y 2 notas" in str(error.value)
+
+    salida = correr("descartar_seccion", seccion=tres_a.pk, confirmar=True)
+
+    assert "y 2 notas borrados" in salida
+    assert not Calificacion.objects.exists()
+
+
+def test_quitar_demo_dice_las_notas_que_borraria(cargada):
+    with pytest.raises(CommandError) as error:
+        correr("quitar_demo")
+
+    assert "y 0 notas" in str(error.value)
 
 
 def test_descartar_seccion_inexistente(db):

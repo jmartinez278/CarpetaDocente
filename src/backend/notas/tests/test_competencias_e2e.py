@@ -22,7 +22,6 @@ from cuentas.tests.e2e import (
     ingresar,
     revisar_con_axe,
 )
-from notas import servicios
 from notas.models import CompetenciaPeriodo
 from notas.tests.conftest import (
     AGO_1,
@@ -30,6 +29,7 @@ from notas.tests.conftest import (
     MATEMATICA,
     NOV_20,
     OCT_30,
+    con_notas,
     ids_de,
 )
 
@@ -305,9 +305,10 @@ def test_deshacer_vuelve_a_lo_guardado(abrir_competencias, ie, seccion_tutora, b
 
 @pytest.fixture
 def ultimo_periodo(abrir_competencias, ie, seccion_tutora, bimestres):
-    """El 20 de noviembre: bimestre 4 vigente y 5 competencias que no se marcaron en el 1 al 3."""
+    """El 20 de noviembre: bimestre 4 vigente y 5 competencias sin notas en el 1 al 3."""
     faltan = sorted(ie)[:5]
     marcar_bimestres(seccion_tutora, bimestres, ie - set(faltan), hasta=3)
+    con_notas(seccion_tutora, bimestres[0], ie - set(faltan))
     return abrir_competencias(dia=NOV_20), faltan
 
 
@@ -374,12 +375,12 @@ def test_el_ultimo_periodo_explica_las_obligatorias(ultimo_periodo):
 # --- Competencia con notas ---
 
 
-def test_desmarcar_una_competencia_con_notas_muestra_el_motivo(abrir_competencias, ie, monkeypatch):
+def test_desmarcar_una_competencia_con_notas_muestra_el_motivo(
+    abrir_competencias, ie, seccion_tutora, bimestres
+):
     """Escenario "Caso de error"."""
     elegida = min(ie)
-    monkeypatch.setattr(
-        servicios, "tiene_notas", lambda seccion, periodo, competencia: competencia == elegida
-    )
+    con_notas(seccion_tutora, bimestres[2], [elegida])
     page = abrir_competencias()
     expect(casilla(page, elegida)).to_be_checked()
     expect(page.locator(f'[data-competencia-fila="{elegida}"]')).to_contain_text(MENSAJE_NOTAS)
@@ -392,7 +393,7 @@ def test_desmarcar_una_competencia_con_notas_muestra_el_motivo(abrir_competencia
 
 
 def test_un_guardado_que_choca_con_notas_las_bloquea_en_pantalla(
-    abrir_competencias, ie, seccion_tutora, bimestres, monkeypatch
+    abrir_competencias, ie, seccion_tutora, bimestres
 ):
     """Las notas llegan después de abrir la pantalla: el servidor rechaza y la pantalla lo avisa."""
     marcar_bimestres(seccion_tutora, bimestres, ie, hasta=3)
@@ -400,9 +401,7 @@ def test_un_guardado_que_choca_con_notas_las_bloquea_en_pantalla(
     page = abrir_competencias()
     alternar(page, elegida)
     expect(casilla(page, elegida)).not_to_be_checked()
-    monkeypatch.setattr(
-        servicios, "tiene_notas", lambda seccion, periodo, competencia: competencia == elegida
-    )
+    con_notas(seccion_tutora, bimestres[2], [elegida])
 
     guardar(page)
 
@@ -599,14 +598,13 @@ def test_la_pantalla_con_marcas_pasa_axe(
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", ANCHOS)
 def test_la_pantalla_con_bloqueos_pasa_axe(
-    abrir_competencias, ie, seccion_tutora, bimestres, monkeypatch, ancho, tema
+    abrir_competencias, ie, seccion_tutora, bimestres, ancho, tema
 ):
     faltan = sorted(ie)[:5]
     marcar_bimestres(seccion_tutora, bimestres, ie - set(faltan), hasta=3)
+    con_notas(seccion_tutora, bimestres[0], ie - set(faltan))
     elegida = max(ie)
-    monkeypatch.setattr(
-        servicios, "tiene_notas", lambda seccion, periodo, competencia: competencia == elegida
-    )
+    con_notas(seccion_tutora, bimestres[3], [elegida])
     page = abrir_competencias(ancho, tema, dia=NOV_20)
     expect(page.locator(".comp-competencia--anual")).to_have_count(5)
     expect(page.locator(".comp-competencia--notas")).to_have_count(1)

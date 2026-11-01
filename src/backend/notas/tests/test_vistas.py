@@ -26,6 +26,7 @@ from notas.tests.conftest import (
     MAR_2,
     MATEMATICA,
     NOV_20,
+    con_notas,
     ids_de,
 )
 
@@ -254,10 +255,11 @@ def test_sin_periodo_inicial_no_hay_marcadas_iniciales(cliente, seccion_tutora, 
 
 
 def test_en_el_bimestre_4_lleva_las_obligatorias(cliente, seccion_tutora, bimestres, ie, hoy):
-    """Escenario "Flujo alternativo válido": 5 sin marcar en los bimestres 1 a 3."""
+    """Escenario "Flujo alternativo válido": 5 sin notas en los bimestres 1 a 3."""
     faltan = sorted(ie)[:5]
     for periodo in bimestres[:3]:
         marcar(seccion_tutora, periodo, ie - set(faltan))
+        con_notas(seccion_tutora, periodo, ie - set(faltan))
     hoy["valor"] = NOV_20
 
     respuesta = abrir(cliente, seccion_tutora)
@@ -282,18 +284,32 @@ def test_sin_notas_ninguna_competencia_va_en_con_notas(cliente, seccion_tutora, 
 
 
 def test_con_notas_va_la_competencia_de_cada_periodo_editable(
-    cliente, seccion_tutora, ie, monkeypatch
+    cliente, seccion_tutora, bimestres, ie
 ):
+    """Escenarios «Una sola nota basta» y «Notas de otro periodo»."""
     elegida = min(ie)
-    monkeypatch.setattr(
-        servicios,
-        "tiene_notas",
-        lambda seccion, periodo, competencia: competencia == elegida and periodo.numero == 2,
-    )
+    marcar(seccion_tutora, bimestres[1], [elegida])
+    con_notas(seccion_tutora, bimestres[1], [elegida])
 
     periodos = datos(abrir(cliente, seccion_tutora))["periodos"]
 
     assert [p["con_notas"] for p in periodos] == [[], [elegida], [], []]
+
+
+def test_las_notas_se_leen_una_vez_por_periodo_editable(cliente, seccion_tutora, ie, monkeypatch):
+    """US-020 D17: el B4 futuro no se lee; los otros tres, una vez cada uno."""
+    llamadas = []
+    original = servicios.competencias_con_notas
+
+    def contar(seccion, periodo):
+        llamadas.append(periodo.numero)
+        return original(seccion, periodo)
+
+    monkeypatch.setattr(servicios, "competencias_con_notas", contar)
+
+    abrir(cliente, seccion_tutora)
+
+    assert llamadas == [1, 2, 3]
 
 
 # --- Lo que la plantilla necesita (D9) ---
@@ -344,16 +360,15 @@ def test_sin_periodos_la_palabra_es_periodo(cliente, seccion_tutora, universo_ie
 
 
 def test_los_bloqueos_iniciales_son_los_del_periodo_que_abre(
-    cliente, seccion_tutora, bimestres, ie, hoy, monkeypatch
+    cliente, seccion_tutora, bimestres, ie, hoy
 ):
     faltan = sorted(ie)[:5]
     for periodo in bimestres[:3]:
         marcar(seccion_tutora, periodo, ie - set(faltan))
+        con_notas(seccion_tutora, periodo, ie - set(faltan))
     hoy["valor"] = NOV_20
     elegida = max(ie)
-    monkeypatch.setattr(
-        servicios, "tiene_notas", lambda seccion, periodo, competencia: competencia == elegida
-    )
+    con_notas(seccion_tutora, bimestres[3], [elegida])
 
     respuesta = abrir(cliente, seccion_tutora)
 
@@ -445,15 +460,11 @@ def test_un_periodo_futuro_responde_409(cliente, seccion_tutora, ie):
     assert not CompetenciaPeriodo.objects.exists()
 
 
-def test_quitar_una_competencia_con_notas_responde_409(
-    cliente, seccion_tutora, bimestres, ie, monkeypatch
-):
+def test_quitar_una_competencia_con_notas_responde_409(cliente, seccion_tutora, bimestres, ie):
     """Escenario "Guardado que la quita"."""
     marcar(seccion_tutora, bimestres[2], ie)
     quitada = min(ie)
-    monkeypatch.setattr(
-        servicios, "tiene_notas", lambda seccion, periodo, competencia: competencia == quitada
-    )
+    con_notas(seccion_tutora, bimestres[2], [quitada])
 
     respuesta = guardar(cliente, seccion_tutora, 3, sorted(ie - {quitada}))
 

@@ -256,6 +256,10 @@ def test_la_pildora_aparece_una_vez_con_una_subida_corta(
     assert animaciones(page) == [["subir-pildora", 1]]
     esperar_la_subida(page)
     expect(pildora(page)).to_have_css("opacity", "1")
+    if ancho == 360:
+        # Desde US-020 el carrusel abre en Notas, la primera disponible: se va a Asistencia.
+        chip_de(page, "Asistencia").click()
+        esperar_reposo(page)
     expect(pildora(page)).to_be_in_viewport()
 
 

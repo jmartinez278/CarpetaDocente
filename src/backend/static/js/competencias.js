@@ -59,7 +59,10 @@
 
   const borradores = new Map();
   let actual = datos.inicial;
-  let areaActual = 0;
+  let areaActual = Math.max(
+    0,
+    areas.findIndex((a) => a.dataset.area === datos.area_inicial),
+  );
   let enviando = false;
   let exito = null; // Número del periodo recién guardado.
   let fallo = null; // { periodo, titulo, ayuda, enlace }
@@ -299,8 +302,20 @@
     pintarNavegacion();
   }
 
+  // El enlace «Registrar notas de B*n*» lleva el periodo visible y el área abierta a la hoja (D15).
+  function pintarEnlaceNotas() {
+    const enlace = $("[data-registrar-notas]");
+    if (!enlace) return;
+    enlace.hidden = actual === null;
+    if (actual === null) return;
+    enlace.querySelector("[data-nombre-periodo]").textContent = periodos.get(actual).nombre;
+    // La ruta la pone el servidor en el href; aquí solo cambia la consulta, así el enlace no puede tomar otro esquema.
+    enlace.search = new URLSearchParams({ periodo: String(actual), area: areas[areaActual].dataset.area }).toString();
+  }
+
   function pintarNavegacion() {
     const area = areas[areaActual];
+    pintarEnlaceNotas();
     selectorArea.value = area.dataset.area;
     selectorArea.disabled = enviando;
     posicion.textContent = `${areaActual + 1} de ${areas.length}`;
@@ -323,6 +338,7 @@
     if (instruccion) instruccion.hidden = !hay;
     pintarBotones();
     pintarNota();
+    pintarEnlaceNotas();
     if (hay) {
       pintarAreas();
       pintarResumen();
@@ -580,14 +596,15 @@
     true,
   );
 
-  // El formulario de "Cerrar sesión" también sale de la pantalla.
+  // El formulario de "Cerrar sesión" también sale de la pantalla. Al confirmar, NotasBorrador.enviar borra los borradores de
+  // notas de la cuenta (design de US-020, D10), que menu.js no ve porque submit() no dispara el evento.
   document.addEventListener(
     "submit",
     (evento) => {
       const formulario = evento.target;
       if (evento.defaultPrevented || !(formulario instanceof HTMLFormElement) || !periodosConCambios().length) return;
       evento.preventDefault();
-      pedirSalida(() => formulario.submit());
+      pedirSalida(() => (window.NotasBorrador ? window.NotasBorrador.enviar(formulario) : formulario.submit()));
     },
     true,
   );

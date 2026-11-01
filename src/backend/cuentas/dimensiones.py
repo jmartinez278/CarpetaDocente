@@ -3,8 +3,9 @@
 La historia que construye la pantalla de una dimensión cambia aquí su entrada: pone
 ``disponible=True`` y el ``url_name`` de esa pantalla. ``test_dimensiones.py`` falla si una
 dimensión disponible no resuelve su ruta, para que ninguna tarjeta enlace a una página que no existe
-(spec pantallas-de-inicio). Desde US-030, Asistencia está disponible; su ruta es de la sección, así
-que la portada la enlaza solo si la docente tiene una sola sección (``para_portada``).
+(spec pantallas-de-inicio). Desde US-030, Asistencia está disponible, y desde US-020, Notas; sus
+rutas son de la sección, así que la portada las enlaza solo si la docente tiene una sola sección
+(``para_portada``).
 """
 
 from dataclasses import dataclass, replace
@@ -12,7 +13,7 @@ from dataclasses import dataclass, replace
 from django.urls import reverse
 
 # Dimensiones cuya pantalla es de una sección: su ruta lleva el id de la sección.
-POR_SECCION = {"asistencia"}
+POR_SECCION = {"notas", "asistencia"}
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,8 @@ DIMENSIONES = (
         "Registro y control de notas",
         "Registrar notas",
         "clipboard-list",
+        url_name="notas:hoja",
+        disponible=True,
     ),
     Dimension(
         "asistencia",
