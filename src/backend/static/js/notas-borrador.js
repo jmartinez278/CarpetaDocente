@@ -82,10 +82,20 @@ window.NotasBorrador ??= (() => {
     }
   }
 
+  // La señal de «Cerrar sesión» de una cuenta: las pestañas abiertas la reciben como evento storage antes que el borrado
+  // de los borradores y dejan de escribirlos (notas.js). Se escribe y se quita enseguida: no queda en el dispositivo.
+  const claveSalida = (usuario) => `${PREFIJO}salida:u${usuario}`;
+
   // Al cerrar sesión: los borradores de esa cuenta, de todas sus secciones, periodos y áreas.
   function borrarCuenta(usuario) {
     if (!/^\d+$/.test(String(usuario))) return;
+    try {
+      almacen()?.setItem(claveSalida(usuario), String(Date.now()));
+    } catch {
+      // Sin almacenamiento tampoco hay borradores que proteger.
+    }
     for (const clave of claves(`${PREFIJO}u${usuario}:`)) borrar(clave);
+    borrar(claveSalida(usuario));
   }
 
   // Envía un formulario que una pantalla detuvo para preguntar antes de salir (notas.js, competencias.js). submit() no
@@ -108,5 +118,5 @@ window.NotasBorrador ??= (() => {
     }
   }
 
-  return { leer, escribir, borrar, claves, borrarCuenta, enviar, disponible };
+  return { leer, escribir, borrar, claves, borrarCuenta, claveSalida, enviar, disponible };
 })();

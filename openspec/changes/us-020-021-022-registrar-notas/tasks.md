@@ -40,7 +40,7 @@
 
 - [x] 5.1 Prueba primero, `notas/tests/test_borradores_e2e.py`: escenarios de «Borradores en el dispositivo» (volver tras recargar y tras cerrar el contexto, «Descartar», solo identificadores, niveles, conclusiones y fechas en `localStorage`, otra cuenta no lo ve, sin almacenamiento la hoja funciona) y de «Cerrar sesión borra los borradores» (desde la portada; el cierre por inactividad los conserva); un borrador con un estudiante que ya no es activo descarta esa celda con aviso. Luego `static/js/notas-borrador.js`, su uso en `notas.js`, `data-usuario` en `menu_cuenta.html` y el borrado en `menu.js` (D10). Verificar: rojo y luego verde; e2e de `notas` en verde
 - [x] 5.2 Prueba primero, en el mismo archivo e2e: escenarios de «Nota cambiada desde otro dispositivo» (dos contextos del navegador), «Dos pestañas de la misma hoja» (dos páginas del mismo contexto) y «Salir sin guardar» (áreas pendientes, variante de «Cerrar sesión», `beforeunload`, el borrador sigue tras «Salir sin guardar»). Luego D7 en el cliente y D11. Verificar: e2e de `notas` en verde
-- [ ] 5.3 Revisión de la parte (agente `revisor`) y commit
+- [x] 5.3 Revisión de la parte (agente `revisor`) y commit
 
 ## 6. Cierre
 

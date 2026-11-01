@@ -526,3 +526,88 @@ def test_recargar_con_cambios_muestra_el_aviso_del_navegador(abrir_hoja, estudia
 
     expect(entrada(page, ana, 1)).to_have_value("A")
     assert avisos == ["beforeunload"]
+
+
+# --- Revisión adversarial (A2) ---
+
+
+def test_tras_una_respuesta_perdida_volver_al_valor_anterior_sigue_siendo_un_cambio(
+    abrir_hoja, estudiantes, hoja_lista
+):
+    """«Guardado sin conexión» con resultado incierto: el servidor guardó AD pero la respuesta no
+    llegó. Volver a elegir A no puede dar «Sin cambios»: guardar debe dejar A en la base (D7 avisa
+    que ahora está AD y el segundo guardado deja lo que muestra la hoja)."""
+    ana, _ = estudiantes
+    comp = competencia(MATEMATICA, 1)
+    poner_nota(ana, comp, hoja_lista, "A")
+    page = abrir_hoja()
+
+    def perder_respuesta(ruta):
+        if ruta.request.method != "POST":
+            ruta.fallback()
+            return
+        ruta.fetch()
+        ruta.abort()
+
+    ruta_guardar = re.compile(r"/notas/\d+/\w+/$")
+    page.route(ruta_guardar, perder_respuesta)
+    escribir(page, ana, 1, "AD")
+    guardar(page)
+    expect(page.locator("#guardar")).to_have_text("Reintentar")
+    assert notas_en_la_base() == {(ana.pk, comp.pk): ("AD", "")}
+    page.unroute(ruta_guardar)
+
+    escribir(page, ana, 1, "A")
+
+    expect(estado(page)).to_have_text("1 cambio sin guardar")
+    guardar(page)
+    expect(entrada(page, ana, 1)).to_have_attribute("aria-label", re.compile("Ahora guardada: AD"))
+    guardar(page)
+    expect(page.locator("#mensaje-guardado")).to_contain_text("Matemática guardada")
+    assert notas_en_la_base() == {(ana.pk, comp.pk): ("A", "")}
+
+
+def test_un_cambio_de_otra_pestana_con_otra_base_avisa_la_nota_cambiada(
+    abrir_hoja, estudiantes, hoja_lista, live_server, seccion_tutora
+):
+    """«Dos pestañas» con «Nota cambiada desde otro dispositivo»: la pestaña uno abrió A, otro
+    dispositivo guardó AD y la pestaña dos abrió AD. Lo que edita la uno llega a la dos con su
+    base A: la dos marca la celda como en «Borrador más antiguo que la nota» (D7)."""
+    ana, _ = estudiantes
+    comp = competencia(MATEMATICA, 1)
+    nota = poner_nota(ana, comp, hoja_lista, "A")
+    uno = abrir_hoja()
+    nota.nivel = "AD"
+    nota.save()
+    dos = otra_pestana(uno, live_server, seccion_tutora)
+    expect(entrada(dos, ana, 1)).to_have_value("AD")
+
+    escribir(uno, ana, 1, "C", CONCLUSION)
+
+    expect(entrada(dos, ana, 1)).to_have_value("C")
+    expect(entrada(dos, ana, 1)).to_have_attribute("aria-label", re.compile("Ahora guardada: AD"))
+    expect(dos.locator("#mensaje-guardado")).to_contain_text("1 nota cambió en otro dispositivo")
+    expect(dos.locator("#mensaje-guardado")).to_contain_text("Ana · C1: AD")
+
+
+def test_cerrar_sesion_en_otra_pestana_impide_volver_a_escribir_borradores(
+    abrir_hoja, estudiantes, docente, live_server, seccion_tutora
+):
+    """«Cerrar sesión borra los borradores» con otra pestaña abierta: la que sigue abierta borra
+    los cambios de su memoria y ya no escribe en el dispositivo (D10)."""
+    ana, luis = estudiantes
+    uno = abrir_hoja()
+    dos = otra_pestana(uno, live_server, seccion_tutora)
+    escribir(uno, ana, 1, "A")
+    expect(entrada(dos, ana, 1)).to_have_value("A")
+
+    uno.get_by_label("Menú de la cuenta").click()
+    uno.get_by_role("button", name="Cerrar sesión").click()
+    uno.locator("#salir-sin-guardar").click()
+    uno.wait_for_url(re.compile(r"/ingresar/"))
+
+    expect(dos.locator("#mensaje-guardado")).to_contain_text("Cerraste sesión en otra pestaña")
+    expect(entrada(dos, ana, 1)).to_have_value("")
+    escribir(dos, luis, 1, "A")
+    expect(entrada(dos, luis, 1)).to_have_value("A")
+    assert borradores_de(dos, docente) == []

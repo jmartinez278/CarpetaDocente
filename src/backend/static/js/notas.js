@@ -57,6 +57,7 @@
       cur: new Map(),
       choques: new Map(), // celdas cuya nota cambió en otro dispositivo → la nota de ahora
       rechazos: new Map(), // celdas que el servidor rechazó → el valor enviado
+      inciertas: new Set(), // celdas enviadas sin respuesta: el servidor pudo guardarlas, así que siguen como cambio
       clave: `${datos.clave_borrador}${dato.codigo}`,
       activosIds: new Set(dato.filas.map((e) => String(e.id))),
       columnasIds: new Set(dato.columnas.map((c) => String(c.id))),
@@ -97,8 +98,10 @@
   // Combina celda por celda lo que otra pestaña escribió desde la última lectura (D11). Lo que cambió solo la otra se suma;
   // si las dos cambiaron la misma celda, queda lo de esta pestaña y la celda pasa a `dobles`. Si la otra guardó o descartó
   // (la clave ya no está), lo de esta pestaña sigue en pantalla: un guardado repetido no escribe (D6).
+  // Una celda que llega con otra base (la otra pestaña abrió antes de un cambio en otro dispositivo) se marca como al abrir
+  // un borrador más antiguo que la nota (D7): muestra la nota de ahora y la docente lo revisa antes de guardar.
   function sincronizar(a) {
-    const resultado = { ajenas: [], dobles: [] };
+    const resultado = { ajenas: [], dobles: [], cambiadas: [] };
     if (!almacenamiento || !hojaMarcable(a)) return resultado;
     const borrador = Borrador.leer(a.clave);
     const rev = borrador?.rev ?? null;
@@ -115,7 +118,15 @@
         a.dobles.add(clave);
       } else {
         if (iguales(suyo, guardada)) a.cur.delete(clave);
-        else a.cur.set(clave, { ...suyo });
+        else {
+          a.cur.set(clave, { ...suyo });
+          const suBase = borrador.celdas[clave]?.base ?? null;
+          if (!mismaNota(suBase, notaDe(a.base.get(clave)))) {
+            a.choques.set(clave, { nivel: a.base.get(clave)?.nivel ?? null });
+            if (!a.cambiadasAlAbrir.includes(clave)) a.cambiadasAlAbrir.push(clave);
+            resultado.cambiadas.push(clave);
+          }
+        }
         a.ajenas.add(clave);
         resultado.ajenas.push(clave);
       }
@@ -203,11 +214,29 @@
 
   // Lo que dice la hoja tras combinar con otra pestaña; el aviso de celdas en ambas sigue hasta guardar o descartar.
   function avisarCombinacion(a, resultado) {
+    const cambiadas = textoCambiadas(a);
+    if (!a.dobles.size && resultado.cambiadas.length && cambiadas) {
+      if (a === area()) avisosDelArea(a);
+      anunciar(`${a.nombre}: ${cambiadas[0]}. ${cambiadas[1]}`, true);
+      return;
+    }
     const n = resultado.ajenas.length;
     const sumadas = n ? `${n === 1 ? "Se sumó 1 cambio hecho" : `Se sumaron ${n} cambios hechos`} en otra pestaña.` : "";
     const texto = a.dobles.size ? `${sumadas ? `${sumadas} ` : ""}${textoDobles(a)}` : `${sumadas} Nada de lo escrito aquí se perdió.`;
     if (a === area()) mensaje(`${a.nombre} · ${periodo.nombre} también se editó en otra pestaña`, escapar(texto), "aviso");
     anunciar(`${a.nombre} también se editó en otra pestaña. ${texto}`, a.dobles.size > 0);
+  }
+
+  // [título, texto] del aviso de notas cambiadas en otro dispositivo desde el borrador (D7), o null si no hay.
+  function textoCambiadas(a) {
+    const cambiadas = a.cambiadasAlAbrir.filter((clave) => a.choques.has(clave));
+    if (!cambiadas.length) return null;
+    const n = cambiadas.length;
+    const lista = enumerar(cambiadas.map((clave) => `${nombreCelda(a, clave)}: ${a.choques.get(clave).nivel ?? "sin nivel"}`));
+    return [
+      `${n === 1 ? "1 nota cambió" : `${n} notas cambiaron`} en otro dispositivo`,
+      `Ahora guardada: ${lista}. La hoja muestra tu borrador; al guardar, se guarda lo que ves.`,
+    ];
   }
 
   // Avisos que acompañan al área al volver a ella: celdas editadas en ambas pestañas y notas cambiadas al abrir (D7).
@@ -216,15 +245,8 @@
       mensaje(`${a.nombre} · ${periodo.nombre} también se editó en otra pestaña`, escapar(textoDobles(a)), "aviso");
       return;
     }
-    const cambiadas = a.cambiadasAlAbrir.filter((clave) => a.choques.has(clave));
-    if (!cambiadas.length) return;
-    const n = cambiadas.length;
-    const lista = enumerar(cambiadas.map((clave) => `${nombreCelda(a, clave)}: ${a.choques.get(clave).nivel ?? "sin nivel"}`));
-    mensaje(
-      `${n === 1 ? "1 nota cambió" : `${n} notas cambiaron`} en otro dispositivo`,
-      escapar(`Ahora guardada: ${lista}. La hoja muestra tu borrador; al guardar, se guarda lo que ves.`),
-      "aviso",
-    );
+    const cambiadas = textoCambiadas(a);
+    if (cambiadas) mensaje(cambiadas[0], escapar(cambiadas[1]), "aviso");
   }
 
   function trasCombinar(a, resultado) {
@@ -348,7 +370,8 @@
       a.dobles.add(clave);
       doblesNuevas.push([a, clave]);
     }
-    if (iguales(valor, base)) a.cur.delete(clave);
+    // Tras un envío sin respuesta, volver a la base sigue siendo un cambio: el servidor pudo guardar lo enviado (D7 lo resuelve).
+    if (iguales(valor, base) && !a.inciertas.has(clave)) a.cur.delete(clave);
     else a.cur.set(clave, valor);
   }
 
@@ -924,7 +947,7 @@
     const previo = sincronizar(a);
     if (previo.ajenas.length || previo.dobles.length) {
       trasCombinar(a, previo);
-      if (previo.dobles.length) return;
+      if (previo.dobles.length || previo.cambiadas.length) return;
     }
     if (!cambios(a) && !errorRed) return;
     validando = true;
@@ -968,6 +991,7 @@
       a.cur.clear();
       a.choques.clear();
       a.rechazos.clear();
+      a.inciertas.clear();
       a.descartadas = 0;
       a.cambiadasAlAbrir = [];
       a.tocadas.clear();
@@ -1006,6 +1030,7 @@
           if (nota) a.base.set(clave, nota);
           else a.base.delete(clave);
           a.choques.set(clave, { nivel: ahora.nivel });
+          a.inciertas.delete(clave);
           if (a.cur.has(clave) && iguales(a.cur.get(clave), nota ?? vacia())) a.cur.delete(clave);
         }
         persistir(a);
@@ -1019,6 +1044,8 @@
         anunciar(`No se guardó nada. ${cuerpo.mensaje ?? MENSAJE_HOJA}`, true);
       }
     } else {
+      // Sin respuesta (o con un código inesperado) no se sabe si el servidor guardó: lo enviado queda como incierto.
+      for (const clave of a.cur.keys()) a.inciertas.add(clave);
       errorRed = true;
       redibujar();
       mensaje("No se pudo guardar", `Revisa tu conexión y reintenta. Tus datos siguen en pantalla${almacenamiento ? " y el borrador queda en este dispositivo" : ""}. No se guardó nada.`, "error");
@@ -1450,8 +1477,32 @@
     },
     true,
   );
+  // «Cerrar sesión» en otra pestaña (D10): esta deja de escribir borradores y borra de su memoria los cambios sin guardar,
+  // para no volver a dejar notas de la cuenta que salió en un dispositivo que puede ser compartido.
+  const usuario = /:u(\d+):/.exec(datos.clave_borrador)?.[1];
+  function salidaEnOtraPestana() {
+    almacenamiento = false;
+    for (const a of areas.values()) {
+      for (const coleccion of [a.cur, a.choques, a.rechazos, a.inciertas, a.tocadas, a.ajenas, a.dobles]) coleccion.clear();
+      a.recuperado = null;
+      a.descartadas = 0;
+      a.cambiadasAlAbrir = [];
+    }
+    doblesNuevas = [];
+    filtro = null;
+    if ($("confirmar-salida").open) $("confirmar-salida").close();
+    dibujarHoja();
+    const texto = "Los cambios sin guardar de esta pestaña se borraron de este dispositivo. Vuelve a ingresar para registrar notas.";
+    mensaje("Cerraste sesión en otra pestaña", escapar(texto), "aviso");
+    anunciar(`Cerraste sesión en otra pestaña. ${texto}`, true);
+  }
+
   // Otra pestaña del mismo navegador escribió el borrador de un área de esta hoja (D11).
   window.addEventListener("storage", (evento) => {
+    if (usuario && Borrador && evento.key === Borrador.claveSalida(usuario) && evento.newValue) {
+      salidaEnOtraPestana();
+      return;
+    }
     if (!evento.key?.startsWith(datos.clave_borrador) || guardando) return;
     const a = areas.get(evento.key.slice(datos.clave_borrador.length));
     if (!a) return;

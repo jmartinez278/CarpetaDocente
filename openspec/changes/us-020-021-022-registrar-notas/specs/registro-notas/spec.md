@@ -245,6 +245,10 @@ Si la conexión se corta antes de confirmar el guardado, la hoja SHALL no guarda
 - **WHEN** vuelve la conexión y la tutora pulsa «Reintentar»
 - **THEN** se guarda la hoja completa y el aviso desaparece
 
+#### Scenario: Respuesta perdida
+- **WHEN** el servidor guardó «AD» sobre una «A», la respuesta no llegó y la tutora vuelve a elegir «A» en esa celda
+- **THEN** la celda sigue como cambio sin guardar, y al guardar la hoja avisa que la nota guardada ahora es «AD» y un segundo «Guardar» deja la «A»
+
 ### Requirement: Sesión vencida al guardar
 Si la sesión venció, «Guardar» SHALL no guardar nada, conservar el borrador en el dispositivo y mostrar «Tu sesión venció» con «Vuelve a ingresar para guardar. Tus cambios siguen aquí.» y el enlace «Volver a ingresar».
 
@@ -282,6 +286,10 @@ Los cambios sin guardar de cada hoja SHALL conservarse en el dispositivo, por cu
 - **WHEN** la sesión de la tutora se cierra por inactividad con un borrador de Matemática y ella vuelve a ingresar
 - **THEN** encuentra el borrador en la hoja de Matemática
 
+#### Scenario: Otra pestaña abierta al cerrar sesión
+- **WHEN** la tutora cierra sesión en una pestaña y sigue editando la hoja en otra pestaña del mismo navegador
+- **THEN** la otra pestaña avisa «Cerraste sesión en otra pestaña», quita de la hoja los cambios sin guardar y no vuelve a escribir borradores en el dispositivo
+
 ### Requirement: Dos pestañas de la misma hoja
 Dos pestañas del mismo navegador con la misma hoja SHALL combinar sus borradores celda por celda: lo que cambió solo en una aparece en la otra. Si las dos cambiaron la misma celda, cada pestaña conserva lo suyo y avisa con las celdas en choque («Mateo · C4»), hasta guardar o descartar.
 
@@ -299,6 +307,10 @@ Cada celda del borrador SHALL recordar la nota guardada que la tutora tenía al 
 #### Scenario: Borrador más antiguo que la nota
 - **WHEN** la tutora deja en su laptop un borrador con «B» en una celda que estaba en «A», y desde el celular guarda esa celda en «AD»; luego vuelve a la laptop
 - **THEN** la celda muestra su «B» y avisa que la nota guardada ahora es «AD»
+
+#### Scenario: Cambio de otra pestaña con otra nota guardada
+- **WHEN** una pestaña abrió la celda en «A», el celular la guardó en «AD», otra pestaña abrió la hoja con «AD» y la primera escribe «C»
+- **THEN** la segunda pestaña muestra la «C» y avisa, como al abrir un borrador más antiguo, que la nota guardada ahora es «AD»
 
 #### Scenario: Cambio al guardar
 - **WHEN** con la hoja abierta en la laptop, la nota de una celda cambia desde el celular y luego la tutora guarda en la laptop
