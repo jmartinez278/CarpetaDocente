@@ -26,6 +26,11 @@ SIN_PERIODOS = {
     "texto": "Cuando estén listos, podrás confirmar las competencias de tu sección.",
 }
 SIN_VIGENTE = "Hoy no hay un periodo vigente"
+ESTADOS_PERIODO = {
+    servicios.VIGENTE: "Vigente",
+    servicios.ANTERIOR: "Anterior",
+    servicios.FUTURO: "Futuro",
+}
 
 
 def _dia_y_mes_corto(fecha):
@@ -122,6 +127,9 @@ class CompetenciasView(SeccionDocenteMixin, View):
                     "obligatorias": obligatorias,
                 }
             )
+        codigos = [a.area.codigo_siagie for a in areas]
+        pedida = request.GET.get("area", "")
+        area_inicial = pedida if pedida in codigos else (codigos[0] if codigos else "")
         marcadas_iniciales, con_notas_iniciales, obligatorias_iniciales = set(), set(), set()
         if inicial is not None:
             dato = por_periodo[periodos.index(inicial)]
@@ -143,8 +151,16 @@ class CompetenciasView(SeccionDocenteMixin, View):
             "obligatorias_iniciales": obligatorias_iniciales,
             "palabra_periodo": _palabra_periodo(periodos),
             "periodos_elegibles": _nombres_elegibles(periodos),
+            "area_inicial": area_inicial,
+            # El enlace «Registrar notas de B*n*»: competencias.js lo cambia al pasar de periodo.
+            "url_notas": reverse("notas:hoja", args=[seccion.pk]),
+            "sin_marcas_de": (
+                inicial if inicial is not None and request.GET.get("desde") == "notas" else None
+            ),
             "datos": {
                 "inicial": inicial.numero if inicial else None,
+                "area_inicial": area_inicial,
+                "url_notas": reverse("notas:hoja", args=[seccion.pk]),
                 "total": len(permitido),
                 # El JS lo devuelve al guardar: si el universo cambió, no se guarda (D5).
                 "universo": sorted(permitido),
@@ -263,6 +279,7 @@ class HojaView(SeccionDocenteMixin, View):
             "seccion_corta": texto_seccion_corto(seccion),
             "periodo": periodo,
             "aviso": _aviso(periodos),
+            "palabra_periodo": _palabra_periodo(periodos),
         }
         if periodo is None:
             return render(request, "notas/hoja.html", contexto)
@@ -272,10 +289,15 @@ class HojaView(SeccionDocenteMixin, View):
         if not any(hoja.columnas for hoja in hojas):
             return _ir_a_competencias(seccion, periodo, hojas, pedida)
         inicial = _area_inicial(hojas, pedida)
+        consulta = urlencode({"periodo": periodo.numero, "area": inicial})
         contexto.update(
             {
                 "hojas": hojas,
                 "area_inicial": inicial,
+                "estado_periodo": ESTADOS_PERIODO[periodo.estado],
+                "url_competencias": (
+                    f"{reverse('competencias:pantalla', args=[seccion.pk])}?{consulta}"
+                ),
                 "datos": {
                     "periodo": {
                         "numero": periodo.numero,

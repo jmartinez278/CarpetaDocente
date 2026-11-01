@@ -411,3 +411,64 @@ def test_antes_del_primer_periodo_el_aviso_con_la_fecha_y_nada_que_elegir(
     assert "data-trabajo" not in html
     assert "Desmarca" not in html
     assert "Puedes revisar y corregir" not in html
+
+
+# --- Vuelta a las notas (design de US-029 / US-020, D15) ---
+
+
+def test_registrar_notas_lleva_el_periodo_y_el_area(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, area=MATEMATICA)
+
+    enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>.*?</a>", html, re.DOTALL).group(0)
+    base = reverse("notas:hoja", args=[seccion_tutora.pk])
+    assert f'href="{base}?periodo=3&amp;area={MATEMATICA}"' in enlace
+    assert "Registrar notas de B3" in " ".join(re.sub(r"<[^>]+>", " ", enlace).split())
+    assert " hidden" not in enlace
+
+
+def test_registrar_notas_sin_area_pedida_usa_la_primera(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora)
+
+    enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>", html).group(0)
+    assert f"area={ARTE}" in enlace
+
+
+def test_el_periodo_pedido_cambia_el_enlace_de_notas(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, periodo="2")
+
+    enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>.*?</a>", html, re.DOTALL).group(0)
+    assert "periodo=2" in enlace
+    assert "Registrar notas de B2" in " ".join(re.sub(r"<[^>]+>", " ", enlace).split())
+
+
+def test_en_vacaciones_el_enlace_de_notas_va_oculto_hasta_elegir(cliente, seccion_tutora, ie, hoy):
+    hoy["valor"] = AGO_1
+
+    html = pagina(cliente, seccion_tutora)
+
+    assert re.search(r"<a [^>]*data-registrar-notas[^>]* hidden", html)
+
+
+def test_con_desde_notas_avisa_que_el_bimestre_no_tiene_competencias(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, desde="notas", periodo="3", area=MATEMATICA)
+
+    assert "B3 aún no tiene competencias confirmadas" in html
+    assert "Confirma las que trabajaste para empezar a registrar los niveles de logro." in html
+
+
+def test_sin_desde_notas_no_hay_aviso_de_confirmar(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, periodo="3")
+
+    assert "aún no tiene competencias confirmadas" not in html
+
+
+def test_el_area_pedida_va_en_los_datos(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, area=MATEMATICA)
+
+    assert f'"area_inicial": "{MATEMATICA}"' in html
+
+
+def test_un_area_pedida_que_no_existe_se_ignora(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora, area="xxxx")
+
+    assert f'"area_inicial": "{ARTE}"' in html
