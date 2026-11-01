@@ -402,13 +402,15 @@ def test_la_portada_carga_portada_js_antes_de_alpine(portada):
 
     # menu.js es el del menú de la cuenta y bfcache.js el del respaldo de "atrás" (US-002);
     # ninguno depende de Alpine. Desde US-006, HTMX y estudiantes.js (el diálogo de la lista).
-    assert len(scripts) == 6
+    # Desde US-020, notas-borrador.js antes de menu.js (borra los borradores al cerrar sesión).
+    assert len(scripts) == 7
     assert "js/portada.js" in scripts[0]
     assert "dist/vendor/alpine.min.js" in scripts[1]
     assert "dist/vendor/htmx.min.js" in scripts[2]
     assert "js/estudiantes.js" in scripts[3]
-    assert "js/menu.js" in scripts[4]
-    assert "js/bfcache.js" in scripts[5]
+    assert "js/notas-borrador.js" in scripts[4]
+    assert "js/menu.js" in scripts[5]
+    assert "js/bfcache.js" in scripts[6]
     assert all("defer" in script for script in scripts)
 
 
@@ -725,8 +727,10 @@ def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
 def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_scripts(inicio_direccion):
     assert "<table" not in inicio_direccion
     assert "<article" not in inicio_direccion
-    # Solo el menú de la cuenta y el respaldo de "atrás" (D5): sin Alpine ni portada.js.
+    # Solo el menú de la cuenta (con el borrado de borradores al cerrar sesión, US-020 D10) y el
+    # respaldo de "atrás" (D5): sin Alpine ni portada.js.
     assert re.findall(r'<script src="([^"]+)"', inicio_direccion) == [
+        "/static/js/notas-borrador.js",
         "/static/js/menu.js",
         "/static/js/bfcache.js",
     ]
@@ -758,6 +762,20 @@ def test_la_barra_lleva_el_menu_con_el_nombre_y_cerrar_sesion(
     assert 'action="/salir/"' in formulario
     assert 'name="csrfmiddlewaretoken"' in formulario
     assert re.search(r"<button\b[^>]*>.*?Cerrar sesión.*?</button>", formulario, re.DOTALL)
+
+
+@pytest.mark.parametrize("ruta", ["/docente/", "/direccion/"])
+def test_cerrar_sesion_lleva_la_cuenta_para_borrar_sus_borradores(client, docente, direccion, ruta):
+    """Design de US-020, D10: menu.js borra los borradores de notas de esa cuenta al enviarlo."""
+    cuenta = docente if ruta == "/docente/" else direccion
+    client.force_login(cuenta)
+    html = client.get(ruta).content.decode()
+
+    formulario = re.search(r"<form\b[^>]*>", menu(html)).group(0)
+    assert "data-salir" in formulario
+    assert f'data-usuario="{cuenta.pk}"' in formulario
+    scripts = re.findall(r'<script src="([^"]+)"', html)
+    assert scripts.index("/static/js/notas-borrador.js") < scripts.index("/static/js/menu.js")
 
 
 def test_el_menu_muestra_el_usuario_si_no_tiene_nombre(client, crear_usuario):

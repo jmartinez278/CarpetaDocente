@@ -19,3 +19,8 @@
 - `notas/views.py`: la regla «área que la institución trabaja» se repite en `_area_inicial` y `_ir_a_competencias`; un solo helper evitaría que se desalineen en la parte 4.
 - `notas/views.py`, `GuardarHojaView`: el 404 de periodo o área va sin cuerpo y los demás errores en JSON con `mensaje`; `notas.js` (parte 4) debe tratar el 404 aparte.
 - `cuentas/tests/test_portada_e2e.py`: el `if ancho == 360` ata la prueba de la píldora a que Notas sea la primera tarjeta disponible.
+
+### Parte D: borradores en el dispositivo
+
+- `static/js/notas.js`, `persistir`: con dos pestañas, cerrar sesión en una borra las claves, pero si se edita en la otra (que sigue abierta) vuelve a escribir su borrador bajo la cuenta que ya salió; va con la deuda de «Descartar en otra pestaña».
+- `notas/tests/test_borradores_e2e.py`: no prueba la rama de D11 en que «Guardar» combina primero y se detiene ante un choque nuevo entre pestañas; el escenario «Misma celda en las dos» solo comprueba el aviso.

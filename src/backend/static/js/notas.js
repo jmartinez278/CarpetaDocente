@@ -10,11 +10,15 @@
 //   sesión venció; red caída u otro código, «No se pudo guardar». Los mensajes que se leen salen del servidor o de este archivo,
 //   nunca del texto de una excepción.
 // - Una nota guardada no vuelve a vacía (RN-023): Retroceso y Suprimir lo anuncian.
+// - Borradores (D10, notas-borrador.js): cada cambio de `cur` se escribe en el dispositivo con la `base` de la celda; al
+//   abrir, lo de un borrador vuelve a la hoja, salvo las celdas que ya no se podrían guardar (estudiante que ya no es activo,
+//   competencia que ya no es columna), que se descartan con aviso. Se borra al guardar, al «Descartar» y al cerrar sesión.
 (() => {
   const raiz = document.querySelector("[data-trabajo]");
   const elementoDatos = document.getElementById("datos-notas");
   if (!raiz || !elementoDatos) return;
   const datos = JSON.parse(elementoDatos.textContent);
+  const Borrador = window.NotasBorrador ?? null;
 
   const NIVELES = ["AD", "A", "B", "C"];
   const NOMBRES_NIVEL = { AD: "Logro destacado", A: "Logro esperado", B: "En proceso", C: "En inicio" };
@@ -53,7 +57,240 @@
       cur: new Map(),
       choques: new Map(), // celdas cuya nota cambió en otro dispositivo → la nota de ahora
       rechazos: new Map(), // celdas que el servidor rechazó → el valor enviado
+      clave: `${datos.clave_borrador}${dato.codigo}`,
+      activosIds: new Set(dato.filas.map((e) => String(e.id))),
+      columnasIds: new Set(dato.columnas.map((c) => String(c.id))),
+      recuperado: null, // fecha del borrador que trajo el dispositivo al abrir
+      descartadas: 0, // celdas del borrador que ya no se podían guardar
+      cambiadasAlAbrir: [], // celdas cuya nota guardada cambió desde el borrador (D7 al abrir)
+      conocido: new Map(), // el borrador del dispositivo tal como esta pestaña lo leyó o escribió por última vez (D11)
+      rev: null,
+      tocadas: new Set(), // celdas que esta pestaña cambió desde el último guardado
+      ajenas: new Set(), // celdas cuyo valor llegó de otra pestaña
+      dobles: new Set(), // celdas editadas en las dos pestañas
     });
+  }
+
+  // --- Borradores en el dispositivo (D10) y dos pestañas (D11) ---
+
+  const pestana = Math.random().toString(36).slice(2, 8);
+  let revision = 0;
+  let almacenamiento = !!Borrador?.disponible();
+  let doblesNuevas = []; // [área, celda] que esta pestaña acaba de editar sobre un cambio de otra pestaña
+
+  const notaDe = (valor) => (valor ? { nivel: valor.nivel, conclusion: valor.conclusion } : null);
+  const mismaNota = (a, b) => (a && b ? iguales(a, b) : !a && !b);
+  const sePuedeGuardar = (a, clave) => {
+    const [estudiante, competencia] = clave.split("-");
+    return hojaMarcable(a) && a.activosIds.has(estudiante) && a.columnasIds.has(competencia);
+  };
+
+  // Las celdas del borrador del dispositivo que esta hoja podría guardar, con su nota.
+  function celdasDelDispositivo(a, borrador) {
+    const celdas = new Map();
+    for (const [clave, celda] of Object.entries(borrador?.celdas ?? {})) {
+      if (sePuedeGuardar(a, clave)) celdas.set(clave, notaDe(celda));
+    }
+    return celdas;
+  }
+
+  // Combina celda por celda lo que otra pestaña escribió desde la última lectura (D11). Lo que cambió solo la otra se suma;
+  // si las dos cambiaron la misma celda, queda lo de esta pestaña y la celda pasa a `dobles`. Si la otra guardó o descartó
+  // (la clave ya no está), lo de esta pestaña sigue en pantalla: un guardado repetido no escribe (D6).
+  function sincronizar(a) {
+    const resultado = { ajenas: [], dobles: [] };
+    if (!almacenamiento || !hojaMarcable(a)) return resultado;
+    const borrador = Borrador.leer(a.clave);
+    const rev = borrador?.rev ?? null;
+    if (rev === a.rev) return resultado;
+    const remoto = celdasDelDispositivo(a, borrador);
+    for (const clave of new Set([...remoto.keys(), ...a.conocido.keys(), ...a.cur.keys()])) {
+      const guardada = a.base.get(clave) ?? vacia();
+      const suyo = borrador ? (remoto.get(clave) ?? guardada) : null;
+      const antes = a.conocido.get(clave) ?? guardada;
+      const mio = a.cur.get(clave) ?? guardada;
+      if (!suyo || iguales(suyo, antes) || iguales(suyo, mio)) continue;
+      if (a.tocadas.has(clave)) {
+        if (!a.dobles.has(clave)) resultado.dobles.push(clave);
+        a.dobles.add(clave);
+      } else {
+        if (iguales(suyo, guardada)) a.cur.delete(clave);
+        else a.cur.set(clave, { ...suyo });
+        a.ajenas.add(clave);
+        resultado.ajenas.push(clave);
+      }
+    }
+    for (const clave of a.dobles) {
+      const guardada = a.base.get(clave) ?? vacia();
+      if (borrador && iguales(a.cur.get(clave) ?? guardada, remoto.get(clave) ?? guardada)) a.dobles.delete(clave);
+    }
+    a.conocido = remoto;
+    a.rev = rev;
+    return resultado;
+  }
+
+  // Combina con el dispositivo y escribe el borrador del área con lo que difiere de lo guardado; sin cambios, borra su clave.
+  function persistir(a = area(), fecha = new Date().toISOString()) {
+    const resultado = sincronizar(a);
+    for (const [otra, clave] of doblesNuevas) if (otra === a) resultado.dobles.push(clave);
+    doblesNuevas = doblesNuevas.filter(([otra]) => otra !== a);
+    if (!a.cur.size) a.recuperado = null;
+    if (almacenamiento) {
+      const celdas = {};
+      for (const [clave, nota] of a.cur) celdas[clave] = { nivel: nota.nivel, conclusion: nota.conclusion, base: notaDe(a.base.get(clave)) };
+      const rev = a.cur.size ? `${pestana}-${++revision}` : null;
+      if (Borrador.escribir(a.clave, { fecha, rev, celdas })) {
+        a.rev = rev;
+        a.conocido = new Map([...a.cur].map(([clave, nota]) => [clave, { ...nota }]));
+      } else {
+        almacenamiento = false;
+      }
+    }
+    if (resultado.ajenas.length || resultado.dobles.length) trasCombinar(a, resultado);
+  }
+
+  // Al abrir: lo del borrador vuelve a la hoja. Una celda que ya no se podría guardar se descarta; una igual a lo guardado
+  // ya no es un cambio; una cuya nota guardada cambió desde que se editó se marca con la de ahora y su base pasa a ser esa
+  // (D7: «Guardar» guarda lo que muestra la hoja). Si algo de eso pasó, el borrador se reescribe.
+  function recuperarBorradores() {
+    if (!almacenamiento) return;
+    for (const a of areas.values()) {
+      const borrador = Borrador.leer(a.clave);
+      if (!borrador) continue;
+      let reescribir = false;
+      for (const [clave, celda] of Object.entries(borrador.celdas)) {
+        if (!sePuedeGuardar(a, clave)) {
+          a.descartadas += 1;
+          reescribir = true;
+          continue;
+        }
+        const nota = notaDe(celda);
+        const guardada = notaDe(a.base.get(clave));
+        if (iguales(nota, guardada ?? vacia())) {
+          reescribir = true;
+          continue;
+        }
+        if (!mismaNota(celda.base, guardada)) {
+          a.choques.set(clave, { nivel: guardada?.nivel ?? null });
+          a.cambiadasAlAbrir.push(clave);
+          reescribir = true;
+        }
+        a.cur.set(clave, nota);
+      }
+      a.rev = borrador.rev;
+      a.conocido = celdasDelDispositivo(a, borrador);
+      if (a.cur.size) a.recuperado = borrador.fecha ?? new Date().toISOString();
+      if (reescribir) persistir(a, a.recuperado ?? undefined);
+    }
+  }
+
+  // «Ana · C1»: el nombre de pila del estudiante y la etiqueta de la competencia, para los avisos de la hoja.
+  function nombreCelda(a, clave) {
+    const [estudiante, competencia] = clave.split("-");
+    const persona = a.lista.find((e) => String(e.id) === estudiante);
+    const columna = a.columnas.find((c) => String(c.id) === competencia);
+    const completo = persona?.nombre ?? "";
+    const nombres = (completo.split(", ")[1] ?? completo).toLowerCase().replace(/(^|\s)\S/g, (letra) => letra.toUpperCase());
+    return `${nombres} · ${columna?.etiqueta ?? ""}`;
+  }
+
+  const enumerar = (lista) => (lista.length > 3 ? `${lista.slice(0, 3).join(", ")} y ${lista.length - 3} más` : lista.join(", "));
+
+  function textoDobles(a) {
+    const dobles = [...a.dobles].map((clave) => nombreCelda(a, clave));
+    return `${dobles.length === 1 ? "Una celda se editó" : "Algunas celdas se editaron"} en ambas; quedó lo escrito aquí: ${enumerar(dobles)}. Revísalo antes de guardar.`;
+  }
+
+  // Lo que dice la hoja tras combinar con otra pestaña; el aviso de celdas en ambas sigue hasta guardar o descartar.
+  function avisarCombinacion(a, resultado) {
+    const n = resultado.ajenas.length;
+    const sumadas = n ? `${n === 1 ? "Se sumó 1 cambio hecho" : `Se sumaron ${n} cambios hechos`} en otra pestaña.` : "";
+    const texto = a.dobles.size ? `${sumadas ? `${sumadas} ` : ""}${textoDobles(a)}` : `${sumadas} Nada de lo escrito aquí se perdió.`;
+    if (a === area()) mensaje(`${a.nombre} · ${periodo.nombre} también se editó en otra pestaña`, escapar(texto), "aviso");
+    anunciar(`${a.nombre} también se editó en otra pestaña. ${texto}`, a.dobles.size > 0);
+  }
+
+  // Avisos que acompañan al área al volver a ella: celdas editadas en ambas pestañas y notas cambiadas al abrir (D7).
+  function avisosDelArea(a) {
+    if (a.dobles.size) {
+      mensaje(`${a.nombre} · ${periodo.nombre} también se editó en otra pestaña`, escapar(textoDobles(a)), "aviso");
+      return;
+    }
+    const cambiadas = a.cambiadasAlAbrir.filter((clave) => a.choques.has(clave));
+    if (!cambiadas.length) return;
+    const n = cambiadas.length;
+    const lista = enumerar(cambiadas.map((clave) => `${nombreCelda(a, clave)}: ${a.choques.get(clave).nivel ?? "sin nivel"}`));
+    mensaje(
+      `${n === 1 ? "1 nota cambió" : `${n} notas cambiaron`} en otro dispositivo`,
+      escapar(`Ahora guardada: ${lista}. La hoja muestra tu borrador; al guardar, se guarda lo que ves.`),
+      "aviso",
+    );
+  }
+
+  function trasCombinar(a, resultado) {
+    if (a === area() && hojaMarcable(a)) {
+      for (const clave of resultado.ajenas) {
+        const [estudiante, competencia] = clave.split("-");
+        const r = a.lista.findIndex((e) => String(e.id) === estudiante);
+        const k = a.columnas.findIndex((c) => String(c.id) === competencia);
+        if (r >= 0 && k >= 0) actualizarCelda(r, k);
+        if (seleccion && $("panel-editor").open && seleccion.r === r && seleccion.k === k) dibujarPanel();
+      }
+      actualizarEstado();
+    }
+    dibujarPildoras();
+    avisarCombinacion(a, resultado);
+  }
+
+  const formatoFecha = new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const fechaBorrador = (iso) => {
+    const fecha = new Date(iso);
+    return Number.isNaN(fecha.getTime()) ? "" : formatoFecha.format(fecha);
+  };
+
+  const textoDescarte = (n) =>
+    [
+      `${n} ${n === 1 ? "cambio del borrador ya no se puede guardar" : "cambios del borrador ya no se pueden guardar"}`,
+      `${n === 1 ? "Se descartó" : "Se descartaron"} porque el estudiante ya no está activo o la competencia ya no está marcada en ${periodo.nombre}.`,
+    ];
+
+  // Solo reescribe la caja cuando su contenido cambia: así no le quita el foco a sus botones.
+  let contenidoBorrador = "";
+  function dibujarBorrador() {
+    const caja = $("borrador");
+    const a = area();
+    const recuperado = hojaMarcable(a) && !!a.recuperado && cambios(a) > 0;
+    const [titulo, motivo] = textoDescarte(a.descartadas);
+    const apagado = guardando ? " disabled" : "";
+    const fecha = recuperado ? fechaBorrador(a.recuperado) : "";
+    const descarte = a.descartadas ? `<p class="notas-ayuda">${escapar(titulo)}. ${escapar(motivo)}</p>` : "";
+    const contenido = recuperado
+      ? `<div><strong>${icono("reloj")}Cambios sin guardar${fecha ? ` del ${escapar(fecha)}` : ""}</strong><p class="notas-ayuda">Conservados en este dispositivo.</p>${descarte}</div><div class="notas-borrador__acciones"><button type="button" class="notas-texto" data-guardar-borrador${apagado}>Guardar</button><button type="button" class="notas-texto" data-descartar${apagado}>Descartar</button></div>`
+      : a.descartadas
+        ? `<div><strong>${icono("aviso")}${escapar(titulo)}</strong><p class="notas-ayuda">${escapar(motivo)}</p></div>`
+        : "";
+    caja.hidden = !contenido;
+    if (contenido !== contenidoBorrador) caja.innerHTML = contenido;
+    contenidoBorrador = contenido;
+  }
+
+  function descartar() {
+    const a = area();
+    if (guardando) return;
+    a.cur.clear();
+    a.choques.clear();
+    a.rechazos.clear();
+    a.recuperado = null;
+    a.descartadas = 0;
+    a.cambiadasAlAbrir = [];
+    a.tocadas.clear();
+    a.ajenas.clear();
+    a.dobles.clear();
+    persistir(a);
+    if (!almacenamiento) Borrador?.borrar(a.clave);
+    dibujarHoja();
+    $("guardar").focus({ preventScroll: true });
+    anunciar(`Borrador descartado de ${a.nombre}.`);
   }
 
   let codigo = areas.has(datos.area_inicial) ? datos.area_inicial : [...areas.keys()][0];
@@ -80,12 +317,37 @@
   const celda = (r, k, a = area()) => a.cur.get(llave(a.lista[r].id, a.columnas[k].id)) ?? a.base.get(llave(a.lista[r].id, a.columnas[k].id)) ?? vacia();
   const hojaMarcable = (a = area()) => !a.aCargo && a.columnas.length > 0;
   const cambios = (a = area()) => a.cur.size;
-  const pendientes = () => [...areas.values()].filter((a) => cambios(a) > 0);
+  // Las hojas con cambios sin guardar: las de este periodo y los borradores de los otros periodos que se editan, de esta
+  // cuenta y sección (D11). Las del periodo visible van primero.
+  function pendientes() {
+    const lista = [...areas.values()].filter((a) => cambios(a) > 0).map((a) => ({ nombre: a.nombre, periodo: periodo.nombre }));
+    if (!almacenamiento) return lista;
+    const prefijo = datos.clave_borrador.replace(/p\d+:a$/, "");
+    const orden = [...areas.keys()];
+    const otros = [];
+    for (const clave of Borrador.claves(prefijo)) {
+      const partes = /^p(\d+):a(.+)$/.exec(clave.slice(prefijo.length));
+      if (!partes || Number(partes[1]) === periodo.numero) continue;
+      const otro = datos.periodos.find((p) => p.numero === Number(partes[1]));
+      const a = areas.get(partes[2]);
+      if (!otro || !a || !Object.keys(Borrador.leer(clave)?.celdas ?? {}).length) continue;
+      otros.push({ nombre: a.nombre, periodo: otro.nombre, numero: otro.numero, posicion: orden.indexOf(partes[2]) });
+    }
+    otros.sort((x, y) => x.numero - y.numero || x.posicion - y.posicion);
+    return [...lista, ...otros];
+  }
 
   function fijar(r, k, valor) {
     const a = area();
     const clave = idCelda(r, k);
     const base = a.base.get(clave) ?? vacia();
+    if (iguales(valor, celda(r, k))) return;
+    a.tocadas.add(clave);
+    if (a.ajenas.delete(clave) && !a.dobles.has(clave)) {
+      // Esta pestaña edita una celda que también cambió la otra: las dos la editaron (D11).
+      a.dobles.add(clave);
+      doblesNuevas.push([a, clave]);
+    }
     if (iguales(valor, base)) a.cur.delete(clave);
     else a.cur.set(clave, valor);
   }
@@ -248,12 +510,14 @@
     $("barra-guardar").hidden = !marcable;
     $("rellenar-movil").hidden = !marcable;
     ocultarMensaje();
+    if (marcable) avisosDelArea(a);
     errorRed = false;
     validando = false;
     if (!marcable) {
       $("superficie-hoja").innerHTML = a.aCargo
         ? `<div class="notas-vacio"><h3>Esta área la registra el docente de curso</h3><p>Las notas de ${escapar(a.nombre)} están a su cargo. Elige otra área para registrar tus niveles de logro.</p></div>`
         : `<div class="notas-vacio">${icono("notas")}<h3>No hay competencias marcadas</h3><p>Marca las competencias que trabajaste en ${escapar(a.nombre)} durante ${escapar(periodo.nombre)} para empezar a registrar sus niveles.</p><a href="${escapar(datos_competencias())}">Ir a Competencias ${icono("derecha")}</a></div>`;
+      dibujarBorrador();
       dibujarPildoras();
       return;
     }
@@ -300,6 +564,7 @@
     $("alcance").textContent = `Solo ${a.nombre} · ${periodo.nombre}`;
     $("guardar").textContent = guardando ? "Guardando…" : errorRed ? "Reintentar" : "Guardar";
     $("guardar").setAttribute("aria-disabled", String(guardando || (!n && !errorRed)));
+    dibujarBorrador();
   }
 
   function actualizarCelda(r, k) {
@@ -338,7 +603,8 @@
     fijar(r, k, { nivel, conclusion: actual.conclusion });
     a.rechazos.delete(clave);
     a.choques.delete(clave);
-    if (!a.rechazos.size && !a.choques.size && !validando) ocultarMensaje();
+    if (!a.rechazos.size && !a.choques.size && !a.dobles.size && !validando) ocultarMensaje();
+    persistir(a);
     ultimoGuardado = null;
     errorRed = false;
     actualizarCelda(r, k);
@@ -349,6 +615,7 @@
   function cambiarConclusion(r, k, texto) {
     const actual = celda(r, k);
     fijar(r, k, { nivel: actual.nivel, conclusion: texto });
+    persistir();
     area().choques.delete(idCelda(r, k));
     ultimoGuardado = null;
     actualizarCelda(r, k);
@@ -653,6 +920,12 @@
     if (a.rechazos.size && !cambios(a)) return;
     cerrarNota(false);
     ocultarCompetencia();
+    // Antes de guardar se suma lo de otra pestaña; si una celda se editó en ambas, la docente lo revisa primero (D11).
+    const previo = sincronizar(a);
+    if (previo.ajenas.length || previo.dobles.length) {
+      trasCombinar(a, previo);
+      if (previo.dobles.length) return;
+    }
     if (!cambios(a) && !errorRed) return;
     validando = true;
     const errores = [...a.cur.values()].filter(invalida).length;
@@ -673,7 +946,7 @@
     document.querySelectorAll(".notas-nivel").forEach((el) => {
       el.readOnly = true;
     });
-    document.querySelectorAll(".notas-celda-movil,.notas-nota,.notas-rellenar,[data-area-pildora]").forEach((el) => {
+    document.querySelectorAll(".notas-celda-movil,.notas-nota,.notas-rellenar,[data-area-pildora],#borrador button").forEach((el) => {
       el.disabled = true;
     });
     const respuesta = await pedir(a.url_guardar, { celdas: celdasDelEnvio(a) });
@@ -695,6 +968,12 @@
       a.cur.clear();
       a.choques.clear();
       a.rechazos.clear();
+      a.descartadas = 0;
+      a.cambiadasAlAbrir = [];
+      a.tocadas.clear();
+      a.ajenas.clear();
+      a.dobles.clear();
+      persistir(a);
       ultimoGuardado = codigo;
       redibujar();
       mensaje(`${a.nombre} guardada`, `Se guardaron juntos los niveles y las conclusiones de ${escapar(periodo.nombre)}.`);
@@ -729,6 +1008,7 @@
           a.choques.set(clave, { nivel: ahora.nivel });
           if (a.cur.has(clave) && iguales(a.cur.get(clave), nota ?? vacia())) a.cur.delete(clave);
         }
+        persistir(a);
         redibujar();
         const n = cambiadas.length;
         mensaje("No se guardó nada", `${n} ${n === 1 ? "nota cambió" : "notas cambiaron"} en otro dispositivo. Revisa las celdas marcadas y vuelve a guardar.`, "error");
@@ -741,7 +1021,7 @@
     } else {
       errorRed = true;
       redibujar();
-      mensaje("No se pudo guardar", "Revisa tu conexión y reintenta. Tus datos siguen en pantalla y el borrador queda en este dispositivo. No se guardó nada.", "error");
+      mensaje("No se pudo guardar", `Revisa tu conexión y reintenta. Tus datos siguen en pantalla${almacenamiento ? " y el borrador queda en este dispositivo" : ""}. No se guardó nada.`, "error");
       anunciar("No se pudo guardar. Tus datos siguen aquí. Puedes reintentar.", true);
     }
     actualizarEstado();
@@ -756,7 +1036,10 @@
 
   // --- Salida ---
 
-  function pedirSalida(destino) {
+  // «¿Salir sin guardar?» con las hojas pendientes; si la salida es «Cerrar sesión», dice que los borradores se borrarán.
+  const AVISO_QUEDAN = $("aviso-borradores").textContent;
+  const AVISO_SE_BORRAN = "Los borradores se borrarán de este dispositivo al cerrar sesión.";
+  function pedirSalida(destino, cierraSesion = false) {
     if (guardando) {
       anunciar("Espera a que termine el guardado.");
       return;
@@ -768,7 +1051,8 @@
     }
     destinoSalida = destino;
     restaurarFoco = document.activeElement;
-    $("areas-pendientes").innerHTML = lista.map((a) => `<li>${escapar(a.nombre)} <span class="notas-ayuda">· ${escapar(periodo.nombre)}</span></li>`).join("");
+    $("areas-pendientes").innerHTML = lista.map((p) => `<li>${escapar(p.nombre)} <span class="notas-ayuda">· ${escapar(p.periodo)}</span></li>`).join("");
+    $("aviso-borradores").textContent = cierraSesion ? AVISO_SE_BORRAN : AVISO_QUEDAN;
     $("confirmar-salida").showModal();
   }
 
@@ -1076,6 +1360,7 @@
     const nivel = document.querySelector("[name=relleno]:checked").value;
     const vacias = celdasVacias(columnaRelleno);
     for (const r of vacias) fijar(r, columnaRelleno, { nivel, conclusion: "" });
+    persistir();
     ultimoGuardado = null;
     restaurarFoco = null;
     $("confirmar-relleno").close();
@@ -1093,6 +1378,10 @@
   });
   $("faltantes").addEventListener("click", activarFiltro);
   $("ver-todos").addEventListener("click", verTodos);
+  $("borrador").addEventListener("click", (evento) => {
+    if (evento.target.closest("[data-guardar-borrador]")) void guardar();
+    if (evento.target.closest("[data-descartar]")) descartar();
+  });
 
   // Salir de la pantalla por un enlace o un formulario con cambios sin guardar abre «¿Salir sin guardar?».
   $("seguir-editando").addEventListener("click", () => $("confirmar-salida").close("seguir"));
@@ -1155,10 +1444,20 @@
       const formulario = evento.target;
       if (evento.defaultPrevented || !(formulario instanceof HTMLFormElement) || !pendientes().length) return;
       evento.preventDefault();
-      pedirSalida(() => formulario.submit());
+      // «Cerrar sesión» (menu_cuenta.html): al confirmar, se borran los borradores de la cuenta antes de salir (D10).
+      const cierraSesion = formulario.matches("[data-salir]");
+      pedirSalida(() => (Borrador ? Borrador.enviar(formulario) : formulario.submit()), cierraSesion);
     },
     true,
   );
+  // Otra pestaña del mismo navegador escribió el borrador de un área de esta hoja (D11).
+  window.addEventListener("storage", (evento) => {
+    if (!evento.key?.startsWith(datos.clave_borrador) || guardando) return;
+    const a = areas.get(evento.key.slice(datos.clave_borrador.length));
+    if (!a) return;
+    const resultado = sincronizar(a);
+    if (resultado.ajenas.length || resultado.dobles.length) trasCombinar(a, resultado);
+  });
   window.addEventListener("beforeunload", (evento) => {
     if (!permisoSalida && pendientes().length) {
       evento.preventDefault();
@@ -1218,6 +1517,7 @@
     observador.observe($("mensaje-guardado"));
   }
 
+  recuperarBorradores();
   dibujarHoja();
   dibujarPildoras();
 })();

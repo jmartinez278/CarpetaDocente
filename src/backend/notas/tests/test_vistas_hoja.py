@@ -316,6 +316,20 @@ def test_lleva_la_clave_del_borrador_sin_nombres(cliente, seccion_tutora, matema
     assert dato["clave_borrador"] == f"cd:notas:v1:u{docente.pk}:s{seccion_tutora.pk}:p3:a"
 
 
+def test_lleva_los_periodos_editables_para_nombrar_los_borradores(
+    cliente, seccion_tutora, matematica
+):
+    """Design D11: el diálogo de salida nombra los borradores de todos los periodos que se editan;
+    el bimestre 4 aún no empieza el 30 de octubre."""
+    dato = datos(abrir(cliente, seccion_tutora))
+
+    assert dato["periodos"] == [
+        {"numero": 1, "nombre": "B1"},
+        {"numero": 2, "nombre": "B2"},
+        {"numero": 3, "nombre": "B3"},
+    ]
+
+
 def test_la_hoja_lee_las_notas_en_un_numero_fijo_de_consultas(
     cliente, seccion_tutora, dos_areas, django_assert_max_num_queries
 ):

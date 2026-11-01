@@ -595,14 +595,15 @@
     true,
   );
 
-  // El formulario de "Cerrar sesión" también sale de la pantalla.
+  // El formulario de "Cerrar sesión" también sale de la pantalla. Al confirmar, NotasBorrador.enviar borra los borradores de
+  // notas de la cuenta (design de US-020, D10), que menu.js no ve porque submit() no dispara el evento.
   document.addEventListener(
     "submit",
     (evento) => {
       const formulario = evento.target;
       if (evento.defaultPrevented || !(formulario instanceof HTMLFormElement) || !periodosConCambios().length) return;
       evento.preventDefault();
-      pedirSalida(() => formulario.submit());
+      pedirSalida(() => (window.NotasBorrador ? window.NotasBorrador.enviar(formulario) : formulario.submit()));
     },
     true,
   );

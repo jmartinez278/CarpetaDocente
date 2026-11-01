@@ -308,6 +308,10 @@ class HojaView(SeccionDocenteMixin, View):
                     "clave_borrador": CLAVE_BORRADOR.format(
                         usuario=usuario.pk, seccion=seccion.pk, numero=periodo.numero
                     ),
+                    # Para nombrar en el diálogo de salida los borradores de otros periodos (D11).
+                    "periodos": [
+                        {"numero": p.numero, "nombre": p.nombre} for p in periodos if p.editable
+                    ],
                     "areas": [_datos_del_area(hoja, seccion, periodo) for hoja in hojas],
                 },
             }

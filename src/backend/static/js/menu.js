@@ -19,3 +19,13 @@ for (const menu of document.querySelectorAll("[data-menu-cuenta]")) {
     }
   });
 }
+
+// "Cerrar sesión" borra de este dispositivo los borradores de notas de la cuenta (design de US-020, D10). Si otra pantalla
+// detuvo el envío (la hoja de notas o Competencias con cambios abren antes "¿Salir sin guardar?"), no se borra nada aquí: al
+// confirmar, esa pantalla envía con NotasBorrador.enviar, que los borra. El cierre por inactividad no pasa por aquí y los
+// conserva.
+for (const formulario of document.querySelectorAll("form[data-salir]")) {
+  formulario.addEventListener("submit", (evento) => {
+    if (!evento.defaultPrevented) window.NotasBorrador?.borrarCuenta(formulario.dataset.usuario);
+  });
+}

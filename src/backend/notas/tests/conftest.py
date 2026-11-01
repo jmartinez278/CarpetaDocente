@@ -162,3 +162,42 @@ def cliente(client, docente, seccion_tutora):
 def ie(seccion_tutora, bimestres, universo_ie):
     """La I.E. del spec: 4 bimestres y Educación Física e Inglés a cargo del docente de curso."""
     return universo_ie
+
+
+# --- Hoja de notas en el navegador (test_hoja_e2e y test_borradores_e2e) ---
+
+
+@pytest.fixture
+def estudiantes(seccion_tutora):
+    """Ana Quispe y Luis Rojas, activos y ficticios."""
+    return crear_estudiantes(seccion_tutora, "QUISPE, ANA", "ROJAS, LUIS")
+
+
+@pytest.fixture
+def hoja_lista(seccion_tutora, ie, bimestres, estudiantes):
+    """Matemática y Comunicación marcadas en B2 y B3 (4 y 3 competencias activas)."""
+    for periodo in bimestres[1:3]:
+        marcar(seccion_tutora, periodo, ids_de(MATEMATICA, COMUNICACION))
+    return bimestres[2]
+
+
+@pytest.fixture
+def abrir_hoja(live_server, page, docente, clave, seccion_tutora, monkeypatch, hoja_lista):
+    """Abre la hoja de la tutora el día pedido (el 30 de octubre por defecto)."""
+    from playwright.sync_api import expect
+
+    from cuentas.tests.e2e import con_pantalla, fijar_hora_de_lima, ingresar
+    from notas.tests.e2e import LIMA, url_hoja
+
+    def abrir(ancho=1280, tema="light", dia=OCT_30, **parametros):
+        fijar_hora_de_lima(
+            monkeypatch, datetime.datetime(dia.year, dia.month, dia.day, 9, 0, tzinfo=LIMA)
+        )
+        con_pantalla(page, ancho, tema)
+        ingresar(page, live_server, docente, clave)
+        page.wait_for_url(f"{live_server.url}/docente/")
+        page.goto(url_hoja(live_server, seccion_tutora, **{"area": MATEMATICA, **parametros}))
+        expect(page.locator(".notas-tabla")).to_be_visible()
+        return page
+
+    return abrir

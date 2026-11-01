@@ -9,7 +9,6 @@ CSS compilado y Chromium:
 import datetime
 import re
 import time
-from zoneinfo import ZoneInfo
 
 import pytest
 from playwright.sync_api import expect
@@ -28,12 +27,20 @@ from notas.tests.conftest import (
     COMUNICACION,
     CONCLUSION,
     MATEMATICA,
-    OCT_30,
     competencia,
     crear_estudiantes,
     ids_de,
     marcar,
     poner_nota,
+)
+from notas.tests.e2e import (
+    LIMA,
+    boton_movil,
+    entrada,
+    estado,
+    guardar,
+    notas_en_la_base,
+    url_hoja,
 )
 
 pytestmark = [pytest.mark.e2e, pytest.mark.django_db(transaction=True)]
@@ -44,73 +51,8 @@ def _catalogo_cargado(catalogo):
     """El catálogo debe estar antes de crear la institución, que copia sus áreas."""
 
 
-LIMA = ZoneInfo("America/Lima")
 MENSAJE_RED = "Revisa tu conexión y reintenta."
 VACIA = "Una nota registrada puede corregirse, pero no quedar vacía."
-
-
-@pytest.fixture
-def estudiantes(seccion_tutora):
-    """Ana Quispe y Luis Rojas, activos y ficticios."""
-    return crear_estudiantes(seccion_tutora, "QUISPE, ANA", "ROJAS, LUIS")
-
-
-@pytest.fixture
-def hoja_lista(seccion_tutora, ie, bimestres, estudiantes):
-    """Matemática y Comunicación marcadas en B2 y B3 (4 y 3 competencias activas)."""
-    for periodo in bimestres[1:3]:
-        marcar(seccion_tutora, periodo, ids_de(MATEMATICA, COMUNICACION))
-    return bimestres[2]
-
-
-@pytest.fixture
-def abrir_hoja(live_server, page, docente, clave, seccion_tutora, monkeypatch, hoja_lista):
-    """Abre la hoja de la tutora el día pedido (el 30 de octubre por defecto)."""
-
-    def abrir(ancho=1280, tema="light", dia=OCT_30, **parametros):
-        fijar_hora_de_lima(
-            monkeypatch, datetime.datetime(dia.year, dia.month, dia.day, 9, 0, tzinfo=LIMA)
-        )
-        con_pantalla(page, ancho, tema)
-        ingresar(page, live_server, docente, clave)
-        page.wait_for_url(f"{live_server.url}/docente/")
-        page.goto(url_hoja(live_server, seccion_tutora, **{"area": MATEMATICA, **parametros}))
-        expect(page.locator(".notas-tabla")).to_be_visible()
-        return page
-
-    return abrir
-
-
-def url_hoja(live_server, seccion, **parametros):
-    consulta = "&".join(f"{k}={v}" for k, v in parametros.items())
-    base = f"{live_server.url}/docente/secciones/{seccion.pk}/notas/"
-    return f"{base}?{consulta}" if consulta else base
-
-
-def entrada(page, estudiante, orden):
-    """La celda de teclado de la competencia ``orden`` (1…n) de Matemática."""
-    comp = competencia(MATEMATICA, orden)
-    return page.locator(f'.notas-nivel[data-est="{estudiante.pk}"][data-comp="{comp.pk}"]')
-
-
-def boton_movil(page, estudiante, orden):
-    comp = competencia(MATEMATICA, orden)
-    return page.locator(f'.notas-celda-movil[data-est="{estudiante.pk}"][data-comp="{comp.pk}"]')
-
-
-def estado(page):
-    return page.locator("#estado-guardado")
-
-
-def guardar(page):
-    page.locator("#guardar").click()
-
-
-def notas_en_la_base():
-    return {
-        (c.estudiante_id, c.competencia_id): (c.nivel, c.conclusion_descriptiva)
-        for c in Calificacion.objects.all()
-    }
 
 
 # --- Nivel en la PC ---
