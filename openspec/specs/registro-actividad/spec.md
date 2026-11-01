@@ -30,7 +30,7 @@ La operación de una entrada MUST ser una del catálogo; cada operación del cat
 
 #### Scenario: Catálogo de esta historia
 - **WHEN** se consulta el catálogo
-- **THEN** tiene estas operaciones, y solo las de asistencia cuentan para KPI-01:
+- **THEN** tiene estas operaciones, y solo las de asistencia y NOTAS_GUARDADAS cuentan para KPI-01:
 
 | Grupo | Operaciones | Cuenta para KPI-01 |
 |---|---|---|
@@ -42,6 +42,7 @@ La operación de una entrada MUST ser una del catálogo; cada operación del cat
 | Estudiantes | ESTUDIANTES_IMPORTADOS, ESTUDIANTE_AGREGADO, ESTUDIANTE_EDITADO, ESTUDIANTE_QUITADO, LISTA_VACIADA | No |
 | Asistencia | REGISTRO_ASISTENCIA, ASISTENCIA_CAMBIADA, JORNADA_COMPLETA | Sí |
 | Notas | COMPETENCIAS_MARCADAS | No |
+| Notas | NOTAS_GUARDADAS | Sí |
 | Catálogo y piloto | CATALOGO_EDITADO, DEMO_CARGADA, DEMO_QUITADA, SECCION_DESCARTADA | No |
 | Permisos | INTENTO_SIN_PERMISO (reservada para US-004) | No |
 | Registro | REGISTRO_EXPORTADO | No |
@@ -173,4 +174,23 @@ Cada guardado de las competencias de un periodo que cambia algo SHALL dejar una 
 
 #### Scenario: Sin cambios
 - **WHEN** la tutora guarda el bimestre sin haber cambiado nada
+- **THEN** no queda una entrada nueva
+
+### Requirement: Guardado de notas
+Cada guardado de la hoja de notas de un área que crea o cambia alguna nota SHALL dejar una entrada NOTAS_GUARDADAS con la docente, la sección, el área, el número del periodo, cuántas notas se crearon y los pares (estudiante, competencia) de las notas cambiadas, sin niveles ni conclusiones (RN-015), en la misma transacción. Un guardado que no cambia nada no deja entrada.
+
+#### Scenario: Primer guardado del área
+- **WHEN** la tutora guarda por primera vez Matemática del bimestre 3 con 30 notas
+- **THEN** queda una entrada NOTAS_GUARDADAS con su usuario, la sección, el área, el periodo 3, 30 creadas y ninguna cambiada
+
+#### Scenario: Corrección
+- **WHEN** la tutora cambia una nota de «B» a «A» y guarda
+- **THEN** queda una entrada con 0 creadas y el par de ese estudiante y esa competencia como cambiado, sin «B» ni «A» en el detalle
+
+#### Scenario: Solo cambia la conclusión
+- **WHEN** la tutora corrige solo el texto de la conclusión de una «C» y guarda
+- **THEN** la entrada lista ese par como cambiado, sin el texto
+
+#### Scenario: Sin cambios
+- **WHEN** la tutora guarda la hoja sin haber cambiado nada, o el mismo guardado llega dos veces
 - **THEN** no queda una entrada nueva
