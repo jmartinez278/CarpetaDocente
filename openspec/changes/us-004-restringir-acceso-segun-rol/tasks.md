@@ -25,9 +25,9 @@
 
 ### Parte C: accesibilidad de la página y documentación (normal)
 
-- [ ] 3.1 Prueba primero, `cuentas/tests/test_accesibilidad_e2e.py`: la página de «sin permiso» sin infracciones graves de axe en claro y oscuro, a 360 y 1280 px; sin desplazamiento horizontal a 320 y 360 px; «Volver a tu inicio» de al menos 44 px. Luego los ajustes de CSS que falten en `src/frontend/`. Verificar: e2e de `cuentas` del archivo en verde
-- [ ] 3.2 Catálogo de rutas (D10): fila de `/docente/sin-permiso/` y la columna «Acceso» de las rutas de sección con 403 y registro. Verificar: cada ruta de `config/urls.py` y `cuentas/urls.py` tiene su fila
-- [ ] 3.3 Pantalla vista en claro/oscuro y celular/escritorio (la marca Marco). `verificar.py` y commit
+- [x] 3.1 Prueba primero, `cuentas/tests/test_accesibilidad_e2e.py`: la página de «sin permiso» sin infracciones graves de axe en claro y oscuro, a 360 y 1280 px; sin desplazamiento horizontal a 320 y 360 px; «Volver a tu inicio» de al menos 44 px. Luego los ajustes de CSS que falten en `src/frontend/`. Verificar: e2e de `cuentas` del archivo en verde
+- [x] 3.2 Catálogo de rutas (D10): fila de `/docente/sin-permiso/` y la columna «Acceso» de las rutas de sección con 403 y registro. Verificar: cada ruta de `config/urls.py` y `cuentas/urls.py` tiene su fila
+- [x] 3.3 Pantalla vista en claro/oscuro y celular/escritorio (la marca Marco). `verificar.py` y commit
 
 ## 4. Cierre
 
