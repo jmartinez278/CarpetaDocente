@@ -8,7 +8,7 @@ from django.db import DatabaseError, IntegrityError, connection, transaction
 from django.db.models import Count, ProtectedError, Q, RestrictedError
 from django.utils import timezone
 
-from actividad.models import Operacion
+from actividad.models import Operacion, RegistroActividad
 from actividad.servicios import registrar
 from cuentas.models import Usuario
 from institucion.models import (
@@ -165,13 +165,16 @@ def registrar_intento_sin_permiso(usuario, seccion_id, ruta, motivo):
     """Una entrada INTENTO_SIN_PERMISO por llamada, sin agrupar (D5; RNF-016).
 
     ``ruta`` es ``request.path``, sin la consulta: solo ids, fechas y códigos (RN-015).
+    El converter ``int`` admite ids más largos que ``entidad_id``: se guardan sus primeros
+    caracteres y el id completo queda en la ruta, así el intento se registra igual (A2).
     """
+    largo = RegistroActividad._meta.get_field("entidad_id").max_length
     with transaction.atomic():
         registrar(
             usuario,
             Operacion.INTENTO_SIN_PERMISO,
             entidad="seccion",
-            entidad_id=seccion_id,
+            entidad_id=str(seccion_id)[:largo],
             detalle={"ruta": ruta, "motivo": motivo},
         )
 

@@ -102,6 +102,15 @@ def test_una_seccion_que_no_existe_da_403_inexistente(entrar, docente):
     assert intentos() == [("999999", url, "inexistente")]
 
 
+def test_un_id_que_no_cabe_en_el_registro_da_403_y_una_entrada(entrar, docente):
+    """A2: el converter ``int`` admite 41 dígitos; el registro guarda los 40 primeros."""
+    pedido = "9" * 41
+    url = f"/docente/secciones/{pedido}/estudiantes/"
+
+    assert es_sin_permiso(entrar(docente).get(url))
+    assert intentos() == [(pedido[:40], url, "inexistente")]
+
+
 def test_con_htmx_la_seccion_ajena_da_403_con_hx_redirect(entrar, otra_docente, seccion_docente):
     respuesta = entrar(otra_docente).get(url_lista(seccion_docente), **HTMX)
 
