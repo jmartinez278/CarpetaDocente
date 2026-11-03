@@ -208,6 +208,67 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
+# Archivos de las sesiones de aprendizaje (EN-03, D2): alias propio "sesiones", sin
+# tocar default ni staticfiles, para que un FileField futuro no vaya a R2 sin decidirlo.
+# - Con las cuatro variables de R2: bucket privado de Cloudflare R2 (sin ACL pública y
+#   con URL firmadas). En Vercel son obligatorias.
+# - Fuera de Vercel y sin ellas: la carpeta media/ de la raíz, que git ignora.
+# - En las pruebas: InMemoryStorage (fixture de src/backend/conftest.py).
+# Los mensajes de error nombran las variables, nunca sus valores.
+
+_VARIABLES_R2 = (
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_STORAGE_BUCKET_NAME",
+    "AWS_S3_ENDPOINT_URL",
+)
+_r2 = {nombre: env.str(nombre, default="") for nombre in _VARIABLES_R2}
+_faltan_r2 = [nombre for nombre, valor in _r2.items() if not valor]
+
+# Fuera de Vercel, R2 a medias también se rechaza: boto3 buscaría las credenciales que
+# falten en la laptop (~/.aws) sin decirlo.
+if _faltan_r2 and (EN_VERCEL or len(_faltan_r2) < len(_VARIABLES_R2)):
+    raise ImproperlyConfigured(
+        f"Faltan variables de Cloudflare R2: {', '.join(_faltan_r2)}. "
+        "En Vercel son obligatorias; fuera de Vercel van las cuatro o ninguna."
+    )
+
+if _faltan_r2:
+    _ALMACEN_SESIONES = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": ROOT_DIR / "media"},
+    }
+else:
+    _ALMACEN_SESIONES = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": _r2["AWS_ACCESS_KEY_ID"],
+            "secret_key": _r2["AWS_SECRET_ACCESS_KEY"],
+            "bucket_name": _r2["AWS_STORAGE_BUCKET_NAME"],
+            # https://<ACCOUNT_ID>.r2.cloudflarestorage.com; R2 pide la región "auto".
+            "endpoint_url": _r2["AWS_S3_ENDPOINT_URL"],
+            "region_name": "auto",
+            # Bucket privado: sin ACL en los objetos y solo URL firmadas, sin dominio público.
+            "default_acl": None,
+            "querystring_auth": True,
+            "custom_domain": None,
+            # La clave es única por UUID de la sesión: sobrescribir evita consultar el
+            # bucket antes de cada subida.
+            "file_overwrite": True,
+        },
+    }
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    "sesiones": _ALMACEN_SESIONES,
+}
+
+# Hasta 4,5 MB (el tope de cuerpo de una función de Vercel) el archivo subido queda en
+# memoria y no se escribe en /tmp (D2).
+FILE_UPLOAD_MAX_MEMORY_SIZE = 4_718_592
+
+
 # Claves primarias enteras de 64 bits (BIGSERIAL en el documento 11)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -11,6 +11,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 RAIZ = BACKEND_DIR.parents[1]
 
@@ -23,6 +25,10 @@ VARIABLES_PROPIAS = (
     "VERCEL_URL",
     "VERCEL_BRANCH_URL",
     "VERCEL_PROJECT_PRODUCTION_URL",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_STORAGE_BUCKET_NAME",
+    "AWS_S3_ENDPOINT_URL",
 )
 
 ENTORNO_MINIMO = {
@@ -130,8 +136,17 @@ def test_hosts_permitidos_desde_lista_separada_por_comas():
 
 # --- Configuración de producción, solo en Vercel (spec despliegue, D5) ---
 
+# Claves de prueba de R2 (EN-03, D2): ninguna es real.
+ENTORNO_R2 = {
+    "AWS_ACCESS_KEY_ID": "id-ficticio-de-prueba",
+    "AWS_SECRET_ACCESS_KEY": "secreto-ficticio-de-prueba",
+    "AWS_STORAGE_BUCKET_NAME": "cubo-ficticio-de-prueba",
+    "AWS_S3_ENDPOINT_URL": "https://cuenta-ficticia.r2.cloudflarestorage.com",
+}
+
 ENTORNO_VERCEL = {
     **ENTORNO_MINIMO,
+    **ENTORNO_R2,
     "VERCEL": "1",
     "VERCEL_URL": "carpeta-docente-abc123-equipo.vercel.app",
     "VERCEL_BRANCH_URL": "carpeta-docente-git-rama-equipo.vercel.app",
@@ -329,3 +344,109 @@ def test_en_vercel_la_entrada_wsgi_se_importa_desde_la_raiz_del_repo():
 
     assert resultado.returncode == 0, resultado.stderr
     assert resultado.stdout.strip() == "True"
+
+
+# --- Archivos de las sesiones por entorno (spec almacenamiento-archivos; EN-03, D2) ---
+
+# Instancia el almacenamiento "sesiones" como lo hará la aplicación.
+ALMACEN_SESIONES = (
+    "import os; os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'; "
+    "from django.core.files.storage import storages; a = storages['sesiones']; "
+)
+
+
+def leer_almacen_sesiones(variables: dict[str, str], expresion: str):
+    """Evalúa ``expresion`` sobre el almacenamiento ``a`` y devuelve el resultado como JSON."""
+    resultado = cargar_settings(
+        variables, ALMACEN_SESIONES + f"import json; print(json.dumps({expresion}))"
+    )
+    assert resultado.returncode == 0, resultado.stderr
+    return json.loads(resultado.stdout)
+
+
+@pytest.mark.parametrize("variable", list(ENTORNO_R2))
+def test_en_vercel_sin_una_variable_de_r2_no_arranca(variable):
+    variables = {k: v for k, v in ENTORNO_VERCEL.items() if k != variable}
+
+    resultado = cargar_settings(variables)
+
+    assert resultado.returncode != 0
+    assert "ImproperlyConfigured" in resultado.stderr
+    assert variable in resultado.stderr
+    for valor in ENTORNO_R2.values():
+        assert valor not in resultado.stderr
+
+
+def test_en_vercel_una_variable_de_r2_vacia_cuenta_como_ausente():
+    # Así queda si se copia .env.example sin llenar.
+    resultado = cargar_settings({**ENTORNO_VERCEL, "AWS_STORAGE_BUCKET_NAME": ""})
+
+    assert resultado.returncode != 0
+    assert "ImproperlyConfigured" in resultado.stderr
+    assert "AWS_STORAGE_BUCKET_NAME" in resultado.stderr
+
+
+def test_fuera_de_vercel_r2_a_medias_no_arranca():
+    # Sin las cuatro, boto3 buscaría credenciales en la laptop (~/.aws) sin decirlo.
+    variables = {**ENTORNO_MINIMO, "AWS_STORAGE_BUCKET_NAME": "cubo-ficticio-de-prueba"}
+
+    resultado = cargar_settings(variables)
+
+    assert resultado.returncode != 0
+    assert "ImproperlyConfigured" in resultado.stderr
+    assert "AWS_ACCESS_KEY_ID" in resultado.stderr
+    assert "cubo-ficticio-de-prueba" not in resultado.stderr
+
+
+def test_con_las_variables_de_r2_las_sesiones_van_a_un_cubo_privado():
+    valores = leer_almacen_sesiones(
+        ENTORNO_VERCEL,
+        "{'clase': f'{type(a).__module__}.{type(a).__name__}',"
+        " 'cubo': a.bucket_name,"
+        " 'endpoint': a.endpoint_url,"
+        " 'region': a.region_name,"
+        " 'acl': a.default_acl,"
+        " 'firma': a.querystring_auth,"
+        " 'sobrescribe': a.file_overwrite,"
+        " 'dominio': a.custom_domain,"
+        f" 'claves': [a.access_key == {ENTORNO_R2['AWS_ACCESS_KEY_ID']!r},"
+        f" a.secret_key == {ENTORNO_R2['AWS_SECRET_ACCESS_KEY']!r}]}}",
+    )
+
+    assert valores == {
+        "clase": "storages.backends.s3.S3Storage",
+        "cubo": "cubo-ficticio-de-prueba",
+        "endpoint": "https://cuenta-ficticia.r2.cloudflarestorage.com",
+        "region": "auto",
+        "acl": None,
+        "firma": True,
+        "sobrescribe": True,
+        "dominio": None,
+        "claves": [True, True],
+    }
+
+
+def test_fuera_de_vercel_sin_r2_las_sesiones_van_a_media():
+    valores = leer_almacen_sesiones(
+        ENTORNO_MINIMO, "[f'{type(a).__module__}.{type(a).__name__}', str(a.location)]"
+    )
+
+    assert valores[0] == "django.core.files.storage.filesystem.FileSystemStorage"
+    assert Path(valores[1]) == RAIZ / "media"
+
+
+def test_los_almacenamientos_de_django_quedan_como_antes():
+    # El alias propio no cambia default ni staticfiles (D2).
+    valores = leer_settings(
+        ENTORNO_MINIMO, "[s.STORAGES['default']['BACKEND'], s.STORAGES['staticfiles']['BACKEND']]"
+    )
+
+    assert valores == [
+        "django.core.files.storage.FileSystemStorage",
+        "django.contrib.staticfiles.storage.StaticFilesStorage",
+    ]
+
+
+def test_un_archivo_de_4_mb_queda_en_memoria_y_no_en_disco():
+    # 4,5 MB: el tope de cuerpo de Vercel; el archivo no pasa por /tmp (D2).
+    assert leer_settings(ENTORNO_MINIMO, "s.FILE_UPLOAD_MAX_MEMORY_SIZE") == 4_718_592

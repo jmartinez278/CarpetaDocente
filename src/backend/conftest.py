@@ -21,6 +21,19 @@ def django_db_modify_db_settings(django_db_modify_db_settings_parallel_suffix):
     base.setdefault("TEST", {})["NAME"] = f"{nombre}_{os.getpid()}"
 
 
+@pytest.fixture(autouse=True)
+def almacenamiento_en_memoria(settings):
+    """Los archivos de las sesiones van a memoria en toda la suite (EN-03, D2).
+
+    Ninguna prueba escribe en ``media/`` ni se conecta a R2. Como el ``live_server`` de las e2e
+    corre en el mismo proceso, también lo usa.
+    """
+    settings.STORAGES = {
+        **settings.STORAGES,
+        "sesiones": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+    }
+
+
 @pytest.fixture
 def catalogo(db):
     """Vuelve a cargar el catálogo de la migración ``catalogo/0002`` (design de EN-06, D3).
