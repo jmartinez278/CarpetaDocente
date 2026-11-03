@@ -60,6 +60,10 @@ ESCENARIOS: dict[Operacion, str] = {
     Operacion.NOTAS_GUARDADAS: (
         f"{_NOTAS}::test_camino_ideal_guarda_la_nota_de_ana_quispe_y_deja_notas_guardadas"
     ),
+    Operacion.SESION_ENVIADA: (
+        "repositorio.tests.test_servicios_enviar::"
+        "test_sesion_compartida_deja_su_entrada_sin_titulo_ni_nombre_de_archivo"
+    ),
     Operacion.CATALOGO_EDITADO: (
         f"{_PANEL}::test_editar_desde_list_editable_deja_catalogo_editado"
     ),

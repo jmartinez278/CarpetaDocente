@@ -64,12 +64,13 @@ def test_entidad_y_detalle_tienen_valores_por_defecto():
     assert (entrada.entidad, entrada.entidad_id, entrada.detalle) == ("", "", {})
 
 
-def test_solo_las_operaciones_de_asistencia_y_notas_guardadas_cuentan_para_kpi_01():
+def test_solo_asistencia_notas_guardadas_y_sesion_enviada_cuentan_para_kpi_01():
     assert CUENTAN_KPI_01 == {
         Operacion.REGISTRO_ASISTENCIA,
         Operacion.ASISTENCIA_CAMBIADA,
         Operacion.JORNADA_COMPLETA,
         Operacion.NOTAS_GUARDADAS,
+        Operacion.SESION_ENVIADA,
     }
 
 
@@ -79,7 +80,7 @@ def test_ninguna_operacion_esta_reservada():
 
 
 def test_el_catalogo_de_esta_historia():
-    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-020)."""
+    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-010)."""
     assert set(Operacion.values) == {
         "INICIO_SESION",
         "CIERRE_SESION",
@@ -106,6 +107,7 @@ def test_el_catalogo_de_esta_historia():
         "JORNADA_COMPLETA",
         "COMPETENCIAS_MARCADAS",
         "NOTAS_GUARDADAS",
+        "SESION_ENVIADA",
         "CATALOGO_EDITADO",
         "DEMO_CARGADA",
         "DEMO_QUITADA",
@@ -115,3 +117,4 @@ def test_el_catalogo_de_esta_historia():
     }
     assert Operacion.COMPETENCIAS_MARCADAS not in CUENTAN_KPI_01
     assert Operacion.NOTAS_GUARDADAS in CUENTAN_KPI_01
+    assert Operacion.SESION_ENVIADA in CUENTAN_KPI_01
