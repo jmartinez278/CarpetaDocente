@@ -6,9 +6,9 @@
 // - Estado: por área, `base` (lo guardado) y `cur` (las celdas editadas, con su nivel y conclusión). Un cambio es lo que difiere
 //   de la base; una celda editada que vuelve a su base sale de `cur`. Cambiar de área no pierde nada.
 // - Guardar: un POST JSON por área con solo las celdas cambiadas y su `base` (D7), todo o nada. 200 guardado; 400 con celdas
-//   marcadas o mensaje; 409 con `cambiadas` (nota cambiada desde otro dispositivo) o periodo no editable; HX-Redirect, la
-//   sesión venció; red caída u otro código, «No se pudo guardar». Los mensajes que se leen salen del servidor o de este archivo,
-//   nunca del texto de una excepción.
+//   marcadas o mensaje; 409 con `cambiadas` (nota cambiada desde otro dispositivo) o periodo no editable; 403 con
+//   HX-Redirect, «sin permiso» (US-004, D6); 200 con HX-Redirect, la sesión venció; red caída u otro código, «No se pudo
+//   guardar». Los mensajes que se leen salen del servidor o de este archivo, nunca del texto de una excepción.
 // - Una nota guardada no vuelve a vacía (RN-023): Retroceso y Suprimir lo anuncian.
 // - Borradores (D10, notas-borrador.js): cada cambio de `cur` se escribe en el dispositivo con la `base` de la celda; al
 //   abrir, lo de un borrador vuelve a la hoja, salvo las celdas que ya no se podrían guardar (estudiante que ya no es activo,
@@ -938,6 +938,16 @@
     for (const [estudiante, competencia] of pares) destino.set(llave(estudiante, competencia), valor(estudiante, competencia));
   }
 
+  // 403 de «sin permiso» (US-004, D6): la sección dejó de ser de la docente. Se borran los borradores de esta cuenta y
+  // sección (todos sus periodos y áreas), se desarma el aviso de salida y la pestaña va a la página de «sin permiso».
+  function sinPermiso(destino) {
+    almacenamiento = false;
+    const seccion = /^.*:s\d+:/.exec(datos.clave_borrador)?.[0];
+    if (Borrador && seccion) for (const clave of Borrador.claves(seccion)) Borrador.borrar(clave);
+    permisoSalida = true;
+    window.location.assign(destino);
+  }
+
   async function guardar() {
     const a = area();
     if (guardando || !hojaMarcable(a)) return;
@@ -978,7 +988,9 @@
     guardando = false;
     $("hoja").removeAttribute("aria-busy");
     validando = false;
-    if (redireccion) {
+    if (redireccion && respuesta.status === 403) {
+      sinPermiso(redireccion);
+    } else if (redireccion) {
       redibujar();
       mensaje(
         "Tu sesión venció",

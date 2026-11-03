@@ -11,6 +11,7 @@ import re
 import pytest
 from playwright.sync_api import expect
 
+from actividad.tests.intentos import SIN_PERMISO, motivos, pasar_a_otra_docente
 from cuentas.tests.e2e import (
     ANCHOS,
     TEMAS,
@@ -718,3 +719,26 @@ def test_a_320_la_lista_con_el_aviso_no_se_desplaza_en_horizontal(
 
     assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= 320
     assert page.evaluate("document.documentElement.scrollWidth") <= 320
+
+
+# --- US-004: la sección deja de ser de la docente con el diálogo abierto ---
+
+
+def test_agregar_en_una_seccion_que_ya_no_es_suya_lleva_a_sin_permiso(
+    portada, con_25, seccion, otra_docente
+):
+    """Escenario "Diálogo de la portada": la pestaña pasa a la página completa, sin pintar nada en
+    el diálogo, y queda una sola entrada."""
+    abrir(portada)
+    dialogo(portada).get_by_role("link", name="Agregar estudiante").click()
+    campo(portada, "Apellidos").fill("aguirre huamán")
+    campo(portada, "Nombres").fill("lucía")
+    pasar_a_otra_docente(seccion, otra_docente)
+
+    dialogo(portada).get_by_role("button", name="Guardar y agregar otro").click()
+
+    portada.wait_for_url(re.compile(r"/docente/sin-permiso/$"))
+    expect(portada.get_by_role("heading", name=SIN_PERMISO)).to_be_visible()
+    expect(portada.locator("dialog")).to_have_count(0)
+    assert seccion.estudiantes.count() == 25
+    assert motivos() == ["ajena"]

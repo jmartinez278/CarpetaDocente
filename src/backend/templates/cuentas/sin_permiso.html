@@ -1,0 +1,10 @@
+{% extends "marco.html" %}
+
+{% block titulo %}Sin permiso · CarpetaDocente{% endblock %}
+
+{% block principal %}
+<main class="mx-auto w-full max-w-280 px-4 pt-8 min-[960px]:px-6 min-[960px]:pt-0">
+  <div class="mensaje mensaje--error">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><h1 class="mensaje__titulo">No tienes permiso para ver esta sección</h1><p>Vuelve a tu inicio para abrir tu sección.</p></div></div>
+  <a class="boton-principal mt-6" href="{% url 'docente:portada' %}">Volver a tu inicio</a>
+</main>
+{% endblock %}

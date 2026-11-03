@@ -1,12 +1,13 @@
-"""Pantalla de inicio de cada rol y verificación de rol de las vistas (US-001).
+"""Pantalla de inicio de cada rol, verificación de rol y respuesta de «sin permiso».
 
-Es lo único de control de acceso que entra en US-001: la matriz completa del
-documento 08 y la denegación con registro son de US-004.
+La verificación de rol es de US-001; la respuesta 403 de «sin permiso» es de US-004 (D3). Quién
+recibe ese 403 y su registro los decide ``SeccionDocenteMixin`` (``institucion/views.py``).
 """
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import redirect_to_login
 from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import reverse
 
 from cuentas.models import Usuario
@@ -39,6 +40,23 @@ def redirigir(request, destino: str):
         respuesta["HX-Redirect"] = destino
         return respuesta
     return HttpResponseRedirect(destino)
+
+
+PLANTILLA_SIN_PERMISO = "cuentas/sin_permiso.html"
+
+
+def sin_permiso(request):
+    """403 de «sin permiso»: la página en la misma dirección o, con HTMX, ``HX-Redirect`` (D3).
+
+    Con ``HX-Request`` (HTMX y los guardados por ``fetch``) el cuerpo va vacío y la cabecera lleva
+    a la página completa, para no pintar un fragmento roto en un diálogo. No registra: el registro
+    lo hace quien decide negar, en la misma petición.
+    """
+    if es_htmx(request):
+        respuesta = HttpResponse(status=403)
+        respuesta["HX-Redirect"] = reverse("docente:sin_permiso")
+        return respuesta
+    return render(request, PLANTILLA_SIN_PERMISO, status=403)
 
 
 class RolRequeridoMixin(LoginRequiredMixin):

@@ -98,7 +98,7 @@ La portada del docente SHALL saludar al docente por su nombre y mostrar las tarj
 - **THEN** la tarjeta Asistencia no muestra "Hoy: pendiente"
 
 ### Requirement: Disponibilidad de cada dimensión
-Cada dimensión SHALL tener una bandera de disponibilidad que activa la historia que construye su pantalla. Una dimensión no disponible se muestra como "Próximamente" y nunca se oculta; una disponible enlaza a su pantalla. Ninguna tarjeta MUST enlazar a una página que no existe. Al cerrar US-001, las tres están en "Próximamente". Desde US-030, Asistencia está disponible y su tarjeta enlaza a la asistencia de hoy de la sección, con la misma regla que "Ver estudiantes": solo si la docente tiene una sola sección en el año ABIERTO. Sin esa sección única, la tarjeta Asistencia se muestra como "Próximamente".
+Cada dimensión SHALL tener una bandera de disponibilidad que activa la historia que construye su pantalla. Una dimensión no disponible se muestra como "Próximamente" y nunca se oculta; una disponible enlaza a su pantalla. Ninguna tarjeta MUST enlazar a una página que no existe. Al cerrar US-001, las tres están en "Próximamente". Desde US-030, Asistencia está disponible y su tarjeta enlaza a la asistencia de hoy de la sección, con la misma regla que "Ver estudiantes": solo si la docente tiene una sola sección en el año ABIERTO. Sin esa sección única, la tarjeta Asistencia se muestra como "Próximamente". Desde US-020, Notas está disponible con la misma regla y su tarjeta enlaza a la hoja de notas de la sección, que abre en el periodo vigente.
 
 #### Scenario: Tres dimensiones en "Próximamente"
 - **WHEN** un docente abre la portada al cerrar US-001
@@ -118,11 +118,19 @@ Cada dimensión SHALL tener una bandera de disponibilidad que activa la historia
 
 #### Scenario: Asistencia con una sección
 - **WHEN** una docente con una sola sección en el año ABIERTO abre la portada
-- **THEN** la tarjeta Asistencia dice "Registrar asistencia" y lleva a la asistencia de hoy de esa sección; Sesiones y Notas siguen en "Próximamente"
+- **THEN** la tarjeta Asistencia dice "Registrar asistencia" y lleva a la asistencia de hoy de esa sección; Sesiones sigue en "Próximamente"
 
 #### Scenario: Asistencia sin sección única
 - **WHEN** una docente sin sección, o con dos, abre la portada
 - **THEN** la tarjeta Asistencia se muestra como "Próximamente" y no contiene un enlace
+
+#### Scenario: Notas con una sección
+- **WHEN** una docente con una sola sección en el año ABIERTO abre la portada y toca la tarjeta Notas
+- **THEN** la tarjeta dice "Registrar notas" y lleva a la hoja de notas de esa sección en el periodo vigente, o a Competencias si ese periodo no tiene competencias guardadas
+
+#### Scenario: Notas sin sección única
+- **WHEN** una docente sin sección, o con dos, abre la portada
+- **THEN** la tarjeta Notas se muestra como "Próximamente" y no contiene un enlace
 
 ### Requirement: Carrusel de dimensiones en el celular
 Por debajo de 960 px de ancho, las tarjetas SHALL mostrarse en un carrusel que se desplaza en horizontal dentro de su propio contenedor, con chips tocables de 44 px como mínimo que llevan a cada tarjeta y puntos de paginación visibles; la página no se desplaza en horizontal. Desde 960 px, las tres tarjetas van en fila.

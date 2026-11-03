@@ -8,7 +8,7 @@ from django.db import DatabaseError, IntegrityError, connection, transaction
 from django.db.models import Count, ProtectedError, Q, RestrictedError
 from django.utils import timezone
 
-from actividad.models import Operacion
+from actividad.models import Operacion, RegistroActividad
 from actividad.servicios import registrar
 from cuentas.models import Usuario
 from institucion.models import (
@@ -123,6 +123,60 @@ def secciones_docente(usuario):
     return Seccion.objects.filter(
         docente=usuario, anio_escolar__estado=AnioEscolar.Estado.ABIERTO
     ).order_by("grado", "nombre")
+
+
+# Motivos de un intento sin permiso (US-004, D1). Solo van al registro: la respuesta es la misma.
+AJENA = "ajena"
+INEXISTENTE = "inexistente"
+ANIO_CERRADO_ACCESO = "anio_cerrado"
+ESTUDIANTE = "estudiante"
+
+
+class SinPermiso(Exception):
+    """La docente no puede abrir esa sección o ese estudiante; ``motivo`` dice por qué (D1)."""
+
+    def __init__(self, motivo):
+        super().__init__(motivo)
+        self.motivo = motivo
+
+
+def seccion_de_la_docente(usuario, seccion_id, estudiante_id=None):
+    """``(seccion, estudiante | None)`` de la docente en el año ABIERTO, o ``SinPermiso`` (D1).
+
+    El motivo sigue el orden de D4: inexistente, ajena (aunque su año esté cerrado), año
+    cerrado y, al final, un estudiante que no es de la sección. Solo lee.
+    """
+    seccion = Seccion.objects.select_related("anio_escolar").filter(pk=seccion_id).first()
+    if seccion is None:
+        raise SinPermiso(INEXISTENTE)
+    if seccion.docente_id != usuario.pk:
+        raise SinPermiso(AJENA)
+    if seccion.anio_escolar.estado != AnioEscolar.Estado.ABIERTO:
+        raise SinPermiso(ANIO_CERRADO_ACCESO)
+    if estudiante_id is None:
+        return seccion, None
+    estudiante = seccion.estudiantes.filter(pk=estudiante_id).first()
+    if estudiante is None:
+        raise SinPermiso(ESTUDIANTE)
+    return seccion, estudiante
+
+
+def registrar_intento_sin_permiso(usuario, seccion_id, ruta, motivo):
+    """Una entrada INTENTO_SIN_PERMISO por llamada, sin agrupar (D5; RNF-016).
+
+    ``ruta`` es ``request.path``, sin la consulta: solo ids, fechas y códigos (RN-015).
+    El converter ``int`` admite ids más largos que ``entidad_id``: se guardan sus primeros
+    caracteres y el id completo queda en la ruta, así el intento se registra igual (A2).
+    """
+    largo = RegistroActividad._meta.get_field("entidad_id").max_length
+    with transaction.atomic():
+        registrar(
+            usuario,
+            Operacion.INTENTO_SIN_PERMISO,
+            entidad="seccion",
+            entidad_id=str(seccion_id)[:largo],
+            detalle={"ruta": ruta, "motivo": motivo},
+        )
 
 
 def seccion_unica(usuario):

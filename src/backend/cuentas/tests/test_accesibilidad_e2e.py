@@ -33,6 +33,7 @@ VISTAS = [
     "portada-menu-abierto",
     "direccion",
     "direccion-menu-abierto",
+    "sin-permiso",
 ]
 
 
@@ -56,6 +57,12 @@ def abrir_vista(page, live_server, vista, docente, direccion, clave):
         page.reload()
         page.locator(".mensaje--aviso").wait_for()
         # axe mide el color calculado: a media animación de entrada lo mezcla con la opacidad.
+        page.wait_for_function("document.getAnimations().length === 0")
+    elif vista == "sin-permiso":
+        ingresar(page, live_server, docente, clave)
+        page.wait_for_url("**/docente/")
+        page.goto(f"{live_server.url}/docente/sin-permiso/")
+        page.get_by_role("heading", name="No tienes permiso para ver esta sección").wait_for()
         page.wait_for_function("document.getAnimations().length === 0")
     else:
         es_portada = vista.startswith("portada")
@@ -94,3 +101,20 @@ def test_el_menu_abierto_no_desborda_la_ventana(
     assert ancho_documento <= ancho
     assert panel["x"] >= 0
     assert panel["x"] + panel["width"] <= ancho
+
+
+@pytest.mark.parametrize("ancho", [320, 360])
+@pytest.mark.parametrize("tema", TEMAS)
+def test_sin_permiso_no_desborda_y_su_boton_es_tactil(
+    live_server, page, tema, ancho, docente, direccion, clave
+):
+    con_pantalla(page, ancho, tema)
+    abrir_vista(page, live_server, "sin-permiso", docente, direccion, clave)
+    page.evaluate("document.fonts.ready")
+
+    boton = page.get_by_role("link", name="Volver a tu inicio").bounding_box()
+
+    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    assert boton["height"] >= 44
+    assert boton["x"] >= 0
+    assert boton["x"] + boton["width"] <= ancho

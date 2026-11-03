@@ -8,8 +8,9 @@
 //   Espacio), anuncia su motivo en la región role="alert". Las obligatorias se calculan aquí con lo guardado en los periodos
 //   anteriores, igual que el servidor; el servidor las agrega siempre.
 // - Guardar: un POST por periodo con todas las competencias marcadas de todas las áreas. 204 guardado; 400, 404 y 409, el
-//   mensaje junto a "Guardar" y el borrador intacto (con 409 y "competencias", esas quedan marcadas y bloqueadas); HX-Redirect,
-//   la sesión venció; red caída u otro código, "No se pudo guardar". Un guardado posterior quita el aviso.
+//   mensaje junto a "Guardar" y el borrador intacto (con 409 y "competencias", esas quedan marcadas y bloqueadas); 403 con
+//   HX-Redirect, «sin permiso» (US-004, D6); 200 con HX-Redirect, la sesión venció; red caída u otro código, "No se pudo
+//   guardar". Un guardado posterior quita el aviso.
 // - Celular (bajo 960 px): un área a la vez con la cápsula de flechas, posición y selector. Las marcas de todas las áreas
 //   quedan en el borrador, así que guardar desde otra área guarda el conjunto completo.
 // - Salida: con cambios sin guardar en algún periodo, los enlaces y formularios que salen de la pantalla abren el diálogo
@@ -490,7 +491,13 @@
     const respuesta = await pedir(datos.url_guardar.replace(/\/0\/$/, `/${numero}/`), cuerpo);
     const redireccion = respuesta?.headers.get("HX-Redirect");
 
-    if (redireccion) {
+    if (redireccion && respuesta.status === 403) {
+      // «Sin permiso» (US-004, D6): la sección ya no es de la docente. Los cambios viven en memoria y se pierden al salir;
+      // se desarma el aviso de salida para que no detenga la redirección.
+      permitirSalida = true;
+      window.location.assign(redireccion);
+      return;
+    } else if (redireccion) {
       fallo = {
         periodo: numero,
         titulo: "Tu sesión venció",

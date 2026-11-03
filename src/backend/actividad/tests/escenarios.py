@@ -72,6 +72,10 @@ ESCENARIOS: dict[Operacion, str] = {
     Operacion.SECCION_DESCARTADA: (
         f"{_ESTUDIANTES}::test_descartar_seccion_deja_seccion_descartada_y_conserva_la_asistencia"
     ),
+    Operacion.INTENTO_SIN_PERMISO: (
+        "institucion.tests.test_servicios_acceso::"
+        "test_acceso_registrar_intento_deja_una_entrada_con_ruta_y_motivo"
+    ),
     Operacion.REGISTRO_EXPORTADO: (
         "actividad.tests.test_exportar::test_deja_registro_exportado_con_filtros_y_numero_de_filas"
     ),

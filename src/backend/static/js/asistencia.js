@@ -7,7 +7,8 @@
 //   una petición en curso, el toque solo cambia lo deseado; al terminar la petición se envía lo deseado si cambió. Nunca
 //   hay dos de la misma fila en la red y gana el último toque.
 // - Respuestas: 204 guardado; 200 con HX-Redirect, sesión vencida: las marcas sin guardar van a sessionStorage y se
-//   reenvían al volver a abrir el mismo día (D6); 400, 404 y 409, la página se recarga para mostrar lo que hay en la base,
+//   reenvían al volver a abrir el mismo día (D6); 403 con HX-Redirect, «sin permiso» (US-004): se borran las de la
+//   sección y la pestaña sigue la redirección; 400, 404 y 409, la página se recarga para mostrar lo que hay en la base,
 //   y las marcas pendientes de las otras filas pasan por sessionStorage (la rechazada no, así no hay bucle de recargas);
 //   red caída u otro código, la fila dice "sin guardar. Reintentando…" y se reintenta a 1, 2, 4 y 8 s y luego cada 15 s,
 //   o en cuanto vuelve la red. Tras 3 fallos seguidos (de cualquier fila) aparece "Sin conexión" una vez.
@@ -262,7 +263,9 @@
   function resolver(respuesta, rechazadas) {
     const redireccion = respuesta?.headers.get("HX-Redirect");
     if (redireccion) {
-      recordarPendientes();
+      // 403, «sin permiso» (US-004, D6): la sección ya no es de la docente; no quedan marcas suyas en el dispositivo.
+      if (respuesta.status === 403) olvidarPendientes();
+      else recordarPendientes();
       saliendo = true;
       window.location.assign(redireccion);
       return "salir";
@@ -455,6 +458,19 @@
     if (cuenta || envioLote || filas.some(pendiente)) return;
     try {
       sessionStorage.removeItem(clave);
+    } catch {
+      // Sin sessionStorage no hay nada que borrar.
+    }
+  }
+
+  // Las marcas pendientes de esta sección, de cualquier día, fuera de sessionStorage (US-004, D6).
+  function olvidarPendientes() {
+    if (cuenta) clearInterval(cuenta.reloj);
+    cuenta = null;
+    try {
+      for (const otra of Object.keys(sessionStorage)) {
+        if (otra.startsWith(prefijoClave)) sessionStorage.removeItem(otra);
+      }
     } catch {
       // Sin sessionStorage no hay nada que borrar.
     }

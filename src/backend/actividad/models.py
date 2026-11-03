@@ -59,7 +59,8 @@ CUENTAN_KPI_01 = frozenset(
 )
 
 # Operaciones del catálogo que aún no tienen quién las genere (la prueba de cobertura las salta).
-RESERVADAS = frozenset({Operacion.INTENTO_SIN_PERMISO})
+# Vacía desde US-004, que genera INTENTO_SIN_PERMISO; se conserva para la próxima reservada.
+RESERVADAS: frozenset[Operacion] = frozenset()
 
 
 class RegistroActividad(models.Model):

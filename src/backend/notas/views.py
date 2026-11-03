@@ -1,7 +1,8 @@
 """Vistas de las competencias de una sección (design de US-029, D8).
 
 Solo leen la petición y llaman a ``notas.servicios``. El acceso es el de la asistencia
-(``SeccionDocenteMixin``): otra docente o un año CERRADO, 404 en GET y POST; otro rol y sin
+(``SeccionDocenteMixin``): sección ajena, inexistente o de un año CERRADO, 403 con registro en
+GET y POST (US-004); otro rol y sin
 sesión, ``RolRequeridoMixin``, con ``HX-Redirect`` cuando el guardado llega con ``HX-Request``.
 """
 

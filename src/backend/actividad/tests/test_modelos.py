@@ -73,8 +73,9 @@ def test_solo_las_operaciones_de_asistencia_y_notas_guardadas_cuentan_para_kpi_0
     }
 
 
-def test_solo_intento_sin_permiso_esta_reservada():
-    assert RESERVADAS == {Operacion.INTENTO_SIN_PERMISO}
+def test_ninguna_operacion_esta_reservada():
+    """US-004 genera INTENTO_SIN_PERMISO: el catálogo ya no salta ninguna."""
+    assert RESERVADAS == frozenset()
 
 
 def test_el_catalogo_de_esta_historia():

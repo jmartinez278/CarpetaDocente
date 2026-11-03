@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from playwright.sync_api import expect
 
+from actividad.tests.intentos import SIN_PERMISO, motivos, pasar_a_otra_docente
 from asistencia.models import Asistencia, Jornada
 from cuentas.tests.e2e import (
     ANCHOS,
@@ -904,3 +905,34 @@ def test_nombre_de_120_mas_120_a_320_px(abrir_asistencia, veinticinco):
     expect(fila(page, veinticinco[1]).locator("[data-fallo]")).to_be_visible()
     expect(barra(page)).to_be_visible()
     assert page.evaluate("document.documentElement.scrollWidth") <= 320
+
+
+# --- US-004: la sección deja de ser de la docente (spec acceso-secciones, D6) ---
+
+
+def pendientes_de_la_seccion(page, seccion):
+    """Las claves de ``sessionStorage`` con marcas pendientes de esa sección (asistencia.js)."""
+    return page.evaluate(
+        "(prefijo) => Object.keys(sessionStorage).filter((k) => k.startsWith(prefijo))",
+        f"asistencia:{seccion.pk}:",
+    )
+
+
+def test_marcar_en_una_seccion_que_ya_no_es_suya_lleva_a_sin_permiso(
+    abrir_asistencia, seccion_de_ana, otra_docente, veinticinco
+):
+    page = abrir_asistencia()
+    tocar(page, veinticinco[0])
+    esperar_guardado(page)
+    dialogos = []
+    page.on("dialog", lambda dialogo: (dialogos.append(dialogo.type), dialogo.dismiss()))
+    pasar_a_otra_docente(seccion_de_ana, otra_docente)
+
+    tocar(page, veinticinco[1])
+
+    page.wait_for_url(re.compile(r"/docente/sin-permiso/$"))
+    expect(page.get_by_role("heading", name=SIN_PERMISO)).to_be_visible()
+    assert dialogos == []
+    assert pendientes_de_la_seccion(page, seccion_de_ana) == []
+    assert estados_en_la_base() == {veinticinco[0].pk: "ASISTIO"}
+    assert motivos() == ["ajena"]
