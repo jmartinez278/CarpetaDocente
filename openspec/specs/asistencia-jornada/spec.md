@@ -6,23 +6,31 @@ Registro de la asistencia diaria de una sección por su docente de aula: un toqu
 ## Requirements
 
 ### Requirement: Acceso solo a la asistencia de su sección
-La asistencia de una sección SHALL abrirse solo para la docente de esa sección en el año ABIERTO. La sección de otra docente o de un año CERRADO responde como página inexistente; otro rol va a su pantalla de inicio y una visita sin sesión va al ingreso, sin mostrar la lista. Las mismas reglas valen para cada guardado.
+La asistencia de una sección SHALL abrirse solo para la docente de esa sección en el año ABIERTO. La sección de otra docente, inexistente o de un año CERRADO responde 403 con el mensaje de «sin permiso» y deja una entrada de intento (spec `acceso-secciones`); otro rol va a su pantalla de inicio y una visita sin sesión va al ingreso, sin mostrar la lista. Las mismas reglas valen para cada guardado. Un guardado con 403 lleva la pestaña a la página de «sin permiso» sin guardar marcas pendientes en el dispositivo.
 
 #### Scenario: Sección de otra docente
 - **WHEN** una docente abre o guarda la asistencia de una sección que no es suya
-- **THEN** recibe "página no encontrada" y no se guarda nada
+- **THEN** recibe 403 y no se guarda nada
 
 #### Scenario: Sección de un año cerrado
 - **WHEN** la docente abre la asistencia de su sección de un año CERRADO
-- **THEN** recibe "página no encontrada"
+- **THEN** recibe 403
 
 #### Scenario: Otro rol
 - **WHEN** un usuario de la dirección abre la asistencia de una sección
 - **THEN** llega a su propia pantalla de inicio
 
 #### Scenario: Estudiante de otra sección
-- **WHEN** llega un guardado para un estudiante que no es de la sección
-- **THEN** no se guarda nada y la respuesta es "página no encontrada"
+- **WHEN** llega el guardado de un estudiante, con el estudiante en la ruta, que no es de la sección
+- **THEN** no se guarda nada y la respuesta es 403
+
+#### Scenario: Estudiante de la sección que ya no está activo
+- **WHEN** llega el guardado de un estudiante de la sección que está trasladado o retirado
+- **THEN** no se guarda nada y la respuesta es "página no encontrada", sin entrada de intento
+
+#### Scenario: Restantes con un id ajeno
+- **WHEN** «Marcar los restantes» envía un id que no es activo de la sección
+- **THEN** no se guarda ninguno y la respuesta es "página no encontrada", sin entrada de intento
 
 ### Requirement: Solo la jornada de hoy
 La pantalla SHALL registrar solo la jornada de hoy, con la fecha de Lima (America/Lima), no la del servidor. Arriba muestra la fecha ("Miércoles 28 de octubre") y el selector de la semana (Lun a Vie con flechas de semana): hoy está marcado y es el único día que responde; los otros días y las flechas se ven deshabilitados. Un guardado para una fecha que no es hoy MUST NOT guardarse.
