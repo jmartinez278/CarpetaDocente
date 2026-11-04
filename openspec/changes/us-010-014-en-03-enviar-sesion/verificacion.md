@@ -44,6 +44,19 @@ Vista previa de `968e27c` (`dpl_8xoetvbC8WFnQ4CVf5ftkuEWJkuY`), región `iad1`. 
 - «Archivo no público»: un GET sin firma al objeto en el endpoint S3 de R2 responde 400; el token del bucket de preview no puede leer `carpetadocente-produccion` (403). En el panel de Cloudflare, «Public Development URL» (`r2.dev`) del bucket está desactivado.
 - Demo, sesión y objeto de la medición quedan en la vista previa; se limpian con `quitar_demo` (deuda del bloque 3).
 
+## Envío de punta a punta con la clave nueva (tarea 5.1)
+
+Vista previa de `b26ee1c` (`carpeta-docente-i37f225ou`), 2026-11-04: el build no tuvo migraciones pendientes. Desde el navegador, con la cuenta demo `demounoa`, se enviaron un PDF y un .docx. En el bucket `carpetadocente-preview`, prefijo `sesiones/`:
+
+| Objeto | Tipo | Tamaño |
+|---|---|---|
+| `29c2f5b3-5969-4248-a065-d2c2c3335681-8e0b9e7e1b6c44f0.pdf` | `application/pdf` | 905,38 kB |
+| `2d48c13f-0adb-4d4e-8204-acf0d5d63ecd-e33e28789c1f007b.docx` | `application/vnd.openxmlformats-…` | 124,67 kB |
+| `f0a5779a-ffb4-4fb5-a62b-32f5ae1cffb6.pdf` | `application/pdf` | 4,19 MB (medición D3, clave anterior a la corrección A2) |
+
+- Los dos envíos nuevos tienen la clave por intento (`<UUID>-<16 hex>`) y el .docx, guardado desde Word, pasó la validación con ElementTree.
+- El bucket sigue con «Public Access: Disabled».
+
 ## Escenarios (cierre, 5.2)
 
 Pruebas en `src/backend/`. Abreviaturas: en `repositorio/tests/`, `srv` = `test_servicios_enviar.py`, `va` = `test_validar_archivo.py`, `vis` = `test_vistas.py`, `pl` = `test_plantillas.py`, `e2e` = `test_sesiones_e2e.py`, `alm` = `test_almacenamiento.py`, `mod` = `test_modelos.py`, `con` = `test_concurrencia.py`; `set` = `config/tests/test_settings.py`; en `actividad/tests/`, `ind` = `test_indicadores.py`, `acat` = `test_catalogo.py`, `amod` = `test_modelos.py`; `dim` = `cuentas/tests/test_dimensiones.py`.
@@ -121,7 +134,7 @@ Pruebas en `src/backend/`. Abreviaturas: en `repositorio/tests/`, `srv` = `test_
 | 1 | Cobertura ≥ 80 % | Local: 98,50 % total (`verificar.py`, sin e2e). Sonar way: pendiente del PR |
 | 2 | Análisis estático sin críticas ni altas | Ruff en verde con `verificar.py` (un `noqa: S314` justificado arriba). A2 de Codex: tres hallazgos corregidos (Parte D). CodeQL y SonarQube Cloud: pendiente del PR |
 | 3 | Aprobación de otra integrante | Pendiente del PR |
-| 4 | Vista previa de Vercel | `968e27c` aplicó `actividad/0005` y `repositorio/0001` en Neon y pasó la medición D3. Pendiente: build de `b26ee1c` y un envío de punta a punta con la clave nueva (`sesiones/<UUID>-<token>`) y un .docx de Word real (tarea 5.1) |
+| 4 | Vista previa de Vercel | `968e27c` aplicó `actividad/0005` y `repositorio/0001` en Neon y pasó la medición D3. `b26ee1c` (`carpeta-docente-i37f225ou`): build sin migraciones pendientes; envío de punta a punta desde el navegador con `demounoa` (ver «Envío de punta a punta») |
 | 5 | Escenarios en verde y e2e de la ruta ideal | Los 63 escenarios tienen prueba o nota y pasan en local; 437 e2e en verde (todas las apps). Ruta ideal: `e2e::test_enviar_sin_compartir_va_directo_y_muestra_el_exito`, `test_aceptar_y_enviar_comparte_y_guarda_la_aceptacion`. GitHub Actions: pendiente del PR |
 | 6 | Reglas de negocio con pruebas propias | RN-007 (áreas que trabaja la institución): `srv::test_area_que_la_institucion_no_trabaja_se_rechaza`, `test_area_de_otra_institucion_que_la_mia_no_trabaja_se_rechaza`. Términos del doc 09 §4: `pl::test_los_terminos_son_los_del_doc_09_literales_y_en_orden`, `srv::test_compartir_sin_aceptar_no_guarda_nada`. Tipo y tamaño (PDF o .docx de hasta 4 MB; frente a los 10 MB de RN-021, en la deuda): `va::*`, `mod::test_la_base_rechaza_una_sesion_incoherente`. RN-015 (registro sin datos sensibles): `srv::test_sesion_compartida_deja_su_entrada_sin_titulo_ni_nombre_de_archivo`. Todo o nada e idempotencia (D4, D5): `srv` («Sin archivos huérfanos» y «Envío repetido») y `con::*` |
 | 7 | Accesibilidad sin errores críticos | `e2e::test_los_estados_del_boceto_son_accesibles_y_sin_desplazamiento` (11 estados, claro y oscuro, 360 y 1280 px, objetivos de 44 px), `test_pantalla_baja_los_terminos_se_desplazan_y_sus_botones_siguen_a_la_vista`, `test_sesiones_carga_con_slow_4g`. Lector de pantalla y gesto «atrás» en un Android físico: pulido final (deuda) |
