@@ -1,0 +1,25 @@
+{% extends "marco.html" %}
+{% comment %}
+Sesiones de la docente (design de US-010, US-014 y EN-03, D7 y D9). Plantilla mínima de la parte C: cabecera, botón y estado
+vacío. El popup, los términos y sesiones.js llegan en la parte D.
+{% endcomment %}
+
+{% block titulo %}Sesiones · CarpetaDocente{% endblock %}
+
+{% block principal %}
+<main class="vista-sesiones" data-dimension="sesiones">
+  <header class="cabecera-sesiones">
+    <div>
+      <h1>{% include "iconos/book-open.svg" %}Sesiones</h1>
+      <span class="franjas-cabecera" aria-hidden="true"></span>
+      <p class="subtitulo">Planificación de sesiones de aprendizaje</p>
+    </div>
+    <button class="boton-principal accion-subir" type="button">Subir una sesión</button>
+  </header>
+  <section class="resultado" aria-label="Envío de la sesión" role="status" data-resultado></section>
+  <div class="vacio">
+    {% include "iconos/inbox.svg" %}
+    <p class="vacio__texto">Aquí verás las sesiones que envíes y su estado.</p>
+  </div>
+</main>
+{% endblock %}

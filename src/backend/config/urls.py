@@ -11,6 +11,7 @@ urlpatterns = [
     path("ingresar/", IngresarView.as_view(), name="ingresar"),
     path("salir/", LogoutView.as_view(), name="salir"),
     path("docente/", include("cuentas.urls")),
+    path("docente/sesiones/", include("repositorio.urls")),
     path("docente/secciones/<int:seccion_id>/estudiantes/", include("institucion.urls")),
     path("docente/secciones/<int:seccion_id>/asistencia/", include("asistencia.urls")),
     path("docente/secciones/<int:seccion_id>/competencias/", include("notas.urls")),

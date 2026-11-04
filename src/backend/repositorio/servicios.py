@@ -341,3 +341,21 @@ def datos_del_formulario(usuario):
         .order_by("area__orden", "area__pk")
     ]
     return {"grados": GRADOS, "grado": grado, "ayuda_grado": ayuda, "areas": areas}
+
+
+# --- Resumen del envío (D7) -----------------------------------------------------------------
+
+# Cómo se nombra el tipo en el resumen («PDF · 1,2 MB», boceto).
+_TIPO_CORTO = {TIPO_PDF: "PDF", TIPO_DOCX: "Word"}
+
+
+def resumen(sesion):
+    """Lo que muestra el Mensaje de éxito de ``sesion``: grado y tipo en palabras.
+
+    El tamaño lo da formato la plantilla (``filesizeformat``, en el formato de es-pe).
+    """
+    return {
+        "sesion": sesion,
+        "grado": dict(GRADOS)[sesion.grado],
+        "tipo": _TIPO_CORTO[sesion.tipo_mime],
+    }
