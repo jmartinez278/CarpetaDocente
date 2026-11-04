@@ -74,6 +74,14 @@ def con_pantalla(page, ancho, tema):
 def revisar_con_axe(page, nombre):
     """Falla ante infracciones ``critical`` o ``serious`` y guarda el informe en test-results/."""
     page.evaluate("document.fonts.ready")
+    # Un mensaje que aparece (``aparecer``, 180 ms) a media opacidad da un contraste falso: se
+    # espera a que terminen las animaciones finitas; las ligadas al desplazamiento no terminan.
+    page.evaluate(
+        """() => Promise.all(document.getAnimations()
+            .filter((a) => a.timeline === document.timeline
+                && a.effect.getComputedTiming().iterations !== Infinity)
+            .map((a) => a.finished.catch(() => null)))"""
+    )
     page.add_script_tag(path=str(AXE))
     resultado = page.evaluate(
         "(etiquetas) => axe.run(document, { runOnly: { type: 'tag', values: etiquetas } })",
