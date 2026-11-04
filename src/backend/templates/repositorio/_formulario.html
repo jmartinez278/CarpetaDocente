@@ -1,0 +1,78 @@
+{% comment %}
+Popup «Subir una sesión» (spec envio-sesiones; D8 y D9). Hoja casi completa en el celular y ventana centrada en la PC.
+Cada campo lleva su ayuda y su región de error en aria-describedby; sesiones.js llena los errores (del navegador o del
+400 del servidor) y el id oculto (crypto.randomUUID al abrir, D5). En el pie, «Enviar» va antes que «Cancelar»: arriba
+en el celular; en la PC, el CSS lo pone a la derecha.
+{% endcomment %}
+<dialog class="modal-sesion" id="subir" aria-labelledby="subir-titulo" aria-describedby="subir-descripcion">
+  <header class="modal-cabecera">
+    <h2 class="modal-titulo" id="subir-titulo" tabindex="-1">Subir una sesión</h2>
+    <p class="campo-ayuda modal-descripcion" id="subir-descripcion">Se enviará a la dirección.</p>
+  </header>
+  <div class="modal-cuerpo" tabindex="0" role="region" aria-labelledby="subir-titulo" data-cuerpo>
+    <div class="mensaje mensaje--error" data-error-red role="alert" hidden>{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>Se cortó la conexión</p><p>Tus datos y tu archivo siguen aquí. Revisa tu conexión e intenta enviar de nuevo.</p></div></div>
+    <div class="mensaje mensaje--error" data-error-general role="alert" hidden>{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p></p></div></div>
+    <form id="formulario-sesion" action="{% url 'sesiones:enviar' %}" method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="id">
+      <fieldset class="campos-sesion" data-campos>
+        <legend class="sr-only">Datos de tu sesión</legend>
+        <div class="campo">
+          <label class="campo__etiqueta" for="archivo">Archivo</label>
+          <div class="archivo-control" data-archivo-control>
+            {% include "iconos/file-text.svg" %}
+            <div class="archivo-texto"><span data-archivo-nombre>Elige tu sesión</span><span class="campo-ayuda" data-archivo-detalle>Aún no has elegido un archivo</span></div>
+            <label class="elegir-archivo" for="archivo"><span data-archivo-accion>Elegir</span><span class="sr-only"> archivo</span></label>
+            <input class="archivo-input" type="file" id="archivo" name="archivo" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-describedby="archivo-ayuda archivo-error">
+          </div>
+          <p class="campo-ayuda" id="archivo-ayuda">PDF o Word (.docx) · Hasta 4 MB</p>
+          <p class="campo__error" id="archivo-error" hidden>{% include "iconos/circle-alert.svg" %}<span></span></p>
+        </div>
+        <div class="grupo-grado-area">
+          <div class="campo">
+            <label class="campo__etiqueta" for="grado">Grado</label>
+            <select class="campo__control" id="grado" name="grado" aria-describedby="grado-ayuda grado-error">
+              <option value=""{% if not grado %} selected{% endif %}>Elige</option>
+              {% for valor, texto in grados %}<option value="{{ valor }}"{% if valor == grado %} selected{% endif %}>{{ texto }}</option>{% endfor %}
+            </select>
+            <p class="campo__error" id="grado-error" hidden>{% include "iconos/circle-alert.svg" %}<span></span></p>
+          </div>
+          <div class="campo">
+            <label class="campo__etiqueta" for="area">Área</label>
+            <select class="campo__control" id="area" name="area" aria-describedby="area-error">
+              <option value="">Elige el área</option>
+              {% for area in areas %}<option value="{{ area.pk }}">{{ area.nombre }}</option>{% endfor %}
+            </select>
+            <p class="campo__error" id="area-error" hidden>{% include "iconos/circle-alert.svg" %}<span></span></p>
+          </div>
+          <p class="campo-ayuda grado-ayuda" id="grado-ayuda">{{ ayuda_grado }}</p>
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta" for="titulo">Título</label>
+          <input class="campo__control" type="text" id="titulo" name="titulo" maxlength="200" autocomplete="off" aria-describedby="titulo-error">
+          <p class="campo__error" id="titulo-error" hidden>{% include "iconos/circle-alert.svg" %}<span></span></p>
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta" for="proposito">Propósito <span class="opcional">(opcional)</span></label>
+          <textarea class="campo__control campo-textarea" id="proposito" name="proposito" rows="2" maxlength="1000" aria-describedby="proposito-error"></textarea>
+          <p class="campo__error" id="proposito-error" hidden>{% include "iconos/circle-alert.svg" %}<span></span></p>
+        </div>
+        <div class="compartir">
+          <label class="casilla"><input type="checkbox" id="compartir" name="compartir" aria-describedby="compartir-ayuda compartir-error"><span>Compartir también en el repositorio</span></label>
+          <p class="campo-ayuda" id="compartir-ayuda">Tus colegas podrán verla, descargarla y adaptarla.</p>
+          <p class="campo__error" id="compartir-error" hidden>{% include "iconos/circle-alert.svg" %}<span></span></p>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+  <footer class="modal-pie">
+    <div class="progreso" data-progreso hidden>
+      <p class="progreso__texto" data-progreso-texto>Subiendo… 0 %</p>
+      <progress max="100" value="0" aria-label="Avance de la subida" data-barra></progress>
+    </div>
+    <div class="acciones-modal">
+      <button class="boton-principal" type="submit" form="formulario-sesion" data-enviar>Enviar a la dirección</button>
+      <button class="boton-secundario" type="button" data-cancelar>Cancelar</button>
+    </div>
+  </footer>
+</dialog>
