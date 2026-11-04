@@ -52,9 +52,10 @@ def pdf_bytes(tamano=None):
     return _PDF + b"%" + b"x" * (tamano - len(_PDF) - 2) + b"\n"
 
 
-def docx_bytes(principal=PRINCIPAL_DOCX, documento=True, relleno=0):
+def docx_bytes(principal=PRINCIPAL_DOCX, documento=True, relleno=0, tipos=None, extras=None):
+    """Un .docx mínimo; ``tipos`` reemplaza ``[Content_Types].xml`` y ``extras`` agrega partes."""
     partes = {
-        "[Content_Types].xml": _tipos(principal, relleno),
+        "[Content_Types].xml": _tipos(principal, relleno) if tipos is None else tipos,
         "_rels/.rels": b'<?xml version="1.0"?><Relationships/>',
     }
     if documento:
@@ -62,6 +63,7 @@ def docx_bytes(principal=PRINCIPAL_DOCX, documento=True, relleno=0):
             b'<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/'
             b'wordprocessingml/2006/main"><w:body><w:p/></w:body></w:document>'
         )
+    partes.update(extras or {})
     return zip_de(partes)
 
 

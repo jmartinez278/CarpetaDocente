@@ -5,6 +5,7 @@ Todo o nada: la sesión, su entrada SESION_ENVIADA y su archivo se guardan junto
 ninguno. Un envío repetido con el mismo ``id`` responde el mismo éxito sin escribir otra vez.
 """
 
+import re
 import uuid
 
 import pytest
@@ -56,6 +57,11 @@ def errores_de(usuario, datos, archivo):
     return {campo: mensajes[0] for campo, mensajes in error.value.message_dict.items()}
 
 
+def clave_de(id_, extension):
+    """La clave de un intento: ``sesiones/<UUID>-<16 hex><extensión>`` (D4)."""
+    return re.compile(rf"sesiones/{re.escape(id_)}-[0-9a-f]{{16}}{re.escape(extension)}")
+
+
 def nada_guardado(almacen):
     assert not Sesion.objects.exists()
     assert not RegistroActividad.objects.filter(operacion=Operacion.SESION_ENVIADA).exists()
@@ -91,7 +97,7 @@ def test_enviar_sin_compartir_guarda_la_sesion_con_sus_datos(
     assert sesion.tamano_bytes == pdf().size
 
 
-def test_clave_de_un_pdf_es_sesiones_uuid_pdf_y_el_archivo_esta_en_el_almacen(
+def test_clave_de_un_pdf_es_sesiones_uuid_token_pdf_y_el_archivo_esta_en_el_almacen(
     docente, datos, almacen
 ):
     # Escenario «Clave de un PDF».
@@ -100,7 +106,7 @@ def test_clave_de_un_pdf_es_sesiones_uuid_pdf_y_el_archivo_esta_en_el_almacen(
 
     sesion = servicios.enviar_sesion(docente, enviados, archivo)
 
-    assert sesion.archivo_clave == f"sesiones/{enviados['id']}.pdf"
+    assert clave_de(enviados["id"], ".pdf").fullmatch(sesion.archivo_clave)
     with almacen.open(sesion.archivo_clave) as guardado:
         assert guardado.read() == archivo.open().read()
 
@@ -111,7 +117,7 @@ def test_un_docx_se_guarda_con_su_tipo_y_su_clave(docente, datos):
     sesion = servicios.enviar_sesion(docente, enviados, docx())
 
     assert sesion.tipo_mime == TIPO_DOCX
-    assert sesion.archivo_clave == f"sesiones/{enviados['id']}.docx"
+    assert clave_de(enviados["id"], ".docx").fullmatch(sesion.archivo_clave)
 
 
 def test_justo_4_mb_se_guarda(docente, datos):
@@ -321,6 +327,85 @@ def test_falla_la_base_despues_del_archivo_borra_el_archivo(docente, datos, alma
     nada_guardado(almacen)
 
 
+def test_el_almacen_escribe_y_luego_falla_no_deja_el_archivo(docente, datos, almacen, monkeypatch):
+    # A2, hallazgo 2: ``save`` llegó a escribir y lanzó antes de devolver la clave.
+    guardar = almacen.save
+
+    def escribir_y_fallar(nombre, contenido, **kwargs):
+        guardar(nombre, contenido, **kwargs)
+        raise OSError("se cortó la respuesta de R2")
+
+    monkeypatch.setattr(almacen, "save", escribir_y_fallar)
+
+    with pytest.raises(OSError):
+        servicios.enviar_sesion(docente, datos(), pdf())
+
+    nada_guardado(almacen)
+
+
+def test_el_intento_que_falla_no_borra_el_archivo_del_reintento_que_gano(
+    docente, datos, almacen, monkeypatch
+):
+    # A2, hallazgo 1: el primer intento guarda su archivo y falla al confirmar; antes de que
+    # borre, el reintento con el mismo ``id`` confirma. El borrado tardío no toca al ganador.
+    # Como R2 (``file_overwrite=True``), el almacén escribe sobre una clave que ya existe.
+    monkeypatch.setattr(almacen, "get_available_name", lambda nombre, max_length=None: nombre)
+    enviados = datos()
+    guardar, confirmar, borrar = almacen.save, connection.savepoint_commit, almacen.delete
+    estado = {"guardo": False, "fallo": False, "reintento": None}
+
+    def guardar_y_marcar(nombre, contenido, **kwargs):
+        estado["guardo"] = True
+        return guardar(nombre, contenido, **kwargs)
+
+    def fallar_despues_de_guardar(sid):
+        if estado["guardo"] and not estado["fallo"]:
+            estado["fallo"] = True
+            raise DatabaseError("se cayó la base al confirmar")
+        return confirmar(sid)
+
+    def reintentar_y_luego_borrar(nombre):
+        if estado["reintento"] is None:
+            estado["reintento"] = servicios.enviar_sesion(docente, enviados, pdf())
+        return borrar(nombre)
+
+    monkeypatch.setattr(almacen, "save", guardar_y_marcar)
+    monkeypatch.setattr(connection, "savepoint_commit", fallar_despues_de_guardar)
+    monkeypatch.setattr(almacen, "delete", reintentar_y_luego_borrar)
+
+    with pytest.raises(DatabaseError):
+        servicios.enviar_sesion(docente, enviados, pdf())
+
+    monkeypatch.undo()
+    ganadora = Sesion.objects.get()
+    assert ganadora.pk == estado["reintento"].pk
+    assert almacen.exists(ganadora.archivo_clave)
+    assert almacen.listdir("sesiones")[1] == [ganadora.archivo_clave.removeprefix("sesiones/")]
+
+
+def test_cada_intento_tiene_su_propia_clave(docente, datos, almacen, monkeypatch):
+    # D4: la clave se conoce antes de escribir y no se repite entre intentos del mismo ``id``.
+    enviados = datos()
+    claves = []
+    guardar = almacen.save
+
+    def fallar_la_primera(nombre, contenido, **kwargs):
+        claves.append(nombre)
+        if len(claves) == 1:
+            raise OSError("R2 no responde")
+        return guardar(nombre, contenido, **kwargs)
+
+    monkeypatch.setattr(almacen, "save", fallar_la_primera)
+    with pytest.raises(OSError):
+        servicios.enviar_sesion(docente, enviados, pdf())
+
+    sesion = servicios.enviar_sesion(docente, enviados, pdf())
+
+    assert len(claves) == 2
+    assert claves[0] != claves[1]
+    assert sesion.archivo_clave == claves[1]
+
+
 # --- Envío repetido (D5) ---------------------------------------------------------------------
 
 
@@ -351,7 +436,7 @@ def test_id_de_otra_autora_da_error_general_sin_escribir(docente, otra_docente, 
     assert errores == {"general": GENERAL}
     assert list(Sesion.objects.all()) == [ajena]
     assert RegistroActividad.objects.filter(operacion=Operacion.SESION_ENVIADA).count() == 1
-    assert almacen.listdir("sesiones")[1] == [f"{enviados['id']}.pdf"]
+    assert almacen.listdir("sesiones")[1] == [ajena.archivo_clave.removeprefix("sesiones/")]
 
 
 @pytest.mark.parametrize("id_", ["", "abc", "123", "00000000-0000-0000-0000-00000000000g"])

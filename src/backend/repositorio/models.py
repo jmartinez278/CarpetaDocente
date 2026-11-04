@@ -2,7 +2,7 @@
 
 ``Sesion`` es una sesión de aprendizaje que una docente envía a la dirección y, si acepta los
 términos, comparte en el repositorio. De su archivo se guardan la clave en el almacenamiento
-``sesiones`` (``sesiones/<UUID>.pdf`` o ``.docx``), el nombre original, el tipo y el tamaño;
+``sesiones`` (``sesiones/<UUID>-<token>.pdf`` o ``.docx``), el nombre original, el tipo y el tamaño;
 el archivo mismo vive en R2 o en ``media/`` (D2). Las reglas legibles las da ``servicios``;
 los ``CHECK`` son la red.
 

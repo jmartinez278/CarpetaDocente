@@ -6,11 +6,13 @@ llaman a estos servicios y responden.
 
 import logging
 import re
+import secrets
 import uuid
 import zipfile
 import zlib
 from dataclasses import dataclass
 from pathlib import PurePosixPath
+from xml.etree import ElementTree
 
 from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
@@ -35,12 +37,19 @@ NOMBRE_MAXIMO = 255
 # que se infla al descomprimir.
 TIPOS_MAXIMO = 64 * 1024
 # Tipo de la parte principal de un .docx; un .docm declara otro (macroEnabled) y no pasa.
-_PRINCIPAL_DOCX = (
-    b"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
-)
+_PRINCIPAL_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+_NS_TIPOS = "{http://schemas.openxmlformats.org/package/2006/content-types}"
 # Lo que puede lanzar un ZIP dañado, cifrado o con un método de compresión raro.
 _ZIP_ROTO = (zipfile.BadZipFile, zipfile.LargeZipFile, zlib.error, EOFError, OSError, KeyError)
-_ZIP_ROTO += (RuntimeError, NotImplementedError, ValueError)
+_ZIP_ROTO += (RuntimeError, NotImplementedError, ValueError, ElementTree.ParseError)
+
+
+class _SinDoctype(ElementTree.TreeBuilder):
+    """Corta la lectura si hay ``<!DOCTYPE>``: un ``[Content_Types].xml`` real no lo trae y así
+    no se expanden entidades."""
+
+    def doctype(self, name, pubid, system):
+        raise ValueError("[Content_Types].xml con DOCTYPE")
 
 
 @dataclass(frozen=True)
@@ -67,19 +76,45 @@ def _es_pdf(archivo):
     return archivo.read(5) == b"%PDF-"
 
 
-def _es_docx(archivo):
-    """ZIP con ``word/document.xml`` y ``[Content_Types].xml`` que declara un .docx.
+def _declara_docx(contenido):
+    """``True`` si ``[Content_Types].xml`` da a ``/word/document.xml`` el tipo de un .docx.
 
-    Solo se leen el índice del ZIP y los primeros 64 KB de ``[Content_Types].xml``.
+    Se lee como XML: un comentario o un ``Default`` con ese texto no cuentan. Debe haber un solo
+    ``Override`` de esa parte, con el tipo exacto, y ningún tipo ``macroEnabled``.
+    """
+    # Sin DOCTYPE no hay entidades ni DTD externos (billion laughs, XXE); entra 64 KB o menos.
+    lector = ElementTree.XMLParser(target=_SinDoctype())  # noqa: S314
+    lector.feed(contenido)
+    raiz = lector.close()
+    if raiz.tag != f"{_NS_TIPOS}Types":
+        return False
+    tipos = [hijo.get("ContentType", "") for hijo in raiz]
+    if any("macroenabled" in tipo.lower() for tipo in tipos):
+        return False
+    principal = [
+        hijo.get("ContentType")
+        for hijo in raiz.iter(f"{_NS_TIPOS}Override")
+        if hijo.get("PartName", "").lower() == "/word/document.xml"
+    ]
+    return principal == [_PRINCIPAL_DOCX]
+
+
+def _es_docx(archivo):
+    """ZIP con ``word/document.xml``, sin ``word/vbaProject.bin``, que declara un .docx (D6).
+
+    Solo se leen el índice del ZIP y los primeros 64 KB de ``[Content_Types].xml``; si no cabe,
+    el XML queda incompleto y se rechaza.
     """
     archivo.seek(0)
     try:
         with zipfile.ZipFile(archivo) as paquete:
-            nombres = set(paquete.namelist())
-            if "word/document.xml" not in nombres or "[Content_Types].xml" not in nombres:
+            nombres = {nombre.lower() for nombre in paquete.namelist()}
+            if not {"word/document.xml", "[content_types].xml"} <= nombres:
+                return False
+            if "word/vbaproject.bin" in nombres:
                 return False
             with paquete.open("[Content_Types].xml") as tipos:
-                return _PRINCIPAL_DOCX in tipos.read(TIPOS_MAXIMO)
+                return _declara_docx(tipos.read(TIPOS_MAXIMO))
     except _ZIP_ROTO:
         return False
 
@@ -243,9 +278,11 @@ def _guardar(usuario, id_sesion, limpios, valido, archivo):
     """La fila, su entrada y el archivo en una transacción; nada si algo falla (D4, pasos 2 y 3).
 
     La fila va primero: un envío simultáneo con el mismo ``id`` queda esperando en la PK y nunca
-    llega a escribir el archivo (D5).
+    llega a escribir el archivo (D5). La clave es de este intento (``<id>-<token>``) y se conoce
+    antes de escribir: si algo falla se borra siempre, aunque ``save`` haya lanzado después de
+    escribir, y nunca toca el archivo de otro intento con el mismo ``id`` que sí confirmó.
     """
-    clave = f"sesiones/{id_sesion}{valido.extension}"
+    clave = f"sesiones/{id_sesion}-{secrets.token_hex(8)}{valido.extension}"
     almacen = storages["sesiones"]
     guardado = None
     try:
@@ -279,12 +316,14 @@ def _guardar(usuario, id_sesion, limpios, valido, archivo):
             if guardado != clave:
                 raise RuntimeError("El almacenamiento guardó el archivo con otra clave.")
     except BaseException:
-        if guardado is not None:
+        for escrita in dict.fromkeys([clave, guardado]):
+            if escrita is None:
+                continue
             try:
-                almacen.delete(guardado)
+                almacen.delete(escrita)
             except Exception:
                 # Se conserva el error original; el objeto queda para borrarlo a mano.
-                logger.exception("No se pudo borrar el archivo de una sesión que no se guardó.")
+                logger.exception("No se pudo borrar %s, de una sesión que no se guardó.", escrita)
         raise
     return sesion
 

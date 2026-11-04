@@ -63,8 +63,9 @@
 ### D4. Envío todo o nada: `enviar_sesion(usuario, datos, archivo)`
 
 1. Valida todo (D6, campos, términos) antes de escribir; devuelve errores por campo.
-2. `transaction.atomic()`: crea la fila con la clave `sesiones/<uuid>.<ext>`, `registrar(SESION_ENVIADA)`, y al final `storage.save(clave, archivo)`; si el nombre devuelto no es la clave, falla. Si el almacenamiento falla, la excepción deshace la fila y la entrada.
-3. Si la confirmación falla después de guardar el archivo, `storage.delete(clave)` en el `except` y se vuelve a lanzar.
+2. Antes de escribir se genera la clave de este intento, `sesiones/<uuid>-<token>.<ext>` (`secrets.token_hex(8)`). `transaction.atomic()`: crea la fila con esa clave, `registrar(SESION_ENVIADA)`, y al final `storage.save(clave, archivo)`; si el nombre devuelto no es la clave, falla. Si el almacenamiento falla, la excepción deshace la fila y la entrada.
+3. Ante cualquier falla, el `except` borra siempre la clave del intento (y el nombre devuelto, si fue otro), aunque `save` haya lanzado después de escribir, y vuelve a lanzar. Borrar una clave que no llegó a escribirse no hace nada.
+- **Ajuste por la A2:** la clave era `sesiones/<uuid>.<ext>`, igual en todos los intentos, y solo se borraba si `save` devolvía. Un `save` que escribe y luego lanza dejaba el archivo; y un intento que fallaba al confirmar podía borrar, tarde, el archivo del reintento que ya había confirmado con la misma clave. Con una clave por intento, cada uno borra solo lo suyo.
 - La fila va antes del archivo para que un segundo envío con el mismo UUID quede esperando en la PK (D5) y nunca escriba.
 - El nombre original: `Path(nombre).name` (sin rutas), recortado a 255 conservando la extensión.
 
@@ -78,7 +79,8 @@
 
 - Extensión `.pdf` o `.docx` (sin distinguir mayúsculas) y contenido que coincide:
   - PDF: empieza con `%PDF-`.
-  - DOCX: ZIP válido (`zipfile`, solo el índice) con `[Content_Types].xml` que declara `wordprocessingml.document.main+xml` y la parte `word/document.xml`. Se lee como máximo 64 KB de `[Content_Types].xml`. Un .docm (`macroEnabled`) no pasa.
+  - DOCX: ZIP válido (`zipfile`, solo el índice) con la parte `word/document.xml` y sin `word/vbaProject.bin`. `[Content_Types].xml` (64 KB como máximo; si no cabe, el XML queda incompleto y se rechaza) se lee con ElementTree, sin `DOCTYPE`: debe tener un solo `Override` de `/word/document.xml` con el tipo exacto `application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml` y ningún tipo con `macroEnabled`. Un .docm no pasa.
+  - **Ajuste por la A2:** antes se buscaba el texto del tipo en los bytes; un .docm con ese texto en un comentario XML pasaba.
 - Tamaño de 1 a 4 194 304 bytes. `tipo_mime` sale del tipo reconocido, nunca del navegador.
 - Mensajes del boceto: «Elige un archivo PDF o Word (.docx).», «Este archivo no es PDF ni Word (.docx). Elige otro archivo.», «El archivo supera los 4 MB. Elige uno más pequeño.». Campos: «Falta indicar el grado.», «Falta indicar el área.», «Falta indicar el título.», «El título puede tener hasta 200 caracteres.», «El propósito puede tener hasta 1000 caracteres.», «Elige un área de la lista.» (área que la institución no trabaja), y el de términos de la spec.
 - En el navegador, `sesiones.js` repite tipo y tamaño al elegir el archivo (firma `%PDF-` o ZIP con `word/document.xml`, como el boceto), solo como ayuda.

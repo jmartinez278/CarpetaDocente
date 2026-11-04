@@ -13,6 +13,7 @@ from repositorio import servicios
 from repositorio.models import TAMANO_MAXIMO, TIPO_DOCX, TIPO_PDF
 from repositorio.tests.archivos import (
     PRINCIPAL_DOCM,
+    PRINCIPAL_DOCX,
     docx,
     docx_bytes,
     pdf,
@@ -137,6 +138,107 @@ def test_content_types_de_mas_de_64_kb_no_se_lee_entero(monkeypatch):
     assert rechazo(archivo) == [NO_ES]
     assert pedidos
     assert all(0 < n <= 64 * 1024 for n in pedidos)
+
+
+# --- [Content_Types].xml se lee como XML, no como bytes (A2, hallazgo 3) ---------------------
+
+_NS = 'xmlns="http://schemas.openxmlformats.org/package/2006/content-types"'
+_CABECERA = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+
+
+def _tipos_xml(cuerpo, antes=""):
+    return f"{_CABECERA}{antes}<Types {_NS}>{cuerpo}</Types>".encode()
+
+
+def _override(parte, tipo):
+    return f'<Override PartName="{parte}" ContentType="{tipo}"/>'
+
+
+@pytest.mark.parametrize(
+    "contenido",
+    [
+        docx_bytes(
+            tipos=_tipos_xml(
+                f"<!-- {PRINCIPAL_DOCX} -->" + _override("/word/document.xml", PRINCIPAL_DOCM)
+            )
+        ),
+        docx_bytes(
+            tipos=_tipos_xml(
+                _override("/word/document.xml", PRINCIPAL_DOCM),
+                antes=f"<!-- {PRINCIPAL_DOCX} -->",
+            ),
+            extras={"word/vbaProject.bin": b"\x00macro"},
+        ),
+        docx_bytes(
+            tipos=_tipos_xml(
+                _override("/word/document.xml", PRINCIPAL_DOCM)
+                + f'<Default Extension="docx" ContentType="{PRINCIPAL_DOCX}"/>'
+            )
+        ),
+    ],
+    ids=["comentario-dentro", "comentario-antes-y-vba", "tipo-docx-en-otro-lugar"],
+)
+def test_un_docm_con_el_tipo_docx_escondido_se_rechaza(contenido):
+    # Prueba adversarial: la cadena del .docx aparece, pero la parte principal es de un .docm.
+    assert rechazo(subido("sesion.docx", contenido)) == [NO_ES]
+
+
+def test_un_docx_con_vba_project_se_rechaza():
+    contenido = docx_bytes(extras={"word/vbaProject.bin": b"\x00macro"})
+
+    assert rechazo(subido("sesion.docx", contenido)) == [NO_ES]
+
+
+def test_macro_enabled_en_cualquier_parte_se_rechaza():
+    tipos = _tipos_xml(
+        _override("/word/document.xml", PRINCIPAL_DOCX)
+        + _override("/word/vbaData.xml", "application/vnd.ms-word.vbaData+xml")
+        + _override("/word/x.xml", "application/vnd.ms-office.macroEnabled+xml")
+    )
+
+    assert rechazo(subido("sesion.docx", docx_bytes(tipos=tipos))) == [NO_ES]
+
+
+@pytest.mark.parametrize(
+    "tipos",
+    [
+        _tipos_xml(""),
+        _tipos_xml(
+            _override("/word/document.xml", PRINCIPAL_DOCX)
+            + _override("/word/document.xml", PRINCIPAL_DOCM)
+        ),
+        _tipos_xml(_override("/word/document.xml", PRINCIPAL_DOCX + " ")),
+        f'{_CABECERA}<Types><Override PartName="/word/document.xml" '
+        f'ContentType="{PRINCIPAL_DOCX}"/></Types>'.encode(),
+        f'{_CABECERA}<!DOCTYPE Types [<!ENTITY t "{PRINCIPAL_DOCX}">]>'
+        f'<Types {_NS}><Override PartName="/word/document.xml" ContentType="&t;"/>'
+        "</Types>".encode(),
+        b"<Types",
+    ],
+    ids=["sin-override", "dos-override", "tipo-casi-igual", "sin-namespace", "doctype", "xml-roto"],
+)
+def test_content_types_sin_un_override_docx_exacto_se_rechaza(tipos):
+    assert rechazo(subido("sesion.docx", docx_bytes(tipos=tipos))) == [NO_ES]
+
+
+def test_un_docx_como_los_de_word_pasa():
+    # Word declara también estilos, ajustes y propiedades; la parte principal con mayúsculas
+    # distintas sigue siendo la misma (los nombres de parte no distinguen mayúsculas).
+    tipos = _tipos_xml(
+        '<Default Extension="rels" '
+        'ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        + _override("/Word/Document.xml", PRINCIPAL_DOCX)
+        + _override(
+            "/word/styles.xml",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml",
+        )
+        + _override(
+            "/docProps/core.xml", "application/vnd.openxmlformats-package.core-properties+xml"
+        )
+    )
+
+    assert servicios.validar_archivo(docx(tipos=tipos)).tipo_mime == TIPO_DOCX
 
 
 @pytest.mark.parametrize(

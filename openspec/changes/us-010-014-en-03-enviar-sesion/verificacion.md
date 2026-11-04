@@ -10,6 +10,20 @@
 - Parte C: «Falla el almacenamiento» se prueba en el servicio (`test_servicios_enviar.py`), no en la vista; ahí sale como 500, que D7 trata como «Se cortó la conexión».
 - Parte C: «Otro rol» prueba el GET sin `HX-Request`; el GET con `HX-Request` lo cubre `RolRequeridoMixin`, sin prueba propia en Sesiones.
 - Parte C: `EnviarSesionView` lee `error.message_dict`; un `ValidationError` sin campo desde el servicio daría 500 y no 400 (hoy el servicio siempre arma un dict).
+- Parte D: en `test_validar_archivo.py`, los casos «comentario-dentro», «comentario-antes-y-vba» y «tipo-docx-en-otro-lugar» llevan además un `Override` .docm; los rechaza la regla `macroEnabled` y no aíslan que un comentario o un `Default` no cuentan. Falta un caso con el tipo .docx solo en un comentario o un `Default`, sin `Override` ni .docm.
+- Parte D: «dos-override» mezcla .docx y .docm; también lo rechaza `macroEnabled`. Para aislar la regla del `Override` único harían falta dos `Override` idénticos con el tipo .docx.
+- Parte D: si el almacén guarda con otro nombre (`guardado != clave`), el `except` borra también `clave`, que en ese caso sería de otro objeto. Solo pasaría si se repite un token de 64 bits.
+
+## Revisión A2 (Codex) y su corrección (Parte D)
+
+| Hallazgo | Corrección | Prueba |
+|---|---|---|
+| D4/D5: la clave `sesiones/<UUID>.<ext>` se repetía entre intentos; un intento que fallaba al confirmar podía borrar, tarde, el archivo del reintento que ya confirmó | Clave por intento `sesiones/<UUID>-<token>.<ext>`, generada antes de escribir (D4, spec «Clave del archivo») | `test_el_intento_que_falla_no_borra_el_archivo_del_reintento_que_gano`, `test_cada_intento_tiene_su_propia_clave` |
+| D4: la clave solo se conocía después de `save`; un `save` que escribe y luego lanza dejaba el archivo | El `except` borra siempre la clave del intento (y el nombre devuelto, si fue otro) | `test_el_almacen_escribe_y_luego_falla_no_deja_el_archivo` |
+| D6: `_es_docx` buscaba el tipo .docx en los bytes; un .docm con esa cadena en un comentario XML pasaba | `[Content_Types].xml` (64 KB como máximo) leído con ElementTree sin `DOCTYPE`; un solo `Override` de `/word/document.xml` con el tipo exacto; rechazo de `macroEnabled` y de `word/vbaProject.bin` | `test_un_docm_con_el_tipo_docx_escondido_se_rechaza` y vecinas en `test_validar_archivo.py` |
+
+- Deuda: la carrera del hallazgo 1 se prueba en un solo hilo, con `InMemoryStorage` que sobrescribe como R2. Falta una prueba de concurrencia con PostgreSQL y R2 reales (dos envíos con el mismo `id`, uno falla al confirmar).
+- `# noqa: S314` en `_declara_docx`: los ataques de XML conocidos (billion laughs, blowup cuadrático, XXE) necesitan un DTD; el lector corta en `<!DOCTYPE>` y lee como máximo 64 KB. No se agrega `defusedxml`.
 
 ## Medición D3 (tarea 3.3)
 

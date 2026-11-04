@@ -36,6 +36,14 @@
 
 ## 5. Cierre
 
+### Parte D: Corrección A2 (alto riesgo)
+
+- [x] 5.0a Prueba primero, `repositorio/tests/test_servicios_enviar.py`: `save` escribe y luego lanza → sin sesión, sin entrada y sin archivo; el primer intento falla al confirmar y borra después de que el reintento con el mismo `id` confirmó → el archivo ganador sigue (almacén que sobrescribe, como R2); cada intento tiene su clave. Luego D4 en `_guardar`: clave `sesiones/<id>-<token><ext>` generada antes de escribir y borrada siempre en el `except`. Ajustar las pruebas que fijaban `sesiones/<UUID>.pdf` y el spec «Clave del archivo». Verificar: rojo y luego verde
+- [x] 5.0b Prueba primero, `repositorio/tests/test_validar_archivo.py`: ZIP de un .docm con el tipo del .docx escondido en un comentario XML (dentro y antes de `<Types>`) o en un `Default`; `word/vbaProject.bin`; `macroEnabled` en cualquier parte; sin `Override`, dos `Override`, tipo casi igual, sin namespace, con `DOCTYPE` y XML roto → rechazados; un `[Content_Types].xml` como el de Word pasa. Luego D6 en `_es_docx` con ElementTree. Verificar: rojo y luego verde
+- [x] 5.0c Revisión de la parte (agente `revisor`), hallazgos en `verificacion.md` y commit
+
+### Parte E: A2 y verificación
+
 - [ ] 5.1 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio, D4, D5, D6 y D8), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde; la vista previa aplica `repositorio/0001` y `actividad/0005` en Neon y envía una sesión de punta a punta
 - [ ] 5.2 `verificacion.md`: tabla escenario → prueba de los cuatro specs del cambio, la medición de D3 y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit
 
@@ -44,7 +52,7 @@
 - Decisión 4: Esc también cierra el popup (como «Cancelar»), salvo mientras sube; en los términos, Esc es «Volver».
 - Decisión 5: título hasta 200 caracteres (doc 11) y propósito hasta 1000 (nuevo).
 - Decisión 6: la extensión y el contenido deben coincidir; un .docm renombrado se rechaza.
-- Decisión 7: la clave es `sesiones/<UUID>.pdf` o `.docx`.
+- Decisión 7: la clave es `sesiones/<UUID>-<token>.pdf` o `.docx` (token por intento, corrección A2).
 - Decisión 9: el reintento no duplica la sesión (UUID del navegador, design D5).
 - Decisión 11: la dirección y el Administrador que abren la ruta van a su inicio, sin registro de intento (no es una ruta de sección).
 

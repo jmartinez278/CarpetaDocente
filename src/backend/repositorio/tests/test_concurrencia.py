@@ -77,4 +77,5 @@ def test_dos_envios_con_el_mismo_id_dejan_una_sesion_y_los_dos_ven_el_exito(
     assert Sesion.objects.count() == 1
     assert RegistroActividad.objects.filter(operacion=Operacion.SESION_ENVIADA).count() == 1
     assert guardados == ["primero"]
-    assert almacen.listdir("sesiones")[1] == [f"{datos['id']}.pdf"]
+    ganadora = Sesion.objects.get()
+    assert almacen.listdir("sesiones")[1] == [ganadora.archivo_clave.removeprefix("sesiones/")]

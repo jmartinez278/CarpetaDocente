@@ -33,11 +33,15 @@ Fuera de Vercel y sin las variables de R2, los archivos SHALL guardarse en la ca
 - **THEN** ninguna prueba crea archivos en `media/` ni se conecta a R2
 
 ### Requirement: Clave del archivo
-La clave de cada archivo SHALL ser `sesiones/<UUID de la sesión>` más la extensión de su tipo (`.pdf` o `.docx`), única, sin el nombre original ni datos de la docente. El nombre original se guarda aparte, en la sesión.
+La clave de cada archivo SHALL ser `sesiones/<UUID de la sesión>-<token del intento>` más la extensión de su tipo (`.pdf` o `.docx`), única, sin el nombre original ni datos de la docente. Cada intento de envío tiene su propio token, así que dos intentos con el mismo UUID nunca comparten clave. El nombre original se guarda aparte, en la sesión.
 
 #### Scenario: Clave de un PDF
 - **WHEN** la docente envía «Leemos un cuento.pdf»
-- **THEN** el archivo queda con la clave `sesiones/<UUID>.pdf` y la sesión guarda «Leemos un cuento.pdf» como nombre original
+- **THEN** el archivo queda con la clave `sesiones/<UUID>-<token>.pdf` y la sesión guarda «Leemos un cuento.pdf» como nombre original
+
+#### Scenario: Intento fallido y reintento con el mismo UUID
+- **WHEN** un intento guarda su archivo y falla al confirmar, y el reintento con el mismo UUID confirma antes de que el primero borre
+- **THEN** el primero borra solo su propio archivo y queda el del reintento, con su sesión
 
 #### Scenario: Nombre original largo o con rutas
 - **WHEN** el nombre original trae una ruta o pasa de 255 caracteres
