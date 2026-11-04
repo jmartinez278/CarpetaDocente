@@ -4,6 +4,7 @@ Las entradas se crean con ``registrar`` y una ``fecha_hora`` fija. Las semanas d
 2027 (el año ABIERTO de las fixtures): el lunes 1 y el lunes 8 de marzo.
 """
 
+import uuid
 from datetime import UTC, date, datetime
 
 import pytest
@@ -198,9 +199,57 @@ def test_demo_cargada_no_cuenta(participante, crear_usuario, con_seccion):
     assert (fila["activos_texto"], fila["jornadas"]) == ("1 / 1 (100 %)", 1)
 
 
-def test_sesiones_queda_sin_dato():
-    """Escenario «Columnas aún sin datos»."""
-    assert semana()["sesiones"] is None
+# --- Sesiones cargadas (US-010, D10) ---------------------------------------------------------
+
+
+def sesion_enviada(usuario, fecha_hora, compartida=False):
+    return entrada(
+        usuario,
+        Operacion.SESION_ENVIADA,
+        fecha_hora,
+        entidad="sesion",
+        entidad_id=uuid.uuid4(),
+        detalle={"compartida": compartida},
+    )
+
+
+def test_sesiones_cargadas_cuenta_las_enviadas_compartidas_o_no(docente, otra_docente):
+    """Escenario «Sesiones cargadas»: dos de una docente (una compartida) y una de otra."""
+    sesion_enviada(docente, MARTES_2, compartida=True)
+    sesion_enviada(docente, JUEVES_4)
+    sesion_enviada(otra_docente, JUEVES_4)
+
+    assert semana()["sesiones"] == 3
+
+
+def test_semana_sin_sesiones_dice_cero(participante):
+    """Escenarios «Semana sin sesiones» y «Columnas aún sin datos»: 0, no «—»."""
+    entrada(participante, Operacion.REGISTRO_ASISTENCIA, MARTES_2)
+
+    assert semana()["sesiones"] == 0
+
+
+def test_las_sesiones_de_la_demostracion_no_cuentan(docente, crear_usuario):
+    """Escenario «Sesiones de la demostración»; tampoco una entrada sin usuario."""
+    sesion_enviada(crear_usuario("demo.docente1", es_demo=True), MARTES_2)
+    sesion_enviada(None, MARTES_2)
+    sesion_enviada(docente, JUEVES_4)
+
+    assert semana()["sesiones"] == 1
+
+
+def test_las_sesiones_cuentan_en_su_semana(docente):
+    sesion_enviada(docente, MARTES_2)
+
+    primera, segunda = indicadores_por_semana(LUNES_1, LUNES_8)
+
+    assert (primera["sesiones"], segunda["sesiones"]) == (1, 0)
+
+
+def test_enviar_una_sesion_cuenta_como_docente_activa(participante):
+    sesion_enviada(participante, MARTES_2)
+
+    assert semana()["activos"] == 1
 
 
 # --- Secciones con notas (US-020, D13) -------------------------------------------------------
@@ -291,8 +340,8 @@ def test_la_pagina_muestra_las_semanas_del_rango_elegido(panel, participante):
         "Secciones con notas",
     ):
         assert f'<th scope="col">{encabezado}</th>' in html
-    # "—" solo en «Sesiones cargadas» de cada fila (US-020 llena «Secciones con notas»).
-    assert html.count("<td>—</td>") == 2
+    # Escenario «Columnas aún sin datos»: ninguna celda dice «—» (US-010 llena «Sesiones cargadas»).
+    assert "<td>—</td>" not in html
     for campo in ("desde", "hasta"):
         assert f'for="id_{campo}"' in html
 

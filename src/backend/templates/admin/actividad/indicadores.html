@@ -42,7 +42,7 @@ panel de Django, con sus temas claro y oscuro.
         <th scope="row">{{ fila.lunes|date:"d-m-Y" }} – {{ fila.domingo|date:"d-m-Y" }}</th>
         <td>{{ fila.activos_texto }}</td>
         <td>{{ fila.jornadas }}</td>
-        <td>{{ fila.sesiones|default_if_none:"—" }}</td>
+        <td>{{ fila.sesiones }}</td>
         <td>{{ fila.secciones_con_notas|default_if_none:"—" }}</td>
       </tr>
       {% endfor %}

@@ -40,6 +40,7 @@ class Operacion(models.TextChoices):
     JORNADA_COMPLETA = "JORNADA_COMPLETA", "Jornada completa"
     COMPETENCIAS_MARCADAS = "COMPETENCIAS_MARCADAS", "Competencias marcadas"
     NOTAS_GUARDADAS = "NOTAS_GUARDADAS", "Notas guardadas"
+    SESION_ENVIADA = "SESION_ENVIADA", "Sesión enviada"
     CATALOGO_EDITADO = "CATALOGO_EDITADO", "Catálogo editado"
     DEMO_CARGADA = "DEMO_CARGADA", "Demostración cargada"
     DEMO_QUITADA = "DEMO_QUITADA", "Demostración quitada"
@@ -48,13 +49,14 @@ class Operacion(models.TextChoices):
     REGISTRO_EXPORTADO = "REGISTRO_EXPORTADO", "Registro exportado"
 
 
-# Operaciones que cuentan para KPI-01 (docentes activos). US-010 agrega la suya.
+# Operaciones que cuentan para KPI-01 (docentes activos).
 CUENTAN_KPI_01 = frozenset(
     {
         Operacion.REGISTRO_ASISTENCIA,
         Operacion.ASISTENCIA_CAMBIADA,
         Operacion.JORNADA_COMPLETA,
         Operacion.NOTAS_GUARDADAS,
+        Operacion.SESION_ENVIADA,
     }
 )
 

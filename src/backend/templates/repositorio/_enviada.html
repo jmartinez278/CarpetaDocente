@@ -1,0 +1,11 @@
+{% comment %}Éxito del envío (spec «Envío exitoso»; D7): Mensaje de éxito, resumen y «Subir otra». Lo pinta sesiones.js en la región role="status".{% endcomment %}
+<div class="mensaje mensaje--exito">{% include "iconos/check.svg" %}<div class="mensaje__texto"><p>{% if sesion.compartida %}Sesión enviada a la dirección y compartida en el repositorio{% else %}Sesión enviada a la dirección{% endif %}</p></div></div>
+<div class="resumen">
+  <h2 tabindex="-1">{{ sesion.titulo }}</h2>
+  <dl>
+    <div><dt>Grado</dt><dd>{{ grado }}</dd></div>
+    <div><dt>Área</dt><dd>{{ sesion.area.nombre }}</dd></div>
+    <div class="resumen-archivo"><dt>Archivo</dt><dd>{% include "iconos/file-text.svg" %}<span><span>{{ sesion.archivo_nombre }}</span> <span class="ayuda">{{ tipo }} · {{ sesion.tamano_bytes|filesizeformat }}</span></span></dd></div>
+  </dl>
+  <button class="boton-principal" type="button" data-subir-otra>Subir otra</button>
+</div>

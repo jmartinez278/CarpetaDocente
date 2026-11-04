@@ -6,15 +6,15 @@ Marcas de las competencias que la tutora desarrolló con su sección en cada per
 ## Requirements
 
 ### Requirement: Acceso a las competencias de su sección
-La pantalla de competencias de una sección SHALL abrirse solo para la docente de esa sección en el año ABIERTO. La sección de otra docente o de un año CERRADO responde como página inexistente; otro rol va a su pantalla de inicio y una visita sin sesión va al ingreso. Las mismas reglas valen para cada guardado. Desde US-020 se llega desde la hoja de notas, con el botón «Competencias».
+La pantalla de competencias de una sección SHALL abrirse solo para la docente de esa sección en el año ABIERTO. La sección de otra docente, inexistente o de un año CERRADO responde 403 con el mensaje de «sin permiso» y deja una entrada de intento (spec `acceso-secciones`); otro rol va a su pantalla de inicio y una visita sin sesión va al ingreso. Las mismas reglas valen para cada guardado; un guardado con 403 lleva la pestaña a la página de «sin permiso», no a «Tu sesión venció». Desde US-020 se llega desde la hoja de notas, con el botón «Competencias».
 
 #### Scenario: Sección de otra docente
 - **WHEN** una docente abre o guarda las competencias de una sección que no es suya
-- **THEN** recibe "página no encontrada" y no se guarda nada
+- **THEN** recibe 403 y no se guarda nada
 
 #### Scenario: Sección de un año cerrado
 - **WHEN** la docente abre o guarda las competencias de su sección de un año CERRADO
-- **THEN** recibe "página no encontrada" y no se guarda nada
+- **THEN** recibe 403 y no se guarda nada
 
 #### Scenario: Otro rol
 - **WHEN** un usuario de la dirección abre las competencias de una sección

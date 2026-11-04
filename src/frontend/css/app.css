@@ -4454,3 +4454,518 @@ html:has(.vista-notas) {
     }
   }
 }
+
+/* Sesiones (US-010, US-014 y EN-03, D9; DESIGN.md 0.4), de sesiones.css del boceto (prototipos-cd/US-010, variante 4a)
+   con los tokens de arriba. Reusa la cabecera de pantalla de trabajo (franjas en el tinte de Sesiones), Campo, Mensaje,
+   Estado vacío, los botones y la estructura de los diálogos de estudiantes (cabecera, cuerpo desplazable y pie). */
+body:has(.vista-sesiones) {
+  background: var(--color-fondo-trabajo);
+}
+
+@layer components {
+  .vista-sesiones {
+    --tinte-cabecera: var(--color-tinte-sesiones);
+    flex: 1;
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    padding-inline: --spacing(4);
+  }
+
+  .cabecera-sesiones {
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(6);
+    padding-top: --spacing(6);
+  }
+
+  .cabecera-sesiones h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 600 var(--text-heading) / 30px var(--font-display);
+    color: var(--color-primario);
+  }
+
+  .sin-script {
+    margin-top: --spacing(6);
+  }
+
+  .vista-sesiones .vacio {
+    margin-top: --spacing(6);
+  }
+
+  /* Éxito del envío: Mensaje y resumen; el vacío sigue debajo, más bajo. */
+  .resultado:not(:empty) {
+    margin-top: --spacing(8);
+    max-width: 680px;
+  }
+
+  .resultado:not(:empty) ~ .vacio {
+    min-height: 160px;
+    padding-block: --spacing(6);
+  }
+
+  .resumen {
+    padding: --spacing(6) 0;
+  }
+
+  .resumen h2 {
+    margin-bottom: --spacing(5);
+    font: 600 20px / 28px var(--font-display);
+  }
+
+  .resumen h2:focus {
+    outline: none;
+  }
+
+  .resumen dl {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: --spacing(4) --spacing(6);
+  }
+
+  .resumen dt {
+    margin-bottom: 2px;
+    font-size: var(--text-caption);
+    line-height: 20px;
+    color: var(--color-texto-suave);
+  }
+
+  .resumen dd {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .resumen-archivo {
+    grid-column: 1 / -1;
+  }
+
+  .resumen-archivo dd {
+    display: flex;
+    align-items: center;
+    gap: --spacing(2);
+  }
+
+  .resumen-archivo dd > .icono {
+    color: var(--color-texto-suave);
+  }
+
+  .resumen-archivo .ayuda {
+    display: block;
+    font-size: var(--text-caption);
+    line-height: 20px;
+    color: var(--color-texto-suave);
+  }
+
+  .resumen > .boton-principal {
+    margin-top: --spacing(6);
+  }
+
+  /* Popups: el formulario (hoja en el celular, ventana en la PC) y los términos, chico y centrado encima. */
+  .modal-sesion,
+  .modal-terminos {
+    position: fixed;
+    inset: 0;
+    max-width: calc(100% - 32px);
+    margin: auto;
+    padding: 0;
+    background: var(--color-superficie);
+    color: var(--color-texto);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-tarjeta);
+    overflow: hidden;
+  }
+
+  .modal-sesion {
+    width: 640px;
+    height: min(800px, calc(100dvh - 64px));
+    max-height: none;
+  }
+
+  .modal-terminos {
+    width: 480px;
+    height: fit-content;
+    max-height: calc(100dvh - 32px);
+  }
+
+  .modal-sesion[open],
+  .modal-terminos[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .modal-sesion::backdrop,
+  .modal-terminos::backdrop {
+    background: color-mix(in srgb, var(--color-fondo) 72%, transparent);
+  }
+
+  body:has(.modal-sesion[open]) {
+    overflow: hidden;
+  }
+
+  .modal-descripcion {
+    margin-top: --spacing(1);
+  }
+
+  .modal-cuerpo:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: -4px;
+  }
+
+  .modal-sesion .modal-cuerpo > * + * {
+    margin-top: 0;
+  }
+
+  .modal-sesion .modal-cuerpo > .mensaje {
+    margin-bottom: --spacing(5);
+  }
+
+  .modal-terminos .modal-cabecera,
+  .modal-terminos .modal-cuerpo {
+    padding: --spacing(5);
+  }
+
+  .modal-terminos .modal-pie {
+    padding: --spacing(4) --spacing(5) calc(--spacing(4) + env(safe-area-inset-bottom));
+  }
+
+  .modal-terminos .modal-cuerpo > * + * {
+    margin-top: --spacing(5);
+  }
+
+  .lista-terminos {
+    padding-left: --spacing(6);
+    list-style: decimal;
+  }
+
+  .lista-terminos li {
+    padding-left: --spacing(1);
+  }
+
+  .lista-terminos li + li {
+    margin-top: --spacing(4);
+  }
+
+  .lista-terminos li::marker {
+    font-weight: 600;
+    color: var(--color-texto-suave);
+  }
+
+  /* Botones: en la PC, «Cancelar» o «Volver» a la izquierda; en el celular, la acción principal arriba. */
+  .acciones-modal {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: --spacing(3);
+  }
+
+  .acciones-modal .boton-principal {
+    flex: 1;
+    width: auto;
+  }
+
+  .acciones-modal .boton-secundario {
+    min-width: 120px;
+  }
+
+  .acciones-modal .boton-secundario .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .acciones-modal [aria-disabled="true"] {
+    background: var(--color-dimension);
+    color: var(--color-texto-suave);
+    border-color: var(--color-linea);
+    cursor: progress;
+    transform: none;
+  }
+
+  /* Campos */
+  .campos-sesion {
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(5);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .campos-sesion .campo {
+    min-width: 0;
+  }
+
+  .campos-sesion .campo__control:disabled {
+    background: var(--color-fondo);
+    color: var(--color-texto-suave);
+    opacity: 1;
+  }
+
+  .campos-sesion select.campo__control {
+    padding-right: --spacing(2);
+  }
+
+  .campo-textarea {
+    height: 80px;
+    min-height: 80px;
+    padding-block: 10px;
+    resize: vertical;
+  }
+
+  .grupo-grado-area {
+    display: grid;
+    grid-template-columns: minmax(112px, 0.8fr) minmax(0, 1.5fr);
+    gap: --spacing(1) --spacing(4);
+  }
+
+  .grado-ayuda {
+    grid-column: 1 / -1;
+  }
+
+  .campos-sesion .opcional {
+    color: var(--color-texto-suave);
+  }
+
+  /* Archivo: el control nativo, invisible, encima de «Elegir»/«Cambiar» (44 px). */
+  .archivo-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: --spacing(3);
+    min-height: 76px;
+    padding: --spacing(3);
+    background: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radius-campo);
+  }
+
+  .archivo-control > .icono {
+    color: var(--color-texto-suave);
+  }
+
+  .archivo-texto {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .archivo-texto > span:first-child {
+    font-size: var(--text-caption);
+    font-weight: 600;
+    line-height: 20px;
+    overflow-wrap: anywhere;
+  }
+
+  .elegir-archivo {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    min-height: 44px;
+    color: var(--color-primario);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+
+  .archivo-input {
+    position: absolute;
+    top: 50%;
+    right: --spacing(3);
+    width: 64px;
+    height: 44px;
+    opacity: 0;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
+  .archivo-control:has(.archivo-input:focus-visible) {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 3px;
+  }
+
+  .archivo-control.rechazado {
+    border-color: var(--color-error);
+  }
+
+  .archivo-control.rechazado > .icono {
+    color: var(--color-error);
+  }
+
+  .archivo-control.rechazado .archivo-texto > span:first-child {
+    font-weight: 400;
+  }
+
+  .archivo-control:has(.archivo-input:disabled) {
+    background: var(--color-fondo);
+  }
+
+  .archivo-control:has(.archivo-input:disabled) .elegir-archivo {
+    color: var(--color-texto-suave);
+    cursor: progress;
+  }
+
+  /* Compartir: casilla de 20 px en una fila de 44 px; su ayuda alineada con el texto. */
+  .compartir {
+    padding-top: --spacing(3);
+    border-top: 1px solid var(--color-linea);
+  }
+
+  .casilla {
+    display: flex;
+    align-items: center;
+    gap: --spacing(3);
+    min-height: 44px;
+    font-weight: 600;
+    line-height: 24px;
+    cursor: pointer;
+  }
+
+  .casilla input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--color-primario);
+  }
+
+  .casilla input:focus-visible {
+    outline: 2px solid var(--color-primario);
+    outline-offset: 2px;
+  }
+
+  .compartir > .campo-ayuda,
+  .compartir > .campo__error {
+    margin-top: 2px;
+    padding-left: --spacing(8);
+  }
+
+  /* Avance de la subida */
+  .progreso {
+    margin-bottom: --spacing(2);
+  }
+
+  .progreso__texto {
+    margin-bottom: --spacing(2);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    line-height: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progreso progress {
+    display: block;
+    width: 100%;
+    height: 8px;
+    appearance: none;
+    background: var(--color-linea);
+    border: 0;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+
+  .progreso progress::-webkit-progress-bar {
+    background: var(--color-linea);
+  }
+
+  .progreso progress::-webkit-progress-value {
+    background: var(--color-primario);
+    border-radius: var(--radius-pill);
+  }
+
+  .progreso progress::-moz-progress-bar {
+    background: var(--color-primario);
+  }
+
+  @media (min-width: 960px) {
+    .vista-sesiones {
+      padding-inline: --spacing(6);
+    }
+
+    .cabecera-sesiones {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: --spacing(8);
+      padding-top: --spacing(8);
+    }
+
+    .cabecera-sesiones .franjas-cabecera {
+      margin-bottom: --spacing(3);
+    }
+
+    .accion-subir.boton-principal,
+    .resumen > .boton-principal {
+      width: auto;
+      padding-inline: --spacing(6);
+    }
+
+    .vista-sesiones .vacio {
+      min-height: 360px;
+    }
+
+    .resultado:not(:empty) {
+      margin-top: --spacing(10);
+    }
+  }
+
+  @media (max-width: 959.98px) {
+    .modal-sesion {
+      width: 100%;
+      max-width: 100%;
+      height: calc(100dvh - 16px);
+      margin: auto 0 0;
+      border-inline: 0;
+      border-bottom: 0;
+      border-radius: var(--radius-tarjeta) var(--radius-tarjeta) 0 0;
+    }
+
+    .acciones-modal {
+      flex-direction: column;
+      gap: --spacing(2);
+    }
+
+    .acciones-modal .boton-principal,
+    .acciones-modal .boton-secundario {
+      flex: none;
+      width: 100%;
+    }
+
+    .campos-sesion {
+      gap: --spacing(4);
+    }
+
+    .grupo-grado-area {
+      column-gap: --spacing(3);
+    }
+
+    .archivo-control {
+      gap: --spacing(2);
+      padding: 10px;
+    }
+
+    .archivo-input {
+      right: 10px;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .modal-sesion[open] {
+      animation: sesion-entrar 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+
+  @keyframes sesion-entrar {
+    from {
+      transform: translateY(8px);
+      opacity: 0.9;
+    }
+  }
+}

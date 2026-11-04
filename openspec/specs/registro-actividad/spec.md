@@ -44,7 +44,7 @@ La operación de una entrada MUST ser una del catálogo; cada operación del cat
 | Notas | COMPETENCIAS_MARCADAS | No |
 | Notas | NOTAS_GUARDADAS | Sí |
 | Catálogo y piloto | CATALOGO_EDITADO, DEMO_CARGADA, DEMO_QUITADA, SECCION_DESCARTADA | No |
-| Permisos | INTENTO_SIN_PERMISO (reservada para US-004) | No |
+| Permisos | INTENTO_SIN_PERMISO | No |
 | Registro | REGISTRO_EXPORTADO | No |
 
 #### Scenario: Operación fuera del catálogo
@@ -53,14 +53,18 @@ La operación de una entrada MUST ser una del catálogo; cada operación del cat
 
 #### Scenario: Cada operación tiene su prueba
 - **WHEN** corre la suite de pruebas
-- **THEN** cada operación del catálogo, salvo la reservada, la genera al menos una prueba que hace la operación real
+- **THEN** cada operación del catálogo la genera al menos una prueba que hace la operación real; ninguna queda reservada
 
 ### Requirement: Toda escritura queda registrada
-Toda operación que crea, modifica o elimina datos MUST registrarse con una operación del catálogo, sea desde las pantallas, desde el panel de administración o desde un comando de consola. La historia que introduce una operación nueva agrega su operación al catálogo. Ver o consultar no se registra. Iniciar y cerrar sesión sí se registran (para atender incidencias), pero no cuentan para KPI-01.
+Toda operación que crea, modifica o elimina datos MUST registrarse con una operación del catálogo, sea desde las pantallas, desde el panel de administración o desde un comando de consola. La historia que introduce una operación nueva agrega su operación al catálogo. Ver o consultar no se registra, salvo un intento sin permiso: la petición de una docente a una sección o un estudiante que no son suyos deja una entrada INTENTO_SIN_PERMISO (spec `acceso-secciones`). Iniciar y cerrar sesión sí se registran (para atender incidencias), pero no cuentan para KPI-01.
 
 #### Scenario: Una lectura no deja entrada
 - **WHEN** una docente abre la portada, la lista de estudiantes o la asistencia de hoy sin cambiar nada
 - **THEN** no queda ninguna entrada de actividad
+
+#### Scenario: Un intento sin permiso deja entrada
+- **WHEN** una docente abre la lista de estudiantes de una sección de otra docente
+- **THEN** queda una entrada INTENTO_SIN_PERMISO con su usuario, aunque no se cambió nada
 
 #### Scenario: Inicio y cierre de sesión
 - **WHEN** una docente inicia sesión y luego la cierra con "Cerrar sesión"
@@ -115,6 +119,10 @@ El detalle de una entrada MUST NOT incluir nombres de estudiantes, sus notas ni 
 #### Scenario: Justificación
 - **WHEN** la docente escribe una nota de justificación
 - **THEN** la entrada ASISTENCIA_CAMBIADA dice que la nota cambió, sin su texto
+
+#### Scenario: Intento sin permiso
+- **WHEN** una docente intenta abrir la hoja de notas de otra sección con una consulta en la dirección
+- **THEN** la entrada INTENTO_SIN_PERMISO solo tiene la ruta sin la consulta y el motivo, sin nombres ni notas
 
 ### Requirement: Registro de solo lectura
 El registro de actividad MUST ser de solo lectura para todos los roles, incluido el Administrador: nadie agrega, edita ni borra entradas desde el panel, y el sistema rechaza modificar o borrar una entrada guardada.

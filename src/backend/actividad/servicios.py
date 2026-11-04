@@ -49,6 +49,8 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
     # Código SIAGIE del área, número del periodo, cuántas se crearon y los pares
     # [estudiante, competencia] cambiados, sin niveles ni conclusiones (US-020, D13).
     Operacion.NOTAS_GUARDADAS: frozenset({"area", "periodo", "creadas", "cambiadas"}),
+    # Solo si se compartió; sin título, propósito ni nombre del archivo (US-010, D10).
+    Operacion.SESION_ENVIADA: frozenset({"compartida"}),
     Operacion.CATALOGO_EDITADO: frozenset({"campos"}),
     Operacion.DEMO_CARGADA: frozenset({"secciones", "estudiantes", "dias"}),
     Operacion.DEMO_QUITADA: frozenset(
@@ -208,8 +210,8 @@ def indicadores_por_semana(desde: date, hasta: date) -> list[dict]:
 
     ``activos``: participantes con una operación de KPI-01 en la semana. ``jornadas``: entradas
     REGISTRO_ASISTENCIA de cuentas reales. ``secciones_con_notas``: secciones distintas con una
-    entrada NOTAS_GUARDADAS de una cuenta real (US-020, D13). ``sesiones`` queda en ``None``
-    hasta US-010.
+    entrada NOTAS_GUARDADAS de una cuenta real (US-020, D13). ``sesiones``: entradas
+    SESION_ENVIADA de cuentas reales, compartidas o no (US-010, D10).
     """
     primer_lunes = desde - timedelta(days=desde.weekday())
     ultimo_lunes = hasta - timedelta(days=hasta.weekday())
@@ -238,6 +240,14 @@ def indicadores_por_semana(desde: date, hasta: date) -> list[dict]:
         ),
         Count("entidad_id", distinct=True),
     )
+    sesiones = _por_semana(
+        semana.filter(
+            operacion=Operacion.SESION_ENVIADA,
+            usuario__isnull=False,
+            usuario__es_demo=False,
+        ),
+        Count("id"),
+    )
 
     filas = []
     lunes = primer_lunes
@@ -251,7 +261,7 @@ def indicadores_por_semana(desde: date, hasta: date) -> list[dict]:
                 "participantes": len(participantes),
                 "activos_texto": texto_activos(n_activos, len(participantes)),
                 "jornadas": jornadas.get(lunes, 0),
-                "sesiones": None,
+                "sesiones": sesiones.get(lunes, 0),
                 "secciones_con_notas": secciones_con_notas.get(lunes, 0),
             }
         )
