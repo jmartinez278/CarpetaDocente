@@ -45,7 +45,7 @@
 ### Parte E: A2 y verificación
 
 - [ ] 5.1 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio, D4, D5, D6 y D8), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde; la vista previa aplica `repositorio/0001` y `actividad/0005` en Neon y envía una sesión de punta a punta
-- [ ] 5.2 `verificacion.md`: tabla escenario → prueba de los cuatro specs del cambio, la medición de D3 y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit
+- [x] 5.2 `verificacion.md`: tabla escenario → prueba de los cuatro specs del cambio, la medición de D3 y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o una nota de por qué no aplica; commit
 
 ## Ajustes del propose a decisiones.md
 
