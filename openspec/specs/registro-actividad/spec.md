@@ -30,7 +30,7 @@ La operación de una entrada MUST ser una del catálogo; cada operación del cat
 
 #### Scenario: Catálogo de esta historia
 - **WHEN** se consulta el catálogo
-- **THEN** tiene estas operaciones, y solo las de asistencia y NOTAS_GUARDADAS cuentan para KPI-01:
+- **THEN** tiene estas operaciones, y solo las de asistencia, NOTAS_GUARDADAS y SESION_ENVIADA cuentan para KPI-01:
 
 | Grupo | Operaciones | Cuenta para KPI-01 |
 |---|---|---|
@@ -43,6 +43,7 @@ La operación de una entrada MUST ser una del catálogo; cada operación del cat
 | Asistencia | REGISTRO_ASISTENCIA, ASISTENCIA_CAMBIADA, JORNADA_COMPLETA | Sí |
 | Notas | COMPETENCIAS_MARCADAS | No |
 | Notas | NOTAS_GUARDADAS | Sí |
+| Sesiones de aprendizaje | SESION_ENVIADA | Sí |
 | Catálogo y piloto | CATALOGO_EDITADO, DEMO_CARGADA, DEMO_QUITADA, SECCION_DESCARTADA | No |
 | Permisos | INTENTO_SIN_PERMISO | No |
 | Registro | REGISTRO_EXPORTADO | No |
@@ -201,4 +202,19 @@ Cada guardado de la hoja de notas de un área que crea o cambia alguna nota SHAL
 
 #### Scenario: Sin cambios
 - **WHEN** la tutora guarda la hoja sin haber cambiado nada, o el mismo guardado llega dos veces
+- **THEN** no queda una entrada nueva
+
+### Requirement: Envío de sesiones
+Cada sesión guardada SHALL dejar una entrada SESION_ENVIADA con la docente, la sesión como entidad (su UUID) y en el detalle solo si se compartió (`{"compartida": true}` o `false`), sin título, propósito ni nombre del archivo, en la misma transacción. Un envío repetido de la misma sesión no deja otra entrada.
+
+#### Scenario: Sesión enviada sin compartir
+- **WHEN** la docente envía una sesión sin compartir
+- **THEN** queda una entrada SESION_ENVIADA con su usuario, la entidad `sesion`, el UUID de la sesión y el detalle `{"compartida": false}`
+
+#### Scenario: Sesión compartida
+- **WHEN** la docente envía una sesión y acepta compartirla
+- **THEN** el detalle de la entrada es `{"compartida": true}`, sin el título ni el nombre del archivo
+
+#### Scenario: Envío rechazado o repetido
+- **WHEN** un envío no se guarda por un dato inválido, o llega otra vez una sesión ya guardada
 - **THEN** no queda una entrada nueva
