@@ -78,8 +78,12 @@ def resultado(page):
 
 
 def quieto(page):
-    """Espera a que el diálogo termine su entrada o su salida (rebrand-us-010, D4)."""
-    page.wait_for_function("document.getAnimations().length === 0")
+    """Espera a que el diálogo termine su entrada o su salida (rebrand-us-010, D4).
+
+    Sondea cada 100 ms: con ``requestAnimationFrame`` la espera se colgaba en el tema oscuro
+    aunque las animaciones ya hubieran terminado.
+    """
+    page.wait_for_function("document.getAnimations().length === 0", polling=100)
 
 
 def abrir(page):
@@ -736,6 +740,48 @@ def test_con_movimiento_reducido_el_popup_no_se_desplaza(pantalla, ancho):
     assert pantalla.evaluate(ESTADO_DEL_DIALOGO)["transform"] == "none"
     quieto(pantalla)
     assert pantalla.evaluate(ESTADO_DEL_DIALOGO)["transform"] == "none"
+
+
+@pytest.mark.parametrize("ancho", [360, 1280])
+def test_a04_al_cerrar_con_el_mouse_el_popup_sale_en_columna(pantalla, ancho):
+    """Auditoría de Emil A-04: durante la salida, cabecera, cuerpo y pie no se ponen en fila."""
+    con_pantalla(pantalla, ancho, "light")
+    abrir(pantalla)
+
+    cancelar(pantalla).click()
+    saliendo = pantalla.evaluate(
+        """() => {
+          const estilo = getComputedStyle(document.getElementById("subir"));
+          return { display: estilo.display, direccion: estilo.flexDirection };
+        }"""
+    )
+    assert saliendo == {"display": "flex", "direccion": "column"}
+    quieto(pantalla)
+    expect(popup(pantalla)).to_be_hidden()
+
+
+@pytest.mark.parametrize("ancho", [320, 568])
+def test_b02_en_una_pantalla_muy_baja_el_cuerpo_del_popup_sigue_a_la_vista(pantalla, ancho):
+    """Auditoría de Emil B-02: cabecera y pie se compactan; el cuerpo conserva altura útil.
+
+    320 px de alto: el celular más chico de pie con el teclado, o acostado (568 × 320).
+    """
+    alto = 320
+    pantalla.set_viewport_size({"width": ancho, "height": alto})
+    abrir(pantalla)
+
+    cuerpo = popup(pantalla).locator(".dialog-cuerpo")
+    altos = popup(pantalla).evaluate(
+        "(d) => [...d.children].map((parte) => `${parte.className} ${parte.clientHeight}`)"
+    )
+    assert cuerpo.evaluate("(el) => el.clientHeight") >= alto * 0.4, altos
+    for nombre in ["Enviar a la dirección", "Cancelar"]:
+        caja = popup(pantalla).get_by_role("button", name=nombre).bounding_box()
+        assert caja["y"] >= 0 and caja["y"] + caja["height"] <= alto, nombre
+        assert caja["height"] >= 44, nombre
+    assert pantalla.evaluate(
+        "document.documentElement.scrollWidth <= document.documentElement.clientWidth"
+    )
 
 
 def test_en_el_celular_subir_una_sesion_se_lee_completo(pantalla):
