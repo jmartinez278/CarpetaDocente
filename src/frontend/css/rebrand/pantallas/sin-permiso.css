@@ -1,0 +1,32 @@
+/* «Sin permiso», del boceto (insumos/rebrand/pantallas-nuevas/sin-permiso.html) (rebrand-base, D8):
+   el mensaje de error con su <h1> y el botón principal, a todo el ancho en celular. */
+
+@layer components {
+  .permission {
+    max-width: 760px;
+    margin-top: var(--s-7);
+  }
+
+  .permission h1 {
+    font-size: var(--text-section);
+    line-height: var(--leading-section);
+    letter-spacing: var(--tracking-section);
+  }
+
+  .permission-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin-top: var(--s-5);
+  }
+
+  @media (max-width: 699px) {
+    .permission {
+      margin-top: var(--s-5);
+    }
+
+    .permission-acciones .btn {
+      width: 100%;
+    }
+  }
+}

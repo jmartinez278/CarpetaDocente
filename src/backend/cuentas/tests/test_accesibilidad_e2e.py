@@ -8,6 +8,7 @@ por npm (``npm ci`` en ``src/frontend/``). Se pide con ``uv run pytest -m e2e --
 """
 
 import pytest
+from playwright.sync_api import expect
 
 from cuentas.tests.e2e import (
     ANCHOS,
@@ -34,6 +35,8 @@ VISTAS = [
     "direccion",
     "direccion-menu-abierto",
     "sin-permiso",
+    "sin-permiso-menu-abierto",
+    "sin-permiso-cuenta-abierta",
 ]
 
 
@@ -58,11 +61,19 @@ def abrir_vista(page, live_server, vista, docente, direccion, clave):
         page.locator(".mensaje--aviso").wait_for()
         # axe mide el color calculado: a media animación de entrada lo mezcla con la opacidad.
         page.wait_for_function("document.getAnimations().length === 0")
-    elif vista == "sin-permiso":
+    elif vista.startswith("sin-permiso"):
         ingresar(page, live_server, docente, clave)
         page.wait_for_url("**/docente/")
         page.goto(f"{live_server.url}/docente/sin-permiso/")
         page.get_by_role("heading", name="No tienes permiso para ver esta sección").wait_for()
+        page.wait_for_load_state("load")
+        if vista == "sin-permiso-menu-abierto":
+            page.get_by_role("button", name="Menú de navegación").click()
+            expect(page.locator("dialog#navegacion")).to_have_js_property("open", True)
+        elif vista == "sin-permiso-cuenta-abierta":
+            page.get_by_label("Menú de la cuenta").click()
+            page.locator("[data-cuenta-panel]").wait_for()
+        # axe mide el color calculado: a media transición lo mezcla con la opacidad.
         page.wait_for_function("document.getAnimations().length === 0")
     else:
         es_portada = vista.startswith("portada")
@@ -113,8 +124,35 @@ def test_sin_permiso_no_desborda_y_su_boton_es_tactil(
     page.evaluate("document.fonts.ready")
 
     boton = page.get_by_role("link", name="Volver a tu inicio").bounding_box()
+    contenido = page.locator("main .permission").bounding_box()
 
     assert page.evaluate("document.documentElement.scrollWidth") <= ancho
     assert boton["height"] >= 44
     assert boton["x"] >= 0
     assert boton["x"] + boton["width"] <= ancho
+    # En celular, el botón principal va a todo el ancho del contenido (boceto).
+    assert boton["x"] == pytest.approx(contenido["x"], abs=0.5)
+    assert boton["width"] == pytest.approx(contenido["width"], abs=0.5)
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_sin_permiso_controles_del_marco_de_44_px(
+    live_server, page, ancho, docente, direccion, clave
+):
+    """El ☰, el ✕ y la cuenta miden 44 × 44 px en su caja real (A-01)."""
+    con_pantalla(page, ancho, "light")
+    abrir_vista(page, live_server, "sin-permiso", docente, direccion, clave)
+
+    controles = [
+        page.get_by_role("button", name="Menú de navegación"),
+        page.get_by_label("Menú de la cuenta"),
+    ]
+    for control in controles:
+        caja = control.bounding_box()
+        assert (caja["width"], caja["height"]) == (44, 44)
+
+    page.get_by_role("button", name="Menú de navegación").click()
+    expect(page.locator("dialog#navegacion")).to_have_js_property("open", True)
+    page.wait_for_function("document.getAnimations().length === 0")
+    caja = page.get_by_role("button", name="Cerrar navegación").bounding_box()
+    assert (caja["width"], caja["height"]) == (44, 44)

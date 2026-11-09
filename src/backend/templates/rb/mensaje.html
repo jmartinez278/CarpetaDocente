@@ -1,0 +1,6 @@
+{% comment %}
+Mensaje del rebrand (rebrand-base, D8; decisión 11). Recibe: tipo (aviso, error o exito), titulo, texto, alerta
+(opcional: role="alert" para lo que se anuncia al cargar o al fallar) y nivel (opcional: el título es <h1>…<h6> de ese
+nivel; sin él, un párrafo). El ícono de 18 px es decorativo.
+{% endcomment %}
+<div class="message message--{{ tipo }}"{% if alerta %} role="alert"{% endif %}>{% if tipo == "exito" %}{% include "iconos/check.svg" with clase=None %}{% else %}{% include "iconos/circle-alert.svg" with clase=None %}{% endif %}<div class="message-texto">{% if nivel %}<h{{ nivel }} class="message-titulo">{{ titulo }}</h{{ nivel }}>{% else %}<p class="message-titulo">{{ titulo }}</p>{% endif %}<p>{{ texto }}</p></div></div>

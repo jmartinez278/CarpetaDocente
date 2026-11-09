@@ -1,0 +1,111 @@
+/* Componentes del rebrand: variantes del botón, campo y mensaje, del prototipo
+   (insumos/rebrand/assets/app.css y pantallas-nuevas/assets/app.css) (rebrand-base, D8). La base
+   de .btn (44 px, foco, movimiento) está en marco.css. */
+
+@layer components {
+  /* Botón: principal, secundario y de texto. */
+  .btn--primary {
+    background: var(--action);
+    border-color: var(--action);
+    color: var(--action-ink);
+  }
+
+  .btn--secondary {
+    background: transparent;
+    border-color: var(--line-strong);
+  }
+
+  .btn--text {
+    padding-inline: var(--s-1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn--secondary:hover {
+      border-color: var(--action);
+    }
+  }
+
+  /* Campo: etiqueta arriba, control de 48 px, ayuda y error debajo. */
+  .field {
+    display: grid;
+    gap: var(--s-2);
+    min-width: 0;
+  }
+
+  .field label {
+    font-weight: var(--display-weight);
+  }
+
+  .input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 10px var(--s-3);
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .input[aria-invalid="true"] {
+    border: 2px solid var(--error);
+  }
+
+  .field-error {
+    display: flex;
+    gap: var(--s-2);
+    align-items: flex-start;
+    color: var(--error-ink);
+    font-size: var(--text-label);
+  }
+
+  .field-error .icono {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+  }
+
+  /* Mensaje: aviso, error y éxito, con ícono de 18 px. */
+  .message {
+    display: flex;
+    gap: var(--s-3);
+    align-items: flex-start;
+    padding: var(--s-4);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--g-alt);
+    color: var(--ink);
+  }
+
+  .message .icono {
+    width: 18px;
+    height: 18px;
+    margin-top: var(--s-1);
+  }
+
+  .message--aviso {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+  }
+
+  .message--error {
+    background: var(--error-bg);
+    color: var(--error-ink);
+    border-color: var(--error);
+  }
+
+  .message-texto {
+    min-width: 0;
+  }
+
+  .message-titulo {
+    font-weight: var(--display-weight);
+  }
+
+  .message-texto > * + * {
+    margin-top: var(--s-2);
+  }
+}

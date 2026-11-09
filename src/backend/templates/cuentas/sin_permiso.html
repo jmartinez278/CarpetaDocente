@@ -5,6 +5,8 @@
 {% block titulo_barra %}Sin permiso{% endblock %}
 
 {% block principal %}
-<div class="mensaje mensaje--error">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><h1 class="mensaje__titulo">No tienes permiso para ver esta sección</h1><p>Vuelve a tu inicio para abrir tu sección.</p></div></div>
-<a class="boton-principal mt-6" href="{% url 'docente:portada' %}">Volver a tu inicio</a>
+<div class="permission">
+  {% include "rb/mensaje.html" with tipo="error" titulo="No tienes permiso para ver esta sección" texto="Vuelve a tu inicio para abrir tu sección." nivel=1 alerta=True %}
+  <div class="permission-acciones">{% url 'docente:portada' as inicio %}{% include "rb/boton.html" with texto="Volver a tu inicio" href=inicio variante="principal" %}</div>
+</div>
 {% endblock %}

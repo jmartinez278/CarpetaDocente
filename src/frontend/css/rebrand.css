@@ -17,3 +17,5 @@
 @import "./rebrand/tokens.css";
 @import "./rebrand/base.css";
 @import "./rebrand/marco.css";
+@import "./rebrand/componentes.css";
+@import "./rebrand/pantallas/sin-permiso.css";

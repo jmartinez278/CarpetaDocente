@@ -1,0 +1,12 @@
+{% comment %}
+Campo del rebrand (rebrand-base, D8; decisión 11). Recibe: campo (BoundField), ayuda (opcional), tipo (opcional; el del
+widget por omisión) y autocompletar (opcional). La etiqueta va con for/id; la ayuda y el error se nombran en
+aria-describedby y aria-invalid aparece solo con error. Sin placeholder: la etiqueta siempre está a la vista. La
+contraseña nunca se vuelve a escribir en la página.
+{% endcomment %}
+{% with control=campo.id_for_label tipo=tipo|default:campo.field.widget.input_type|default:"text" %}<div class="field">
+  <label for="{{ control }}">{{ campo.label }}</label>
+  <input class="input" id="{{ control }}" name="{{ campo.html_name }}" type="{{ tipo }}"{% if tipo != "password" and campo.value %} value="{{ campo.value }}"{% endif %}{% if autocompletar %} autocomplete="{{ autocompletar }}"{% endif %}{% if campo.field.required %} required{% endif %}{% if campo.errors %} aria-invalid="true"{% endif %}{% if ayuda or campo.errors %} aria-describedby="{% if ayuda %}{{ control }}_ayuda{% endif %}{% if ayuda and campo.errors %} {% endif %}{% if campo.errors %}{{ control }}_error{% endif %}"{% endif %}>
+  {% if ayuda %}<p class="small" id="{{ control }}_ayuda">{{ ayuda }}</p>{% endif %}
+  {% if campo.errors %}<p class="field-error" id="{{ control }}_error">{% include "iconos/circle-alert.svg" with clase=None %}<span>{{ campo.errors.0 }}</span></p>{% endif %}
+</div>{% endwith %}
