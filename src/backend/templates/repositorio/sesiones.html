@@ -1,31 +1,30 @@
-{% extends "marco.html" %}
+{% extends "marco_rebrand.html" %}
 {% load static %}
 {% comment %}
-Sesiones de la docente (spec envio-sesiones; design de US-010, US-014 y EN-03, D8 y D9; boceto de prototipos-cd/US-010,
-variante 4a): cabecera, «Subir una sesión», la región del éxito y el estado vacío, sin lista. Los dos popups (#subir y
-#terminos, encima) van en la página; sesiones.js los abre, valida y envía. Sin JavaScript, el <noscript> lo dice.
+Sesiones de la docente en el marco del rebrand (spec envio-sesiones; rebrand-us-010, D1): cabecera con «Sesiones», su
+subtítulo y «Subir una sesión» (debajo en el celular si no cabe), la región del éxito y el estado vacío, sin lista. El
+<main> es del marco: aquí va el gancho data-dimension. Los dos popups (#subir y #terminos, encima) van en la página;
+sesiones.js los abre, valida y envía. Sin JavaScript, el <noscript> lo dice.
 {% endcomment %}
 
 {% block titulo %}Sesiones · CarpetaDocente{% endblock %}
 {% block scripts %}<script src="{% static 'js/sesiones.js' %}" defer></script>{% endblock %}
 
+{% block titulo_barra %}Sesiones{% endblock %}
+
 {% block principal %}
-<main class="vista-sesiones" data-dimension="sesiones">
-  <header class="cabecera-sesiones">
+<div class="sesiones" data-dimension="sesiones">
+  <div class="page-heading sessions-heading">
     <div>
-      <h1>{% include "iconos/book-open.svg" %}Sesiones</h1>
-      <span class="franjas-cabecera" aria-hidden="true"></span>
-      <p class="subtitulo">Planificación de sesiones de aprendizaje</p>
+      <h1>Sesiones</h1>
+      <p class="small">Planificación de sesiones de aprendizaje</p>
     </div>
-    <button class="boton-principal accion-subir" type="button" data-abrir-subir>Subir una sesión</button>
-  </header>
-  <noscript><div class="mensaje mensaje--aviso sin-script">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>Para subir una sesión necesitas activar JavaScript.</p></div></div></noscript>
-  <section class="resultado" aria-label="Envío de la sesión" role="status" data-resultado></section>
-  <div class="vacio">
-    {% include "iconos/inbox.svg" %}
-    <p class="vacio__texto">Aquí verás las sesiones que envíes y su estado.</p>
+    {% include "rb/boton.html" with texto="Subir una sesión" variante="principal" datos="abrir-subir" %}
   </div>
-</main>
+  <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Para subir una sesión necesitas activar JavaScript." %}</noscript>
+  <section class="sesiones-resultado" aria-label="Envío de la sesión" role="status" data-resultado></section>
+  {% include "rb/estado_vacio.html" with icono="inbox" texto="Aquí verás las sesiones que envíes y su estado." %}
+</div>
 {% include "repositorio/_formulario.html" %}
 {% include "repositorio/_terminos.html" %}
 <div class="sr-only" id="anuncio" aria-live="polite"></div>

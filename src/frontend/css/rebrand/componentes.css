@@ -1,4 +1,5 @@
-/* Componentes del rebrand: variantes del botón, campo, mensaje y diálogo, del prototipo
+/* Componentes del rebrand: variantes del botón, campo, mensaje, diálogo, estado vacío, progreso,
+   archivo y casilla, del prototipo
    (insumos/rebrand/assets/app.css y pantallas-nuevas/assets/app.css) (rebrand-base, D8;
    rebrand-us-010, D3 y D4). La base de .btn (44 px, foco, movimiento) está en marco.css. */
 
@@ -211,13 +212,20 @@
     border-top: 1px solid var(--line);
   }
 
+  /* Acciones del pie: en el DOM, la principal primero (arriba en el celular); desde 700 px, a la
+     derecha. */
+  .dialog-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
   @media (min-width: 700px) {
-    .dialog-pie {
+    .dialog-acciones {
       flex-direction: row-reverse;
-      justify-content: flex-start;
     }
 
-    .dialog-pie .btn {
+    .dialog-acciones .btn {
       flex: 1;
     }
   }
@@ -304,5 +312,143 @@
   .empty p {
     max-width: 40ch;
     overflow-wrap: anywhere;
+  }
+
+  /* Campos que no pinta rb/campo.html: select y textarea con .input, pares de dos columnas desde
+     700 px (rebrand-us-010, D5). */
+  select.input {
+    padding-right: var(--s-6);
+  }
+
+  textarea.input {
+    min-height: 112px;
+    resize: vertical;
+  }
+
+  .field-pair {
+    display: grid;
+    gap: var(--s-4) var(--s-3);
+  }
+
+  @media (min-width: 700px) {
+    .field-pair {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .field-pair-ayuda {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Archivo: el control nativo, invisible, encima de «Elegir» / «Cambiar» (44 px). sesiones.js pone
+     .rechazado si el archivo no pasa la revisión. */
+  .file-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-width: 0;
+    padding: var(--s-3);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+  }
+
+  .file-control > .icono {
+    color: var(--muted);
+  }
+
+  .file-control-texto {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .file-control-elegir {
+    position: relative;
+    flex: none;
+  }
+
+  .file-control-input {
+    position: absolute;
+    top: 50%;
+    right: var(--s-3);
+    width: 88px;
+    height: var(--touch-min);
+    opacity: 0;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
+  .file-control:has(.file-control-input:focus-visible) {
+    outline: 2px solid var(--action);
+    outline-offset: 2px;
+  }
+
+  .file-control.rechazado {
+    border: 2px solid var(--error);
+  }
+
+  .file-control.rechazado > .icono {
+    color: var(--error);
+  }
+
+  .file-control:has(.file-control-input:disabled) {
+    background: var(--g-alt);
+  }
+
+  .file-control:has(.file-control-input:disabled) .file-control-elegir {
+    color: var(--muted);
+    cursor: progress;
+  }
+
+  /* Casilla: 20 px dentro de una fila de 44 px. */
+  .check-label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--s-3);
+    min-height: var(--touch-min);
+    font-weight: var(--display-weight);
+    cursor: pointer;
+  }
+
+  .check-label input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin-top: 3px;
+    accent-color: var(--action);
+  }
+
+  /* Progreso: texto y barra en --gold sobre --line; el relleno cambia de una vez, sin animar. */
+  .progress {
+    display: grid;
+    gap: var(--s-2);
+  }
+
+  .progress progress {
+    display: block;
+    width: 100%;
+    height: 6px;
+    appearance: none;
+    border: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--line);
+  }
+
+  .progress progress::-webkit-progress-bar {
+    background: var(--line);
+  }
+
+  .progress progress::-webkit-progress-value {
+    background: var(--gold);
+    border-radius: 4px;
+  }
+
+  .progress progress::-moz-progress-bar {
+    background: var(--gold);
+    border-radius: 4px;
   }
 }

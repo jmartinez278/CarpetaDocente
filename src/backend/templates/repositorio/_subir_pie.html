@@ -1,0 +1,12 @@
+{% comment %}
+Pie de «Subir una sesión»: el avance (sin animar el ancho) y, en el DOM, «Enviar a la dirección» antes que «Cancelar»:
+arriba en el celular; en la PC, el CSS lo pone a la derecha.
+{% endcomment %}
+<div class="progress" data-progreso hidden>
+  <p class="small" data-progreso-texto>Subiendo… 0 %</p>
+  <progress max="100" value="0" aria-label="Avance de la subida" data-barra></progress>
+</div>
+<div class="dialog-acciones">
+  <button class="btn btn--primary" type="submit" form="formulario-sesion" data-enviar>Enviar a la dirección</button>
+  {% include "rb/boton.html" with texto="Cancelar" variante="secundario" datos="cancelar" %}
+</div>

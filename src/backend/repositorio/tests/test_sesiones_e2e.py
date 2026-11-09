@@ -77,9 +77,15 @@ def resultado(page):
     return page.locator("[data-resultado]")
 
 
+def quieto(page):
+    """Espera a que el diálogo termine su entrada o su salida (rebrand-us-010, D4)."""
+    page.wait_for_function("document.getAnimations().length === 0")
+
+
 def abrir(page):
     boton_subir(page).click()
     expect(popup(page)).to_be_visible()
+    quieto(page)
 
 
 def elegir(page, nombre, contenido, tipo="application/pdf"):
@@ -570,8 +576,9 @@ def test_se_guardo_pero_no_llego_la_respuesta_y_el_reintento_da_el_mismo_exito(p
 OBJETIVOS_PEQUENOS = """() => {
   const capas = [...document.querySelectorAll("dialog[open]")];
   const raiz = capas.length ? capas[capas.length - 1] : document;
-  const selector = "button, a[href], select, textarea, summary, label.elegir-archivo,"
-    + " label.casilla, input:not([type=hidden]):not([type=file]):not([type=checkbox])";
+  const selector = "button, a[href]:not(.skip), select, textarea, summary,"
+    + " .file-control label[for=archivo], label:has(#compartir),"
+    + " input:not([type=hidden]):not([type=file]):not([type=checkbox])";
   return [...raiz.querySelectorAll(selector)]
     .filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== "hidden")
     .map((el) => ({ el: el.outerHTML.slice(0, 80), caja: el.getBoundingClientRect() }))
@@ -603,6 +610,7 @@ def test_los_estados_del_boceto_son_accesibles_y_sin_desplazamiento(pantalla, te
 
     enviar(pantalla).click()
     expect(terminos(pantalla)).to_be_visible()
+    quieto(pantalla)
     revisar_estado(pantalla, "4a", tema, ancho)
     terminos(pantalla).get_by_role("button", name="Volver").click()
 
@@ -657,12 +665,91 @@ def test_pantalla_baja_los_terminos_se_desplazan_y_sus_botones_siguen_a_la_vista
     pantalla.locator("#compartir").check()
     enviar(pantalla).click()
     expect(terminos(pantalla)).to_be_visible()
+    quieto(pantalla)
 
-    cuerpo = terminos(pantalla).locator(".modal-cuerpo")
+    cuerpo = terminos(pantalla).locator("[data-cuerpo]")
     assert cuerpo.evaluate("(el) => el.scrollHeight > el.clientHeight"), "el cuerpo se desplaza"
     for nombre in ["Acepto y envío", "Volver"]:
         caja = terminos(pantalla).get_by_role("button", name=nombre).bounding_box()
         assert caja["y"] >= 0 and caja["y"] + caja["height"] <= 560, nombre
+
+
+# --- Marco del rebrand: diálogo y cabecera (rebrand-us-010, D1, D3 y D4) ---
+
+
+def caja_de(page, selector):
+    return page.locator(selector).bounding_box()
+
+
+def test_en_el_celular_el_popup_es_una_hoja_abajo_a_todo_el_ancho(pantalla):
+    con_pantalla(pantalla, 360, "light")
+    abrir(pantalla)
+
+    caja = caja_de(pantalla, "#subir")
+    alto = pantalla.viewport_size["height"]
+    assert caja["x"] == 0 and caja["width"] == 360
+    assert abs(caja["y"] + caja["height"] - alto) <= 1, "pegada abajo"
+
+
+def test_en_la_pc_el_popup_es_una_ventana_centrada_de_480_px_o_menos(pantalla):
+    con_pantalla(pantalla, 1280, "light")
+    abrir(pantalla)
+
+    caja = caja_de(pantalla, "#subir")
+    alto = pantalla.viewport_size["height"]
+    assert caja["width"] <= 480
+    assert abs(caja["x"] + caja["width"] / 2 - 640) <= 1, "centrada en horizontal"
+    assert caja["y"] > 0 and caja["y"] + caja["height"] < alto, "no toca los bordes"
+
+
+ESTADO_DEL_DIALOGO = """() => {
+  const subir = document.getElementById("subir");
+  return {
+    abierto: subir.open,
+    animaciones: document.getAnimations().length,
+    transform: getComputedStyle(subir).transform,
+  };
+}"""
+
+
+def test_con_el_teclado_el_popup_abre_y_cierra_sin_transicion(pantalla):
+    """Regla 1 de Movimiento: Enter abre en su lugar y Esc cierra de inmediato."""
+    con_pantalla(pantalla, 360, "light")
+    boton_subir(pantalla).focus()
+
+    pantalla.keyboard.press("Enter")
+    abierto = pantalla.evaluate(ESTADO_DEL_DIALOGO)
+    assert abierto == {"abierto": True, "animaciones": 0, "transform": "none"}
+
+    pantalla.keyboard.press("Escape")
+    cerrado = pantalla.evaluate(ESTADO_DEL_DIALOGO)
+    assert cerrado["abierto"] is False and cerrado["animaciones"] == 0
+    expect(popup(pantalla)).to_be_hidden()
+
+
+@pytest.mark.parametrize("ancho", [360, 1280])
+def test_con_movimiento_reducido_el_popup_no_se_desplaza(pantalla, ancho):
+    con_pantalla(pantalla, ancho, "light")
+    pantalla.emulate_media(reduced_motion="reduce")
+
+    boton_subir(pantalla).click()
+    assert pantalla.evaluate(ESTADO_DEL_DIALOGO)["transform"] == "none"
+    quieto(pantalla)
+    assert pantalla.evaluate(ESTADO_DEL_DIALOGO)["transform"] == "none"
+
+
+def test_en_el_celular_subir_una_sesion_se_lee_completo(pantalla):
+    """Escenario «Botón en el celular»."""
+    con_pantalla(pantalla, 360, "light")
+
+    boton = boton_subir(pantalla)
+    caja = boton.bounding_box()
+    assert caja["x"] >= 0 and caja["x"] + caja["width"] <= 360
+    assert boton.evaluate("(el) => el.scrollWidth <= el.clientWidth"), "texto sin recortar"
+    expect(boton).to_have_text("Subir una sesión")
+    assert pantalla.evaluate(
+        "document.documentElement.scrollWidth <= document.documentElement.clientWidth"
+    )
 
 
 SLOW_4G = {

@@ -177,6 +177,12 @@ def test_mensaje_titulo_texto_e_icono_decorativo():
     assert 'aria-hidden="true"' in svg
 
 
+def test_mensaje_sin_texto_solo_trae_el_titulo():
+    html = mensaje(tipo="aviso", titulo="Activa JavaScript.")
+
+    assert re.findall(r"<p\b[^>]*>", html) == ['<p class="message-titulo">']
+
+
 def test_mensaje_sin_alerta_no_trae_role():
     assert "role=" not in mensaje(tipo="error", titulo="Título", texto="Texto")
 

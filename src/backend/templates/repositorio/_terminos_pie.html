@@ -1,0 +1,5 @@
+{% comment %}Pie de los términos: «Acepto y envío» antes que «Volver» en el DOM (arriba en el celular).{% endcomment %}
+<div class="dialog-acciones">
+  {% include "rb/boton.html" with texto="Acepto y envío" variante="principal" datos="aceptar" %}
+  {% include "rb/boton.html" with texto="Volver" variante="secundario" datos="volver" icono="chevron-left" %}
+</div>

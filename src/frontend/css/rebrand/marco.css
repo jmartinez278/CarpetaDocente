@@ -13,6 +13,10 @@
     margin-inline: auto;
   }
 
+  .muted {
+    color: var(--muted);
+  }
+
   .small {
     color: var(--muted);
     font-size: var(--text-label);
