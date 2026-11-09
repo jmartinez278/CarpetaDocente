@@ -1,6 +1,6 @@
-/* Componentes del rebrand: variantes del botón, campo y mensaje, del prototipo
-   (insumos/rebrand/assets/app.css y pantallas-nuevas/assets/app.css) (rebrand-base, D8). La base
-   de .btn (44 px, foco, movimiento) está en marco.css. */
+/* Componentes del rebrand: variantes del botón, campo, mensaje y diálogo, del prototipo
+   (insumos/rebrand/assets/app.css y pantallas-nuevas/assets/app.css) (rebrand-base, D8;
+   rebrand-us-010, D3 y D4). La base de .btn (44 px, foco, movimiento) está en marco.css. */
 
 @layer components {
   /* Botón: principal, secundario y de texto. */
@@ -107,5 +107,179 @@
 
   .message-texto > * + * {
     margin-top: var(--s-2);
+  }
+
+  /* Diálogo (rb/dialogo.html): cabecera y pie fijos, cuerpo que se desplaza. Hoja abajo en el celular
+     y ventana centrada desde 700 px; el chico va centrado siempre. Cerrado, el UA lo oculta con
+     display:none; el movimiento es solo CSS (transiciones con allow-discrete y @starting-style). */
+  .dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(480px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    height: fit-content;
+    max-height: calc(100svh - 32px);
+    padding: 0;
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-dialog);
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      transform var(--m-out) var(--m-ease),
+      opacity var(--m-out) var(--m-ease),
+      display var(--m-out) allow-discrete,
+      overlay var(--m-out) allow-discrete;
+  }
+
+  .dialog[open] {
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    transform: none;
+  }
+
+  .dialog--chico {
+    width: min(440px, calc(100vw - 32px));
+  }
+
+  .dialog::backdrop {
+    background: rgb(48 39 31 / 0.4);
+    opacity: 0;
+    transition:
+      opacity var(--m-out) var(--m-ease),
+      display var(--m-out) allow-discrete,
+      overlay var(--m-out) allow-discrete;
+  }
+
+  .dialog[open]::backdrop {
+    opacity: 1;
+  }
+
+  html[data-theme=dark] .dialog::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme=light]) .dialog::backdrop {
+      background: rgb(0 0 0 / 0.55);
+    }
+  }
+
+  @starting-style {
+    .dialog[open] {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  .dialog-cabecera {
+    flex: none;
+    padding: var(--s-5) var(--s-5) var(--s-3);
+  }
+
+  .dialog-cabecera h2 {
+    font-size: 24px;
+    overflow-wrap: anywhere;
+  }
+
+  .dialog-cabecera .small {
+    margin-top: var(--s-2);
+  }
+
+  .dialog-cuerpo {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: var(--s-2) var(--s-5) var(--s-4);
+  }
+
+  .dialog-pie {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--s-3);
+    padding: var(--s-4) var(--s-5);
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 700px) {
+    .dialog-pie {
+      flex-direction: row-reverse;
+      justify-content: flex-start;
+    }
+
+    .dialog-pie .btn {
+      flex: 1;
+    }
+  }
+
+  @media (max-width: 699px) {
+    .dialog--hoja {
+      inset: auto 0 0;
+      width: 100%;
+      max-width: 100%;
+      max-height: calc(100svh - 24px);
+      margin: 0;
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      opacity: 1;
+      transform: translateY(100%);
+    }
+
+    .dialog--hoja .dialog-cabecera h2 {
+      font-size: 22px;
+    }
+
+    .dialog--hoja .dialog-pie {
+      padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+    }
+
+    @starting-style {
+      .dialog--hoja[open] {
+        opacity: 1;
+        transform: translateY(100%);
+      }
+    }
+  }
+
+  /* Regla 1 (DESIGN.md, Movimiento): abierto o cerrado con el teclado, sin transición.
+     marco.js pone data-teclado en <html> con cualquier tecla y lo quita con el puntero. */
+  html[data-teclado] .dialog,
+  html[data-teclado] .dialog::backdrop {
+    transition: none;
+  }
+
+  /* Movimiento reducido: sin desplazamiento; solo opacidad, hasta 200 ms. */
+  @media (prefers-reduced-motion: reduce) {
+    .dialog,
+    .dialog--hoja {
+      opacity: 0;
+      transform: none;
+      transition:
+        opacity var(--m-out) var(--m-ease),
+        display var(--m-out) allow-discrete,
+        overlay var(--m-out) allow-discrete;
+    }
+
+    .dialog[open],
+    .dialog--hoja[open] {
+      opacity: 1;
+    }
+
+    @starting-style {
+      .dialog[open],
+      .dialog--hoja[open] {
+        opacity: 0;
+        transform: none;
+      }
+    }
   }
 }

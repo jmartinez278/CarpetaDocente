@@ -198,3 +198,112 @@ def test_mensaje_titulo_sin_nivel_no_es_encabezado():
 
     assert not re.search(r"<h\d", html)
     assert "Título" in html
+
+
+# --- Botón con datos (rebrand-us-010, D1) ---
+
+
+def test_boton_con_datos_pone_el_atributo_data():
+    html = boton(texto="Subir una sesión", datos="abrir-subir")
+
+    assert re.match(r"<button\b[^>]*\sdata-abrir-subir(\s|>|=)", html)
+
+
+def test_boton_con_datos_tambien_en_el_enlace():
+    html = boton(texto="Ir", href="/x/", datos="ir")
+
+    assert re.match(r"<a\b[^>]*\sdata-ir(\s|>|=)", html)
+
+
+def test_boton_sin_datos_no_trae_atributos_data():
+    assert "data-" not in boton(texto="Hacer")
+    assert "data-" not in boton(texto="Ir", href="/x/")
+
+
+# --- Diálogo (rebrand-us-010, D3) ---
+
+
+def dialogo(**contexto):
+    base = {
+        "id": "subir",
+        "titulo": "Subir una sesión",
+        "titulo_id": "subir-titulo",
+        "variante": "hoja",
+        "cuerpo": "rb/mensaje.html",
+        "pie": "rb/boton.html",
+        "tipo": "aviso",
+        "texto": "Texto del cuerpo",
+        "datos": "pie-marca",
+    }
+    base.update(contexto)
+    return render_to_string("rb/dialogo.html", base).strip()
+
+
+def etiqueta_apertura(html, etiqueta):
+    encontrado = re.search(rf"<{etiqueta}\b[^>]*>", html)
+    assert encontrado, f"no hay <{etiqueta}>"
+    return encontrado.group(0)
+
+
+@pytest.mark.parametrize(
+    ("variante", "clase"), [("hoja", "dialog--hoja"), ("chico", "dialog--chico")]
+)
+def test_dialogo_variantes(variante, clase):
+    html = dialogo(variante=variante)
+
+    assert html.startswith("<dialog ")
+    assert clases(html, "dialog")[:2] == ["dialog", clase]
+    assert 'id="subir"' in etiqueta_apertura(html, "dialog")
+
+
+def test_dialogo_nombrado_por_su_titulo():
+    html = dialogo()
+
+    assert 'aria-labelledby="subir-titulo"' in etiqueta_apertura(html, "dialog")
+    titulo = etiqueta_apertura(html, "h2")
+    assert 'id="subir-titulo"' in titulo
+    assert 'tabindex="-1"' in titulo
+    assert "Subir una sesión</h2>" in html
+
+
+def test_dialogo_sin_descripcion_no_trae_describedby():
+    assert "aria-describedby" not in dialogo()
+
+
+def test_dialogo_con_descripcion_en_describedby():
+    html = dialogo(descripcion="Tu envío llega a la dirección.", descripcion_id="subir-desc")
+
+    assert 'aria-describedby="subir-desc"' in etiqueta_apertura(html, "dialog")
+    assert re.search(r'id="subir-desc"[^>]*>Tu envío llega a la dirección\.<', html)
+
+
+def test_dialogo_cuerpo_alcanzable_con_teclado_y_con_nombre():
+    html = dialogo()
+
+    cuerpo = re.search(r'<div\b[^>]*class="[^"]*\bdialog-cuerpo\b[^"]*"[^>]*>', html).group(0)
+    assert 'tabindex="0"' in cuerpo
+    assert 'role="region"' in cuerpo
+    assert 'aria-labelledby="subir-titulo"' in cuerpo
+    assert "Texto del cuerpo" in html
+
+
+def test_dialogo_data_cuerpo_solo_si_se_pide():
+    assert "data-cuerpo" not in dialogo()
+    assert "data-cuerpo" in dialogo(marca_cuerpo=True)
+
+
+def test_dialogo_pie_despues_del_cuerpo():
+    html = dialogo()
+
+    assert html.index("Texto del cuerpo") < html.index("data-pie-marca")
+    assert html.index("dialog-pie") < html.index("data-pie-marca")
+
+
+def test_dialogo_cerrado_sin_x_ni_hex_ni_style():
+    html = dialogo()
+
+    assert "open" not in etiqueta_apertura(html, "dialog").split()
+    assert not re.search(r"\bopen\b", etiqueta_apertura(html, "dialog"))
+    assert "<svg" not in html.split("dialog-cuerpo")[0]  # cabecera sin ✕
+    assert "style=" not in html
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", html)

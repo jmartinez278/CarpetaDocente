@@ -195,6 +195,91 @@ def test_ninguna_utilidad_repite_una_clase_de_componente(rebrand):
     assert not repetidas
 
 
+# --- Diálogo (rebrand-us-010, D3 y D4) -------------------------------------------------------
+
+
+def _reglas(css, selector):
+    """Cuerpos de las reglas cuyo selector (de una lista con comas) es exactamente ``selector``."""
+    cuerpos = []
+    for lista, cuerpo in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        if selector in [parte.strip() for parte in lista.split(",")]:
+            cuerpos.append(cuerpo)
+    return cuerpos
+
+
+def _propiedades_de_transicion(cuerpos):
+    """Nombres de propiedad que ``transition`` o ``transition-property`` declaran en ``cuerpos``."""
+    propiedades = set()
+    for cuerpo in cuerpos:
+        for valor in re.findall(r"(?:^|;)transition(?:-property)?:([^;]*)", cuerpo):
+            for parte in re.split(r",(?![^(]*\))", valor):
+                nombre = parte.split()[0] if parte.split() else ""
+                if nombre and nombre != "none":
+                    propiedades.add(nombre)
+    return propiedades
+
+
+def _medios(css, condicion):
+    """Contenido de cada ``@media <condicion>{…}`` de la hoja."""
+    return [
+        _bloque(css[m.start() :], m.group(0))
+        for m in re.finditer(rf"@media\s*\({condicion}\)\s*\{{", css)
+    ]
+
+
+def test_el_dialogo_transiciona_solo_transform_opacity_display_y_overlay(rebrand):
+    cuerpos = _reglas(rebrand, ".dialog")
+
+    assert cuerpos, "falta .dialog en la hoja"
+    assert _propiedades_de_transicion(cuerpos) == {"transform", "opacity", "display", "overlay"}
+    assert "allow-discrete" in "".join(cuerpos)
+
+
+def test_el_dialogo_y_su_velo_entran_con_starting_style(rebrand):
+    estilos = "".join(
+        _bloque(rebrand[m.start() :], m.group(0))
+        for m in re.finditer(r"@starting-style\s*\{", rebrand)
+    )
+
+    assert ".dialog[open]{" in estilos
+    assert ".dialog[open]::backdrop{" in estilos
+
+
+def test_el_velo_del_dialogo_solo_transiciona_opacidad_display_y_overlay(rebrand):
+    cuerpos = _reglas(rebrand, ".dialog::backdrop")
+
+    assert cuerpos, "falta .dialog::backdrop en la hoja"
+    assert _propiedades_de_transicion(cuerpos) == {"opacity", "display", "overlay"}
+
+
+def test_con_la_marca_de_teclado_el_dialogo_y_su_velo_no_transicionan(rebrand):
+    for selector in ("html[data-teclado] .dialog", "html[data-teclado] .dialog::backdrop"):
+        cuerpos = _reglas(rebrand, selector)
+        assert cuerpos, f"falta {selector}"
+        assert any("transition:none" in c for c in cuerpos), selector
+
+
+def test_con_movimiento_reducido_el_dialogo_no_se_desplaza(rebrand):
+    medios = "".join(_medios(rebrand, "prefers-reduced-motion:reduce"))
+    cuerpos = _reglas(medios, ".dialog") + [
+        c
+        for m in re.finditer(r"@starting-style\s*\{", medios)
+        for c in _reglas(_bloque(medios[m.start() :], m.group(0)), ".dialog[open]")
+    ]
+
+    assert cuerpos, "falta .dialog dentro de prefers-reduced-motion: reduce"
+    assert "transform" not in _propiedades_de_transicion(cuerpos)
+    for cuerpo in cuerpos:
+        for valor in re.findall(r"(?:^|;)transform:([^;]*)", cuerpo):
+            assert valor == "none", valor
+
+
+def test_ninguna_regla_del_dialogo_anima_ancho_ni_alto(rebrand):
+    cuerpos = _reglas(rebrand, ".dialog") + _reglas(rebrand, ".dialog::backdrop")
+
+    assert not _propiedades_de_transicion(cuerpos) & {"width", "height"}
+
+
 # --- Cifras tabulares (decisión 4) -----------------------------------------------------------
 
 CIFRAS = """

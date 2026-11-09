@@ -103,4 +103,10 @@
   document.addEventListener("pointerup", quitarMarca);
   document.addEventListener("pointercancel", quitarMarca);
   document.addEventListener("keydown", quitarMarca);
+
+  // Regla 1 de Movimiento (rebrand-us-010, D4): los diálogos de las pantallas abren y cierran sin transición
+  // cuando la última acción fue del teclado. La marca vive en <html> y el CSS (.dialog) la lee; el puntero la quita.
+  const raiz = document.documentElement;
+  document.addEventListener("keydown", () => raiz.setAttribute("data-teclado", ""));
+  document.addEventListener("pointerdown", () => raiz.removeAttribute("data-teclado"));
 })();

@@ -1,6 +1,7 @@
 {% comment %}
 Botón del rebrand (rebrand-base, D8; decisión 11). Recibe: texto; href (con él es un enlace, sin él un <button>); tipo
 (button por omisión; submit para formularios); variante: principal, secundario (por omisión) o texto; icono (opcional,
-nombre de templates/iconos/, decorativo: el nombre accesible es el texto) y clase (opcional, clases propias).
+nombre de templates/iconos/, decorativo: el nombre accesible es el texto), clase (opcional, clases propias) y datos
+(opcional: nombre del atributo data-* que se pone, p. ej. «abrir-subir» da data-abrir-subir).
 {% endcomment %}
-{% with variante=variante|default:"secundario" %}{% if href %}<a class="btn {% if variante == "principal" %}btn--primary{% elif variante == "texto" %}btn--text{% else %}btn--secondary{% endif %}{% if clase %} {{ clase }}{% endif %}" href="{{ href }}">{% else %}<button class="btn {% if variante == "principal" %}btn--primary{% elif variante == "texto" %}btn--text{% else %}btn--secondary{% endif %}{% if clase %} {{ clase }}{% endif %}" type="{{ tipo|default:"button" }}">{% endif %}{% if icono %}{% include "iconos/"|add:icono|add:".svg" with clase=None %}{% endif %}{{ texto }}{% if href %}</a>{% else %}</button>{% endif %}{% endwith %}
+{% with variante=variante|default:"secundario" %}{% if href %}<a class="btn {% if variante == "principal" %}btn--primary{% elif variante == "texto" %}btn--text{% else %}btn--secondary{% endif %}{% if clase %} {{ clase }}{% endif %}"{% if datos %} data-{{ datos }}{% endif %} href="{{ href }}">{% else %}<button class="btn {% if variante == "principal" %}btn--primary{% elif variante == "texto" %}btn--text{% else %}btn--secondary{% endif %}{% if clase %} {{ clase }}{% endif %}"{% if datos %} data-{{ datos }}{% endif %} type="{{ tipo|default:"button" }}">{% endif %}{% if icono %}{% include "iconos/"|add:icono|add:".svg" with clase=None %}{% endif %}{{ texto }}{% if href %}</a>{% else %}</button>{% endif %}{% endwith %}

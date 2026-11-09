@@ -505,3 +505,47 @@ def test_a03_la_marca_del_mouse_dura_solo_su_pulsacion(live_server, page, docent
     con_toque = page.locator("[data-pointer]").count()
 
     assert (durante, tras_soltar, tras_cancelar, con_toque) == (1, 0, 0, 0)
+
+
+# --- Marca de teclado para los diálogos (rebrand-us-010, D4) ---
+
+
+def test_la_marca_de_teclado_va_en_html_con_una_tecla_y_se_quita_con_el_puntero(
+    live_server, page, docente, clave
+):
+    con_pantalla(page, 1280, "light")
+    entrar(page, live_server, docente, clave)
+
+    assert page.evaluate("document.documentElement.hasAttribute('data-teclado')") is False
+
+    page.keyboard.press("Shift")
+    assert page.evaluate("document.documentElement.hasAttribute('data-teclado')") is True
+
+    page.mouse.move(640, 600)
+    page.mouse.down()
+    con_puntero = page.evaluate("document.documentElement.hasAttribute('data-teclado')")
+    page.mouse.up()
+
+    assert con_puntero is False
+
+
+def test_la_marca_de_teclado_no_toca_la_marca_del_mouse_ni_el_menu(
+    live_server, page, docente, clave
+):
+    con_pantalla(page, 1280, "light")
+    entrar(page, live_server, docente, clave)
+    selector = ".permission-acciones .btn"
+    page.evaluate(
+        f"document.querySelector('{selector}').addEventListener('click', (e) => e.preventDefault())"
+    )
+    caja = page.locator(selector).bounding_box()
+    page.mouse.move(caja["x"] + caja["width"] / 2, caja["y"] + caja["height"] / 2)
+
+    page.keyboard.press("Shift")
+    page.mouse.down()
+    marca_mouse = page.locator(f"{selector}[data-pointer]").count()
+    page.mouse.up()
+    abrir_navegacion(page)
+
+    assert marca_mouse == 1
+    assert dialogo(page).get_attribute("data-teclado") is None

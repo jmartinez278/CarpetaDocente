@@ -1,0 +1,20 @@
+{% comment %}
+Diálogo del rebrand (rebrand-us-010, D3). Recibe: id; titulo y titulo_id (el <h2> recibe el foco al abrir, por eso
+tabindex="-1"); variante: hoja (formulario: hoja abajo en el celular, ventana centrada desde 700 px) o chico
+(centrado en todos los anchos); descripcion y descripcion_id (opcionales: aria-describedby solo con ellas);
+cuerpo y pie (nombres de plantillas que se incluyen con el contexto de la página; el pie va después del cuerpo y no
+se desplaza); marca_cuerpo (opcional: pone data-cuerpo en el cuerpo). Sin ✕: se cierra con los botones del pie y Esc.
+Cerrado de origen: lo abre el JS de la pantalla con showModal().
+{% endcomment %}
+<dialog class="dialog dialog--{{ variante }}" id="{{ id }}" aria-labelledby="{{ titulo_id }}"{% if descripcion %} aria-describedby="{{ descripcion_id }}"{% endif %}>
+  <div class="dialog-cabecera">
+    <h2 id="{{ titulo_id }}" tabindex="-1">{{ titulo }}</h2>
+    {% if descripcion %}<p class="small" id="{{ descripcion_id }}">{{ descripcion }}</p>{% endif %}
+  </div>
+  <div class="dialog-cuerpo" tabindex="0" role="region" aria-labelledby="{{ titulo_id }}"{% if marca_cuerpo %} data-cuerpo{% endif %}>
+    {% include cuerpo %}
+  </div>
+  <div class="dialog-pie">
+    {% include pie %}
+  </div>
+</dialog>
