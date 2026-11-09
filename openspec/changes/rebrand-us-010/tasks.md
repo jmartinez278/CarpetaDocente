@@ -33,8 +33,9 @@ Ninguna parte es de alto riesgo: no toca modelos, permisos, transacciones, datos
 ### Parte D: auditoría de Emil y A2
 
 - [x] 4.1 Auditoría de Emil (`review-animations` del diálogo; `break-ui` con títulos largos y errores abiertos a 320 px), en solo lectura con Codex → `insumos/rebrand-sesiones/auditoria-emil.md`. Marco aprueba los ids; cada uno se aplica con su prueba primero. Verificar: e2e de `repositorio` y `cuentas` en verde
-- [ ] 4.2 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la spec `envio-sesiones` del cambio, D3 y D4), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde
-- [ ] 4.3 `verificacion.md`: tabla escenario → prueba de la spec delta y de los escenarios de `envio-sesiones` que se vuelven a correr, y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
+- [x] 4.2 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la spec `envio-sesiones` del cambio, D3 y D4), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde
+  - Resultado (2026-11-09): un hallazgo medium, sin Critical ni Important. Marco decide anotarlo y no corregirlo en esta rama; va a la «## Deuda» del PR (Workflow follow-up) y a `verificacion.md` (4.3).
+- [x] 4.3 `verificacion.md`: tabla escenario → prueba de la spec delta y de los escenarios de `envio-sesiones` que se vuelven a correr, y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
 
 ## Ajustes del propose a decisiones.md
 
@@ -50,4 +51,6 @@ Ninguna parte es de alto riesgo: no toca modelos, permisos, transacciones, datos
   - estado y fecha de envío junto al encabezado de la sesión → con `sesion.html`;
   - salida del diálogo sin animación en navegadores sin `overlay` (Firefox) → aceptado;
   - CSS viejo de Sesiones en `app.css` → paso 8 del PLAN.
+  - Auditoría de Emil B-01 (la hoja queda detrás del teclado virtual; salida chica: `interactive-widget=resizes-content`) y el popup a 320 × 240 → verlos en un celular real en el pulido final.
+  - A2 [medium] (`rebrand/componentes.css:138-139`, D3/D4): durante los 200 ms de salida, tras `close()`, el diálogo sigue visible, ya no es modal y sus controles aceptan clics; «Cancelar» conserva datos y archivo, y el `submit` de `sesiones.js` solo mira `ocupado`, no `subir.open`. Un clic rápido en «Enviar a la dirección» justo después de «Cancelar» podría guardar la sesión cancelada (por trazado estático; el clic físico no se verificó). Arreglo propuesto: `pointer-events: none` en el diálogo cerrado y su `::backdrop` sin quitar la animación, con una e2e que pulse Enviar durante la salida y compruebe que no sale ningún POST → anotado, sin corregir en esta rama.
 - Al proponer el siguiente cambio del rebrand (paso 2, Ingreso), su primer commit archiva este con `/opsx:archive` y «Sync now».
