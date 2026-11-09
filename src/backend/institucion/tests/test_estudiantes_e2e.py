@@ -739,6 +739,7 @@ def test_agregar_en_una_seccion_que_ya_no_es_suya_lleva_a_sin_permiso(
 
     portada.wait_for_url(re.compile(r"/docente/sin-permiso/$"))
     expect(portada.get_by_role("heading", name=SIN_PERMISO)).to_be_visible()
-    expect(portada.locator("dialog")).to_have_count(0)
+    # «Sin permiso» ya va en el marco del rebrand, que trae el <dialog> del ☰ (rebrand-base, D4).
+    expect(portada.locator("dialog:not(#navegacion)")).to_have_count(0)
     assert seccion.estudiantes.count() == 25
     assert motivos() == ["ajena"]

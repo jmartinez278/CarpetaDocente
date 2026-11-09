@@ -32,8 +32,8 @@
 ### Parte C: auditoría de Emil y A2
 
 - [x] 4.1 Auditoría de Emil (solo `review-animations`, en solo lectura con Codex) sobre el movimiento del marco y «sin permiso» → `insumos/rebrand-base/auditoria-emil.md`. Marco aprueba los ids; cada uno se aplica con su prueba primero. Verificar: e2e de `cuentas` en verde
-- [ ] 4.2 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio, D2, D4 y D5), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde
-- [ ] 4.3 `verificacion.md`: tabla escenario → prueba de los dos specs del cambio (los de D10, «con su pantalla»), la prueba manual de `vigilar.mjs` y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
+- [x] 4.2 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio, D2, D4 y D5), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde
+- [x] 4.3 `verificacion.md`: tabla escenario → prueba de los dos specs del cambio (los de D10, «con su pantalla»), la prueba manual de `vigilar.mjs` y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
 
 ## Ajustes del propose a decisiones.md
 

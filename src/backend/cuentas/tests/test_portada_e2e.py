@@ -30,7 +30,9 @@ pytestmark = pytest.mark.e2e
 
 AVISO = "Llegará en una próxima versión."
 TARJETAS = ("sesiones", "notas", "asistencia")
-DESIGN_MD = Path(__file__).resolve().parents[4] / "DESIGN.md"
+# La portada sigue en el marco viejo (app.css) hasta su pantalla del rebrand (paso 3 del PLAN);
+# DESIGN.md 1.1 ya trae los tokens nuevos: el contrato oscuro de la portada se lee de app.css.
+APP_CSS = Path(__file__).resolve().parents[4] / "src" / "frontend" / "css" / "app.css"
 
 
 def chip_de(page, titulo):
@@ -121,10 +123,10 @@ def test_el_documento_no_se_desplaza_en_horizontal(
     assert medidas["ancho"] <= medidas["ventana"], medidas
 
 
-def valores_oscuros_de_design_md():
-    """Los tokens del bloque ``prefers-color-scheme: dark`` del Quick Start de DESIGN.md."""
-    quick_start = DESIGN_MD.read_text(encoding="utf-8").split("## Quick Start", 1)[1]
-    oscuro = quick_start.split("prefers-color-scheme: dark", 1)[1].split("@media", 1)[0]
+def valores_oscuros_de_app_css():
+    """Los tokens del bloque ``prefers-color-scheme: dark`` de ``app.css`` (marco viejo)."""
+    hoja = APP_CSS.read_text(encoding="utf-8")
+    oscuro = hoja.split("prefers-color-scheme: dark", 1)[1].split("}", 1)[0]
     return dict(re.findall(r"(--color-[\w-]+):\s*(#[0-9a-fA-F]{6});", oscuro))
 
 
@@ -182,7 +184,7 @@ def test_los_tokens_aplicados_toman_su_valor_del_tema(live_server, page, docente
     con_pantalla(page, 1280, tema)
     ingresar(page, live_server, docente, clave)
     expect(page).to_have_url(f"{live_server.url}/docente/")
-    oscuros = valores_oscuros_de_design_md()
+    oscuros = valores_oscuros_de_app_css()
     claros = {
         "--color-fondo": "#f3eee3",
         "--color-texto": "#2c150c",
