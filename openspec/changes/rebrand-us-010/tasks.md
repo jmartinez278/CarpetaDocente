@@ -15,8 +15,8 @@ Ninguna parte es de alto riesgo: no toca modelos, permisos, transacciones, datos
 
 ### Parte B: `rb/estado_vacio.html` (normal)
 
-- [ ] 2.1 Prueba primero, `cuentas/tests/test_componentes_rb.py`: `rb/estado_vacio.html` con ícono `aria-hidden`, el texto, y la acción solo si se pasa (enlace o botón por `rb/boton.html`). Luego el componente y `.empty` en `rebrand/componentes.css`. Verificar: rojo y luego verde; `uv run pytest src/backend/cuentas/tests/test_componentes_rb.py`
-- [ ] 2.2 `verificar.py` y commit
+- [x] 2.1 Prueba primero, `cuentas/tests/test_componentes_rb.py`: `rb/estado_vacio.html` con ícono `aria-hidden`, el texto, y la acción solo si se pasa (enlace o botón por `rb/boton.html`). Luego el componente y `.empty` en `rebrand/componentes.css`. Verificar: rojo y luego verde; `uv run pytest src/backend/cuentas/tests/test_componentes_rb.py`
+- [x] 2.2 `verificar.py` y commit
 
 ## 3. Pantalla Sesiones (D1, D2, D5, D7)
 

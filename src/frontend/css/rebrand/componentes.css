@@ -282,4 +282,27 @@
       }
     }
   }
+
+  /* Estado vacío (rb/estado_vacio.html): ícono decorativo, texto y una acción opcional. */
+  .empty {
+    display: grid;
+    justify-items: center;
+    gap: var(--s-3);
+    padding: var(--s-6) var(--s-4);
+    border: 1px dashed var(--line);
+    border-radius: var(--r-lg);
+    font-size: var(--text-body);
+    text-align: center;
+  }
+
+  .empty-icono {
+    width: 32px;
+    height: 32px;
+    color: var(--muted);
+  }
+
+  .empty p {
+    max-width: 40ch;
+    overflow-wrap: anywhere;
+  }
 }

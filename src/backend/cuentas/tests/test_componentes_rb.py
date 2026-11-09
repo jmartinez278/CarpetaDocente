@@ -307,3 +307,49 @@ def test_dialogo_cerrado_sin_x_ni_hex_ni_style():
     assert "<svg" not in html.split("dialog-cuerpo")[0]  # cabecera sin ✕
     assert "style=" not in html
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", html)
+
+
+# --- Estado vacío (rebrand-us-010, D6) ---
+
+
+def estado_vacio(**contexto):
+    base = {"icono": "inbox", "texto": "Aquí verás las sesiones que envíes y su estado."}
+    base.update(contexto)
+    return render_to_string("rb/estado_vacio.html", base).strip()
+
+
+def test_estado_vacio_trae_icono_decorativo_y_texto():
+    html = estado_vacio()
+
+    assert "empty" in clases(html, "div")
+    assert 'aria-hidden="true"' in html
+    assert html.index("<svg") < html.index("Aquí verás las sesiones")
+    assert "Aquí verás las sesiones que envíes y su estado." in html
+
+
+def test_estado_vacio_sin_accion_no_trae_enlace_ni_boton():
+    html = estado_vacio()
+
+    assert "<a " not in html
+    assert "<button" not in html
+
+
+def test_estado_vacio_con_href_trae_un_enlace():
+    html = estado_vacio(accion="Ir a la portada", href="/inicio/")
+
+    assert re.search(r'<a\b[^>]*href="/inicio/"[^>]*>Ir a la portada</a>', html)
+    assert "<button" not in html
+
+
+def test_estado_vacio_con_datos_trae_un_boton_con_el_atributo():
+    html = estado_vacio(accion="Subir una sesión", datos="abrir-subir")
+
+    assert re.search(r"<button\b[^>]*data-abrir-subir[^>]*>Subir una sesión</button>", html)
+    assert "<a " not in html
+
+
+def test_estado_vacio_sin_hex_ni_style():
+    html = estado_vacio(accion="Subir", datos="x")
+
+    assert "style=" not in html
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", html)
