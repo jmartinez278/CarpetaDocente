@@ -23,3 +23,10 @@ def menu_docente(context):
 def menu_cuenta(context):
     usuario = context["request"].user
     return {"user": usuario, "secciones": secciones_de_la_cuenta(usuario)}
+
+
+@register.filter
+def partes_aviso(mensaje):
+    """Parte el aviso de inactividad («título», línea en blanco, «detalle») en sus dos líneas."""
+    titulo, _, detalle = str(mensaje).partition("\n\n")
+    return titulo.strip(), detalle.strip()

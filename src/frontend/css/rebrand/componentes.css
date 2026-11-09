@@ -55,6 +55,51 @@
     border: 2px solid var(--error);
   }
 
+  /* Ingreso (rebrand-us-001, D3): campo de 52 px sobre --g-alt y el ojo de la contraseña dentro del campo. */
+  .field--ingreso .input {
+    min-height: 52px;
+    background: var(--g-alt);
+  }
+
+  .input-grupo {
+    position: relative;
+  }
+
+  .input-grupo .input {
+    padding-inline-end: 52px;
+  }
+
+  .input-ojo {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-block: auto;
+    padding: 0;
+    background: transparent;
+    color: var(--muted);
+    border: 0;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+  }
+
+  .input-ojo[hidden] {
+    display: none;
+  }
+
+  .input-ojo .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .input-ojo[aria-pressed="false"] .ojo-ocultar,
+  .input-ojo[aria-pressed="true"] .ojo-ver {
+    display: none;
+  }
+
   .field-error {
     display: flex;
     gap: var(--s-2);
@@ -96,6 +141,12 @@
     background: var(--error-bg);
     color: var(--error-ink);
     border-color: var(--error);
+  }
+
+  /* El error del ingreso recibe el foco al cargar (rebrand-us-001, D2): el anillo es la única señal. */
+  .message[tabindex]:focus {
+    outline: 2px solid var(--action);
+    outline-offset: 2px;
   }
 
   .message-texto {

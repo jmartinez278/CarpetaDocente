@@ -243,6 +243,15 @@
     margin-left: auto;
   }
 
+  /* Inicio de sesión (rebrand-us-001, D3): solo la marca, centrada. */
+  .footer--marca {
+    justify-content: center;
+  }
+
+  .footer--marca > :last-child {
+    margin-left: 0;
+  }
+
   @media (max-width: 699px) {
     .appbar-inner {
       gap: var(--s-3);

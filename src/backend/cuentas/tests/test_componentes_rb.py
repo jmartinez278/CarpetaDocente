@@ -359,3 +359,146 @@ def test_estado_vacio_sin_hex_ni_style():
 
     assert "style=" not in html
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", html)
+
+
+# --- Ingreso del rebrand (rebrand-us-001, D3) ---
+
+
+class FormularioIngreso(forms.Form):
+    username = forms.CharField(label="Usuario")
+    password = forms.CharField(label="Contraseña", widget=forms.PasswordInput)
+
+
+def campo_de_ingreso(nombre, datos=None, **contexto):
+    formulario = FormularioIngreso(datos)
+    if datos is not None:
+        formulario.is_valid()
+    return campo(campo=formulario[nombre], **contexto)
+
+
+def test_campo_con_mostrar_clave_envuelve_el_input_y_trae_el_ojo():
+    html = campo_de_ingreso("password", mostrar_clave=True)
+
+    assert re.search(r'<div class="input-grupo">\s*<input\b', html)
+    ojo = etiqueta_apertura(html, "button")
+    assert 'type="button"' in ojo
+    assert "data-mostrar-clave" in ojo
+    assert 'aria-controls="id_password"' in ojo
+    assert 'aria-pressed="false"' in ojo
+    assert 'aria-label="Mostrar contraseña"' in ojo
+    assert re.search(r"\shidden(\s|>)", ojo)
+    iconos = re.findall(r"<svg\b[^>]*>", html)
+    assert len(iconos) == 2
+    assert all('aria-hidden="true"' in icono for icono in iconos)
+
+
+def test_campo_con_mostrar_clave_nunca_reescribe_la_contraseña():
+    html = campo_de_ingreso("password", datos={"password": "secreta"}, mostrar_clave=True)
+
+    assert "value=" not in etiqueta_apertura(html, "input")
+    assert "secreta" not in html
+
+
+def test_campo_con_variante_ingreso_lleva_field_ingreso():
+    html = campo_de_ingreso("username", variante="ingreso")
+
+    assert "field--ingreso" in clases(html, "div")
+
+
+def test_campo_con_sin_correccion_apaga_mayusculas_y_corrector():
+    html = campo_de_ingreso("username", sin_correccion=True)
+
+    entrada = etiqueta_apertura(html, "input")
+    assert 'autocapitalize="none"' in entrada
+    assert 'spellcheck="false"' in entrada
+
+
+def test_campo_sin_los_parametros_nuevos_queda_como_antes():
+    html = campo_de()
+
+    assert "input-grupo" not in html
+    assert "<button" not in html
+    assert "<svg" not in html
+    assert "field--ingreso" not in html
+    assert clases(html, "div") == ["field"]
+    assert "autocapitalize" not in html
+    assert "spellcheck" not in html
+
+
+# --- Mensaje con ícono y foco (rebrand-us-001, D2 y D3) ---
+
+
+def test_mensaje_con_icono_usa_ese_icono():
+    from django.template.loader import render_to_string as pintar
+
+    reloj = pintar("iconos/clock.svg", {"clase": None}).strip()
+    alerta = pintar("iconos/circle-alert.svg", {"clase": None}).strip()
+    html = mensaje(tipo="aviso", titulo="T", texto="X", icono="clock")
+
+    assert reloj in html
+    assert alerta not in html
+
+
+def test_mensaje_sin_icono_conserva_el_de_hoy():
+    from django.template.loader import render_to_string as pintar
+
+    alerta = pintar("iconos/circle-alert.svg", {"clase": None}).strip()
+
+    assert alerta in mensaje(tipo="error", titulo="T")
+
+
+def test_mensaje_con_enfocar_trae_tabindex_y_autofocus_sin_role():
+    html = mensaje(tipo="error", titulo="T", texto="X", enfocar=True, alerta=True)
+
+    apertura = etiqueta_apertura(html, "div")
+    assert 'tabindex="-1"' in apertura
+    assert re.search(r"\sautofocus(\s|>)", apertura)
+    assert "role=" not in html
+
+
+def test_mensaje_sin_enfocar_no_trae_tabindex_ni_autofocus():
+    html = mensaje(tipo="error", titulo="T", texto="X")
+
+    assert "tabindex" not in html
+    assert "autofocus" not in html
+
+
+# --- Pie con solo la marca (rebrand-us-001, D3) ---
+
+
+def pie(**contexto):
+    return render_to_string("rb/pie.html", contexto).strip()
+
+
+def test_pie_con_solo_marca_trae_un_texto_y_footer_marca():
+    html = pie(solo_marca=True)
+
+    assert "footer--marca" in clases(html, "footer")
+    assert "CarpetaDocente · 2026" in html
+    assert "I.E. Virgen del Carmen" not in html
+
+
+def test_pie_sin_solo_marca_trae_los_dos_textos():
+    html = pie()
+
+    assert "CarpetaDocente · 2026" in html
+    assert "I.E. Virgen del Carmen" in html
+    assert "footer--marca" not in html
+
+
+# --- Filtro partes_aviso (rebrand-us-001, D3) ---
+
+
+def test_partes_aviso_parte_titulo_y_detalle():
+    from cuentas.templatetags.marco import partes_aviso
+
+    assert partes_aviso("Tu sesión se cerró.\n\nVuelve a ingresar.") == (
+        "Tu sesión se cerró.",
+        "Vuelve a ingresar.",
+    )
+
+
+def test_partes_aviso_sin_detalle_deja_el_texto_vacio():
+    from cuentas.templatetags.marco import partes_aviso
+
+    assert partes_aviso("Solo título") == ("Solo título", "")
