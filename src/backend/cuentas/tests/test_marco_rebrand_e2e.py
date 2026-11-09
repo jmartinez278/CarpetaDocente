@@ -363,6 +363,24 @@ def test_e03_cerrar_a_media_entrada_sigue_desde_donde_esta(live_server, page, do
     esperar_cierre(page)
 
 
+def test_cierre_nativo_durante_la_salida_no_cierra_la_reapertura(live_server, page, docente, clave):
+    """Si el navegador cierra el diálogo a media salida (p. ej. un segundo Escape en Chrome),
+    la salida pendiente se descarta y no cierra ni desplaza la apertura siguiente."""
+    con_pantalla(page, 1280, "light")
+    entrar(page, live_server, docente, clave)
+    abrir_navegacion(page)
+
+    cerrar_navegacion(page).click()  # con el mouse: empieza la salida animada
+    expect(dialogo(page)).to_have_attribute("data-cerrando", "")
+    page.evaluate("document.getElementById('navegacion').close()")
+    abrir_navegacion(page)
+    page.wait_for_timeout(400)
+
+    expect(dialogo(page)).to_have_js_property("open", True)
+    expect(dialogo(page)).not_to_have_attribute("data-cerrando", "")
+    assert desplazamiento(estilo(page, "dialog#navegacion", "transform")) == pytest.approx(0, abs=1)
+
+
 def test_e05_la_pulsacion_solo_con_el_mouse(live_server, page, docente, clave):
     con_pantalla(page, 1280, "light")
     entrar(page, live_server, docente, clave)

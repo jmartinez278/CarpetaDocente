@@ -20,11 +20,16 @@
 
     let espera = null;
 
-    // close() llega recién al terminar la salida, para que el panel no deje la capa superior de golpe (E-03).
-    function terminar() {
+    // Descarta una salida pendiente: su temporizador no debe cerrar una apertura posterior.
+    function descartarSalida() {
       clearTimeout(espera);
       dialogo.removeEventListener("transitionend", alTerminar);
       delete dialogo.dataset.cerrando;
+    }
+
+    // close() llega recién al terminar la salida, para que el panel no deje la capa superior de golpe (E-03).
+    function terminar() {
+      descartarSalida();
       if (dialogo.open) dialogo.close();
     }
 
@@ -75,7 +80,9 @@
       if (!dentro) cerrar(false);
     });
 
+    // También si el navegador cierra por su cuenta a media salida (p. ej. un segundo Escape en Chrome).
     dialogo.addEventListener("close", () => {
+      descartarSalida();
       delete dialogo.dataset.teclado;
       boton.setAttribute("aria-expanded", "false");
       boton.focus();
