@@ -37,7 +37,7 @@
 
 ### D1. Segunda hoja: `src/frontend/css/rebrand.css`
 
-- `@import "tailwindcss" source(none);` y `@source` explícito sobre `templates/base_rebrand.html`, `templates/marco_rebrand.html`, `templates/rb/` y cada plantilla migrada (hoy `templates/cuentas/sin_permiso.html`). Cada pantalla del rebrand agrega su línea. Por qué: el CSS del prototipo se copia como componentes, casi no se usan utilidades, y escanear todo traería las utilidades de las pantallas viejas y más choques posibles.
+- `@import "tailwindcss" source(none);` y `@source` explícito sobre `templates/base_rebrand.html`, `templates/marco_rebrand.html`, `templates/rb/` y cada plantilla migrada (hoy `templates/cuentas/sin_permiso.html`). Cada pantalla del rebrand agrega su línea. Además, `@source "./rebrand"` sobre la carpeta de los parciales: con `--poll` (contenedor) la CLI solo ve cambios en sus `@source` y en la entrada, no en los archivos importados (ajuste del apply; la hoja compilada no cambia con esa línea). Por qué: el CSS del prototipo se copia como componentes, casi no se usan utilidades, y escanear todo traería las utilidades de las pantallas viejas y más choques posibles.
 - Partes en archivos importados desde `rebrand.css`: `rebrand/tokens.css`, `rebrand/base.css` (reinicio y foco), `rebrand/marco.css` (barra, ☰, cuenta, pie, enlace «Ir al contenido»), `rebrand/componentes.css` (botón, campo, mensaje) y `rebrand/pantallas/sin-permiso.css`. El CSS copiado va en `@layer components`.
 - Es el único archivo del marco nuevo con hex (tokens). El `::backdrop` del ☰ conserva los dos valores del prototipo (`rgb(48 39 31 / .4)` y `rgb(0 0 0 / .55)` en oscuro).
 - Alternativa descartada: un prefijo de Tailwind (`prefix(tw)`) evitaría los choques, pero también prefija las variables del `@theme` y rompería los `var(--ink)` del CSS copiado (decisión 3).
@@ -45,7 +45,7 @@
 ### D2. Build y vigilancia
 
 - `build`: `copiar-vendor`, luego `tailwindcss` de `app.css` y de `rebrand.css`, las dos con `--minify`, en serie con `&&`.
-- `dev` y `dev:contenedor`: `copiar-vendor` y `node scripts/vigilar.mjs` (`--poll=1000` en el contenedor). `vigilar.mjs` arranca un `tailwindcss --watch=always` por entrada con `spawn` (con `shell` en Windows para hallar `npx`/`tailwindcss`), reenvía la salida con el nombre de la hoja y, si uno termina o llega Ctrl+C, cierra el otro. Por qué: sin dependencia nueva y en el mismo estilo que `copiar-vendor.mjs`; `concurrently` o `npm-run-all2` sumarían un paquete solo para esto.
+- `dev` y `dev:contenedor`: `copiar-vendor` y `node scripts/vigilar.mjs` (`--poll=1000` en el contenedor). `vigilar.mjs` arranca un `tailwindcss --watch=always` por entrada con `spawn`, con el mismo Node (`process.execPath`) y la ruta del `bin` de `@tailwindcss/cli`, sin `shell`, para que `kill()` llegue al vigilante y no a un `cmd` (ajuste del apply); reenvía la salida con el nombre de la hoja y, si uno termina o llega Ctrl+C, cierra el otro. Por qué: sin dependencia nueva y en el mismo estilo que `copiar-vendor.mjs`; `concurrently` o `npm-run-all2` sumarían un paquete solo para esto.
 - Vercel, CI, el Dockerfile y `build_vercel.py` no cambian (corren `npm run build`).
 
 ### D3. Tokens y fuentes

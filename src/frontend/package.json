@@ -4,9 +4,9 @@
   "description": "Fuentes de Tailwind CSS y copia de HTMX y Alpine.js hacia los estáticos de src/backend (documento 10; EN-01)",
   "type": "module",
   "scripts": {
-    "build": "npm run copiar-vendor && tailwindcss -i ./css/app.css -o ../backend/static/dist/app.css --minify",
-    "dev": "npm run copiar-vendor && tailwindcss -i ./css/app.css -o ../backend/static/dist/app.css --watch=always",
-    "dev:contenedor": "npm run copiar-vendor && tailwindcss -i ./css/app.css -o ../backend/static/dist/app.css --watch=always --poll=1000",
+    "build": "npm run copiar-vendor && tailwindcss -i ./css/app.css -o ../backend/static/dist/app.css --minify && tailwindcss -i ./css/rebrand.css -o ../backend/static/dist/rebrand.css --minify",
+    "dev": "npm run copiar-vendor && node scripts/vigilar.mjs",
+    "dev:contenedor": "npm run copiar-vendor && node scripts/vigilar.mjs --poll=1000",
     "copiar-vendor": "node scripts/copiar-vendor.mjs"
   },
   "devDependencies": {
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@fontsource/besley": "^5.3.0",
+    "@fontsource/instrument-sans": "^5.3.0",
     "alpinejs": "^3.17.4",
     "htmx.org": "~2.0.11"
   }

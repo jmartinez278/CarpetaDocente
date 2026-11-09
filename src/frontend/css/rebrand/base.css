@@ -1,0 +1,146 @@
+/* Base del rebrand: fuente, reinicio y foco, del prototipo (insumos/rebrand/assets/app.css) sobre
+   el preflight de Tailwind (rebrand-base, D1 y D3). */
+
+/* Instrument Sans 400 y 500 latinas, de @fontsource/instrument-sans (las copia copiar-vendor.mjs a
+   dist/fuentes/). Sin Besley: solo la usa el inicio de sesión. */
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fuentes/instrument-sans-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("fuentes/instrument-sans-latin-500-normal.woff2") format("woff2");
+}
+
+@layer base {
+  html {
+    min-width: 280px;
+    scroll-padding-top: calc(var(--bar-height) + var(--s-5));
+    font-synthesis: none;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    background: var(--g-main);
+    color: var(--ink);
+    font: var(--weight-body) var(--text-body) / var(--leading-text) var(--font-text);
+    -webkit-font-smoothing: antialiased;
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  ul,
+  ol,
+  dl,
+  dd,
+  fieldset {
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  strong,
+  b {
+    font-weight: var(--display-weight);
+  }
+
+  h1 {
+    font-size: var(--text-page);
+    line-height: var(--leading-page);
+    letter-spacing: var(--tracking-page);
+  }
+
+  h2 {
+    font-size: var(--text-section);
+    line-height: var(--leading-section);
+    letter-spacing: var(--tracking-section);
+  }
+
+  h3 {
+    font-size: var(--text-subsection);
+    line-height: var(--leading-subsection);
+    letter-spacing: var(--tracking-subsection);
+  }
+
+  /* Controles: heredan la fuente y miden al menos 44 × 44 px (Quick Start, A-01). */
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button,
+  summary {
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    cursor: pointer;
+  }
+
+  button,
+  a,
+  summary {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  svg {
+    display: block;
+    flex: none;
+  }
+
+  ul,
+  ol {
+    padding: 0;
+    list-style: none;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  fieldset {
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    margin-bottom: var(--s-3);
+    padding: 0;
+    font-weight: var(--display-weight);
+  }
+
+  /* Foco: 2 px y 4 px de separación, sin transición (E-02: aparece de una vez). */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 4px;
+  }
+
+  main:focus {
+    outline: 0;
+  }
+
+  ::selection {
+    background: var(--sand);
+    color: var(--preview-ink);
+  }
+}

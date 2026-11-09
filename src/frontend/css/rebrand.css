@@ -1,0 +1,18 @@
+/* Segunda entrada de Tailwind CSS v4, la del rebrand (rebrand-base, D1).
+   Se compila a src/backend/static/dist/rebrand.css. Una página carga esta hoja o app.css, nunca
+   las dos (D9). */
+@import "tailwindcss" source(none);
+
+/* Solo las plantillas del marco nuevo y las pantallas ya migradas (rutas relativas a este
+   archivo). Cada pantalla del rebrand suma aquí su línea. */
+@source "../../backend/templates/base_rebrand.html";
+@source "../../backend/templates/marco_rebrand.html";
+@source "../../backend/templates/rb";
+@source "../../backend/templates/cuentas/sin_permiso.html";
+
+/* Los parciales de abajo también son fuente: con --poll (contenedor) la CLI solo ve cambios en sus
+   @source y en la entrada, no en los archivos importados. */
+@source "./rebrand";
+
+@import "./rebrand/tokens.css";
+@import "./rebrand/base.css";

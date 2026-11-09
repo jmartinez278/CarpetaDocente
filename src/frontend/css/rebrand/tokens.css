@@ -1,0 +1,254 @@
+/* Tokens del rebrand: Quick Start de DESIGN.md 1.1, copiado tal cual (rebrand-base, D3).
+   Es el único archivo del marco nuevo con hex. */
+
+/* static: se emiten todos, se usen o no en utilidades; los componentes copiados del prototipo
+   los leen con var(--ink), var(--g-main)… */
+@theme static {
+  --g-main: #F3EEE3;
+  --g-alt: #FAF6EF;
+  --bg: var(--g-main);
+  --card: #FEFCF9;
+  --sand: #E3D4AD;
+  --folder: #E3D4AD;
+  --ink: #30271F;
+  --muted: #6E5746;
+  --action: #76543E;
+  --action-ink: #FEFCF9;
+  --line: #C2B290;
+  --line-strong: #9F916A;
+  --gold: #E9B70B;
+  --gold-ink: #976700;
+  --cocoa: #76543E;
+  --cocoa-line: #76543E;
+  --cocoa-ink: #FEFCF9;
+  --cocoa-muted: #EADFCB;
+  --focus-ring: var(--action);
+
+  --asistio: #2E7D4F;
+  --asistio-ink: #FFFFFF;
+  --falto: #B3261E;
+  --falto-ink: #FFFFFF;
+  --asistio-punto: var(--asistio);
+  --falto-punto: var(--falto);
+  --asistio-punto-cocoa: #8FD6A6;
+  --falto-punto-cocoa: #F7A39A;
+  --tarde-bg: var(--gold);
+  --tarde-ink: #30271F;
+  --tarde-line: #976700;
+  --justificado-bg: var(--sand);
+  --justificado-ink: #76543E;
+  --justificado-line: #9F916A;
+
+  --grid-line: #E4D9C6;
+  --grid-head: #F3ECDF;
+  --grid-hatch: #ECE3D3;
+  --row-hover: #FAF5EC;
+  --sel-bg: #EFE4D1;
+  --warn-bg: #FBEFC9;
+  --warn-ink: #6B4A00;
+  --error: #B3261E;
+  --error-bg: #FBE8E6;
+  --error-ink: #8C1D18;
+  --changed: #76543E;
+
+  /* Papel de miniaturas: fijo en claro y oscuro. */
+  --preview-paper: #FAF6EF;
+  --preview-card: #FEFCF9;
+  --preview-ink: #30271F;
+  --preview-muted: #6E5746;
+  --preview-line: #C2B290;
+  --preview-action: #76543E;
+  --preview-sand: #E3D4AD;
+
+  --font-text: 'Instrument Sans', Arial, sans-serif;
+  --font-display: var(--font-text);
+  --weight-body: 400;
+  --display-weight: 500;
+  --text-home: 42px;
+  --text-page: 36px;
+  --text-session: 32px;
+  --text-section: 24px;
+  --text-subsection: 18px;
+  --text-toolbar: 20px;
+  --text-greeting: 24px;
+  --text-body: 16px;
+  --text-label: 14px;
+  --text-support: 13px;
+  --text-level: 26px;
+  --text-count: 36px;
+  --leading-home: 1.16;
+  --leading-page: 1.17;
+  --leading-session: 1.2;
+  --leading-section: 1.3;
+  --leading-subsection: 1.4;
+  --leading-toolbar: 1.3;
+  --leading-greeting: 1.4;
+  --leading-text: 1.5;
+  --leading-preview: 1.4;
+  --leading-session-text: 1.8;
+  --leading-level: 1;
+  --leading-count: 1.2;
+  --tracking-page: -.035em;
+  --tracking-section: -.025em;
+  --tracking-subsection: -.015em;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --r-sm: 8px;
+  --r-btn: var(--r-sm);
+  --r-md: 12px;
+  --r-lg: 20px;
+  --r-sheet: var(--r-lg);
+  --r-pill: 999px;
+  --r-round: 50%;
+  --touch-min: 44px;
+  --gut: 32px;
+  --bar-height: 72px;
+  --content-max: 1120px;
+  --sheet-max: 1280px;
+
+  --shadow-account: 0 12px 32px rgb(48 39 31 / .10);
+  --shadow-editor: 0 16px 40px rgb(48 39 31 / .18);
+  --shadow-dialog: 0 24px 80px rgb(48 39 31 / .16);
+  --shadow-toast: 0 8px 24px rgb(48 39 31 / .12);
+  --shadow-preview: 4px 4px 0 var(--preview-sand);
+  --m-in: 140ms;
+  --m-out: 200ms;
+  --m-press: 90ms;
+  --m-panel: 200ms;
+  --m-slide: 240ms;
+  --m-ease: cubic-bezier(.2,.8,.2,1);
+  --m-ease-io: cubic-bezier(.65,0,.35,1);
+}
+
+/* Alias para las utilidades de color (bg-card, text-ink…); inline: la utilidad usa var(--ink) y
+   así sigue al tema. */
+@theme inline {
+  --color-g-main: var(--g-main);
+  --color-g-alt: var(--g-alt);
+  --color-card: var(--card);
+  --color-sand: var(--sand);
+  --color-folder: var(--folder);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-action: var(--action);
+  --color-action-ink: var(--action-ink);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-gold: var(--gold);
+  --color-gold-ink: var(--gold-ink);
+  --color-cocoa: var(--cocoa);
+  --color-cocoa-ink: var(--cocoa-ink);
+  --color-cocoa-muted: var(--cocoa-muted);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-error-ink: var(--error-ink);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-ink: var(--warn-ink);
+  --color-asistio: var(--asistio);
+  --color-asistio-ink: var(--asistio-ink);
+  --color-falto: var(--falto);
+  --color-falto-ink: var(--falto-ink);
+}
+
+/* Variantes del tema y de celular: no caben en @theme. La capa base va después de theme y les
+   gana. Los cortes 700/900/960/1100 se escriben a mano en cada @media (sin --breakpoint-*). */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html[data-theme=dark] {
+    color-scheme: dark;
+    --g-main: #202020;
+    --g-alt: #202020;
+    --card: #342D27;
+    --folder: #4C4033;
+    --ink: #F4EDE4;
+    --muted: #D1C2AD;
+    --action: #E0BF9C;
+    --action-ink: #202020;
+    --line: #65584A;
+    --line-strong: #9D8A73;
+    --gold-ink: #E9B70B;
+    --cocoa: #574A3E;
+    --cocoa-line: #9D8A73;
+    --cocoa-ink: #F4EDE4;
+    --cocoa-muted: #E3D6C4;
+    --asistio: #5CB87F;
+    --asistio-ink: #0E2016;
+    --falto: #EE8379;
+    --falto-ink: #2A0B08;
+    --grid-line: #4B4138;
+    --grid-head: #3D352E;
+    --grid-hatch: #433A32;
+    --row-hover: #3A312A;
+    --sel-bg: #463B31;
+    --warn-bg: #4A3C17;
+    --warn-ink: #F2D27A;
+    --error: #FFB4AB;
+    --error-bg: #4D2723;
+    --error-ink: #FFDAD5;
+    --changed: #E0BF9C;
+    --shadow-editor: 0 16px 40px rgb(0 0 0 / .45);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme=light]) {
+      color-scheme: dark;
+      --g-main: #202020;
+      --g-alt: #202020;
+      --card: #342D27;
+      --folder: #4C4033;
+      --ink: #F4EDE4;
+      --muted: #D1C2AD;
+      --action: #E0BF9C;
+      --action-ink: #202020;
+      --line: #65584A;
+      --line-strong: #9D8A73;
+      --gold-ink: #E9B70B;
+      --cocoa: #574A3E;
+      --cocoa-line: #9D8A73;
+      --cocoa-ink: #F4EDE4;
+      --cocoa-muted: #E3D6C4;
+      --asistio: #5CB87F;
+      --asistio-ink: #0E2016;
+      --falto: #EE8379;
+      --falto-ink: #2A0B08;
+      --grid-line: #4B4138;
+      --grid-head: #3D352E;
+      --grid-hatch: #433A32;
+      --row-hover: #3A312A;
+      --sel-bg: #463B31;
+      --warn-bg: #4A3C17;
+      --warn-ink: #F2D27A;
+      --error: #FFB4AB;
+      --error-bg: #4D2723;
+      --error-ink: #FFDAD5;
+      --changed: #E0BF9C;
+      --shadow-editor: 0 16px 40px rgb(0 0 0 / .45);
+    }
+  }
+
+  @media (max-width:699px) {
+    :root {
+      --gut: 20px;
+      --bar-height: 64px;
+      --r-sheet: 16px;
+      --text-home: 30px;
+      --text-page: 28px;
+      --text-session: 26px;
+      --text-section: 20px;
+      --text-toolbar: 18px;
+      --text-greeting: 20px;
+      --leading-home: 1.18;
+      --leading-page: 1.2;
+    }
+  }
+}
