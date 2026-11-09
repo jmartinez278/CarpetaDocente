@@ -288,6 +288,12 @@
     transition-duration: var(--m-panel);
   }
 
+  /* A-01: abierto con el teclado, el panel aparece en su lugar, sin entrada. */
+  .drawer[data-teclado],
+  .drawer[data-teclado]::backdrop {
+    transition: none;
+  }
+
   /* Color de los controles: entra en 140 ms y sale en 200 ms. */
   .btn,
   .drawer-nav li > a {
@@ -299,9 +305,10 @@
 
   /* E-05: subir 1 px y pulsar con escala 0,985 solo con puntero fino y pulsación con el mouse. */
   @media (hover: hover) and (pointer: fine) {
+    /* A-02: el color entra en 140 ms; transform (4.º de la lista de .btn) sigue en --m-press. */
     .btn:hover,
     .drawer-nav li > a:hover {
-      transition-duration: var(--m-in);
+      transition-duration: var(--m-in), var(--m-in), var(--m-in), var(--m-press);
     }
 
     .drawer-nav li > a:hover {

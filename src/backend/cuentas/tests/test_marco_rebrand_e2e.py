@@ -328,14 +328,17 @@ def test_e02_el_foco_aparece_de_una_vez(live_server, page, docente, clave, movim
         assert "outline" not in estilo(page, selector, "transitionProperty")
 
 
+# Abre y, a mitad de la entrada, toca el velo, las dos veces con el mouse (``detail: 1``);
+# un clic con el teclado llega con ``detail: 0`` y no se anima (A-01).
 CERRAR_A_MEDIA_ENTRADA = """async () => {
   const boton = document.querySelector("[data-menu-navegacion]");
   const panel = document.getElementById("navegacion");
-  boton.click();
+  boton.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
   await new Promise((listo) => setTimeout(listo, 90));
   const antes = getComputedStyle(panel).transform;
-  // Escape llega al <dialog> como «cancel».
-  panel.dispatchEvent(new Event("cancel", { cancelable: true }));
+  panel.dispatchEvent(
+    new MouseEvent("click", { bubbles: true, detail: 1, clientX: 900, clientY: 400 })
+  );
   const despues = getComputedStyle(panel).transform;
   return { antes, despues, abierto: panel.open };
 }"""
@@ -394,3 +397,93 @@ def test_movimiento_reducido_el_menu_no_se_desplaza(live_server, page, docente, 
     assert medida["despues"] == "none"
     assert not medida["abierto"], "con movimiento reducido el cierre es inmediato"
     esperar_cierre(page)
+
+
+# --- Auditoría de Emil (insumos/rebrand-base/auditoria-emil.md) ---
+
+SIN_MOVIMIENTO_AL_ABRIR = """() => {
+  const panel = document.getElementById("navegacion");
+  return {
+    abierto: panel.open,
+    transform: getComputedStyle(panel).transform,
+    animaciones: document.getAnimations().length,
+  };
+}"""
+
+
+def test_a01_con_el_teclado_el_menu_abre_y_cierra_de_una_vez(live_server, page, docente, clave):
+    con_pantalla(page, 1280, "light")
+    entrar(page, live_server, docente, clave)
+
+    boton_menu(page).focus()
+    page.keyboard.press("Enter")
+    al_abrir = page.evaluate(SIN_MOVIMIENTO_AL_ABRIR)
+    page.keyboard.press("Escape")
+    abierto_tras_escape = dialogo(page).evaluate("(d) => d.open")
+
+    assert al_abrir == {"abierto": True, "transform": "none", "animaciones": 0}
+    assert not abierto_tras_escape, "Escape cierra sin esperar la salida"
+    esperar_cierre(page)
+
+
+def test_a01_el_x_con_el_teclado_cierra_de_una_vez(live_server, page, docente, clave):
+    con_pantalla(page, 1280, "light")
+    entrar(page, live_server, docente, clave)
+    abrir_navegacion(page)
+
+    cerrar_navegacion(page).focus()
+    page.keyboard.press("Enter")
+
+    assert not dialogo(page).evaluate("(d) => d.open")
+    esperar_cierre(page)
+
+
+def transicion_de(page, selector, propiedad):
+    """La duración con la que ``propiedad`` transiciona en ``selector``."""
+    return page.evaluate(
+        """([s, p]) => {
+          const estilo = getComputedStyle(document.querySelector(s));
+          const propiedades = estilo.transitionProperty.split(", ");
+          const duraciones = estilo.transitionDuration.split(", ");
+          const i = propiedades.indexOf(p);
+          return i < 0 ? null : duraciones[i % duraciones.length];
+        }""",
+        [selector, propiedad],
+    )
+
+
+def test_a02_la_pulsacion_dura_90_ms_tambien_con_el_mouse_encima(live_server, page, docente, clave):
+    con_pantalla(page, 1280, "light")
+    entrar(page, live_server, docente, clave)
+    selector = ".permission-acciones .btn"
+
+    page.locator(selector).hover()
+
+    assert transicion_de(page, selector, "transform") == "0.09s"
+    assert transicion_de(page, selector, "background-color") == "0.14s"
+
+
+def test_a03_la_marca_del_mouse_dura_solo_su_pulsacion(live_server, page, docente, clave):
+    con_pantalla(page, 1280, "light")
+    entrar(page, live_server, docente, clave)
+    selector = ".permission-acciones .btn"
+    caja = page.locator(selector).bounding_box()
+    page.mouse.move(caja["x"] + caja["width"] / 2, caja["y"] + caja["height"] / 2)
+    # El enlace no debe navegar: solo interesa la marca.
+    page.evaluate(
+        "document.querySelector('.permission-acciones .btn')"
+        ".addEventListener('click', (e) => e.preventDefault())"
+    )
+
+    page.mouse.down()
+    durante = page.locator(f"{selector}[data-pointer]").count()
+    page.mouse.up()
+    tras_soltar = page.locator("[data-pointer]").count()
+    page.mouse.down()
+    page.locator(selector).dispatch_event("pointercancel")
+    tras_cancelar = page.locator("[data-pointer]").count()
+    page.mouse.up()
+    page.locator(selector).dispatch_event("pointerdown", {"pointerType": "touch"})
+    con_toque = page.locator("[data-pointer]").count()
+
+    assert (durante, tras_soltar, tras_cancelar, con_toque) == (1, 0, 0, 0)
