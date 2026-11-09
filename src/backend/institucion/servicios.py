@@ -202,6 +202,20 @@ def texto_secciones_docente(usuario):
     return " · ".join(texto_seccion(seccion) for seccion in secciones)
 
 
+def secciones_de_la_cuenta(usuario):
+    """Línea de secciones del menú de la cuenta (spec cierre-sesion; rebrand-base, D7).
+
+    El mismo texto que la portada para una docente con secciones en el año ABIERTO; ``None``
+    sin secciones o para otro rol (sin el aviso "Tu sección aparecerá…").
+    """
+    if usuario.rol != Usuario.Rol.DOCENTE:
+        return None
+    secciones = secciones_docente(usuario)
+    if not secciones:
+        return None
+    return " · ".join(texto_seccion(seccion) for seccion in secciones)
+
+
 def docentes_elegibles(seccion):
     """Cuentas que se ofrecen como docente de aula de una sección guardada (US-005, D4).
 

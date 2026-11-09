@@ -41,7 +41,7 @@ def test_camino_ideal_abre_el_menu_y_cierra_la_sesion(live_server, page, docente
     entrar_a_la_portada(page, live_server, docente, clave)
 
     boton_menu(page).click()
-    expect(page.locator(".menu-cuenta__nombre")).to_have_text("Ana Quispe")
+    expect(page.locator("[data-cuenta-nombre]")).to_have_text("Ana Quispe")
     cerrar_sesion(page).click()
 
     expect(page).to_have_url(f"{live_server.url}/ingresar/")

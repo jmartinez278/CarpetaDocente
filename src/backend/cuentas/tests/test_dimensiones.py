@@ -2,11 +2,13 @@
 
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
+import pytest
 from django.template.loader import get_template
 from django.urls import NoReverseMatch, reverse
 
-from cuentas.dimensiones import DIMENSIONES, POR_SECCION, tarjeta_inicial
+from cuentas.dimensiones import DIMENSIONES, POR_SECCION, navegacion_docente, tarjeta_inicial
 
 CARPETA_PLANTILLAS = Path(__file__).resolve().parents[2] / "templates"
 
@@ -87,3 +89,84 @@ def test_abre_en_la_primera_disponible_en_el_orden_de_las_tarjetas():
 
     assert tarjeta_inicial(solo_asistencia) == "asistencia"
     assert tarjeta_inicial(notas_y_asistencia) == "notas"
+
+
+# --- Destinos del ☰ (spec pantallas-de-inicio, «Navegación de la docente»; rebrand-base, D6) ---
+
+SECCION = SimpleNamespace(pk=7)
+
+
+def destinos(seccion=SECCION, vista=None, dimensiones=DIMENSIONES):
+    return navegacion_docente(seccion, vista, dimensiones)
+
+
+def test_inicio_y_las_tres_dimensiones_en_el_orden_del_menu():
+    assert [(d.clave, d.titulo) for d in destinos()] == [
+        ("inicio", "Inicio"),
+        ("sesiones", "Sesiones"),
+        ("asistencia", "Asistencia"),
+        ("notas", "Notas"),
+    ]
+
+
+def test_cada_destino_tiene_su_icono():
+    for destino in destinos():
+        assert (CARPETA_PLANTILLAS / "iconos" / f"{destino.icono}.svg").is_file()
+
+
+def test_con_seccion_unica_enlaza_igual_que_las_tarjetas():
+    """Escenario «Abrir el ☰»."""
+    urls = {d.clave: d.url for d in destinos()}
+
+    assert urls == {
+        "inicio": reverse("docente:portada"),
+        "sesiones": None,
+        "asistencia": reverse("asistencia:hoy", args=[7]),
+        "notas": reverse("notas:hoja", args=[7]),
+    }
+
+
+def test_sin_seccion_unica_solo_inicio_enlaza():
+    """Escenario «Destino no disponible»: lo no disponible sigue en la lista, sin enlace."""
+    urls = {d.clave: d.url for d in destinos(seccion=None)}
+
+    assert urls == {
+        "inicio": reverse("docente:portada"),
+        "sesiones": None,
+        "asistencia": None,
+        "notas": None,
+    }
+
+
+def test_sesiones_disponible_enlaza_su_pantalla():
+    con_sesiones = tuple(
+        replace(d, disponible=True, url_name="sesiones:inicio") if d.clave == "sesiones" else d
+        for d in DIMENSIONES
+    )
+
+    assert destinos(dimensiones=con_sesiones)[1].url == reverse("sesiones:inicio")
+
+
+@pytest.mark.parametrize(
+    ("vista", "actual"),
+    [
+        ("docente:portada", "inicio"),
+        ("notas:hoja", "notas"),
+        ("competencias:pantalla", "notas"),
+        ("asistencia:hoy", "asistencia"),
+        ("asistencia:restantes", "asistencia"),
+        ("docente:sin_permiso", None),
+        ("estudiantes:lista", None),
+        (None, None),
+    ],
+)
+def test_ubicacion_actual(vista, actual):
+    """Escenario «Ubicación actual»: a lo más un destino marcado."""
+    marcados = [d.clave for d in destinos(vista=vista) if d.actual]
+
+    assert marcados == ([actual] if actual else [])
+
+
+def test_un_destino_no_disponible_no_es_el_actual():
+    assert not any(d.actual for d in destinos(seccion=None, vista="notas:hoja"))
+    assert not any(d.actual for d in destinos(vista="sesiones:inicio"))

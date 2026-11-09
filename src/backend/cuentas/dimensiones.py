@@ -82,3 +82,50 @@ def para_portada(dimensiones, seccion):
 def tarjeta_inicial(dimensiones):
     """Clave de la tarjeta inicial del carrusel: la primera disponible o, si no hay, la primera."""
     return next((d.clave for d in dimensiones if d.disponible), dimensiones[0].clave)
+
+
+@dataclass(frozen=True)
+class Destino:
+    """Un destino del ☰. ``url`` en ``None`` se ve como "Próximamente", sin enlace."""
+
+    clave: str
+    titulo: str
+    icono: str
+    url: str | None
+    actual: bool = False
+
+
+# Orden del ☰ (spec pantallas-de-inicio, «Navegación de la docente»).
+ORDEN_NAVEGACION = ("sesiones", "asistencia", "notas")
+
+# Espacio de nombres de la vista → destino que marca como actual (rebrand-base, D6).
+DESTINO_POR_ESPACIO = {
+    "sesiones": "sesiones",
+    "asistencia": "asistencia",
+    "notas": "notas",
+    "competencias": "notas",
+}
+
+
+def _destino_actual(vista_actual):
+    """Clave del destino de la vista ``"espacio:nombre"``; ``None`` si no corresponde a ninguno."""
+    if vista_actual == "docente:portada":
+        return "inicio"
+    espacio = (vista_actual or "").partition(":")[0]
+    return DESTINO_POR_ESPACIO.get(espacio)
+
+
+def navegacion_docente(seccion, vista_actual, dimensiones=DIMENSIONES):
+    """Destinos del ☰: Inicio y las tres dimensiones con la regla de las tarjetas (D6).
+
+    ``vista_actual`` es el ``view_name`` de la vista (``request.resolver_match``). Solo un
+    destino con enlace puede ser el actual.
+    """
+    tarjetas = {d.clave: d for d in para_portada(dimensiones, seccion)}
+    actual = _destino_actual(vista_actual)
+    destinos = [Destino("inicio", "Inicio", "house", reverse("docente:portada"))]
+    destinos += [
+        Destino(t.clave, t.titulo, t.icono, t.url if t.disponible else None)
+        for t in (tarjetas[clave] for clave in ORDEN_NAVEGACION)
+    ]
+    return tuple(replace(d, actual=d.url is not None and d.clave == actual) for d in destinos)

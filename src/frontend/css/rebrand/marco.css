@@ -1,0 +1,341 @@
+/* Marco del rebrand: «Ir al contenido», barra, ☰, cuenta y pie, del prototipo
+   (insumos/rebrand/assets/app.css) (rebrand-base, D4, D5, D7 y D8). El movimiento usa transiciones,
+   no animaciones de fotogramas, para que un cierre a medio abrir siga desde donde está (E-03). */
+
+@layer components {
+  .icono {
+    width: 22px;
+    height: 22px;
+  }
+
+  .wrap {
+    width: min(calc(100% - 2 * var(--gut)), var(--content-max));
+    margin-inline: auto;
+  }
+
+  .small {
+    color: var(--muted);
+    font-size: var(--text-label);
+    line-height: 1.5;
+  }
+
+  .page {
+    flex: 1;
+    padding-block: var(--s-7);
+  }
+
+  /* «Ir al contenido»: fuera de la vista hasta recibir el foco. */
+  .skip {
+    position: fixed;
+    z-index: 100;
+    top: 8px;
+    left: 16px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .skip:focus {
+    width: auto;
+    height: auto;
+    padding: var(--s-3) var(--s-4);
+    clip-path: none;
+    background: var(--card);
+    border-radius: var(--r-sm);
+  }
+
+  /* Barra: 72 px (64 px en celular, --bar-height), fija arriba. */
+  .appbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    flex: none;
+    height: var(--bar-height);
+    background: var(--g-main);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .appbar-inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+  }
+
+  .bar-title {
+    margin-right: auto;
+    font-size: var(--text-toolbar);
+    font-weight: var(--display-weight);
+    letter-spacing: -0.025em;
+  }
+
+  .bar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  /* Botón: base del prototipo; sus variantes van en componentes.css. */
+  .btn {
+    min-height: var(--touch-min);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    padding: 10px var(--s-4);
+    border: 1px solid transparent;
+    border-radius: var(--r-btn);
+    background: transparent;
+    color: var(--action);
+    font-weight: var(--display-weight);
+    line-height: 1.3;
+    text-decoration: none;
+  }
+
+  .icon-button {
+    flex: none;
+    width: var(--touch-min);
+    height: var(--touch-min);
+    padding: 10px;
+  }
+
+  /* ☰: panel a la izquierda, de arriba abajo, sobre la barra (D4). */
+  .drawer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 320px;
+    max-width: calc(100vw - 32px);
+    height: 100svh;
+    max-height: 100svh;
+    margin: 0;
+    padding: var(--s-5);
+    overflow: auto;
+    color: var(--ink);
+    background: var(--card);
+    border: 0;
+    border-right: 1px solid var(--line-strong);
+    border-radius: 0 20px 20px 0;
+  }
+
+  .drawer::backdrop {
+    background: rgb(48 39 31 / 0.4);
+  }
+
+  html[data-theme=dark] .drawer::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme=light]) .drawer::backdrop {
+      background: rgb(0 0 0 / 0.55);
+    }
+  }
+
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+
+  .drawer-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    margin-bottom: var(--s-6);
+  }
+
+  .drawer-brand strong {
+    font-size: 20px;
+    letter-spacing: -0.025em;
+  }
+
+  .drawer-nav ul {
+    display: grid;
+    gap: var(--s-2);
+  }
+
+  .drawer-nav li > a,
+  .drawer-proximamente {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    padding: var(--s-3) var(--s-4);
+    border-radius: var(--r-sm);
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .drawer-nav li > a[aria-current] {
+    background: var(--folder);
+    color: var(--action);
+    font-weight: var(--display-weight);
+  }
+
+  .drawer-proximamente .small {
+    margin-left: auto;
+  }
+
+  /* Cuenta: <details> con su panel bajo el botón (D7). */
+  .account {
+    position: relative;
+  }
+
+  .account summary {
+    list-style: none;
+    border-radius: var(--r-round);
+    background: var(--folder);
+  }
+
+  .account summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .account-panel {
+    position: absolute;
+    top: 56px;
+    right: 0;
+    width: 272px;
+    max-width: calc(100vw - 32px);
+    padding: var(--s-5);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-account);
+  }
+
+  .account-panel p + p {
+    margin-top: var(--s-2);
+  }
+
+  .account-salir {
+    margin-top: var(--s-4);
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--line);
+  }
+
+  .account-salir .btn {
+    padding-inline: var(--s-1);
+  }
+
+  .account-salir .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Pie: los dos textos en los bordes del contenido; si no caben, en dos líneas (D8). */
+  .footer {
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-1) var(--s-4);
+    padding-bottom: var(--s-5);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .footer > :last-child {
+    margin-left: auto;
+  }
+
+  @media (max-width: 699px) {
+    .appbar-inner {
+      gap: var(--s-3);
+    }
+
+    .bar-actions {
+      gap: var(--s-1);
+    }
+
+    .footer {
+      font-size: 13px;
+    }
+  }
+
+  /* --- Movimiento (D5) --- */
+
+  /* E-03: entrada y salida con transiciones; marco.js marca data-cerrando y cierra al terminar. */
+  .drawer {
+    transition:
+      transform var(--m-slide) var(--m-ease),
+      opacity var(--m-slide) var(--m-ease);
+  }
+
+  .drawer::backdrop {
+    transition: opacity var(--m-slide) var(--m-ease);
+  }
+
+  @starting-style {
+    .drawer[open] {
+      transform: translateX(-100%);
+      opacity: 0.6;
+    }
+
+    .drawer[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  .drawer[data-cerrando] {
+    transform: translateX(-100%);
+    opacity: 0.6;
+    transition-duration: var(--m-panel);
+  }
+
+  .drawer[data-cerrando]::backdrop {
+    opacity: 0;
+    transition-duration: var(--m-panel);
+  }
+
+  /* Color de los controles: entra en 140 ms y sale en 200 ms. */
+  .btn,
+  .drawer-nav li > a {
+    transition:
+      background-color var(--m-out) var(--m-ease),
+      color var(--m-out) var(--m-ease),
+      border-color var(--m-out) var(--m-ease);
+  }
+
+  /* E-05: subir 1 px y pulsar con escala 0,985 solo con puntero fino y pulsación con el mouse. */
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover,
+    .drawer-nav li > a:hover {
+      transition-duration: var(--m-in);
+    }
+
+    .drawer-nav li > a:hover {
+      background: var(--folder);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .btn {
+        transition:
+          background-color var(--m-out) var(--m-ease),
+          color var(--m-out) var(--m-ease),
+          border-color var(--m-out) var(--m-ease),
+          transform var(--m-press) var(--m-ease);
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .btn[data-pointer]:active {
+        transform: translateY(1px) scale(0.985);
+      }
+    }
+  }
+
+  /* Movimiento reducido: el ☰ abre y cierra sin desplazarse (marco.js cierra de inmediato). */
+  @media (prefers-reduced-motion: reduce) {
+    .drawer,
+    .drawer::backdrop,
+    .drawer[data-cerrando],
+    .drawer[data-cerrando]::backdrop {
+      transform: none;
+      opacity: 1;
+      transition: none;
+    }
+  }
+}

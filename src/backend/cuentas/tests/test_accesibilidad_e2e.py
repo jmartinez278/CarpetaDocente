@@ -71,7 +71,7 @@ def abrir_vista(page, live_server, vista, docente, direccion, clave):
         if vista.endswith("-menu-abierto"):
             page.wait_for_load_state("load")
             page.get_by_label("Menú de la cuenta").click()
-            page.locator(".menu-cuenta__panel").wait_for()
+            page.locator("[data-cuenta-panel]").wait_for()
 
 
 @pytest.mark.parametrize("ancho", ANCHOS)
@@ -96,7 +96,7 @@ def test_el_menu_abierto_no_desborda_la_ventana(
     page.evaluate("document.fonts.ready")
 
     ancho_documento = page.evaluate("document.documentElement.scrollWidth")
-    panel = page.locator(".menu-cuenta__panel").bounding_box()
+    panel = page.locator("[data-cuenta-panel]").bounding_box()
 
     assert ancho_documento <= ancho
     assert panel["x"] >= 0
