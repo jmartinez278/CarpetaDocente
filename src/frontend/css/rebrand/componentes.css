@@ -108,6 +108,13 @@
     font-size: var(--text-label);
   }
 
+  /* Un error con datos de la docente (sin espacios) se parte y no ensancha el campo (auditoría de
+     Emil del ingreso, B-01). */
+  .field-error span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
   .field-error .icono {
     width: 18px;
     height: 18px;

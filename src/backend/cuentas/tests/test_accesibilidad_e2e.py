@@ -143,6 +143,26 @@ def test_el_inicio_de_sesion_no_desborda(
     assert ficha["x"] + ficha["width"] <= ancho
 
 
+@pytest.mark.parametrize("ancho", [320, 360])
+def test_b01_un_error_de_campo_sin_espacios_no_desborda(
+    live_server, page, ancho, docente, direccion, clave
+):
+    """Auditoría de Emil, B-01: rb/campo.html es compartido; un error con datos de la docente (80
+    caracteres seguidos) se parte dentro de la ficha. En el ingreso los errores son fijos, así que
+    el texto se pone a mano sobre el error real de «campos vacíos»."""
+    con_pantalla(page, ancho, "light")
+    abrir_vista(page, live_server, "ingresar-vacio", docente, direccion, clave)
+    page.locator(".field-error span").first.evaluate("(el) => { el.textContent = 'x'.repeat(80); }")
+    page.evaluate("document.fonts.ready")
+
+    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    ficha = page.locator(".login-ficha").bounding_box()
+    error = page.locator(".field-error").first.bounding_box()
+    assert ficha["x"] >= 0
+    assert ficha["x"] + ficha["width"] <= ancho
+    assert error["x"] + error["width"] <= ficha["x"] + ficha["width"]
+
+
 @pytest.mark.parametrize("ancho", ANCHOS)
 def test_el_ojo_mide_44_px_dentro_del_campo(live_server, page, ancho, docente, direccion, clave):
     con_pantalla(page, ancho, "light")

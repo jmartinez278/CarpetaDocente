@@ -25,9 +25,9 @@ La página es de alto riesgo: es el formulario de autenticación (CSRF, `next`, 
 
 ### Parte C: auditoría de Emil, A2 y `verificacion.md`
 
-- [ ] 3.1 Auditoría de Emil (`review-animations` del estado de envío y del ojo; `break-ui` con un usuario largo, el error abierto a 320 px y zoom de texto), en solo lectura con Codex → `insumos/rebrand-ingreso/auditoria-emil.md`. Marco aprueba los ids; cada uno se aplica con su prueba primero. Verificar: e2e de `cuentas` en verde
-- [ ] 3.2 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la delta de `pantallas-de-inicio`, D2 y D4), corregir los Critical e Important con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde
-- [ ] 3.3 `verificacion.md`: tabla escenario → prueba de la delta y de los escenarios de `pantallas-de-inicio` («Mostrar la contraseña», «Estado de envío», «Carga en conexión lenta», «Sin desplazamiento horizontal») y de `cierre-sesion` («Aviso de cierre por inactividad») que se vuelven a correr, y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
+- [x] 3.1 Auditoría de Emil (`review-animations` del estado de envío y del ojo; `break-ui` con un usuario largo, el error abierto a 320 px y zoom de texto), en solo lectura con Codex → `insumos/rebrand-ingreso/auditoria-emil.md`. Marco aprueba los ids; cada uno se aplica con su prueba primero. Verificar: e2e de `cuentas` en verde
+- [x] 3.2 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la delta de `pantallas-de-inicio`, D2 y D4), corregir los Critical e Important con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde
+- [x] 3.3 `verificacion.md`: tabla escenario → prueba de la delta y de los escenarios de `pantallas-de-inicio` («Mostrar la contraseña», «Estado de envío», «Carga en conexión lenta», «Sin desplazamiento horizontal») y de `cierre-sesion` («Aviso de cierre por inactividad») que se vuelven a correr, y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
 
 ## Ajustes del propose a decisiones.md
 
@@ -41,5 +41,6 @@ La página es de alto riesgo: es el formulario de autenticación (CSRF, `next`, 
   - escudo de la I.E. → T-06 (espacio reservado y vacío);
   - botón de tema junto al pie → T-04, rama apilada;
   - Besley en `app.css`, `componentes/campo.html`, `componentes/pie.html` y la clase `boton-principal--enviando` (marca interna de `ingresar.js`, ya sin estilo) → paso 8 del PLAN;
-  - Besley con `font-display: optional` puede no verse en la primera visita con Slow 4G → aceptado.
+  - Besley con `font-display: optional` puede no verse en la primera visita con Slow 4G → aceptado;
+  - DESIGN.md (línea 141) aún dice `role="alert"` en el error del ingreso; D2 lo quitó → corregir el texto con aprobación del equipo.
 - Al proponer el siguiente cambio del rebrand (paso 3, Portada y Estudiantes), su primer commit archiva este con `/opsx:archive` y «Sync now».

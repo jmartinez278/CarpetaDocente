@@ -349,7 +349,7 @@ def test_sesion_vencida_al_importar_lleva_la_pagina_a_ingresar(live_server, port
     dialogo(portada).get_by_role("button", name="Importar").click()
 
     expect(portada).to_have_url(re.compile(r"/ingresar/\?next=/docente/"))
-    expect(portada.locator(".mensaje--aviso")).to_contain_text(
+    expect(portada.locator(".message--aviso")).to_contain_text(
         "Tu sesión se cerró por inactividad."
     )
     expect(portada.locator("dialog")).to_have_count(0)
