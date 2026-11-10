@@ -174,5 +174,6 @@ def test_la_portada_lleva_a_la_hoja_y_no_a_las_competencias(
     html = entrar(docente).get(reverse("docente:portada")).content.decode()
 
     tarjetas = re.findall(r"<article\b.*?</article>", html, re.DOTALL)
-    assert f'href="/docente/secciones/{seccion_tutora.pk}/notas/"' in tarjetas[1]
+    notas = next(t for t in tarjetas if 'id="c-notas"' in t)
+    assert f'href="/docente/secciones/{seccion_tutora.pk}/notas/"' in notas
     assert "/competencias/" not in html

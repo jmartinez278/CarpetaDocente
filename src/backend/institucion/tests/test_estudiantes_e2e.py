@@ -24,11 +24,6 @@ from cuentas.tests.e2e import (
 
 pytestmark = pytest.mark.e2e
 
-# La portada aún carga app.css y no da al diálogo las clases del rebrand (D8): lo que mide el
-# aspecto dentro del diálogo vuelve en rebrand-portada. Las vistas se miden aquí como página
-# completa.
-SALTO_DIALOGO = pytest.mark.skip(reason="rebrand-portada: la portada aún carga app.css")
-
 TITULO = "Estudiantes de 2.º A"
 
 
@@ -144,7 +139,6 @@ def test_la_portada_con_el_aviso_pasa_axe(
 
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", ANCHOS)
-@SALTO_DIALOGO
 def test_la_lista_vacia_en_el_dialogo_pasa_axe(
     live_server, page, docente_con_seccion, clave, ancho, tema
 ):
@@ -197,7 +191,6 @@ def contorno(page, selector):
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@SALTO_DIALOGO
 def test_el_titulo_recibe_el_foco_sin_contorno_y_los_controles_si(portada, tema):
     portada.emulate_media(color_scheme=tema)
     abrir(portada)
@@ -210,9 +203,14 @@ def test_el_titulo_recibe_el_foco_sin_contorno_y_los_controles_si(portada, tema)
     expect(dialogo(portada).get_by_role("button", name="Cerrar")).to_be_focused()
     assert contorno(portada, "#estudiantes [data-cerrar]") == {"estilo": "solid", "ancho": "2px"}
 
+    # Desde rebrand-us-006 el cuerpo es una región enfocable que se desplaza con el teclado.
+    portada.keyboard.press("Tab")
+    expect(portada.locator("#modal-cuerpo")).to_be_focused()
+    assert contorno(portada, "#modal-cuerpo")["ancho"] == "2px"
+
     portada.keyboard.press("Tab")
     expect(dialogo(portada).get_by_role("link", name="Agregar uno por uno")).to_be_focused()
-    assert contorno(portada, "#estudiantes .boton-principal")["ancho"] == "2px"
+    assert contorno(portada, "#estudiantes .btn--primary")["ancho"] == "2px"
 
 
 @pytest.mark.parametrize("tema", TEMAS)
@@ -233,7 +231,6 @@ def test_la_portada_con_el_aviso_carga_empezando_arriba(
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@SALTO_DIALOGO
 def test_cerrar_es_un_boton_con_borde_de_44_px_con_icono_y_texto(portada, tema):
     portada.emulate_media(color_scheme=tema)
     abrir(portada)
@@ -242,7 +239,7 @@ def test_cerrar_es_un_boton_con_borde_de_44_px_con_icono_y_texto(portada, tema):
     estilo = cerrar.evaluate(
         """(el) => {
             const e = getComputedStyle(el), secundario = document.createElement("a");
-            secundario.className = "boton-secundario";
+            secundario.className = "btn btn--secondary";
             document.body.append(secundario);
             const s = getComputedStyle(secundario);
             const datos = {
@@ -361,16 +358,12 @@ def test_sesion_vencida_al_importar_lleva_la_pagina_a_ingresar(live_server, port
 
 
 def esperar_animaciones(page):
-    # axe mide el color calculado: a media animación de entrada lo mezcla con la opacidad. Solo los
-    # mensajes: el carrusel de la portada (detrás del diálogo, en el celular) no deja de animarse.
-    page.wait_for_function(
-        "[...document.querySelectorAll('.message')].every((m) => m.getAnimations().length === 0)"
-    )
+    # axe mide el color calculado: a media animación de entrada lo mezcla con la opacidad.
+    page.wait_for_function("document.getAnimations().length === 0")
 
 
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", ANCHOS)
-@SALTO_DIALOGO
 def test_pegar_y_revisar_lista_pasan_axe(
     live_server, page, docente_con_seccion, clave, ancho, tema
 ):
@@ -412,7 +405,6 @@ def con_25(seccion):
         Estudiante.objects.create(seccion=seccion, apellidos=apellidos, nombres=nombres)
 
 
-@SALTO_DIALOGO
 @pytest.mark.parametrize("ancho", [320, 360])
 def test_un_nombre_de_120_mas_120_se_lee_completo_en_el_dialogo(
     live_server, page, docente_con_seccion, seccion, clave, ancho
@@ -438,7 +430,6 @@ def test_un_nombre_de_120_mas_120_se_lee_completo_en_el_dialogo(
 
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", ANCHOS)
-@SALTO_DIALOGO
 def test_la_lista_con_estudiantes_pasa_axe(
     live_server, page, docente_con_seccion, clave, ancho, tema
 ):
@@ -526,7 +517,6 @@ def test_corregir_un_nombre_vuelve_a_la_lista_con_el_nombre_corregido(portada, s
 
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", ANCHOS)
-@SALTO_DIALOGO
 def test_agregar_y_editar_pasan_axe(
     live_server, page, docente_con_seccion, con_25, clave, ancho, tema
 ):
@@ -650,7 +640,6 @@ def test_sin_javascript_todo_funciona_como_pagina_completa(
 
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", ANCHOS)
-@SALTO_DIALOGO
 def test_quitar_vaciar_y_los_bloqueos_pasan_axe(
     live_server, page, docente_con_seccion, con_25, borrado_con_registros, clave, ancho, tema
 ):
@@ -702,7 +691,6 @@ def test_tomar_la_asistencia_abre_la_asistencia_como_pagina_completa(live_server
 
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", ANCHOS)
-@SALTO_DIALOGO
 def test_la_lista_con_el_aviso_de_importados_pasa_axe(
     live_server, page, docente_con_seccion, clave, ancho, tema
 ):
@@ -716,7 +704,6 @@ def test_la_lista_con_el_aviso_de_importados_pasa_axe(
     revisar_con_axe(page, f"lista-importados-{ancho}-{tema}")
 
 
-@SALTO_DIALOGO
 def test_a_320_la_lista_con_el_aviso_no_se_desplaza_en_horizontal(
     live_server, page, docente_con_seccion, clave
 ):
@@ -925,8 +912,6 @@ def test_a_360_el_pie_apila_sus_acciones_a_todo_el_ancho(
 
 
 def test_al_cambiar_de_vista_el_cuerpo_del_dialogo_vuelve_arriba(portada, con_25):
-    # La portada aún trae app.css: se le da al cuerpo un alto para que pueda desplazarse.
-    portada.add_style_tag(content="#modal-cuerpo { height: 160px; overflow: auto; }")
     portada.evaluate(
         """() => {
             window.llamadasAScrollTo = [];
@@ -945,3 +930,42 @@ def test_al_cambiar_de_vista_el_cuerpo_del_dialogo_vuelve_arriba(portada, con_25
     expect(campo(portada, "Apellidos")).to_be_focused()
     assert "modal-cuerpo" in portada.evaluate("window.llamadasAScrollTo")
     assert portada.locator("#modal-cuerpo").evaluate("(el) => el.scrollTop") == 0
+
+
+# --- Lista más alta que el diálogo (A2 [high] de rebrand-us-006; rebrand-portada, D6) ---
+
+
+@pytest.fixture
+def con_40(seccion):
+    from institucion.models import Estudiante
+
+    for n in range(40):
+        Estudiante.objects.create(
+            seccion=seccion,
+            apellidos=f"APELLIDO {chr(65 + n // 26)}{chr(65 + n % 26)}",
+            nombres="ANA",
+        )
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_con_40_el_ultimo_editar_se_alcanza_desplazando_el_cuerpo(
+    live_server, page, docente_con_seccion, con_40, clave, ancho
+):
+    con_pantalla(page, ancho, "light")
+    ingresar(page, live_server, docente_con_seccion, clave)
+    abrir(page)
+    cuerpo = page.locator("#modal-cuerpo")
+    expect(dialogo(page)).to_contain_text("40 estudiantes")
+    pagina_antes = page.evaluate("[window.scrollY, document.documentElement.scrollTop]")
+    assert cuerpo.evaluate("(el) => el.scrollHeight > el.clientHeight"), "la lista cabe entera"
+
+    cuerpo.evaluate("(el) => { el.scrollTop = el.scrollHeight; }")
+    ultimo = dialogo(page).get_by_role("link", name="Editar a APELLIDO BN, ANA")
+
+    expect(ultimo).to_be_in_viewport()
+    caja = ultimo.bounding_box()
+    marco = cuerpo.bounding_box()
+    assert caja["y"] >= marco["y"] and caja["y"] + caja["height"] <= marco["y"] + marco["height"]
+    assert page.evaluate("[window.scrollY, document.documentElement.scrollTop]") == pagina_antes
+    ultimo.click()
+    expect(campo(page, "Apellidos")).to_have_value("APELLIDO BN")

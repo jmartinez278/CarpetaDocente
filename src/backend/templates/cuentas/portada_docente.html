@@ -1,29 +1,32 @@
-{% extends "marco.html" %}
+{% extends "marco_rebrand.html" %}
 {% load static %}
+{% comment %}
+Portada del docente en el marco del rebrand (spec pantallas-de-inicio, «Portada del docente»; rebrand-portada, D1).
+Barra sin ☰ ni título y sin fijar; el saludo y el nombre en el mismo <h1>; la línea de fecha y secciones fuera de él;
+«Ver estudiantes» y el aviso solo con una sección; las tarjetas en «Tus accesos», en el orden de lectura.
+{% endcomment %}
+
+{% block titulo %}Inicio · CarpetaDocente{% endblock %}
 
 {% block scripts %}<script src="{% static 'js/portada.js' %}" defer></script>
-<script src="{% static 'dist/vendor/alpine.min.js' %}" defer></script>
 <script src="{% static 'dist/vendor/htmx.min.js' %}" defer></script>
 <script src="{% static 'js/estudiantes.js' %}" defer></script>{% endblock %}
 
+{% block clase_barra %} appbar--portada{% endblock %}
+
+{% block navegacion %}{% endblock %}
+
 {% block principal %}
-<main class="portada" x-data="carrusel">
-  <div class="mx-auto w-full max-w-280 px-4 pt-8 min-[960px]:px-6 min-[960px]:pt-0">
-    <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">{{ saludo }}, {{ user.get_full_name|default:user.username }}</h1>
-    <div class="seccion-entrada">
-      <p class="text-body text-balance text-texto-suave">{{ fecha }} · {{ secciones }}</p>
-      {% if entrada %}{% url 'estudiantes:lista' entrada.pk as url_lista %}<a class="dimension__accion entrada-estudiantes" id="ver-estudiantes" href="{{ url_lista }}" hx-get="{{ url_lista }}" hx-target="#estudiantes" hx-swap="innerHTML" data-abrir-estudiantes>Ver estudiantes{% include "iconos/arrow-right.svg" with clase="dimension__flecha" %}</a>{% endif %}
-    </div>
-    {% if entrada %}{% include "institucion/estudiantes/_aviso_portada.html" with cantidad=entrada.cantidad_estudiantes %}{% endif %}
-    <nav class="chips" aria-label="Accesos">
-      {% for d in dimensiones %}<a class="chip" href="#c-{{ d.clave }}" :class="{ 'es-activo': controla && activa === 'c-{{ d.clave }}' }" @click.prevent="ir('c-{{ d.clave }}')" :aria-current="activa === 'c-{{ d.clave }}' ? 'true' : 'false'">{{ d.titulo }}<span class="sr-only">: ver tarjeta</span></a>
-      {% endfor %}
-    </nav>
+<div class="bienvenida">
+  <h1><span class="saludo">{{ saludo }},</span> <span class="docente">{{ user.get_full_name|default:user.username }}</span></h1>
+  <div class="seccion-entrada">
+    <p>{{ fecha }} · {{ secciones }}</p>
+    {% if entrada %}{% url 'estudiantes:lista' entrada.pk as url_lista %}<a class="entrada-estudiantes" id="ver-estudiantes" href="{{ url_lista }}" hx-get="{{ url_lista }}" hx-target="#estudiantes" hx-swap="innerHTML" data-abrir-estudiantes>Ver estudiantes{% include "iconos/arrow-right.svg" %}</a>{% endif %}
   </div>
-  <div class="dimensiones carrusel" x-ref="pista" data-carrusel tabindex="0" role="region" aria-label="Tus accesos">
-    {% for d in dimensiones %}{% include "componentes/tarjeta_dimension.html" %}{% endfor %}
-  </div>
-  <div class="puntos" aria-hidden="true">{% for d in dimensiones %}<span class="punto" :class="{ 'es-activo': controla && activa === 'c-{{ d.clave }}' }"></span>{% endfor %}</div>
-</main>
-{% if entrada %}<dialog class="modal-estudiantes" id="estudiantes" aria-labelledby="modal-titulo" aria-describedby="modal-cantidad" hx-target="this" hx-swap="innerHTML"></dialog>{% endif %}
+</div>
+{% if entrada %}{% include "institucion/estudiantes/_aviso_portada.html" with cantidad=entrada.cantidad_estudiantes %}{% endif %}
+<nav class="accesos" aria-label="Tus accesos">
+  {% for d in dimensiones %}{% include "rb/tarjeta_dimension.html" %}{% endfor %}
+</nav>
+{% if entrada %}<dialog class="dialog dialog--lista" id="estudiantes" aria-labelledby="modal-titulo" aria-describedby="modal-cantidad" hx-target="this" hx-swap="innerHTML"></dialog>{% endif %}
 {% endblock %}

@@ -10,6 +10,7 @@
 @import "./rebrand/pantallas/sesiones.css";
 @import "./rebrand/pantallas/ingreso.css";
 @import "./rebrand/pantallas/estudiantes.css";
+@import "./rebrand/pantallas/portada.css";
 
 /* Solo las plantillas del marco nuevo y las pantallas ya migradas (rutas relativas a este
    archivo). Cada pantalla del rebrand suma aquí su línea. */
@@ -20,6 +21,7 @@
 @source "../../backend/templates/cuentas/ingresar.html";
 @source "../../backend/templates/repositorio";
 @source "../../backend/templates/institucion/estudiantes";
+@source "../../backend/templates/cuentas/portada_docente.html";
 
 /* Los parciales de abajo también son fuente: con --poll (contenedor) la CLI solo ve cambios en sus
    @source y en la entrada, no en los archivos importados. */

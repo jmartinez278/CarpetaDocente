@@ -60,6 +60,14 @@
     border-bottom: 1px solid var(--line);
   }
 
+  /* Portada: sin franja. La barra no es fija y no lleva fondo ni línea: solo flotan los controles a la
+     derecha, como en el boceto (DESIGN.md, Layout «Portada»; rebrand-portada, D1). */
+  .appbar--portada {
+    position: static;
+    background: transparent;
+    border-bottom: 0;
+  }
+
   .appbar-inner {
     height: 100%;
     display: flex;

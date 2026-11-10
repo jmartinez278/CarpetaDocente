@@ -113,6 +113,25 @@ def test_la_barra_lleva_el_menu_el_titulo_y_la_cuenta_en_orden(html_de, docente)
     assert posiciones == sorted(posiciones)
 
 
+def test_sin_clase_barra_la_barra_es_la_fija_de_siempre(html_de, docente):
+    """El bloque ``clase_barra`` vacío no cambia la barra de las pantallas interiores
+    (rebrand-portada, D1)."""
+    assert '<header class="appbar">' in html_de(docente)
+
+
+def test_con_clase_barra_la_barra_la_lleva(rf, docente):
+    from django.template import Template
+    from django.template.context import RequestContext
+
+    request = rf.get("/docente/")
+    request.user = docente
+    html = Template(
+        '{% extends "marco_rebrand.html" %}{% block clase_barra %} appbar--portada{% endblock %}'
+    ).render(RequestContext(request, {"user": docente}))
+
+    assert '<header class="appbar appbar--portada">' in html
+
+
 def test_la_barra_no_lleva_el_nombre_de_la_ie(html_de, docente):
     barra = cabecera(html_de(docente))
 
@@ -195,11 +214,12 @@ def test_la_cuenta_sin_nombre_muestra_el_usuario(html_de, docente):
     assert re.search(r"data-cuenta-nombre[^>]*>ana\.quispe<", cuenta(html_de(docente)))
 
 
-def test_el_menu_viejo_tambien_lleva_los_ganchos(html_de, docente):
-    menu = cuenta(html_de(docente, "/docente/"))
+def test_el_menu_viejo_tambien_lleva_los_ganchos(html_de, direccion):
+    """El inicio de la dirección sigue en ``marco.html`` hasta el paso 7 del PLAN."""
+    menu = cuenta(html_de(direccion, "/direccion/"))
 
     assert "data-cuenta-panel" in menu
-    assert re.search(r"data-cuenta-nombre[^>]*>Ana Quispe<", menu)
+    assert re.search(r"data-cuenta-nombre[^>]*>Rosa Huamán<", menu)
 
 
 # --- Pie (escenario «Pie») ---

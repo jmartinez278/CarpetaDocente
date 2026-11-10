@@ -1,0 +1,24 @@
+{% comment %}
+Tarjeta de dimensión del rebrand (DESIGN.md 1.1, Layout «Portada», patrones 1 y 3; rebrand-portada, D3). Recibe d (una
+Dimension de dimensiones.para_portada) y pendiente_hoy. Disponible: un solo enlace, el del título, estirado sobre la
+tarjeta y descrito por el verbo (y por «Hoy: pendiente» si está). La frase no entra en la descripción: se lee en el
+orden del documento. «Próximamente»: un botón con aria-disabled que no navega (data-proxima), descrito por la insignia;
+al tocarlo, portada.js escribe el aviso en la región aria-live, presente y vacía desde el inicio.
+{% endcomment %}
+<article class="dimension dimension--{{ d.clave }}{% if not d.disponible %} dimension--proxima{% endif %}" id="c-{{ d.clave }}" aria-labelledby="dim-{{ d.clave }}">
+  <div class="dimension-copia">
+    <div class="dimension-cabecera">
+      {% include "iconos/"|add:d.icono|add:".svg" with clase="dimension-icono" %}
+      <h2 class="dimension-titulo" id="dim-{{ d.clave }}">{% if d.disponible %}<a class="dimension-enlace" href="{{ d.url }}" aria-describedby="acc-{{ d.clave }}{% if d.clave == 'asistencia' and pendiente_hoy %} pend-asistencia{% endif %}">{{ d.titulo }}</a>{% else %}<button class="dimension-boton" type="button" aria-disabled="true" aria-describedby="ins-{{ d.clave }}" data-proxima>{{ d.titulo }}</button>{% endif %}</h2>
+    </div>
+    {% if not d.disponible %}<p class="insignia insignia--callada" id="ins-{{ d.clave }}">Próximamente</p>{% endif %}
+    <p class="dimension-frase" id="frase-{{ d.clave }}">{{ d.frase }}</p>
+    {% if d.disponible %}
+    {% if d.clave == "asistencia" and pendiente_hoy %}<p class="pildora-pendiente" id="pend-asistencia">{% include "iconos/clock.svg" with clase=None %}Hoy: pendiente</p>{% endif %}
+    <p class="dimension-accion" id="acc-{{ d.clave }}">{{ d.verbo }}{% include "iconos/arrow-right.svg" with clase=None %}</p>
+    {% else %}
+    <p class="dimension-aviso" aria-live="polite"></p>
+    {% endif %}
+  </div>
+  {% include "rb/miniatura_"|add:d.clave|add:".html" %}
+</article>

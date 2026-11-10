@@ -94,10 +94,9 @@ class SinPermisoView(RolRequeridoMixin, TemplateView):
 class PortadaDocenteView(RolRequeridoMixin, TemplateView):
     """Portada del docente, con las tres dimensiones (spec pantallas-de-inicio).
 
-    Cada tarjeta enlaza a su pantalla o queda en "Próximamente" según su bandera (D7), y el
-    carrusel del celular abre en la tarjeta inicial. Desde US-030: el saludo según la hora de Lima,
-    la fecha delante de la sección y, con sección única, la tarjeta Asistencia con su píldora
-    "Hoy: pendiente" (design de US-030, D10).
+    Cada tarjeta enlaza a su pantalla o queda en "Próximamente" según su bandera (D7). Desde
+    US-030: el saludo según la hora de Lima, la fecha delante de la sección y, con sección única,
+    la tarjeta Asistencia con su píldora "Hoy: pendiente" (design de US-030, D10).
     """
 
     rol_requerido = Usuario.Rol.DOCENTE
@@ -108,7 +107,6 @@ class PortadaDocenteView(RolRequeridoMixin, TemplateView):
         entrada = servicios.seccion_unica(self.request.user)
         tarjetas = dimensiones.para_portada(dimensiones.DIMENSIONES, entrada)
         contexto["dimensiones"] = tarjetas
-        contexto["inicial"] = dimensiones.tarjeta_inicial(tarjetas)
         contexto["saludo"] = asistencia.saludo(timezone.localtime().hour)
         contexto["fecha"] = asistencia.texto_fecha(timezone.localdate())
         contexto["secciones"] = servicios.texto_secciones_docente(self.request.user)

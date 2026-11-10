@@ -7,6 +7,9 @@ A y AA, el contraste incluido (RNF-008), y guarda el informe en ``test-results/`
 por npm (``npm ci`` en ``src/frontend/``). Se pide con ``uv run pytest -m e2e --browser chromium``.
 """
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import pytest
 from playwright.sync_api import expect
 
@@ -19,11 +22,15 @@ from cuentas.tests.e2e import (
     campo_usuario,
     con_pantalla,
     envejecer_sesion,
+    fijar_hora_de_lima,
     ingresar,
     revisar_con_axe,
 )
+from institucion.models import AnioEscolar, Estudiante, Seccion
 
 pytestmark = pytest.mark.e2e
+
+MIERCOLES_9 = datetime(2026, 10, 28, 9, 0, tzinfo=ZoneInfo("America/Lima"))
 
 VISTAS = [
     "ingresar",
@@ -32,7 +39,13 @@ VISTAS = [
     "ingresar-enviando",
     "ingresar-con-aviso",
     "portada",
+    "portada-una-seccion",
+    "portada-varias-secciones",
+    "portada-sin-estudiantes",
+    "portada-hoy-pendiente",
+    "portada-proximamente",
     "portada-menu-abierto",
+    "portada-dialogo-estudiantes",
     "direccion",
     "direccion-menu-abierto",
     "sin-permiso",
@@ -89,22 +102,69 @@ def abrir_vista(page, live_server, vista, docente, direccion, clave):
         page.wait_for_function("document.getAnimations().length === 0")
     else:
         es_portada = vista.startswith("portada")
+        if es_portada:
+            preparar_portada(vista, docente)
         ingresar(page, live_server, docente if es_portada else direccion, clave)
         page.wait_for_url(f"**/{'docente' if es_portada else 'direccion'}/")
+        page.wait_for_load_state("load")
         if vista.endswith("-menu-abierto"):
-            page.wait_for_load_state("load")
             page.get_by_label("Menú de la cuenta").click()
             page.locator("[data-cuenta-panel]").wait_for()
+        elif vista == "portada-proximamente":
+            # force: Playwright no da por habilitado un botón con aria-disabled.
+            page.get_by_role("button", name="Sesiones", exact=True).click(force=True)
+            expect(page.locator("#c-sesiones .dimension-aviso")).to_have_text(
+                "Llegará en una próxima versión."
+            )
+        elif vista == "portada-dialogo-estudiantes":
+            page.get_by_role("link", name="Ver estudiantes").click()
+            expect(page.locator("dialog#estudiantes")).to_have_js_property("open", True)
+            page.locator("#modal-titulo").wait_for()
+        # axe mide el color calculado: a media transición lo mezcla con la opacidad.
+        page.wait_for_function("document.getAnimations().length === 0")
+
+
+def preparar_portada(vista, docente):
+    """Secciones y estudiantes de cada vista de la portada (escenario «Revisión de cada pantalla»).
+
+    Con una sección y estudiantes, la prueba fija un miércoles a las 9:00 de Lima: la jornada está
+    sin completar y la tarjeta Asistencia lleva «Hoy: pendiente».
+    """
+    secciones = {
+        "portada-una-seccion": [(2, "A")],
+        "portada-varias-secciones": [(2, "A"), (3, "B")],
+        "portada-sin-estudiantes": [(2, "A")],
+        "portada-hoy-pendiente": [(2, "A")],
+        "portada-proximamente": [(2, "A")],
+        "portada-menu-abierto": [(2, "A")],
+        "portada-dialogo-estudiantes": [(2, "A")],
+    }.get(vista, [])
+    if not secciones:
+        return
+    anio = AnioEscolar.objects.create(institucion=docente.institucion, anio=2027)
+    for grado, nombre in secciones:
+        seccion = Seccion.objects.create(
+            anio_escolar=anio, grado=grado, nombre=nombre, docente=docente
+        )
+        if vista == "portada-sin-estudiantes":
+            continue
+        for apellidos in ("AGUILAR FLORES", "BRAVO CASAS", "CRUZ HUAMÁN"):
+            Estudiante.objects.create(seccion=seccion, apellidos=apellidos, nombres="ANA")
 
 
 @pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("vista", VISTAS)
 def test_sin_infracciones_graves_de_accesibilidad(
-    live_server, page, vista, tema, ancho, docente, direccion, clave
+    live_server, page, vista, tema, ancho, docente, direccion, clave, monkeypatch
 ):
+    fijar_hora_de_lima(monkeypatch, MIERCOLES_9)
     con_pantalla(page, ancho, tema)
     abrir_vista(page, live_server, vista, docente, direccion, clave)
+    if vista == "portada-hoy-pendiente":
+        expect(page.locator("#pend-asistencia")).to_have_text("Hoy: pendiente")
+    elif vista == "portada-sin-estudiantes":
+        expect(page.get_by_text("Tu sección aún no tiene estudiantes")).to_be_visible()
     revisar_con_axe(page, f"{vista}-{tema}-{ancho}")
 
 

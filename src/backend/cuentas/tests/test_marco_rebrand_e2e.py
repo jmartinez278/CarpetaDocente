@@ -294,7 +294,8 @@ HOJAS = (
 
 @pytest.mark.parametrize(
     ("ruta", "hoja"),
-    [(SIN_PERMISO, "/static/dist/rebrand.css"), ("/docente/", "/static/dist/app.css")],
+    # Desde rebrand-portada, la portada también carga solo la hoja del rebrand.
+    [(SIN_PERMISO, "/static/dist/rebrand.css"), ("/docente/", "/static/dist/rebrand.css")],
 )
 def test_cada_pagina_carga_una_sola_hoja(live_server, page, docente, clave, ruta, hoja):
     entrar(page, live_server, docente, clave, ruta)

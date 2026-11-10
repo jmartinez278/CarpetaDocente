@@ -25,7 +25,7 @@ class Dimension:
 
     clave: str
     titulo: str
-    subtitulo: str
+    frase: str
     verbo: str
     icono: str
     url_name: str | None = None
@@ -33,31 +33,32 @@ class Dimension:
     url: str | None = None
 
 
-# En el orden de las tarjetas (DESIGN.md, Tarjeta de dimensión G4e).
+# En el orden de las tarjetas, que es también el de lectura (DESIGN.md 1.1, Layout «Portada»;
+# rebrand-portada, D2). La frase reemplaza al subtítulo formal de la dimensión.
 DIMENSIONES = (
+    Dimension(
+        "asistencia",
+        "Asistencia",
+        "Marca la asistencia de cada día.",
+        "Registrar asistencia",
+        "calendar-check",
+        url_name="asistencia:hoy",
+        disponible=True,
+    ),
     Dimension(
         "sesiones",
         "Sesiones",
-        "Planificación de sesiones de aprendizaje",
+        "Envía tu sesión a la dirección y compártela con tus colegas.",
         "Ver sesiones",
         "book-open",
     ),
     Dimension(
         "notas",
         "Notas",
-        "Registro y control de notas",
+        "Registra tus notas por competencia para el SIAGIE.",
         "Registrar notas",
         "clipboard-list",
         url_name="notas:hoja",
-        disponible=True,
-    ),
-    Dimension(
-        "asistencia",
-        "Asistencia",
-        "Control de asistencia",
-        "Registrar asistencia",
-        "calendar-check",
-        url_name="asistencia:hoy",
         disponible=True,
     ),
 )
@@ -77,11 +78,6 @@ def para_portada(dimensiones, seccion):
             dimension = replace(dimension, url=reverse(dimension.url_name))
         tarjetas.append(dimension)
     return tuple(tarjetas)
-
-
-def tarjeta_inicial(dimensiones):
-    """Clave de la tarjeta inicial del carrusel: la primera disponible o, si no hay, la primera."""
-    return next((d.clave for d in dimensiones if d.disponible), dimensiones[0].clave)
 
 
 @dataclass(frozen=True)

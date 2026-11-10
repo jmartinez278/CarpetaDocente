@@ -1,76 +1,30 @@
-// Portada del docente: carrusel de dimensiones y tarjeta "Próximamente" (DESIGN.md 0.3.1; design.md de US-001,
-// D6). Copiado del prototipo final; se carga antes de Alpine, los dos con defer.
+// Portada del docente: aviso de las tarjetas "Próximamente" (spec pantallas-de-inicio; rebrand-portada, D5). Sin
+// Alpine: la misma lógica que tenía Alpine.data("proxima").
 //
-// Carrusel, mejora progresiva sobre HTML que ya funciona:
-// - Sin JavaScript, los chips son enlaces a cada tarjeta y, donde hay líneas de tiempo de desplazamiento,
-//   el chip y el punto activos siguen la posición solo con CSS.
-// - Con Alpine: aria-current en el chip de la tarjeta visible; donde no hay líneas de tiempo, Alpine marca
-//   el chip y el punto activos (data-carrusel-js apaga las de CSS) y abre en la tarjeta inicial.
-// - Con Alpine, el chip desplaza el carrusel sin cambiar la dirección (R-19) y la tarjeta que asoma no responde
-//   al toque (R-28: carrusel__item--asoma en las que no son la visible).
-document.addEventListener("alpine:init", () => {
-  Alpine.data("carrusel", () => ({
-    activa: null,
-    controla: !CSS.supports("animation-timeline", "view()"),
+// La tarjeta trae un botón con aria-disabled que no navega (data-proxima) y, vacía desde el inicio, una región
+// aria-live="polite" (.dimension-aviso). Al tocarlo, la región se vacía y en el cuadro siguiente recibe "Llegará en
+// una próxima versión.", para que un segundo toque también se anuncie; a los 3 s se vacía. Un toque nuevo reinicia
+// el reloj de esa tarjeta. El renglón del aviso está reservado en el CSS: aparecer o irse no mueve la miniatura.
+(() => {
+  const AVISO = "Llegará en una próxima versión.";
+  const relojes = new WeakMap();
 
-    // Desplazamiento de la pista que deja la tarjeta en el borde de ajuste, donde empieza la primera.
-    hasta(item) {
-      return item.getBoundingClientRect().left - this.$refs.pista.querySelector(".carrusel__item").getBoundingClientRect().left;
-    },
+  document.addEventListener("click", (evento) => {
+    const boton = evento.target.closest("[data-proxima]");
+    if (!boton) return;
+    const aviso = boton.closest(".dimension")?.querySelector(".dimension-aviso");
+    if (!aviso) return;
 
-    // Sin entrada nueva en el historial: "Atrás" sale de la portada en vez de recorrer las tarjetas.
-    ir(id) {
-      this.$refs.pista.scrollTo({ left: this.hasta(document.getElementById(id)) });
-    },
-
-    init() {
-      const pista = this.$refs.pista;
-      const items = [...pista.querySelectorAll(".carrusel__item")];
-      if (this.controla) this.$root.setAttribute("data-carrusel-js", "");
-
-      if (!CSS.supports("scroll-initial-target", "nearest") && !location.hash) {
-        const inicial = pista.querySelector(".carrusel__item--inicial");
-        if (inicial) pista.scrollTo({ left: this.hasta(inicial), behavior: "instant" });
-      }
-
-      // La tarjeta activa es la que queda más cerca del borde de ajuste (scroll-padding).
-      const medir = () => {
-        const borde = pista.getBoundingClientRect().left + (parseFloat(getComputedStyle(pista).scrollPaddingInlineStart) || 0);
-        let mejor = items[0];
-        for (const item of items) {
-          if (Math.abs(item.getBoundingClientRect().left - borde) < Math.abs(mejor.getBoundingClientRect().left - borde)) mejor = item;
-        }
-        this.activa = mejor.id;
-      };
-      let pendiente = false;
-      pista.addEventListener("scroll", () => {
-        if (pendiente) return;
-        pendiente = true;
-        requestAnimationFrame(() => {
-          pendiente = false;
-          medir();
-        });
-      }, { passive: true });
-      medir();
-    },
-  }));
-
-  // "Próximamente": botón con aria-disabled que no navega. Al tocarlo, "Llegará en una próxima versión." en el
-  // renglón al pie de la cabecera durante 3 s, en una región aria-live="polite" que ya está en la página (vacía).
-  Alpine.data("proxima", () => ({
-    aviso: "",
-    reloj: null,
-
-    avisar() {
-      clearTimeout(this.reloj);
-      // Vaciar y volver a escribir: un segundo toque también se anuncia.
-      this.aviso = "";
-      this.$nextTick(() => {
-        this.aviso = "Llegará en una próxima versión.";
-      });
-      this.reloj = setTimeout(() => {
-        this.aviso = "";
-      }, 3000);
-    },
-  }));
-});
+    clearTimeout(relojes.get(aviso));
+    aviso.textContent = "";
+    requestAnimationFrame(() => {
+      aviso.textContent = AVISO;
+    });
+    relojes.set(
+      aviso,
+      setTimeout(() => {
+        aviso.textContent = "";
+      }, 3000),
+    );
+  });
+})();

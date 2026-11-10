@@ -39,9 +39,10 @@ def test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada(live_server, page, docent
 
     expect(page).to_have_url(f"{live_server.url}/docente/")
     expect(page.get_by_role("heading", level=1)).to_have_text(saludo_de("Ana Quispe"))
-    expect(page.get_by_role("heading", level=2)).to_have_text(["Sesiones", "Notas", "Asistencia"])
-    # Alpine se carga con defer: se espera a que termine, no a que aparezca el marcado.
-    page.wait_for_function("typeof Alpine === 'object'", timeout=5000)
+    expect(page.get_by_role("heading", level=2)).to_have_text(["Asistencia", "Sesiones", "Notas"])
+    # Desde rebrand-portada, la portada tampoco carga Alpine.js (D5).
+    page.wait_for_load_state("load")
+    assert page.evaluate("typeof Alpine") == "undefined"
 
 
 def test_la_direccion_llega_a_su_inicio(live_server, page, direccion, clave):
