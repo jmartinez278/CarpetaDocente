@@ -42,9 +42,9 @@ Ninguna parte es de alto riesgo: no toca modelos, permisos, transacciones ni not
 
 ### Parte E: A2 y verificacion.md
 
-- [ ] 5.1 E-02 a mano: en un Android real, Agregar como página completa con el teclado abierto deja a la vista el campo y el pie. Si no alcanza, a la deuda del pulido final. Verificar: resultado anotado en `verificacion.md`
-- [ ] 5.2 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la spec `estudiantes-seccion` del cambio, D3, D6 y D7), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde
-- [ ] 5.3 `verificacion.md`: tabla escenario → prueba de la spec delta y de los escenarios de `estudiantes-seccion` que se vuelven a correr (con los saltados por `rebrand-portada` señalados), y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
+- [x] 5.1 E-02 a mano: en un Android real, Agregar como página completa con el teclado abierto deja a la vista el campo y el pie. Si no alcanza, a la deuda del pulido final. Verificar: resultado anotado en `verificacion.md`
+- [x] 5.2 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la spec `estudiantes-seccion` del cambio, D3, D6 y D7), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e y `verificar.py --antes-del-commit` en verde
+- [x] 5.3 `verificacion.md`: tabla escenario → prueba de la spec delta y de los escenarios de `estudiantes-seccion` que se vuelven a correr (con los saltados por `rebrand-portada` señalados), y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
 
 ## Ajustes del propose a decisiones.md
 
@@ -57,6 +57,8 @@ Ninguna parte es de alto riesgo: no toca modelos, permisos, transacciones ni not
 ## Workflow follow-up
 
 - **(rebrand-portada)** Dar al `<dialog id="estudiantes">` las clases `dialog dialog--lista`, quitar los `skip` con motivo `rebrand-portada` de `test_estudiantes_e2e.py` y correr axe, ancho, «Cerrar» de 44 px y nombre largo dentro del diálogo. Push solo al cerrar los dos cambios, con aprobación; sigue el PR borrador único hacia `main`.
+- **(rebrand-portada, A2 [high])** El popup de la portada pierde el desplazamiento: `_base.html` usa `.dialog-cuerpo` y la portada solo carga `app.css`. Se corrige al dar `dialog dialog--lista` al `<dialog>` y cargar `rebrand.css`; añadir una e2e con una lista que supere el alto del diálogo y comprobar que el último «Editar» se alcanza.
+- **(pulido final)** E-02 en un celular real, sobre el popup, Android e iPhone: 5.1 se hizo solo con emulación de DevTools.
 - **(equipo)** E-07: ¿hay un máximo de estudiantes por sección? (pregunta en `auditoria-emil.md`). Si sí, cambio de spec propio.
 - E-02: si `interactive-widget=resizes-content` no alcanza en Android → pulido final (Sesiones y Estudiantes).
 - Paso 8 del PLAN: `_subir_pie.html` de Sesiones a `rb/boton.html formulario=`; enlaces HTMX del pie a `rb/boton.html` si gana `hx-get`; borrar el CSS viejo de Estudiantes en `app.css`.
