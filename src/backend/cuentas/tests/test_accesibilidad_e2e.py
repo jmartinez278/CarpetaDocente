@@ -1,7 +1,7 @@
 """Accesibilidad con axe-core en las pantallas de US-001 y US-002 (spec pantallas-de-inicio; D10).
 
-Ocho vistas (inicio de sesión normal, con error, con campos vacíos y con el aviso de inactividad;
-portada y dirección, cada una con el menú cerrado y abierto) en
+Las vistas (inicio de sesión normal, con error, con campos vacíos, «Ingresando…» y con el aviso
+de inactividad; portada y dirección, cada una con el menú cerrado y abierto; «sin permiso») en
 tema claro y oscuro, a 360 y 1280 px. Falla ante infracciones ``critical`` o ``serious`` de WCAG 2.1
 A y AA, el contraste incluido (RNF-008), y guarda el informe en ``test-results/``. axe-core llega
 por npm (``npm ci`` en ``src/frontend/``). Se pide con ``uv run pytest -m e2e --browser chromium``.
@@ -29,6 +29,7 @@ VISTAS = [
     "ingresar",
     "ingresar-con-error",
     "ingresar-vacio",
+    "ingresar-enviando",
     "ingresar-con-aviso",
     "portada",
     "portada-menu-abierto",
@@ -48,17 +49,28 @@ def abrir_vista(page, live_server, vista, docente, direccion, clave):
         campo_usuario(page).fill(docente.username)
         campo_clave(page).fill(f"{clave}-incorrecta")
         boton_ingresar(page).click()
-        page.get_by_role("alert").wait_for()
+        page.locator(".message--error").wait_for()
     elif vista == "ingresar-vacio":
         abrir_ingresar(page, live_server)
         boton_ingresar(page).click()
-        page.locator(".campo__error").first.wait_for()
+        page.locator(".field-error").first.wait_for()
+    elif vista == "ingresar-enviando":
+        # El envío retenido (como en test_ingresar_e2e): «Ingresando…» se queda en pantalla.
+        abrir_ingresar(page, live_server)
+        page.evaluate(
+            "document.querySelector('[data-formulario-ingreso]')"
+            ".addEventListener('submit', (evento) => evento.preventDefault())"
+        )
+        campo_usuario(page).fill(docente.username)
+        campo_clave(page).fill(clave)
+        boton_ingresar(page).click()
+        page.get_by_role("button", name="Ingresando…").wait_for()
     elif vista == "ingresar-con-aviso":
         ingresar(page, live_server, docente, clave)
         page.wait_for_url("**/docente/")
         envejecer_sesion(page, 61)
         page.reload()
-        page.locator(".mensaje--aviso").wait_for()
+        page.locator(".message--aviso").wait_for()
         # axe mide el color calculado: a media animación de entrada lo mezcla con la opacidad.
         page.wait_for_function("document.getAnimations().length === 0")
     elif vista.startswith("sin-permiso"):
@@ -112,6 +124,47 @@ def test_el_menu_abierto_no_desborda_la_ventana(
     assert ancho_documento <= ancho
     assert panel["x"] >= 0
     assert panel["x"] + panel["width"] <= ancho
+
+
+@pytest.mark.parametrize("ancho", [320, 360])
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("vista", ["ingresar", "ingresar-con-error", "ingresar-con-aviso"])
+def test_el_inicio_de_sesion_no_desborda(
+    live_server, page, vista, tema, ancho, docente, direccion, clave
+):
+    """«Sin desplazamiento horizontal» con el marco del rebrand (rebrand-us-001, 2.4)."""
+    con_pantalla(page, ancho, tema)
+    abrir_vista(page, live_server, vista, docente, direccion, clave)
+    page.evaluate("document.fonts.ready")
+
+    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    ficha = page.locator(".login-ficha").bounding_box()
+    assert ficha["x"] >= 0
+    assert ficha["x"] + ficha["width"] <= ancho
+
+
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_el_ojo_mide_44_px_dentro_del_campo(live_server, page, ancho, docente, direccion, clave):
+    con_pantalla(page, ancho, "light")
+    abrir_vista(page, live_server, "ingresar", docente, direccion, clave)
+
+    ojo = page.get_by_role("button", name="Mostrar contraseña").bounding_box()
+    campo = campo_clave(page).bounding_box()
+
+    assert (ojo["width"], ojo["height"]) == (44, 44)
+    assert campo["x"] <= ojo["x"] and ojo["x"] + ojo["width"] <= campo["x"] + campo["width"]
+    assert campo["y"] <= ojo["y"] and ojo["y"] + ojo["height"] <= campo["y"] + campo["height"]
+
+
+@pytest.mark.parametrize(("ancho", "letra"), [(360, "30px"), (1280, "40px")])
+def test_el_nombre_de_la_ie_mide_40_px_en_pc_y_30_en_celular(
+    live_server, page, ancho, letra, docente, direccion, clave
+):
+    con_pantalla(page, ancho, "light")
+    abrir_vista(page, live_server, "ingresar", docente, direccion, clave)
+
+    nombre = page.get_by_role("heading", level=1)
+    assert nombre.evaluate("(el) => getComputedStyle(el).fontSize") == letra
 
 
 @pytest.mark.parametrize("ancho", [320, 360])

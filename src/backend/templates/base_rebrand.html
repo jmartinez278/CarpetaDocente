@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>{% block titulo %}CarpetaDocente{% endblock %}</title>
-  {% comment %}Base del rebrand (rebrand-base, D8 y D9): una sola hoja, dist/rebrand.css, y solo Instrument Sans.{% endcomment %}
+  {% comment %}Base del rebrand (rebrand-base, D8 y D9): una sola hoja, dist/rebrand.css, y solo Instrument Sans. El bloque precargas suma
+fuentes de una sola pantalla: Besley, solo en el inicio de sesión (rebrand-us-001, D5).{% endcomment %}
   <link rel="preload" href="{% static 'dist/fuentes/instrument-sans-latin-400-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{% static 'dist/fuentes/instrument-sans-latin-500-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  {% block precargas %}{% endblock %}
   <link rel="stylesheet" href="{% static 'dist/rebrand.css' %}">
   {% block scripts %}{% endblock %}
 </head>

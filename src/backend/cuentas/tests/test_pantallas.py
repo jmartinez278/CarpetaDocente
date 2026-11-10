@@ -114,15 +114,80 @@ def test_sin_escudo_ni_menu_ni_enlaces(pagina):
     assert "<img" not in pagina
     assert "<nav" not in pagina
     assert 'class="barra' not in pagina
+    # Marco del rebrand sin barra ni ☰ (rebrand-us-001, D1).
+    assert 'class="appbar' not in pagina
+    assert "Menú de navegación" not in pagina
     assert "<a " not in pagina, "no hay enlaces: ni de recuperación ni a funciones que no existen"
 
 
+# --- Marco del rebrand (rebrand-us-001, D1 y D5) ---
+
+
+def test_carga_solo_la_hoja_del_rebrand_y_precarga_besley_e_instrument_sans(pagina):
+    assert "dist/rebrand.css" in pagina
+    assert "dist/app.css" not in pagina
+    for fuente in (
+        "instrument-sans-latin-400-normal",
+        "instrument-sans-latin-500-normal",
+        "besley-latin-600-normal",
+    ):
+        assert re.search(
+            rf'<link rel="preload" href="[^"]*{fuente}\.woff2" as="font" type="font/woff2"'
+            r" crossorigin>",
+            pagina,
+        ), f"no se precarga {fuente}"
+
+
+def test_la_base_del_rebrand_no_precarga_besley_sin_el_bloque_precargas():
+    """Otra pantalla del rebrand que no llena «precargas» no descarga Besley (D5)."""
+    from django.template.loader import render_to_string
+
+    assert "besley" not in render_to_string("base_rebrand.html").lower()
+
+
+def test_el_espacio_del_escudo_va_vacio_y_oculto_antes_del_nombre(pagina):
+    escudo = re.search(r'<div class="login-escudo" aria-hidden="true"></div>', pagina)
+
+    assert escudo, "el espacio del escudo se reserva vacío y oculto al lector"
+    assert escudo.start() < pagina.index("<h1")
+
+
+def test_el_formulario_va_en_la_ficha_con_sus_ganchos(pagina):
+    formulario = etiqueta(pagina, "data-formulario-ingreso")
+
+    assert formulario.startswith("<form")
+    assert pagina.index('class="login-ficha"') < pagina.index("<form")
+    for atributo in ('method="post"', "novalidate", 'aria-label="Iniciar sesión"'):
+        assert atributo in formulario
+    for campo in ("username", "password"):
+        assert re.search(rf'<div class="field field--ingreso">\s*<label for="id_{campo}">', pagina)
+
+
+def test_ingresar_es_el_boton_principal_con_su_gancho(pagina):
+    boton = etiqueta(pagina, "data-boton-ingresar")
+
+    assert boton.startswith("<button")
+    assert "btn--primary" in boton
+    assert 'type="submit"' in boton
+    assert re.search(r"data-boton-ingresar[^>]*>Ingresar</button>", pagina)
+
+
+def test_el_pie_lleva_solo_la_marca(pagina):
+    pie = re.search(r"<footer\b[^>]*>(.*?)</footer>", pagina, re.DOTALL)
+
+    assert pie, "no hay pie"
+    assert "footer--marca" in pie.group(0)
+    assert re.sub(r"<[^>]+>", "", pie.group(1)).strip() == "CarpetaDocente · 2026"
+
+
 def test_usuario_y_contrasena_tienen_etiqueta_y_autocompletado(pagina):
-    assert '<label class="campo__etiqueta" for="id_username">Usuario</label>' in pagina
-    assert '<label class="campo__etiqueta" for="id_password">Contraseña</label>' in pagina
+    assert '<label for="id_username">Usuario</label>' in pagina
+    assert '<label for="id_password">Contraseña</label>' in pagina
     usuario = etiqueta(pagina, 'name="username"')
     assert 'id="id_username"' in usuario
     assert 'autocomplete="username"' in usuario
+    assert 'autocapitalize="none"' in usuario
+    assert 'spellcheck="false"' in usuario
     clave = etiqueta(pagina, 'name="password"')
     assert 'id="id_password"' in clave
     assert 'type="password"' in clave
@@ -140,18 +205,39 @@ def test_el_formulario_envia_por_post_con_token_y_next(client):
 # --- Mensaje de error ---
 
 
-def test_el_error_va_sobre_la_tarjeta_con_role_alert_y_dos_lineas(pagina_rechazada):
-    alerta = re.search(r'<div[^>]*role="alert".*?</div>\s*</div>', pagina_rechazada, re.DOTALL)
-    assert alerta, "no hay un mensaje con role=alert"
-    lineas = re.findall(r"<p>(.*?)</p>", alerta.group(0), re.DOTALL)
+def error_general(html):
+    encontrado = re.search(
+        r'<div class="message message--error"[^>]*>.*?</div></div>', html, re.DOTALL
+    )
+    return encontrado.group(0) if encontrado else None
 
-    assert lineas == [LINEA_1, LINEA_2]
-    assert alerta.start() < pagina_rechazada.index("<form")
-    assert "<svg" in alerta.group(0)
+
+def test_el_error_va_sobre_la_ficha_con_sus_dos_lineas_y_recibe_el_foco(pagina_rechazada):
+    """El anuncio sale del foco, sin role="alert": se lee una sola vez (rebrand-us-001, D2)."""
+    html = pagina_rechazada
+    error = error_general(html)
+    assert error, "no hay mensaje de error general"
+    apertura = etiqueta(error, "message--error")
+
+    assert re.findall(r"<p\b[^>]*>(.*?)</p>", error, re.DOTALL) == [LINEA_1, LINEA_2]
+    assert 'class="message-titulo"' in error
+    assert "<svg" in error
+    assert 'tabindex="-1"' in apertura
+    assert re.search(r"\bautofocus\b", apertura)
+    assert 'role="alert"' not in html
+    assert html.index(error) < html.index('class="login-ficha"')
+
+
+def test_solo_el_error_lleva_autofocus(pagina_rechazada):
+    assert len(re.findall(r"\bautofocus\b", pagina_rechazada)) == 1
+    for campo in ("username", "password"):
+        assert "autofocus" not in etiqueta(pagina_rechazada, f'name="{campo}"')
 
 
 def test_sin_rechazo_no_hay_mensaje(pagina):
     assert 'role="alert"' not in pagina
+    assert error_general(pagina) is None
+    assert "autofocus" not in pagina
 
 
 def test_el_error_conserva_el_usuario_y_no_la_contrasena(pagina_rechazada):
@@ -170,11 +256,13 @@ def test_campos_vacios_marcan_cada_campo_y_lo_enlazan_a_su_mensaje(pagina_con_ca
         ayuda = "id_username_ayuda " if campo == "username" else ""
         assert f'aria-describedby="{ayuda}id_{campo}_error"' in control
         assert re.search(
-            rf'<p class="campo__error" id="id_{campo}_error">.*?<span>{mensaje}</span>',
+            rf'<p class="field-error" id="id_{campo}_error">.*?<span>{mensaje}</span>',
             pagina_con_campos_vacios,
             re.DOTALL,
         )
     assert 'role="alert"' not in pagina_con_campos_vacios
+    assert error_general(pagina_con_campos_vacios) is None
+    assert "autofocus" not in pagina_con_campos_vacios
 
 
 def test_sin_errores_los_campos_no_se_marcan_invalidos(pagina):
@@ -194,6 +282,12 @@ def test_el_boton_mostrar_contrasena_nace_oculto_y_sin_presionar(pagina):
     assert 'aria-label="Mostrar contraseña"' in boton
     assert 'aria-controls="id_password"' in boton
     assert 'type="button"' in boton
+    # El ojo va dentro del campo, junto a la contraseña (rebrand-us-001, D3).
+    assert re.search(
+        r'<div class="input-grupo"><input\b[^>]*id="id_password"[^>]*>\s*'
+        r"<button\b[^>]*data-mostrar-clave",
+        pagina,
+    )
 
 
 # --- Anuncio del envío (C8-01) ---
@@ -806,7 +900,9 @@ AVISO_2 = "Pasaron 60 minutos sin uso. Ingresa de nuevo para continuar."
 
 
 def aviso(html):
-    encontrado = re.search(r"<div\b[^>]*mensaje--aviso[^>]*>.*?</div>\s*</div>", html, re.DOTALL)
+    encontrado = re.search(
+        r'<div class="message message--aviso"[^>]*>.*?</div></div>', html, re.DOTALL
+    )
     return encontrado.group(0) if encontrado else None
 
 
@@ -819,16 +915,21 @@ def pagina_por_inactividad(client, docente):
     return client.get("/docente/", follow=True).content.decode()
 
 
-def test_el_aviso_va_sobre_el_formulario_con_icono_y_dos_lineas(pagina_por_inactividad):
+def test_el_aviso_va_sobre_la_ficha_con_el_reloj_y_dos_lineas(pagina_por_inactividad):
     html = pagina_por_inactividad
 
     caja = aviso(html)
     assert caja, "no hay aviso de inactividad"
-    assert re.findall(r"<p>(.*?)</p>", caja, re.DOTALL) == [AVISO_1, AVISO_2]
-    assert "<svg" in caja
-    assert 'role="status"' in etiqueta(caja, "mensaje--aviso")
-    assert 'role="alert"' not in caja
-    assert html.index("mensaje--aviso") < html.index("<form")
+    assert re.findall(r"<p\b[^>]*>(.*?)</p>", caja, re.DOTALL) == [AVISO_1, AVISO_2]
+    # El reloj de Lucide (clock), no el círculo del error.
+    assert '<path d="M12 6v6l4 2"/>' in caja
+    assert re.search(
+        r'<div class="login-mensaje" role="status">\s*<div class="message message--aviso"', html
+    )
+    assert 'role="alert"' not in html
+    assert "autofocus" not in html, "el aviso no toma el foco (cierre-sesion no cambia)"
+    assert html.count("message--aviso") == 1
+    assert html.index(caja) < html.index('class="login-ficha"')
 
 
 def test_el_aviso_no_se_repite_al_recargar(client, pagina_por_inactividad):

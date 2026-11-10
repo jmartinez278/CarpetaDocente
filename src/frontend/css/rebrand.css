@@ -9,6 +9,7 @@
 @source "../../backend/templates/marco_rebrand.html";
 @source "../../backend/templates/rb";
 @source "../../backend/templates/cuentas/sin_permiso.html";
+@source "../../backend/templates/cuentas/ingresar.html";
 @source "../../backend/templates/repositorio";
 
 /* Los parciales de abajo también son fuente: con --poll (contenedor) la CLI solo ve cambios en sus
@@ -21,3 +22,4 @@
 @import "./rebrand/componentes.css";
 @import "./rebrand/pantallas/sin-permiso.css";
 @import "./rebrand/pantallas/sesiones.css";
+@import "./rebrand/pantallas/ingreso.css";

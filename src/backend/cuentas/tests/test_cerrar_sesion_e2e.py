@@ -45,7 +45,7 @@ def test_camino_ideal_abre_el_menu_y_cierra_la_sesion(live_server, page, docente
     cerrar_sesion(page).click()
 
     expect(page).to_have_url(f"{live_server.url}/ingresar/")
-    expect(page.locator(".mensaje--aviso")).to_have_count(0)
+    expect(page.locator(".message--aviso")).to_have_count(0)
 
 
 def test_atras_despues_de_cerrar_sesion_no_muestra_el_saludo(live_server, page, docente, clave):
@@ -72,7 +72,7 @@ def test_inactividad_muestra_el_aviso_y_atras_no_muestra_la_pantalla(
     page.reload()
 
     expect(page).to_have_url(re.compile(r"/ingresar/\?next=/docente/"))
-    aviso = page.locator(".mensaje--aviso")
+    aviso = page.locator(".message--aviso")
     expect(aviso).to_be_visible()
     expect(aviso).to_contain_text(AVISO)
     expect(aviso).to_contain_text(DETALLE)
@@ -156,4 +156,4 @@ def test_panel_atras_tras_la_inactividad_no_muestra_la_pantalla(
     restaurar_desde_bfcache(page)
 
     expect(page).to_have_url(re.compile(r"/ingresar/\?next=/admin/"))
-    expect(page.locator(".mensaje--aviso")).to_contain_text(AVISO)
+    expect(page.locator(".message--aviso")).to_contain_text(AVISO)

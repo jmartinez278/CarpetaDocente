@@ -1,0 +1,165 @@
+/* Inicio de sesión (rebrand-us-001, D1, D4 y D5), del boceto (insumos/rebrand/ingreso.html,
+   propuesta D): pantalla centrada sin barra, la identidad de la I.E., los mensajes y la ficha con el
+   formulario. */
+
+/* Besley 600 latina, solo para el nombre de la I.E. (excepción de DESIGN.md). optional: sin cambio
+   de letra a media carga; la precarga va solo en ingresar.html (D5). */
+@font-face {
+  font-family: "Besley";
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url("fuentes/besley-latin-600-normal.woff2") format("woff2");
+}
+
+@layer components {
+  .login {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: min(calc(100% - 2 * var(--gut)), 600px);
+    margin-inline: auto;
+    padding-block: var(--s-7) var(--s-5);
+  }
+
+  .login-identidad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* Espacio del escudo: reservado y vacío hasta tener autorización de uso. */
+  .login-escudo {
+    width: 56px;
+    height: 56px;
+    margin-bottom: var(--s-5);
+  }
+
+  .login-ie {
+    color: var(--action);
+    font-family: "Besley", Georgia, serif;
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .login-filete {
+    width: 40px;
+    height: 1px;
+    margin: var(--s-4) auto var(--s-3);
+    background: var(--line-strong);
+  }
+
+  .login-lugar {
+    font-size: var(--text-subsection);
+    line-height: var(--leading-subsection);
+  }
+
+  .login-dimensiones {
+    margin-top: var(--s-1);
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  /* Mensajes y ficha: el mismo ancho, centrados. */
+  .login-mensaje,
+  .login-ficha {
+    width: 100%;
+    max-width: 440px;
+    margin-inline: auto;
+  }
+
+  .login-mensaje {
+    margin-top: var(--s-6);
+  }
+
+  .login-ficha {
+    margin-top: var(--s-5);
+    padding: var(--s-6);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+
+  .login-form {
+    display: grid;
+    gap: var(--s-4);
+  }
+
+  .login-ingresar {
+    width: 100%;
+    margin-top: var(--s-2);
+  }
+
+  .login-ayuda {
+    margin-top: var(--s-2);
+    text-wrap: pretty;
+  }
+
+  /* «Ingresando…» (D4): sale de lo que ya pone ingresar.js (aria-disabled en el botón, aria-busy en
+     el formulario y readonly en los campos). Fondo --folder con --ink, no opacidad; el giro es un
+     ::before porque el JS reescribe el texto del botón. */
+  .login-form [data-boton-ingresar][aria-disabled="true"] {
+    background: var(--folder);
+    border-color: var(--folder);
+    color: var(--ink);
+    cursor: progress;
+    /* El cambio de fondo es inmediato (D4): el giro ya dice que algo pasa. */
+    transition: none;
+  }
+
+  .login-form [data-boton-ingresar][aria-disabled="true"]::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: var(--r-round);
+    animation: login-giro 800ms linear infinite;
+  }
+
+  .login-form[aria-busy="true"] .input:read-only {
+    border-style: dotted;
+  }
+
+  /* Celular: nombre a 30 px, escudo de 48 px y la ficha con menos relleno. */
+  @media (max-width: 699px) {
+    .login {
+      padding-block: var(--s-7) var(--s-4);
+    }
+
+    .login-escudo {
+      width: 48px;
+      height: 48px;
+      margin-bottom: var(--s-4);
+    }
+
+    .login-ie {
+      font-size: 30px;
+    }
+
+    .login-mensaje {
+      margin-top: var(--s-5);
+    }
+
+    .login-ficha {
+      padding: var(--s-5);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .login-form [data-boton-ingresar][aria-disabled="true"]::before {
+      animation: none;
+    }
+  }
+}
+
+@keyframes login-giro {
+  to {
+    transform: rotate(1turn);
+  }
+}

@@ -166,11 +166,16 @@ def test_app_css_no_trae_los_tokens_del_rebrand():
 # --- Fuentes ---------------------------------------------------------------------------------
 
 
-def test_instrument_sans_400_y_500_en_woff2_con_swap_y_sin_besley(rebrand):
+def test_instrument_sans_400_y_500_en_woff2_con_swap_y_besley_solo_600_optional(rebrand):
     caras = re.findall(r"@font-face\{([^}]*)\}", rebrand)
     instrument = [c for c in caras if "instrument sans" in c.lower()]
+    besley = [c for c in caras if "besley" in c.lower()]
 
-    assert not [c for c in caras if "besley" in c.lower()]
+    # Besley: una sola cara, para el nombre de la I.E. del inicio de sesión (rebrand-us-001, D5).
+    assert len(besley) == 1
+    assert re.search(r"font-weight:\s*600", besley[0])
+    assert re.search(r"font-display:\s*optional", besley[0])
+    assert re.search(r"url\([\"']?fuentes/besley-latin-600-normal\.woff2", besley[0])
     assert sorted(re.search(r"font-weight:\s*(\d+)", c).group(1) for c in instrument) == [
         "400",
         "500",

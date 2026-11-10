@@ -774,7 +774,7 @@ def test_sesion_vencida_durante_los_toques(
     page.unroute("**/estudiantes/*/")
 
     expect(page).to_have_url(re.compile(r"/ingresar/\?next=/docente/"))
-    expect(page.locator(".mensaje--aviso")).to_contain_text("Tu sesión se cerró por inactividad.")
+    expect(page.locator(".message--aviso")).to_contain_text("Tu sesión se cerró por inactividad.")
     assert estados_en_la_base() == {veinticinco[0].pk: "ASISTIO"}
 
     campo_usuario(page).fill(docente.username)
