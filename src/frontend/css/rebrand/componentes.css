@@ -207,6 +207,23 @@
     width: min(440px, calc(100vw - 32px));
   }
 
+  /* Lista de estudiantes (rebrand-us-006, D3): ventana de alto fijo para que el cambio de vista no la mueva; en el
+     celular, casi toda la pantalla, centrada (sin la salida de hoja). */
+  .dialog--lista {
+    width: min(760px, calc(100vw - 48px));
+    max-width: calc(100vw - 48px);
+    height: min(720px, calc(100dvh - 48px));
+  }
+
+  @media (max-width: 699px) {
+    .dialog--lista {
+      width: calc(100vw - 16px);
+      max-width: calc(100vw - 16px);
+      height: calc(100dvh - 16px);
+      max-height: calc(100dvh - 16px);
+    }
+  }
+
   .dialog::backdrop {
     background: rgb(48 39 31 / 0.4);
     opacity: 0;

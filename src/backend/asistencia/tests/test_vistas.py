@@ -352,10 +352,10 @@ def test_el_aviso_de_importados_lleva_a_tomar_la_asistencia_de_hoy(cliente, secc
     html = cliente.post(url_pegar, {"lista": "QUISPE, ANA\nROJAS, LUIS"}, follow=True)
     html = html.content.decode()
 
-    aviso = html[html.index("mensaje--exito") : html.index('<ol class="estudiantes"')]
+    aviso = html[html.index("message--exito") : html.index('<ol class="estudiantes-lista"')]
     assert "2 estudiantes importados" in aviso
     enlace = (
-        f'<a class="mensaje-enlace" href="{url_hoy(seccion_docente)}">Tomar la asistencia de hoy'
+        f'<a class="btn btn--text" href="{url_hoy(seccion_docente)}">Tomar la asistencia de hoy'
     )
     assert enlace in aviso
     assert "hx-get" not in aviso, "un enlace normal: también en el diálogo abre la página completa"

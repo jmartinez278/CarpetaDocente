@@ -294,6 +294,17 @@ def test_el_alto_del_dialogo_y_de_la_hoja_usa_dvh_no_svh(rebrand):
         assert any(re.search(r"max-height:[^;]*dvh", c) for c in cuerpos), selector
 
 
+def test_el_dialogo_de_la_lista_mide_760_sin_svh_ni_transiciones_de_ancho_o_alto(rebrand):
+    """rebrand-us-006, D3 y D8: ventana de 760 px de ancho, alto en ``dvh`` y sin animar medidas."""
+    cuerpos = _reglas(rebrand, ".dialog--lista")
+
+    assert cuerpos, "falta .dialog--lista en la hoja"
+    assert not any("svh" in c for c in cuerpos)
+    assert any(re.search(r"width:min\(760px", c) for c in cuerpos)
+    assert any(re.search(r"height:[^;]*dvh", c) for c in cuerpos)
+    assert not _propiedades_de_transicion(cuerpos) & {"width", "height"}
+
+
 # --- Cifras tabulares (decisión 4) -----------------------------------------------------------
 
 CIFRAS = """
