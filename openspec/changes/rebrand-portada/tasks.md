@@ -24,8 +24,8 @@ Ninguna parte es de alto riesgo: no toca modelos, permisos, transacciones ni not
 
 ### Parte B: A2 y verificacion.md
 
-- [ ] 2.1 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la spec `pantallas-de-inicio` del cambio, D3, D5 y D6), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e de todas las apps y `verificar.py --antes-del-commit` en verde
-- [ ] 2.2 `verificacion.md`: tabla escenario → prueba de la spec delta (incluido el requisito retirado y su migración) y de las e2e de `estudiantes-seccion` que vuelven a correr, y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
+- [x] 2.1 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la spec `pantallas-de-inicio` del cambio, D3, D5 y D6), corregir los Critical e Important, con la prueba primero. Verificar: `uv run pytest --cov` (80 % o más), las e2e de todas las apps y `verificar.py --antes-del-commit` en verde
+- [x] 2.2 `verificacion.md`: tabla escenario → prueba de la spec delta (incluido el requisito retirado y su migración) y de las e2e de `estudiantes-seccion` que vuelven a correr, y la DoD 1 a 9. Verificar: cada escenario tiene su prueba o su nota; commit
 
 ## Ajustes del propose a decisiones.md
 
