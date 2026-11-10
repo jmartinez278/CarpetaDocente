@@ -523,3 +523,97 @@ def test_partes_aviso_sin_detalle_deja_el_texto_vacio():
     from cuentas.templatetags.marco import partes_aviso
 
     assert partes_aviso("Solo título") == ("Solo título", "")
+
+
+# --- Campo y mensaje para Estudiantes (rebrand-us-006, D6) ---
+
+
+class FormularioEstudiante(forms.Form):
+    apellidos = forms.CharField(label="Apellidos", max_length=120)
+    nombres = forms.CharField(label="Nombres")
+
+
+def campo_de_estudiante(nombre, datos=None, **contexto):
+    formulario = FormularioEstudiante(datos)
+    if datos is not None:
+        formulario.is_valid()
+    return campo(campo=formulario[nombre], **contexto)
+
+
+def test_campo_pinta_maxlength_desde_el_campo_de_django():
+    entrada = etiqueta_apertura(campo_de_estudiante("apellidos"), "input")
+
+    assert 'maxlength="120"' in entrada
+
+
+def test_campo_sin_max_length_no_pinta_maxlength():
+    entrada = etiqueta_apertura(campo_de_estudiante("nombres"), "input")
+
+    assert "maxlength" not in entrada
+
+
+def test_campo_con_autocapitalize_pinta_el_valor_y_apaga_el_corrector():
+    html = campo_de_estudiante("apellidos", autocapitalize="characters")
+    entrada = etiqueta_apertura(html, "input")
+
+    assert 'autocapitalize="characters"' in entrada
+    assert 'spellcheck="false"' in entrada
+
+
+def test_campo_con_descrito_por_lo_suma_a_la_ayuda_y_al_error():
+    html = campo_de_estudiante(
+        "apellidos", datos={"apellidos": ""}, ayuda="Ayuda", descrito_por="ayuda-x"
+    )
+
+    entrada = etiqueta_apertura(html, "input")
+    descrito = re.search(r'aria-describedby="([^"]*)"', entrada).group(1).split()
+    assert descrito == ["id_apellidos_ayuda", "id_apellidos_error", "ayuda-x"]
+
+
+def test_campo_con_descrito_por_solo_lo_nombra():
+    entrada = etiqueta_apertura(campo_de_estudiante("apellidos", descrito_por="ayuda-x"), "input")
+
+    assert 'aria-describedby="ayuda-x"' in entrada
+
+
+def test_campo_con_foco_marca_solo_el_campo_indicado():
+    con_foco = etiqueta_apertura(campo_de_estudiante("apellidos", foco="apellidos"), "input")
+    sin_foco = etiqueta_apertura(campo_de_estudiante("nombres", foco="apellidos"), "input")
+
+    assert re.search(r"\sdata-foco(\s|>|=)", con_foco)
+    assert "data-foco" not in sin_foco
+
+
+def test_campo_sin_foco_no_trae_data_foco():
+    assert "data-foco" not in campo_de_estudiante("apellidos")
+
+
+def test_campo_del_ingreso_no_cambia_con_los_parametros_nuevos():
+    html = campo_de_ingreso("username", variante="ingreso", sin_correccion=True)
+
+    entrada = etiqueta_apertura(html, "input")
+    assert "maxlength" not in entrada
+    assert "data-foco" not in entrada
+    assert "aria-describedby" not in entrada
+    assert entrada.count("autocapitalize") == 1
+
+
+def test_mensaje_con_estado_trae_role_status():
+    apertura = etiqueta_apertura(mensaje(tipo="aviso", titulo="T", estado=True), "div")
+
+    assert 'role="status"' in apertura
+
+
+def test_mensaje_con_alerta_o_enfocar_ignora_estado():
+    alerta = mensaje(tipo="error", titulo="T", alerta=True, estado=True)
+    enfocado = mensaje(tipo="error", titulo="T", enfocar=True, estado=True)
+    con_alerta = etiqueta_apertura(alerta, "div")
+    con_foco = etiqueta_apertura(enfocado, "div")
+
+    assert 'role="alert"' in con_alerta
+    assert "status" not in con_alerta
+    assert "role=" not in con_foco
+
+
+def test_mensaje_sin_estado_ni_alerta_no_trae_role():
+    assert "role=" not in mensaje(tipo="aviso", titulo="T")

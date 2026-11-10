@@ -13,9 +13,9 @@ Ninguna parte es de alto riesgo: no toca modelos, permisos, transacciones ni not
 
 ### Parte B: `rb/campo.html` y `rb/mensaje.html` (normal) — E-06
 
-- [ ] 2.1 Prueba primero, `cuentas/tests/test_componentes_rb.py`: con un formulario de `CharField(max_length=120)`, `rb/campo.html` pinta `maxlength="120"` sin pasarlo, y sin `max_length` no lo pinta; `autocapitalize="characters"` pinta ese atributo y `spellcheck="false"`; `descrito_por="ayuda-x"` entra en `aria-describedby` junto a la ayuda y al error; `foco="apellidos"` pone `data-foco` solo en ese campo; el campo del ingreso (`sin_correccion`, `mostrar_clave`) no cambia. Luego los cuatro parámetros (D6). Verificar: rojo y luego verde; `uv run pytest src/backend/cuentas/tests/test_componentes_rb.py`
-- [ ] 2.2 Prueba primero, `cuentas/tests/test_componentes_rb.py`: `rb/mensaje.html` con `estado` pinta `role="status"`; con `alerta` o `enfocar` sigue como hoy; sin ninguno, sin `role`. Luego el parámetro (D6). Verificar: rojo y luego verde; mismo archivo
-- [ ] 2.3 Pruebas de Ingreso y «sin permiso» sin cambios: `uv run pytest src/backend/cuentas`. `verificar.py` y commit
+- [x] 2.1 Prueba primero, `cuentas/tests/test_componentes_rb.py`: con un formulario de `CharField(max_length=120)`, `rb/campo.html` pinta `maxlength="120"` sin pasarlo, y sin `max_length` no lo pinta; `autocapitalize="characters"` pinta ese atributo y `spellcheck="false"`; `descrito_por="ayuda-x"` entra en `aria-describedby` junto a la ayuda y al error; `foco="apellidos"` pone `data-foco` solo en ese campo; el campo del ingreso (`sin_correccion`, `mostrar_clave`) no cambia. Luego los cuatro parámetros (D6). Verificar: rojo y luego verde; `uv run pytest src/backend/cuentas/tests/test_componentes_rb.py`
+- [x] 2.2 Prueba primero, `cuentas/tests/test_componentes_rb.py`: `rb/mensaje.html` con `estado` pinta `role="status"`; con `alerta` o `enfocar` sigue como hoy; sin ninguno, sin `role`. Luego el parámetro (D6). Verificar: rojo y luego verde; mismo archivo
+- [x] 2.3 Pruebas de Ingreso y «sin permiso» sin cambios: `uv run pytest src/backend/cuentas`. `verificar.py` y commit
 
 ## 3. Viewport y alto del diálogo (D7)
 

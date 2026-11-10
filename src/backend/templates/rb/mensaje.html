@@ -3,6 +3,7 @@ Mensaje del rebrand (rebrand-base, D8; decisión 11). Recibe: tipo (aviso, error
 (opcional: role="alert" para lo que se anuncia al cargar o al fallar) y nivel (opcional: el título es <h1>…<h6> de ese
 nivel; sin él, un párrafo). El ícono de 18 px es decorativo. icono (opcional: nombre de
 templates/iconos/) y enfocar (opcional: tabindex="-1" y autofocus, sin role="alert" aunque se pase alerta, para que el
-anuncio salga del foco y no se lea dos veces; rebrand-us-001, D2).
+anuncio salga del foco y no se lea dos veces; rebrand-us-001, D2). estado (opcional: role="status" para lo que se anuncia
+sin interrumpir; no se combina con alerta ni enfocar; rebrand-us-006, D6).
 {% endcomment %}
-<div class="message message--{{ tipo }}"{% if enfocar %} tabindex="-1" autofocus{% elif alerta %} role="alert"{% endif %}>{% if icono %}{% include "iconos/"|add:icono|add:".svg" with clase=None %}{% elif tipo == "exito" %}{% include "iconos/check.svg" with clase=None %}{% else %}{% include "iconos/circle-alert.svg" with clase=None %}{% endif %}<div class="message-texto">{% if nivel %}<h{{ nivel }} class="message-titulo">{{ titulo }}</h{{ nivel }}>{% else %}<p class="message-titulo">{{ titulo }}</p>{% endif %}{% if texto %}<p>{{ texto }}</p>{% endif %}</div></div>
+<div class="message message--{{ tipo }}"{% if enfocar %} tabindex="-1" autofocus{% elif alerta %} role="alert"{% elif estado %} role="status"{% endif %}>{% if icono %}{% include "iconos/"|add:icono|add:".svg" with clase=None %}{% elif tipo == "exito" %}{% include "iconos/check.svg" with clase=None %}{% else %}{% include "iconos/circle-alert.svg" with clase=None %}{% endif %}<div class="message-texto">{% if nivel %}<h{{ nivel }} class="message-titulo">{{ titulo }}</h{{ nivel }}>{% else %}<p class="message-titulo">{{ titulo }}</p>{% endif %}{% if texto %}<p>{{ texto }}</p>{% endif %}</div></div>
