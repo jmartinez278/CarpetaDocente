@@ -82,6 +82,15 @@ def test_carga_solo_la_hoja_del_rebrand_y_precarga_instrument_sans(html_de, doce
         )
 
 
+def test_el_viewport_achica_el_area_de_diseno_con_el_teclado(html_de, docente):
+    """E-02: con el teclado abierto, ``dvh`` se achica y el pie fijo queda sobre el teclado."""
+    html = html_de(docente)
+
+    viewport = bloque(html, r'<meta name="viewport"[^>]*>')
+    assert "width=device-width" in viewport
+    assert "interactive-widget=resizes-content" in viewport
+
+
 # --- Barra (escenario «Barra de una pantalla interior») ---
 
 

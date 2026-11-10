@@ -285,6 +285,15 @@ def test_ninguna_regla_del_dialogo_anima_ancho_ni_alto(rebrand):
     assert not _propiedades_de_transicion(cuerpos) & {"width", "height"}
 
 
+def test_el_alto_del_dialogo_y_de_la_hoja_usa_dvh_no_svh(rebrand):
+    """E-02: con ``interactive-widget=resizes-content``, ``dvh`` sigue al teclado; ``svh`` no."""
+    for selector in (".dialog", ".dialog--hoja"):
+        cuerpos = _reglas(rebrand, selector)
+        assert cuerpos, f"falta {selector} en la hoja"
+        assert not any("svh" in c for c in cuerpos), selector
+        assert any(re.search(r"max-height:[^;]*dvh", c) for c in cuerpos), selector
+
+
 # --- Cifras tabulares (decisión 4) -----------------------------------------------------------
 
 CIFRAS = """

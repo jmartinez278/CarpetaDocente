@@ -21,8 +21,8 @@ Ninguna parte es de alto riesgo: no toca modelos, permisos, transacciones ni not
 
 ### Parte C: viewport y alto en `dvh` (normal) — E-02
 
-- [ ] 3.1 Prueba primero, `cuentas/tests/test_marco_rebrand.py`: el `<meta name="viewport">` de una pantalla del rebrand trae `interactive-widget=resizes-content`; y en `cuentas/tests/test_hoja_rebrand_e2e.py` (hoja compilada): ninguna regla de `.dialog` ni `.dialog--hoja` usa `svh`, su `max-height` usa `dvh`, y siguen sin transiciones de `width` ni `height`. Luego `base_rebrand.html` y `rebrand/componentes.css` (D7). Verificar: rojo y luego verde; `uv run pytest src/backend/cuentas` y `uv run pytest -m e2e src/backend/cuentas/tests/test_hoja_rebrand_e2e.py --browser chromium` con el CSS compilado
-- [ ] 3.2 E-2e de `cuentas` y `repositorio` (Sesiones: «Pantalla baja», hoja a 360 px, ventana a 1280 px) en verde con el viewport nuevo. `verificar.py` y commit
+- [x] 3.1 Prueba primero, `cuentas/tests/test_marco_rebrand.py`: el `<meta name="viewport">` de una pantalla del rebrand trae `interactive-widget=resizes-content`; y en `cuentas/tests/test_hoja_rebrand_e2e.py` (hoja compilada): ninguna regla de `.dialog` ni `.dialog--hoja` usa `svh`, su `max-height` usa `dvh`, y siguen sin transiciones de `width` ni `height`. Luego `base_rebrand.html` y `rebrand/componentes.css` (D7). Verificar: rojo y luego verde; `uv run pytest src/backend/cuentas` y `uv run pytest -m e2e src/backend/cuentas/tests/test_hoja_rebrand_e2e.py --browser chromium` con el CSS compilado
+- [x] 3.2 E-2e de `cuentas` y `repositorio` (Sesiones: «Pantalla baja», hoja a 360 px, ventana a 1280 px) en verde con el viewport nuevo. `verificar.py` y commit
 
 ## 4. Pantalla Estudiantes (D1–D6, D8)
 
