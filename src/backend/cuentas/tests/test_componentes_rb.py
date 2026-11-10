@@ -226,6 +226,27 @@ def test_boton_sin_datos_no_trae_atributos_data():
     assert "data-" not in boton(texto="Ir", href="/x/")
 
 
+# --- Botón con formulario (rebrand-us-006, D5; E-05) ---
+
+
+def test_boton_con_formulario_pone_el_atributo_form():
+    html = boton(texto="Importar", tipo="submit", formulario="form-x", variante="principal")
+
+    assert re.match(r'<button\b[^>]*\stype="submit" form="form-x">', html)
+
+
+def test_boton_sin_formulario_no_cambia():
+    assert boton(texto="Guardar", tipo="submit", variante="principal") == (
+        '<button class="btn btn--primary" type="submit">Guardar</button>'
+    )
+
+
+def test_boton_con_href_ignora_formulario():
+    html = boton(texto="Ir", href="/x/", formulario="form-x")
+
+    assert html == '<a class="btn btn--secondary" href="/x/">Ir</a>'
+
+
 # --- Diálogo (rebrand-us-010, D3) ---
 
 
