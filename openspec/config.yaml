@@ -24,7 +24,7 @@ rules:
   tasks:
     - 'Agrupa por riesgo, no por cantidad: cada tramo de alto riesgo es una parte "(alto riesgo)" con su revisión y su commit; todo lo demás va junto en una parte "(normal)", sin revisión, con verificar.py y commit. Unas 15 tareas.'
     - Cada tarea empieza por la prueba ("Prueba primero, <archivo>") y termina con "Verificar:" y lo que se comprueba.
-    - El "Verificar:" de cada tarea nombra solo pruebas de la app tocada. La regresión de otras historias la cubre verificar.py; las e2e de otras historias, solo en el cierre.
+    - El "Verificar:" de cada tarea nombra solo pruebas de la app tocada. La regresión de otras historias la cubre `verificar.py --completo` en el cierre; las e2e de otras historias, también solo en el cierre.
     - 'Es de alto riesgo si toca: modelos, restricciones o migraciones; permisos y roles; transacciones o concurrencia; datos personales (RN-015); notas; seguridad, despliegue o workflows; o una "Zona de cuidado" de decisiones.md.'
     - Un commit por parte, nunca por tarea; la casilla va en ese commit.
     - 'Al final, la parte de cierre: A2 y verificacion.md.'
@@ -37,8 +37,8 @@ operations:
       - Pruebas primero; ante una falla inesperada, depuración sistemática.
       - Antes de usar una API de Django, HTMX, Tailwind o Playwright que el repo aún no usa, consulta su documentación actual (Context7). Si ya se usa en el repo, sigue ese código.
       - Revisión (agente revisor, .claude/agents/revisor.md) solo al cerrar una parte "(alto riesgo)". Critical e Important se corrigen; Minor, máximo 3, una línea cada uno, a verificacion.md, "## Minor para la descripción del PR".
-      - Durante las tareas se corren solo las pruebas de la app tocada; la suite completa la corre verificar.py.
-      - Antes de proponer un commit, lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit`. Commit solo con aprobación.
+      - Durante las tareas se corren solo las pruebas de la app tocada; la suite completa, con la cobertura mínima de 80 %, la corre `uv run python scripts/verificar.py --completo` en el cierre.
+      - Antes de proponer un commit, lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit` (Ruff y las pruebas de las apps del índice; si cambia algo compartido, toda la suite; sin cobertura). Commit solo con aprobación.
       - verificacion.md se escribe una vez, en el cierre - tabla escenario → prueba y DoD 1 a 9. Sin evidencia por commit ni commits solo de docs.
       - A2 (Codex) una vez al final, sin re-revisión del arreglo. Lo que no se puede provocar desde la interfaz va a la deuda.
   archive:
