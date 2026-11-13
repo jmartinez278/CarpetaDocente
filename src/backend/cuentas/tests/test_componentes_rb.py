@@ -375,6 +375,23 @@ def test_estado_vacio_con_datos_trae_un_boton_con_el_atributo():
     assert "<a " not in html
 
 
+def test_estado_vacio_con_titulo_lo_pinta_antes_del_texto():
+    html = estado_vacio(
+        titulo="Hoy no hay clases", texto="La asistencia se registra de lunes a viernes."
+    )
+
+    assert '<p class="empty-titulo">Hoy no hay clases</p><p>La asistencia' in html
+    assert html.index("<svg") < html.index("Hoy no hay clases")
+
+
+def test_estado_vacio_sin_titulo_no_cambia():
+    icono = render_to_string("iconos/inbox.svg", {"clase": "empty-icono"})
+
+    assert estado_vacio() == (
+        f'<div class="empty">{icono}<p>Aquí verás las sesiones que envíes y su estado.</p></div>'
+    )
+
+
 def test_estado_vacio_sin_hex_ni_style():
     html = estado_vacio(accion="Subir", datos="x")
 

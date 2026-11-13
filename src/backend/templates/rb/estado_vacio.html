@@ -1,5 +1,5 @@
 {% comment %}
-Estado vacío del rebrand (rebrand-us-010, D6). Recibe: icono (nombre de templates/iconos/, decorativo), texto y, opcional,
-accion (texto del botón; con href es un enlace, con datos un botón con data-<datos>, ambos por rb/boton.html).
+Estado vacío del rebrand (rebrand-us-010, D6). Recibe: icono (nombre de templates/iconos/, decorativo), texto, titulo
+(opcional: un párrafo antes del texto; rebrand-us-030, D5) y, opcional, accion (texto del botón; con href es un enlace, con datos un botón con data-<datos>, ambos por rb/boton.html).
 {% endcomment %}
-<div class="empty">{% include "iconos/"|add:icono|add:".svg" with clase="empty-icono" %}<p>{{ texto }}</p>{% if accion %}{% include "rb/boton.html" with texto=accion href=href datos=datos variante="secundario" tipo="button" icono=None clase=None %}{% endif %}</div>
+<div class="empty">{% include "iconos/"|add:icono|add:".svg" with clase="empty-icono" %}{% if titulo %}<p class="empty-titulo">{{ titulo }}</p>{% endif %}<p>{{ texto }}</p>{% if accion %}{% include "rb/boton.html" with texto=accion href=href datos=datos variante="secundario" tipo="button" icono=None clase=None %}{% endif %}</div>
