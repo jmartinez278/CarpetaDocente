@@ -43,11 +43,23 @@ Mientras se envía el formulario, el botón SHALL decir "Ingresando…" con un f
 - **THEN** el botón cambia a "Ingresando…" con el fondo de envío y los campos quedan de solo lectura hasta que llega la respuesta
 
 ### Requirement: Portada del docente
-La portada del docente SHALL saludar al docente por su nombre y mostrar las tarjetas de las tres dimensiones en este orden: Sesiones, Notas y Asistencia, cada una con su título corto, su subtítulo formal y su miniatura esquemática, sin ningún dato que pueda leerse como un registro del docente. Desde US-005, bajo el saludo y fuera del encabezado principal, una línea SHALL mostrar las secciones del docente en el año escolar ABIERTO de su institución, con el formato "2.º grado, sección A" (º ordinal), separadas por " · " y ordenadas por grado y nombre. Sin sección en el año ABIERTO, la línea dice "Tu sección aparecerá cuando el administrador la asigne." Las tarjetas no cambian. Desde US-006, si la docente tiene una sola sección en el año ABIERTO, junto a esa línea (que sigue siendo texto, sin estilo de enlace) va el enlace "Ver estudiantes" con la flecha de acción, de 44 px de alto como mínimo, que abre la lista de la sección; y mientras la sección no tenga estudiantes, debajo aparece el aviso "Tu sección aún no tiene estudiantes" / "Agrégalos para poder tomar asistencia", que desaparece en cuanto la sección tiene estudiantes, también sin recargar la página. Con varias secciones, o sin sección, no hay enlace ni aviso. Desde US-030, el saludo depende de la hora de Lima: "Buenos días" hasta las 11:59, "Buenas tardes" de 12:00 a 18:59 y "Buenas noches" desde las 19:00; y la línea de la sección empieza con la fecha de hoy ("Miércoles 28 de octubre · 2.º grado, sección A"). Con una sola sección, en un día de lunes a viernes, con estudiantes activos y la jornada de hoy sin completar, la tarjeta Asistencia lleva la píldora "Hoy: pendiente", sin enlace propio y descrita en el enlace de la tarjeta; con la jornada completa, el fin de semana o sin estudiantes, no está.
+La portada del docente SHALL saludar al docente por su nombre y mostrar las tarjetas de las tres dimensiones en este orden, que es también el orden de lectura: Asistencia, Sesiones y Notas, cada una con su título corto, su frase de acción y su miniatura esquemática, sin el subtítulo formal de la dimensión y sin ningún dato que pueda leerse como un registro del docente. Las frases son "Marca la asistencia de cada día.", "Envía tu sesión a la dirección y compártela con tus colegas." y "Registra tus notas por competencia para el SIAGIE.". En la computadora, Asistencia es la tarjeta principal y Sesiones y Notas van a su lado; en el celular, las tres se apilan en el mismo orden, sin carrusel. Desde US-005, bajo el saludo y fuera del encabezado principal, una línea SHALL mostrar las secciones del docente en el año escolar ABIERTO de su institución, con el formato "2.º grado, sección A" (º ordinal), separadas por " · " y ordenadas por grado y nombre. Sin sección en el año ABIERTO, la línea dice "Tu sección aparecerá cuando el administrador la asigne." Las tarjetas no cambian. Desde US-006, si la docente tiene una sola sección en el año ABIERTO, junto a esa línea (que sigue siendo texto, sin estilo de enlace) va el enlace "Ver estudiantes" con la flecha de acción, de 44 px de alto como mínimo, que abre la lista de la sección; y mientras la sección no tenga estudiantes, debajo aparece el aviso "Tu sección aún no tiene estudiantes" / "Agrégalos para poder tomar asistencia", que desaparece en cuanto la sección tiene estudiantes, también sin recargar la página. Con varias secciones, o sin sección, no hay enlace ni aviso. Desde US-030, el saludo depende de la hora de Lima: "Buenos días" hasta las 11:59, "Buenas tardes" de 12:00 a 18:59 y "Buenas noches" desde las 19:00; y la línea de la sección empieza con la fecha de hoy ("Miércoles 28 de octubre · 2.º grado, sección A"). Con una sola sección, en un día de lunes a viernes, con estudiantes activos y la jornada de hoy sin completar, la tarjeta Asistencia lleva la píldora "Hoy: pendiente", sin enlace propio y descrita en el enlace de la tarjeta; con la jornada completa, el fin de semana o sin estudiantes, no está.
 
 #### Scenario: Portada al entrar
 - **WHEN** un docente entra al sistema a las 9:00 de Lima
-- **THEN** ve "Buenos días," con su nombre y las tres tarjetas en orden, con sus subtítulos "Planificación de sesiones de aprendizaje", "Registro y control de notas" y "Control de asistencia"
+- **THEN** ve "Buenos días," con su nombre y las tres tarjetas en el orden Asistencia, Sesiones y Notas, con sus frases "Marca la asistencia de cada día.", "Envía tu sesión a la dirección y compártela con tus colegas." y "Registra tus notas por competencia para el SIAGIE.", y ninguna muestra "Planificación de sesiones de aprendizaje", "Registro y control de notas" ni "Control de asistencia"
+
+#### Scenario: Orden de lectura
+- **WHEN** el lector de pantalla o el teclado recorren la portada
+- **THEN** llegan a las tarjetas en el orden Asistencia, Sesiones y Notas, el mismo que se ve
+
+#### Scenario: Tarjetas en el celular
+- **WHEN** la portada se abre a 360 px
+- **THEN** las tres tarjetas se ven apiladas en el orden Asistencia, Sesiones y Notas, sin chips, sin puntos y sin desplazamiento horizontal
+
+#### Scenario: Tarjetas en la computadora
+- **WHEN** la portada se abre a 1280 px
+- **THEN** Asistencia ocupa la columna principal y Sesiones y Notas van a su lado, una sobre otra
 
 #### Scenario: Saludo según la hora
 - **WHEN** el docente abre la portada a las 12:00 y luego a las 19:00 de Lima
@@ -136,25 +148,6 @@ Cada dimensión SHALL tener una bandera de disponibilidad que activa la historia
 - **WHEN** una docente sin sección, o con dos, abre la portada
 - **THEN** la tarjeta Notas se muestra como "Próximamente" y no contiene un enlace
 
-### Requirement: Carrusel de dimensiones en el celular
-Por debajo de 960 px de ancho, las tarjetas SHALL mostrarse en un carrusel que se desplaza en horizontal dentro de su propio contenedor, con chips tocables de 44 px como mínimo que llevan a cada tarjeta y puntos de paginación visibles; la página no se desplaza en horizontal. Desde 960 px, las tres tarjetas van en fila.
-
-#### Scenario: Chip de una tarjeta
-- **WHEN** en un celular de 360 px el docente toca el chip "Notas"
-- **THEN** el carrusel muestra la tarjeta Notas, el chip y el punto de Notas quedan marcados como actuales, y la dirección y el historial del navegador no cambian
-
-#### Scenario: Carrusel sin JavaScript
-- **WHEN** la portada se abre sin JavaScript
-- **THEN** las tres tarjetas siguen accesibles con el desplazamiento y con los chips, que funcionan como enlaces a cada tarjeta
-
-#### Scenario: Tarjeta inicial
-- **WHEN** el docente abre la portada en el celular
-- **THEN** el carrusel muestra la primera dimensión disponible en el orden de las tarjetas o, si no hay ninguna, la primera tarjeta
-
-#### Scenario: Computadora
-- **WHEN** la portada se abre a 1280 px
-- **THEN** las tres tarjetas se ven en fila, sin chips ni puntos
-
 ### Requirement: Inicio de la dirección
 El inicio de la dirección SHALL saludar al usuario por su nombre y mostrar, mientras no exista el panel de consolidados (US-040), el estado vacío "Los consolidados de notas y asistencia estarán aquí en una próxima versión."
 
@@ -227,15 +220,19 @@ Cada pantalla SHALL seguir la preferencia de tema del sistema operativo, con los
 Cada pantalla nueva MUST pasar la revisión automática de accesibilidad (WCAG 2.1, niveles A y AA) sin infracciones críticas ni graves, en tema claro y en tema oscuro, a 360 px y a 1280 px (RNF-008, DoD 7). El contraste de texto queda incluido en la revisión.
 
 #### Scenario: Revisión de cada pantalla
-- **WHEN** se ejecuta la revisión automática sobre el inicio de sesión con el marco del rebrand (normal, con error, con campos vacíos, «Ingresando…» y con el aviso de inactividad), la portada del docente y el inicio de la dirección (cada una con el menú cerrado y abierto) y «sin permiso» (con el ☰ y el menú de la cuenta cerrados, con el ☰ abierto y con el menú de la cuenta abierto), en ambos temas y en ambos anchos
+- **WHEN** se ejecuta la revisión automática sobre el inicio de sesión con el marco del rebrand (normal, con error, con campos vacíos, «Ingresando…» y con el aviso de inactividad), la portada del docente con el marco del rebrand (con una sección, con varias, sin sección, con la sección sin estudiantes, con «Hoy: pendiente», con una tarjeta «Próximamente» mostrando su aviso, con el menú de la cuenta abierto y con el diálogo de Estudiantes abierto), el inicio de la dirección (con el menú cerrado y abierto) y «sin permiso» (con el ☰ y el menú de la cuenta cerrados, con el ☰ abierto y con el menú de la cuenta abierto), en ambos temas y en ambos anchos
 - **THEN** no hay infracciones críticas ni graves
 
 ### Requirement: Sin desplazamiento horizontal
-Ninguna pantalla nueva SHALL desplazarse en horizontal entre 320 px y 1280 px de ancho, en ningún tema; la única excepción es el carrusel de dimensiones dentro de su contenedor (RNF-005).
+Ninguna pantalla nueva SHALL desplazarse en horizontal entre 320 px y 1280 px de ancho, en ningún tema (RNF-005).
 
 #### Scenario: Pantallas a 320 px
 - **WHEN** cada pantalla nueva se abre a 320 px y a 360 px, en ambos temas
 - **THEN** el ancho del documento no supera el de la ventana
+
+#### Scenario: Portada sin desplazamiento interno
+- **WHEN** la portada se abre a 320 px y a 360 px, en ambos temas, con «Hoy: pendiente» y con el aviso de la sección sin estudiantes
+- **THEN** ni el documento ni ningún contenedor de las tarjetas se desplaza en horizontal
 
 ### Requirement: Carga en conexión lenta
 La pantalla de inicio de sesión MUST transferir 2 MB o menos y quedar usable en 5 segundos o menos con el perfil Slow 4G de Chrome DevTools y sin caché (RNF-002).
