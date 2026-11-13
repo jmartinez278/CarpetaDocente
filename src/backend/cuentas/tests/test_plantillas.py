@@ -66,6 +66,9 @@ def test_los_iconos_de_d9_estan_y_llevan_el_aviso_isc():
         # ☰ del marco del rebrand y su destino Inicio (rebrand-base, D4 y D6).
         "menu",
         "house",
+        # «Tu selección» y «Deshacer cambios» de Competencias (rebrand-us-029, D4).
+        "list-checks",
+        "undo-2",
     }
     assert "ISC License" in (CARPETA_ICONOS / "LICENSE-lucide.txt").read_text(encoding="utf-8")
 

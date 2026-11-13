@@ -304,6 +304,20 @@ def test_dialogo_con_descripcion_en_describedby():
     assert re.search(r'id="subir-desc"[^>]*>Tu envío llega a la dirección\.<', html)
 
 
+def test_dialogo_descrito_por_el_cuerpo_sin_parrafo_en_la_cabecera():
+    html = dialogo(descrito_por="texto-salida")
+
+    assert 'aria-describedby="texto-salida"' in etiqueta_apertura(html, "dialog")
+    assert '<p class="small"' not in html
+
+
+def test_dialogo_sin_descrito_por_no_cambia():
+    con_descripcion = dialogo(descripcion="Tu envío.", descripcion_id="d")
+
+    assert 'aria-describedby="d"' in con_descripcion
+    assert dialogo() == dialogo(descrito_por="")
+
+
 def test_dialogo_cuerpo_alcanzable_con_teclado_y_con_nombre():
     html = dialogo()
 

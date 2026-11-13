@@ -11,7 +11,7 @@
 //   mensaje junto a "Guardar" y el borrador intacto (con 409 y "competencias", esas quedan marcadas y bloqueadas); 403 con
 //   HX-Redirect, «sin permiso» (US-004, D6); 200 con HX-Redirect, la sesión venció; red caída u otro código, "No se pudo
 //   guardar". Un guardado posterior quita el aviso.
-// - Celular (bajo 960 px): un área a la vez con la cápsula de flechas, posición y selector. Las marcas de todas las áreas
+// - Celular (hasta 899 px): un área a la vez con la cápsula de flechas, posición y selector. Las marcas de todas las áreas
 //   quedan en el borrador, así que guardar desde otra área guarda el conjunto completo.
 // - Salida: con cambios sin guardar en algún periodo, los enlaces y formularios que salen de la pantalla abren el diálogo
 //   "¿Salir sin guardar?"; recargar o cerrar la pestaña muestra el aviso del navegador (beforeunload).
@@ -41,7 +41,7 @@
   const anuncio = $("[data-anuncio]");
   const alerta = $("[data-alerta]");
   const botones = [...document.querySelectorAll("[data-periodo]")];
-  const movil = window.matchMedia("(max-width: 959px)");
+  const movil = window.matchMedia("(max-width: 899px)");
 
   const ids = casillas.filter((c) => !c.disabled).map((c) => c.value);
   const periodos = new Map(
@@ -158,24 +158,26 @@
     const periodo = periodos.get(actual);
     let titulo = "";
     let texto = "";
+    let icono_ = "nota";
     if (periodo.estado === "ANTERIOR") {
       titulo = `Estás revisando un ${palabra} anterior`;
       texto = "Puedes corregirlo mientras el año esté abierto.";
     } else if (actual === ultimo) {
-      titulo = `Último ${palabra} del año`;
-      texto = "Las competencias que no se trabajaron antes deben tener nivel al cerrar el año. Se incluyen al guardar.";
+      titulo = `${periodo.nombre}: último del año`;
+      texto = `Las competencias que no marcaste en ${palabra}s anteriores quedan marcadas: deben tener nivel al cerrar el año.`;
+      icono_ = "aviso";
     } else {
       return;
     }
     const contenedor = document.createElement("div");
-    contenedor.className = "mensaje__texto";
+    contenedor.className = "message-texto";
     for (const [indice, contenido] of [titulo, texto].entries()) {
       const parrafo = document.createElement("p");
       parrafo.textContent = contenido;
-      if (indice === 0) parrafo.className = "comp-nota__titulo";
+      if (indice === 0) parrafo.className = "message-titulo";
       contenedor.append(parrafo);
     }
-    nota.replaceChildren(icono("nota"), contenedor);
+    nota.replaceChildren(icono(icono_), contenedor);
     nota.hidden = false;
   }
 
@@ -184,12 +186,10 @@
     contenedor.replaceChildren(
       ...lista_.map((m) => {
         const motivo = document.createElement("span");
-        motivo.className = "comp-motivo";
+        motivo.className = m.clase === "anual" ? "motivo motivo--anual" : "motivo";
         const texto = document.createElement("span");
         texto.textContent = m.texto;
-        const svg = icono(m.icono);
-        svg.classList.add("comp-motivo__icono");
-        motivo.append(svg, texto);
+        motivo.append(icono(m.icono), texto);
         return motivo;
       }),
     );
@@ -202,13 +202,13 @@
       if (casilla.disabled) continue;
       const id = casilla.value;
       const razones = motivos(actual, id);
-      const fila = casilla.closest(".comp-competencia");
+      const fila = casilla.closest(".comp-fila");
       casilla.checked = seleccion.has(id);
       if (razones.length) casilla.setAttribute("aria-disabled", "true");
       else casilla.removeAttribute("aria-disabled");
-      fila.classList.toggle("comp-competencia--notas", razones.some((m) => m.clase === "notas"));
+      fila.classList.toggle("comp-fila--notas", razones.some((m) => m.clase === "notas"));
       fila.classList.toggle(
-        "comp-competencia--anual",
+        "comp-fila--anual",
         razones.some((m) => m.clase === "anual") && !razones.some((m) => m.clase === "notas"),
       );
       pintarMotivos(fila, razones);
@@ -238,8 +238,12 @@
     const huboFallo = fallo !== null && fallo.periodo === actual;
     const nombre = periodo.nombre;
 
-    $("[data-conteo]").textContent = `${seleccion.size} de ${datos.total} seleccionadas`;
-    $("[data-conteo-periodo]").textContent = `competencias para ${nombre}`;
+    $("[data-conteo]").textContent = `${seleccion.size}/${datos.total}`;
+    $("[data-conteo-periodo]").textContent = `para el ${nombre}`;
+    $("[data-conteo-lector]").textContent = `${seleccion.size} de ${datos.total} para el ${nombre}`;
+    const progreso = $("[data-progreso]");
+    progreso.max = datos.total;
+    progreso.value = seleccion.size;
     const resumen = $("[data-resumen-bloqueos]");
     resumen.replaceChildren(
       ...[
@@ -283,7 +287,7 @@
     } else if (huboExito) {
       ayuda.textContent = `${seleccion.size} competencias seleccionadas.`;
     } else if (movil.matches) {
-      ayuda.textContent = `${nombre} · ${seleccion.size} de ${datos.total} en total`;
+      ayuda.textContent = `${periodo.corto} · ${seleccion.size} de ${datos.total} en total`;
     } else if (!hayPendientes) {
       ayuda.textContent = `${nombre} · ${seleccion.size} seleccionadas`;
     } else if (periodo.guardado !== null || seleccion.size !== datos.total) {
@@ -297,13 +301,13 @@
     grupo.classList.toggle("comp-guardado--fallo", huboFallo);
     botonGuardar.textContent = enviando ? "Guardando…" : "Guardar";
     botonGuardar.setAttribute("aria-disabled", String(enviando || !hayPendientes));
-    botonGuardar.classList.toggle("boton-principal--enviando", enviando);
+    botonGuardar.classList.toggle("comp-guardar--enviando", enviando);
     botonDeshacer.hidden = enviando || n === 0;
     pintarContadores();
     pintarNavegacion();
   }
 
-  // El enlace «Registrar notas de B*n*» lleva el periodo visible y el área abierta a la hoja (D15).
+  // El enlace «Registrar notas del III bimestre» lleva el periodo visible y el área abierta a la hoja (D15).
   function pintarEnlaceNotas() {
     const enlace = $("[data-registrar-notas]");
     if (!enlace) return;
@@ -362,7 +366,7 @@
         aCargo ? "A cargo del docente de curso." : `${marcadas} de ${delArea.length} seleccionadas.`
       }`,
     );
-    if (movil.matches) $(".comp-navegacion").scrollIntoView({ block: "start", behavior: "instant" });
+    if (movil.matches) $(".comp-capsula").scrollIntoView({ block: "start", behavior: "instant" });
   }
 
   anterior.addEventListener("click", () => cambiarArea(areaActual - 1));
@@ -532,18 +536,19 @@
 
   // --- Salir sin guardar ---
 
-  function listaDePeriodos(numeros) {
-    const nombres = numeros.map((n) => periodos.get(n).nombre);
-    return nombres.length < 2 ? nombres[0] : `${nombres.slice(0, -1).join(", ")} y ${nombres.at(-1)}`;
-  }
-
   function pedirSalida(continuar) {
     const pendientes = periodosConCambios();
     if (!pendientes.length) {
       continuar();
       return;
     }
-    $("#texto-salida").textContent = `Tienes cambios pendientes en ${listaDePeriodos(pendientes)}. Si sales, se perderán.`;
+    $("[data-pendientes]").replaceChildren(
+      ...pendientes.map((n) => {
+        const item = document.createElement("li");
+        item.textContent = periodos.get(n).nombre;
+        return item;
+      }),
+    );
     salidaPendiente = { continuar, foco: document.activeElement };
     if (!dialogo.open) dialogo.showModal();
   }

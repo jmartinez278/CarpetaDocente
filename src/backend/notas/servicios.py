@@ -130,6 +130,8 @@ def universo(usuario, seccion):
 
 # --- D4. Periodos ---
 
+NUMEROS_ROMANOS = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI"}
+
 
 @dataclass
 class PeriodoDeLaSeccion:
@@ -144,6 +146,16 @@ class PeriodoDeLaSeccion:
     @property
     def numero(self):
         return self.periodo.numero
+
+    @property
+    def romano(self):
+        """El número en romanos («IV»), para las pantallas del rebrand."""
+        return NUMEROS_ROMANOS[self.periodo.numero]
+
+    @property
+    def nombre_romano(self):
+        """«IV bimestre» o «III trimestre» (la palabra sale de ``nombre_largo``)."""
+        return f"{self.romano} {self.nombre_largo.split()[0].lower()}"
 
     @property
     def fecha_inicio(self):
