@@ -261,8 +261,17 @@ def ultima_fila_de_personal_social(page):
     casillas.nth(casillas.count() - 2).focus()
     page.keyboard.press("Tab")
     expect(casillas.last).to_be_focused()
-    page.wait_for_timeout(150)
-    return page.locator(".comp-area:visible .comp-fila").last
+    fila = page.locator(".comp-area:visible .comp-fila").last
+    # Espera a que el desplazamiento del foco termine (la fila deja de moverse), sin
+    # un plazo fijo: con la suite completa en marcha tarda más que solo.
+    anterior = None
+    for _ in range(40):
+        actual = fila.bounding_box()["y"]
+        if actual == anterior:
+            break
+        anterior = actual
+        page.wait_for_timeout(100)
+    return fila
 
 
 def test_con_tab_la_ultima_fila_queda_sobre_la_barra(abrir_competencias, ie):
