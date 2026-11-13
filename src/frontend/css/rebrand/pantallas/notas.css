@@ -1,0 +1,1169 @@
+/* Hoja de notas (rebrand-us-020, D1 a D5), del boceto (insumos/rebrand/notas.html y assets/notas/base.css): encabezado con
+   el selector de periodo, tira de áreas con el acceso fijo a Competencias, tarjeta del área con «Rellenar vacías», la hoja
+   a todo el ancho (el nombre cerca del 40 %), la leyenda y la barra café de guardar, fija al pie y fuera de la hoja. Prefijo
+   hn- (hoja de notas). Corte PC/celular de notas.js: 960 px (en el celular, la celda es un botón que abre el panel). */
+
+@layer components {
+  /* --- Página: la hoja usa el ancho de hoja (1280 px), con margen abajo para la barra fija --- */
+  /* --alto-barra: el alto real de la barra fija, medido por notas.js con ResizeObserver; el respaldo es el de dos líneas. La
+     barra flota a --s-4 del pie en PC y, hasta 699 px, va pegada al pie con safe-area-inset-bottom dentro de su alto. */
+  html:has(.hn-barra) {
+    --hn-hueco-barra: calc(var(--alto-barra, 80px) + var(--s-4) + env(safe-area-inset-bottom));
+
+    scroll-padding-bottom: calc(var(--hn-hueco-barra) + var(--s-3));
+  }
+
+  /* DESIGN.md, Layout: la hoja va a 1280 px y la barra y el pie alinean sus bordes con ella. */
+  body:has(.page > .hn) .appbar-inner,
+  body:has(.page > .hn) .footer,
+  .page:has(> .hn) {
+    width: min(calc(100% - 2 * var(--gut)), var(--sheet-max));
+  }
+
+  .page:has(> .hn) {
+    padding-top: var(--s-6);
+    padding-bottom: calc(var(--hn-hueco-barra, 0px) + var(--s-6));
+  }
+
+  .hn :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* --- Encabezado: sección, título y selector de periodo --- */
+  .hn-cabecera {
+    align-items: flex-end;
+    margin-bottom: var(--s-5);
+  }
+
+  .hn-cabecera .small {
+    margin: 0 0 var(--s-1);
+  }
+
+  .hn-periodos ul {
+    display: flex;
+    gap: var(--s-1);
+    margin: 0;
+    padding: var(--s-1);
+    list-style: none;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+  }
+
+  .hn-periodo {
+    display: grid;
+    place-items: center;
+    min-width: 72px;
+    min-height: var(--touch-min);
+    padding: var(--s-1) var(--s-3);
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    line-height: 1.25;
+    text-decoration: none;
+  }
+
+  .hn-periodo strong {
+    font-size: var(--text-body);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hn-periodo__estado {
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  a.hn-periodo:hover {
+    background: var(--row-hover);
+  }
+
+  .hn-periodo[aria-current="page"] {
+    background: var(--action);
+    color: var(--action-ink);
+  }
+
+  .hn-periodo[aria-current="page"] .hn-periodo__estado {
+    color: inherit;
+    opacity: 0.85;
+  }
+
+  .hn-periodo[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .hn-aviso,
+  .hn > .message,
+  .hn > .empty {
+    margin-bottom: var(--s-4);
+  }
+
+  noscript .message {
+    margin-bottom: var(--s-4);
+  }
+
+  /* --- Tira de áreas: se desplaza en su contenedor (RNF-005); Competencias queda fijo a la derecha --- */
+  .hn-tira {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-width: 0;
+    margin-bottom: var(--s-5);
+  }
+
+  /* position: relative contiene el sr-only «Cambios sin guardar» de cada píldora; si no, estira la página. */
+  .hn-tira__lista {
+    position: relative;
+    display: flex;
+    flex: 1;
+    gap: var(--s-2);
+    min-width: 0;
+    padding-block: 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  }
+
+  .hn-tira__lista::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hn-pildora {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: var(--touch-min);
+    padding: 10px var(--s-4);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    color: var(--ink);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .hn-pildora:first-child {
+    margin-left: var(--s-4);
+  }
+
+  .hn-pildora:last-child {
+    margin-right: var(--s-4);
+  }
+
+  .hn-pildora:hover {
+    background: var(--row-hover);
+  }
+
+  .hn-pildora[aria-pressed="true"] {
+    background: var(--action);
+    border-color: var(--action);
+    color: var(--action-ink);
+    font-weight: 500;
+  }
+
+  .hn-pildora--curso {
+    background: transparent;
+    border-style: dashed;
+    color: var(--muted);
+  }
+
+  .hn-pildora:disabled {
+    cursor: default;
+  }
+
+  .hn-punto {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  .hn-tira__separador {
+    flex: none;
+    width: 1px;
+    height: 28px;
+    background: var(--line);
+  }
+
+  .hn-ir-competencias {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: var(--touch-min);
+    padding: 10px var(--s-4);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    color: var(--action);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .hn-ir-competencias:hover {
+    background: var(--row-hover);
+  }
+
+  .hn-ir-competencias .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* --- Tarjeta del área --- */
+  .hn-hoja {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+    overflow: clip;
+  }
+
+  .hn-hoja:focus {
+    outline: none;
+  }
+
+  .hn-hoja__cabecera {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-5) var(--s-5) var(--s-4);
+  }
+
+  .hn-hoja__cabecera h2 {
+    font-size: var(--text-section);
+    line-height: var(--leading-section);
+    letter-spacing: var(--tracking-section);
+  }
+
+  .hn-hoja__detalle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--s-3);
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .hn-rellenar-area {
+    flex: none;
+  }
+
+  .hn-borrador,
+  .hn-mensaje {
+    margin: 0 var(--s-5) var(--s-4);
+  }
+
+  .hn-borrador {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-4);
+    padding: var(--s-3) var(--s-4);
+    background: var(--warn-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    color: var(--warn-ink);
+  }
+
+  .hn-borrador strong {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-weight: 500;
+  }
+
+  .hn-borrador .icono,
+  .hn-mensaje .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  .hn-borrador .small {
+    color: inherit;
+  }
+
+  .hn-borrador__acciones {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  .hn-borrador .btn,
+  .hn-mensaje .btn {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .hn-mensaje .message-texto .btn {
+    justify-content: flex-start;
+    margin-top: var(--s-1);
+    padding-inline: 0;
+    text-align: left;
+  }
+
+  /* --- Tabla (la pinta notas.js): nombre cerca del 40 %, las competencias reparten el resto --- */
+  .hn-tabla {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+  }
+
+  .hn-tabla col:first-child {
+    width: 40%;
+  }
+
+  .hn-tabla th {
+    font-weight: 500;
+    text-align: left;
+  }
+
+  /* Cabecera C1…Cn a la vista al bajar la página (un solo desplazamiento vertical). */
+  .hn-tabla thead th {
+    position: sticky;
+    top: var(--bar-height);
+    z-index: 5;
+    padding: var(--s-3) var(--s-2);
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: var(--text-label);
+    vertical-align: bottom;
+  }
+
+  .hn-th-est {
+    padding-left: 72px !important;
+  }
+
+  .hn-comp {
+    text-align: center !important;
+  }
+
+  .hn-comp__boton {
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    padding: 0 var(--s-2);
+    background: none;
+    border: 0;
+    color: var(--ink);
+    font-size: var(--text-label);
+    font-weight: 500;
+    text-decoration: underline dotted var(--line-strong);
+    text-underline-offset: 4px;
+    cursor: help;
+  }
+
+  /* Hasta 1.14 (D5) cada columna conserva su «Rellenar vacías»: discreto, debajo de Cn. */
+  .hn-rellenar {
+    display: block;
+    width: 100%;
+    min-height: var(--touch-min);
+    padding: 0 var(--s-1);
+    background: none;
+    border: 0;
+    color: var(--action);
+    font-size: var(--text-support);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .hn-tabla tbody th,
+  .hn-tabla tbody td {
+    border-bottom: 1px solid var(--grid-line);
+  }
+
+  .hn-tabla tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hn-tabla tbody tr:hover > * {
+      background: var(--row-hover);
+    }
+  }
+
+  .hn-nombre {
+    padding: var(--s-3) var(--s-4);
+    font-weight: 400 !important;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+
+  .hn-nombre__texto {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-4);
+  }
+
+  .hn-numero {
+    flex: none;
+    width: 40px;
+    color: var(--muted);
+    font-size: var(--text-support);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .hn-apellidos {
+    font-weight: 500;
+  }
+
+  .hn-estado-fila,
+  .hn-completa-marca {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    margin: var(--s-1) 0 0 56px;
+    color: var(--muted);
+    font-size: var(--text-support);
+    text-transform: none;
+  }
+
+  .hn-completa-marca .icono {
+    width: 16px;
+    height: 16px;
+  }
+
+  .hn-inactiva > * {
+    color: var(--muted);
+  }
+
+  .hn-corte th {
+    padding: var(--s-3) var(--s-4);
+    background: var(--grid-head);
+    color: var(--muted);
+    font-size: var(--text-label);
+    font-weight: 500;
+  }
+
+  /* Celda: nivel, icono de conclusión y marca de cambio en la esquina. */
+  .hn-tabla td {
+    position: relative;
+    padding: 0;
+    text-align: center;
+  }
+
+  .hn-celda {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    padding-left: var(--touch-min);
+  }
+
+  .hn-tabla td[data-cambio]::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    content: "";
+    border-style: solid;
+    border-width: 0 10px 10px 0;
+    border-color: transparent var(--changed) transparent transparent;
+  }
+
+  .hn-nivel {
+    width: var(--touch-min);
+    min-height: var(--touch-min);
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    text-transform: uppercase;
+    caret-color: var(--action);
+    scroll-margin-block: calc(var(--bar-height) + 64px) var(--s-3);
+  }
+
+  .hn-nivel:hover {
+    background: var(--sel-bg);
+  }
+
+  .hn-nivel:focus {
+    background: var(--sel-bg);
+  }
+
+  .hn-nivel::placeholder {
+    color: var(--muted);
+    font-weight: 400;
+    opacity: 1;
+  }
+
+  .hn-nota {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: var(--touch-min);
+    height: var(--touch-min);
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: var(--r-sm);
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .hn-nota:hover {
+    background: var(--sel-bg);
+    color: var(--action);
+  }
+
+  .hn-nota .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hn-pendiente {
+    color: var(--error);
+  }
+
+  .hn-invalida {
+    box-shadow: inset 0 0 0 2px var(--error);
+  }
+
+  .hn-invalida .hn-nivel,
+  .hn-invalida .hn-celda-movil {
+    color: var(--error);
+  }
+
+  .hn-celda-movil {
+    display: none;
+  }
+
+  /* Estados vacíos del área (docente de curso, sin competencias marcadas). */
+  .hn-vacio {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-2);
+    padding: var(--s-4) var(--s-5) var(--s-6);
+    color: var(--muted);
+  }
+
+  .hn-vacio h3 {
+    color: var(--ink);
+    font-size: var(--text-subsection);
+    font-weight: 500;
+  }
+
+  .hn-vacio > .icono {
+    width: 28px;
+    height: 28px;
+  }
+
+  .hn-vacio a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: var(--touch-min);
+    color: var(--action);
+    font-weight: 500;
+  }
+
+  .hn-vacio a .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* --- Leyenda bajo la hoja --- */
+  .hn-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin-top: var(--s-4);
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .hn-leyenda__cambio {
+    display: inline-block;
+    margin-right: var(--s-2);
+    border-style: solid;
+    border-width: 0 10px 10px 0;
+    border-color: transparent var(--changed) transparent transparent;
+  }
+
+  .hn-leyenda kbd {
+    padding: 0 4px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font: inherit;
+    font-size: var(--text-support);
+  }
+
+  .hn-leyenda p:empty {
+    display: none;
+  }
+
+  .hn-solo-celular {
+    display: none;
+  }
+
+  /* --- Barra café de guardar: una sola, fija al pie, fuera de la hoja --- */
+  .hn-barra {
+    position: fixed;
+    bottom: var(--s-4);
+    left: 50%;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    width: min(calc(100% - 2 * var(--gut)), var(--sheet-max));
+    padding: var(--s-3) var(--s-3) var(--s-3) var(--s-5);
+    background: var(--cocoa);
+    border: 1px solid var(--cocoa-line);
+    border-radius: var(--r-lg);
+    color: var(--cocoa-ink);
+    transform: translateX(-50%);
+  }
+
+  .hn-barra :focus-visible {
+    outline-color: var(--cocoa-ink);
+  }
+
+  .hn-barra__estado {
+    min-width: 0;
+  }
+
+  .hn-barra__linea,
+  .hn-cierre {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--s-2);
+    font-size: var(--text-label);
+  }
+
+  .hn-estado,
+  .hn-cierre {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: var(--text-body);
+    font-weight: 500;
+  }
+
+  .hn-barra .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  .hn-estado--error .icono {
+    color: var(--gold);
+  }
+
+  .hn-faltantes {
+    min-height: var(--touch-min);
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--cocoa-ink);
+    font-size: var(--text-label);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .hn-sin-faltantes,
+  .hn-no-validos {
+    font-size: var(--text-label);
+  }
+
+  .hn-barra__alcance {
+    color: var(--cocoa-muted);
+    font-size: var(--text-label);
+  }
+
+  .hn-guardar {
+    flex: none;
+    min-width: 144px;
+    background: var(--cocoa-ink);
+    border-color: var(--cocoa-ink);
+    color: var(--cocoa);
+  }
+
+  .hn-guardar[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  html .hn-guardar:hover:not([aria-disabled="true"]) {
+    background: color-mix(in srgb, var(--cocoa-ink) 92%, var(--cocoa));
+  }
+
+  /* --- Lista de niveles, ayuda de la competencia y recuadro de conclusión (fijos; notas.js los coloca) --- */
+  .hn-lista {
+    position: fixed;
+    z-index: 25;
+    display: flex;
+    gap: var(--s-1);
+    padding: var(--s-1);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-editor);
+  }
+
+  .hn-lista [role="option"] {
+    display: grid;
+    place-items: center;
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .hn-lista [role="option"][aria-selected="true"] {
+    background: var(--action);
+    color: var(--action-ink);
+  }
+
+  .hn-lista strong {
+    font-weight: 500;
+  }
+
+  .hn-tip {
+    position: fixed;
+    z-index: 30;
+    max-width: 320px;
+    padding: var(--s-2) var(--s-3);
+    background: var(--ink);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-toast);
+    color: var(--g-main);
+    font-size: var(--text-label);
+    line-height: 1.4;
+  }
+
+  .hn-editor {
+    position: fixed;
+    z-index: 25;
+    width: 344px;
+    max-width: calc(100vw - 32px);
+    padding: var(--s-4);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-editor);
+  }
+
+  .hn-editor__cabecera {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--s-2);
+    margin-bottom: var(--s-3);
+  }
+
+  .hn-editor__cabecera h2 {
+    padding-top: 10px;
+    font-size: var(--text-body);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .hn-editor__texto {
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  .hn-editor .small,
+  .hn-panel__conclusion .small {
+    margin-top: var(--s-2);
+  }
+
+  .hn-editor__pie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--s-3);
+  }
+
+  .hn-error {
+    color: var(--error) !important;
+  }
+
+  /* --- Panel del celular: hoja abajo con los niveles en botones grandes --- */
+  .hn-panel {
+    position: fixed;
+    inset: auto 0 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - var(--s-6));
+    margin: 0;
+    padding: var(--s-4) var(--gut) calc(var(--s-4) + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-bottom: 0;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    color: var(--ink);
+  }
+
+  .hn-panel::backdrop {
+    background: rgb(48 39 31 / 0.4);
+  }
+
+  html[data-theme="dark"] .hn-panel::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .hn-panel::backdrop {
+      background: rgb(0 0 0 / 0.55);
+    }
+  }
+
+  body:has(.hn-panel[open]) {
+    overflow: hidden;
+  }
+
+  .hn-panel__cabecera {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--s-3);
+  }
+
+  .hn-panel__cabecera h2 {
+    font-size: var(--text-subsection);
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+
+  .hn-panel__competencia {
+    margin: var(--s-2) 0 var(--s-4);
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .hn-panel__niveles {
+    margin: 0 0 var(--s-4);
+    padding: 0;
+    border: 0;
+  }
+
+  .hn-panel__niveles legend {
+    margin-bottom: var(--s-2);
+    font-size: var(--text-label);
+    font-weight: 500;
+  }
+
+  #panel-niveles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-2);
+  }
+
+  .hn-nivel-grande {
+    min-height: 64px;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    color: var(--ink);
+    font-size: var(--text-section);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .hn-nivel-grande[aria-pressed="true"] {
+    background: var(--action);
+    border-color: var(--action);
+    color: var(--action-ink);
+  }
+
+  .hn-nivel-grande:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .hn-panel__conclusion {
+    margin-bottom: var(--s-4);
+  }
+
+  .hn-conclusion-etiqueta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-3);
+    margin-bottom: var(--s-2);
+    font-size: var(--text-label);
+    font-weight: 500;
+  }
+
+  .hn-conclusion-etiqueta span:not(.small) {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .hn-panel__rechazo {
+    display: flex;
+    gap: var(--s-2);
+    margin-bottom: var(--s-3);
+    color: var(--error);
+    font-size: var(--text-label);
+  }
+
+  .hn-panel__rechazo .icono {
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+
+  .hn-siguiente {
+    width: 100%;
+    margin-top: var(--s-3);
+  }
+
+  /* --- Diálogos: «Rellenar vacías» y la lista de «¿Salir sin guardar?» --- */
+  .hn-relleno {
+    display: flex;
+    gap: var(--s-4);
+    margin: var(--s-4) 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .hn-relleno legend {
+    margin-bottom: var(--s-2);
+    font-size: var(--text-label);
+    font-weight: 500;
+  }
+
+  .hn-relleno label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: var(--touch-min);
+    font-weight: 500;
+  }
+
+  .hn-relleno input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--action);
+  }
+
+  .hn-relleno__columna {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
+    font-size: var(--text-label);
+    font-weight: 500;
+  }
+
+  /* --- PC: la celda de teclado y el icono de conclusión; en el celular, el botón que abre el panel --- */
+  @media (max-width: 959px) {
+    .hn-nivel,
+    .hn-nota,
+    .hn-rellenar {
+      display: none;
+    }
+
+    .hn-celda {
+      padding: 0;
+    }
+
+    .hn-celda-movil {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      width: 100%;
+      min-height: 64px;
+      padding: var(--s-1) 0;
+      background: transparent;
+      border: 0;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .hn-celda-movil .icono {
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+    }
+
+    .hn-celda-movil .hn-pendiente .icono {
+      color: var(--error);
+    }
+
+    .hn-solo-pc {
+      display: none;
+    }
+
+    .hn-solo-celular {
+      display: block;
+    }
+
+    .hn-tabla col:first-child {
+      width: auto;
+    }
+
+    .hn-tabla col:not(:first-child) {
+      width: 48px;
+    }
+
+    .hn-th-est {
+      padding-left: var(--s-3) !important;
+    }
+
+    .hn-tabla thead th.hn-comp {
+      padding-inline: 0;
+    }
+
+    .hn-numero {
+      display: none;
+    }
+
+    .hn-nombre {
+      padding: var(--s-3);
+    }
+
+    .hn-estado-fila,
+    .hn-completa-marca {
+      margin-left: 0;
+    }
+  }
+
+  /* --- Hasta 699 px: encabezado en columna, selector a todo el ancho, Competencias solo con su icono, barra a todo el ancho --- */
+  @media (max-width: 699px) {
+    html:has(.hn-barra) {
+      --hn-hueco-barra: var(--alto-barra, 136px);
+    }
+
+    .page:has(> .hn) {
+      padding-top: var(--s-5);
+    }
+
+    .hn-cabecera {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--s-4);
+    }
+
+    .hn-periodos ul {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    }
+
+    .hn-periodo {
+      min-width: 0;
+      padding-inline: var(--s-1);
+    }
+
+    .hn-ir-competencias {
+      justify-content: center;
+      width: var(--touch-min);
+      padding: 10px;
+      border-radius: 50%;
+    }
+
+    .hn-ir-competencias__texto {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .hn-hoja__cabecera {
+      padding: var(--s-4);
+    }
+
+    .hn-rellenar-area {
+      padding-inline: var(--s-3);
+      font-size: var(--text-label);
+    }
+
+    .hn-borrador,
+    .hn-mensaje {
+      margin-inline: var(--s-4);
+    }
+
+    .hn-barra {
+      bottom: 0;
+      left: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--s-2);
+      width: 100%;
+      padding: var(--s-3) var(--gut) calc(var(--s-3) + env(safe-area-inset-bottom));
+      border-bottom: 0;
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      transform: none;
+    }
+
+    .hn-guardar {
+      width: 100%;
+    }
+  }
+
+  /* Cinco competencias o más bajo 360 px: el nombre en su línea y las celdas debajo (se retira en 1.11, D2). */
+  @media (max-width: 359px) {
+    .hn-tabla--apilada,
+    .hn-tabla--apilada tbody {
+      display: block;
+    }
+
+    .hn-tabla--apilada thead,
+    .hn-tabla--apilada colgroup {
+      display: none;
+    }
+
+    .hn-tabla--apilada tbody tr {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      border-bottom: 1px solid var(--grid-line);
+    }
+
+    .hn-tabla--apilada tbody tr > th {
+      grid-column: 1 / -1;
+      border-bottom: 0;
+    }
+
+    .hn-tabla--apilada tbody tr.hn-corte {
+      display: block;
+    }
+
+    .hn-tabla--apilada .hn-celda-movil::before {
+      color: var(--muted);
+      content: attr(data-etiqueta);
+      font-size: var(--text-support);
+      font-weight: 400;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .hn-pildora[aria-pressed="true"],
+    .hn-periodo[aria-current="page"],
+    .hn-nivel-grande[aria-pressed="true"] {
+      outline: 2px solid Highlight;
+    }
+
+    .hn-punto {
+      background: CanvasText;
+    }
+
+    .hn-invalida {
+      outline: 1px solid LinkText;
+    }
+  }
+}

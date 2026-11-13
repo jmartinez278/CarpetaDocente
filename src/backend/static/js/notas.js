@@ -28,7 +28,9 @@
   const $ = (id) => document.getElementById(id);
   const movil = window.matchMedia("(max-width: 959px)");
   const periodo = datos.periodo;
-  const iconos = new Map([...document.querySelectorAll("template[data-iconos] [data-icono]")].map((el) => [el.dataset.icono, el.innerHTML]));
+  // Los íconos viven en el contenido del <template>, que querySelectorAll del documento no alcanza.
+  const moldes = document.querySelector("template[data-iconos]")?.content.querySelectorAll("[data-icono]") ?? [];
+  const iconos = new Map([...moldes].map((el) => [el.dataset.icono, el.innerHTML]));
   const icono = (nombre) => iconos.get(nombre) ?? "";
   const escapar = (valor) =>
     String(valor).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -285,11 +287,11 @@
     const [titulo, motivo] = textoDescarte(a.descartadas);
     const apagado = guardando ? " disabled" : "";
     const fecha = recuperado ? fechaBorrador(a.recuperado) : "";
-    const descarte = a.descartadas ? `<p class="notas-ayuda">${escapar(titulo)}. ${escapar(motivo)}</p>` : "";
+    const descarte = a.descartadas ? `<p class="small">${escapar(titulo)}. ${escapar(motivo)}</p>` : "";
     const contenido = recuperado
-      ? `<div><strong>${icono("reloj")}Cambios sin guardar${fecha ? ` del ${escapar(fecha)}` : ""}</strong><p class="notas-ayuda">Conservados en este dispositivo.</p>${descarte}</div><div class="notas-borrador__acciones"><button type="button" class="notas-texto" data-guardar-borrador${apagado}>Guardar</button><button type="button" class="notas-texto" data-descartar${apagado}>Descartar</button></div>`
+      ? `<div><strong>${icono("reloj")}Cambios sin guardar${fecha ? ` del ${escapar(fecha)}` : ""}</strong><p class="small">Conservados en este dispositivo.</p>${descarte}</div><div class="hn-borrador__acciones"><button type="button" class="btn btn--text" data-guardar-borrador${apagado}>Guardar</button><button type="button" class="btn btn--text" data-descartar${apagado}>Descartar</button></div>`
       : a.descartadas
-        ? `<div><strong>${icono("aviso")}${escapar(titulo)}</strong><p class="notas-ayuda">${escapar(motivo)}</p></div>`
+        ? `<div><strong>${icono("aviso")}${escapar(titulo)}</strong><p class="small">${escapar(motivo)}</p></div>`
         : "";
     caja.hidden = !contenido;
     if (contenido !== contenidoBorrador) caja.innerHTML = contenido;
@@ -405,8 +407,8 @@
   function mensaje(titulo, texto, tipo = "", extra = "") {
     const caja = $("mensaje-guardado");
     caja.hidden = false;
-    caja.className = `mensaje notas-mensaje${tipo ? ` notas-mensaje--${tipo}` : ""}`;
-    caja.innerHTML = `${icono(tipo === "error" || tipo === "aviso" ? "aviso" : "check")}<div class="mensaje__texto"><strong>${escapar(titulo)}</strong><p>${texto}</p>${extra}</div>`;
+    caja.className = `message hn-mensaje message--${tipo || "exito"}`;
+    caja.innerHTML = `${icono(tipo === "error" || tipo === "aviso" ? "aviso" : "check")}<div class="message-texto"><p class="message-titulo">${escapar(titulo)}</p><p>${texto}</p>${extra}</div>`;
   }
   const ocultarMensaje = () => {
     $("mensaje-guardado").hidden = true;
@@ -429,15 +431,15 @@
     const falta = invalida(c);
     const lectura = area().lista[r].lectura;
     const texto = falta ? "Falta conclusión" : lectura ? "Leer conclusión" : "Ver conclusión anotada";
-    return `<button type="button" class="notas-nota${falta ? " notas-pendiente" : ""}" data-nota="${r}:${k}" data-est="${escapar(area().lista[r].id)}" data-comp="${escapar(columnas()[k].id)}" aria-label="${texto} de ${escapar(area().lista[r].nombre)}, ${escapar(etiquetaDe(k))}${lectura ? ", solo lectura" : ""}" title="${texto}">${icono(falta ? "aviso" : "nota")}</button>`;
+    return `<button type="button" class="hn-nota${falta ? " hn-pendiente" : ""}" data-nota="${r}:${k}" data-est="${escapar(area().lista[r].id)}" data-comp="${escapar(columnas()[k].id)}" aria-label="${texto} de ${escapar(area().lista[r].nombre)}, ${escapar(etiquetaDe(k))}${lectura ? ", solo lectura" : ""}" title="${texto}">${icono(falta ? "aviso" : "nota")}</button>`;
   }
 
   function botonMovil(r, k, c, etiqueta) {
     const a = area();
     const rechazo = a.rechazos.get(idCelda(r, k));
     const nivel = escapar(rechazo ?? c.nivel) || "—";
-    const marca = requiere(c) ? `<span class="${invalida(c) ? "notas-pendiente" : ""}">${icono(invalida(c) ? "aviso" : "nota")}</span>` : "";
-    return `<button class="notas-celda-movil" type="button" data-r="${r}" data-k="${k}" data-est="${escapar(a.lista[r].id)}" data-comp="${escapar(columnas()[k].id)}" data-etiqueta="${escapar(etiquetaDe(k))}" aria-label="${escapar(etiqueta)}${a.lista[r].lectura ? ", solo lectura" : ""}">${nivel}${marca}</button>`;
+    const marca = requiere(c) ? `<span class="${invalida(c) ? "hn-pendiente" : ""}">${icono(invalida(c) ? "aviso" : "nota")}</span>` : "";
+    return `<button class="hn-celda-movil" data-celda-movil type="button" data-r="${r}" data-k="${k}" data-est="${escapar(a.lista[r].id)}" data-comp="${escapar(columnas()[k].id)}" data-etiqueta="${escapar(etiquetaDe(k))}" aria-label="${escapar(etiqueta)}${a.lista[r].lectura ? ", solo lectura" : ""}">${nivel}${marca}</button>`;
   }
 
   function celdaConError(r, k, c) {
@@ -447,12 +449,18 @@
     return a.rechazos.has(clave) || a.choques.has(clave) || (validando && invalida(c));
   }
 
+  // «QUISPE, ANA» con los apellidos en su propio <span> (el boceto los destaca).
+  function nombreConApellidos(nombre) {
+    const [apellidos, ...resto] = nombre.split(", ");
+    return resto.length ? `<span class="hn-apellidos">${escapar(apellidos)},</span> ${escapar(resto.join(", "))}` : escapar(nombre);
+  }
+
   function dibujarFila(r) {
     const a = area();
     const persona = a.lista[r];
     const completa = filtro && filaCompleta(r);
     const encabezado = persona.lectura && (r === a.activos)
-      ? `<tr class="notas-corte" role="row"><th colspan="${1 + a.columnas.length}" role="rowheader" scope="colgroup">Con notas de este bimestre · Solo lectura</th></tr>`
+      ? `<tr class="hn-corte" role="row"><th colspan="${1 + a.columnas.length}" role="rowheader" scope="colgroup">Con notas de este bimestre · Solo lectura</th></tr>`
       : "";
     const celdas = a.columnas
       .map((columna, k) => {
@@ -460,20 +468,20 @@
         const error = celdaConError(r, k, c);
         const etiqueta = etiquetaCelda(r, k, c);
         const rechazo = a.rechazos.get(idCelda(r, k));
-        return `<td role="gridcell" class="${error ? "notas-invalida" : ""}"${persona.lectura ? ' aria-readonly="true"' : ""}><div class="notas-celda"><input class="notas-nivel" type="text" maxlength="2" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="none" aria-haspopup="listbox" aria-expanded="false" aria-controls="lista-niveles"${requiere(c) ? ' aria-keyshortcuts="Alt+Enter"' : ""} data-r="${r}" data-k="${k}" data-est="${escapar(persona.id)}" data-comp="${escapar(columna.id)}" aria-label="${escapar(etiqueta)}" value="${escapar(rechazo ?? c.nivel)}" placeholder="—"${persona.lectura ? ' readonly tabindex="-1"' : ""}${error ? ' aria-invalid="true"' : ""}>${indicadorNota(r, k, c)}${botonMovil(r, k, c, etiqueta)}</div></td>`;
+        return `<td role="gridcell" class="${error ? "hn-invalida" : ""}"${a.cur.has(idCelda(r, k)) ? " data-cambio" : ""}${persona.lectura ? ' aria-readonly="true"' : ""}><div class="hn-celda"><input class="hn-nivel" data-celda type="text" maxlength="2" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="none" aria-haspopup="listbox" aria-expanded="false" aria-controls="lista-niveles"${requiere(c) ? ' aria-keyshortcuts="Alt+Enter"' : ""} data-r="${r}" data-k="${k}" data-est="${escapar(persona.id)}" data-comp="${escapar(columna.id)}" aria-label="${escapar(etiqueta)}" value="${escapar(rechazo ?? c.nivel)}" placeholder="—"${persona.lectura ? ' readonly tabindex="-1"' : ""}${error ? ' aria-invalid="true"' : ""}>${indicadorNota(r, k, c)}${botonMovil(r, k, c, etiqueta)}</div></td>`;
       })
       .join("");
-    return `${encabezado}<tr role="row" data-fila="${r}" class="${persona.lectura ? "notas-inactiva" : ""}${completa ? " notas-fila-completa" : ""}"><th scope="row" role="rowheader" class="notas-nombre"><span class="notas-nombre__texto"><span class="notas-numero" aria-hidden="true">${r + 1}</span><span>${escapar(persona.nombre)}</span></span>${persona.lectura ? `<span class="notas-estado-fila">${escapar(persona.estado)} · Solo lectura</span>` : ""}${filtro ? `<span class="notas-completa-marca"${completa ? "" : " hidden"}>${icono("check")}Completa</span>` : ""}</th>${celdas}</tr>`;
+    return `${encabezado}<tr role="row" data-fila="${r}" class="${persona.lectura ? "hn-inactiva" : ""}${completa ? " hn-fila-completa" : ""}"><th scope="row" role="rowheader" class="hn-nombre"><span class="hn-nombre__texto"><span class="hn-numero" aria-hidden="true">${String(r + 1).padStart(2, "0")}</span><span>${nombreConApellidos(persona.nombre)}</span></span>${persona.lectura ? `<span class="hn-estado-fila">${escapar(persona.estado)} · Solo lectura</span>` : ""}${filtro ? `<span class="hn-completa-marca"${completa ? "" : " hidden"}>${icono("check")}Completa</span>` : ""}</th>${celdas}</tr>`;
   }
 
   function dibujarTabla() {
     const a = area();
     const n = a.columnas.length;
     const filas = a.lista.map((_, r) => (filtro && !filtro.filas.has(r) ? "" : dibujarFila(r))).join("");
-    $("superficie-hoja").innerHTML = `<table class="notas-tabla${n >= 5 ? " notas-tabla--apilada" : ""}" role="grid" aria-label="Niveles y conclusiones de ${escapar(a.nombre)}, ${escapar(periodo.nombre)}"><colgroup><col>${a.columnas.map(() => "<col>").join("")}</colgroup><thead><tr role="row"><th scope="col" class="notas-th-est" role="columnheader">Estudiante</th>${a.columnas
+    $("superficie-hoja").innerHTML = `<table class="hn-tabla${n >= 5 ? " hn-tabla--apilada" : ""}" role="grid" aria-label="Niveles y conclusiones de ${escapar(a.nombre)}, ${escapar(periodo.nombre)}"><colgroup><col>${a.columnas.map(() => "<col>").join("")}</colgroup><thead><tr role="row"><th scope="col" class="hn-th-est" role="columnheader">Apellidos y nombres</th>${a.columnas
       .map(
         (c, k) =>
-          `<th scope="col" class="notas-comp" role="columnheader"><button class="notas-comp__boton" type="button" data-competencia="${k}" aria-label="${escapar(c.etiqueta)}: ${escapar(c.nombre)}">${escapar(c.etiqueta)}</button><button type="button" class="notas-rellenar" data-rellenar="${k}" aria-label="Rellenar vacías de ${escapar(c.etiqueta)}">Rellenar vacías</button></th>`,
+          `<th scope="col" class="hn-comp" role="columnheader"><button class="hn-comp__boton" type="button" data-competencia="${k}" aria-label="${escapar(c.etiqueta)}: ${escapar(c.nombre)}">${escapar(c.etiqueta)}</button><button type="button" class="hn-rellenar" data-rellenar="${k}" aria-label="Rellenar vacías de ${escapar(c.etiqueta)}">Rellenar vacías</button></th>`,
       )
       .join("")}</tr></thead><tbody>${filas}</tbody></table>`;
   }
@@ -486,7 +494,7 @@
       boton.querySelector("[data-punto]")?.remove();
       boton.querySelector("[data-punto-sr]")?.remove();
       if (a && cambios(a) > 0) {
-        boton.insertAdjacentHTML("beforeend", '<span class="notas-punto" data-punto aria-hidden="true"></span><span class="sr-only" data-punto-sr> · Cambios sin guardar</span>');
+        boton.insertAdjacentHTML("beforeend", '<span class="hn-punto" data-punto aria-hidden="true"></span><span class="sr-only" data-punto-sr> · Cambios sin guardar</span>');
       }
     }
     const enlace = document.querySelector("[data-ir-competencias]");
@@ -538,8 +546,8 @@
     validando = false;
     if (!marcable) {
       $("superficie-hoja").innerHTML = a.aCargo
-        ? `<div class="notas-vacio"><h3>Esta área la registra el docente de curso</h3><p>Las notas de ${escapar(a.nombre)} están a su cargo. Elige otra área para registrar tus niveles de logro.</p></div>`
-        : `<div class="notas-vacio">${icono("notas")}<h3>No hay competencias marcadas</h3><p>Marca las competencias que trabajaste en ${escapar(a.nombre)} durante ${escapar(periodo.nombre)} para empezar a registrar sus niveles.</p><a href="${escapar(datos_competencias())}">Ir a Competencias ${icono("derecha")}</a></div>`;
+        ? `<div class="hn-vacio"><h3>Esta área la registra el docente de curso</h3><p>Las notas de ${escapar(a.nombre)} están a su cargo. Elige otra área para registrar tus niveles de logro.</p></div>`
+        : `<div class="hn-vacio">${icono("notas")}<h3>No hay competencias marcadas</h3><p>Marca las competencias que trabajaste en ${escapar(a.nombre)} durante ${escapar(periodo.nombre)} para empezar a registrar sus niveles.</p><a href="${escapar(datos_competencias())}">Ir a Competencias ${icono("derecha")}</a></div>`;
       dibujarBorrador();
       dibujarPildoras();
       return;
@@ -560,7 +568,7 @@
     const nv = noValidos();
     const completa = !f && !nv && !n && !guardando && !errorRed;
     const estado = $("estado-guardado");
-    estado.className = `notas-estado${errorRed ? " notas-estado--error" : exito ? " notas-estado--exito" : ""}`;
+    estado.className = `hn-estado${errorRed ? " hn-estado--error" : exito ? " hn-estado--exito" : ""}`;
     const textoEstado = guardando ? "Guardando…" : errorRed ? "No se pudo guardar" : n ? `${n} ${n === 1 ? "cambio" : "cambios"} sin guardar` : "Sin cambios";
     estado.innerHTML = `${icono(guardando || n ? "reloj" : "check")}${escapar(textoEstado)}`;
     const teniaFoco = document.activeElement === $("faltantes");
@@ -585,7 +593,7 @@
       $("conteo-vivo").textContent = f ? `${textoFaltan(f)} en ${a.nombre}.` : n ? `${a.nombre}: sin notas faltantes.` : `${a.nombre} completa.`;
     }
     ultimoConteo = { clave: codigo, f };
-    $("alcance").textContent = `Solo ${a.nombre} · ${periodo.nombre}`;
+    $("alcance").textContent = `${a.nombre} · ${periodo.nombre}`;
     $("guardar").textContent = guardando ? "Guardando…" : errorRed ? "Reintentar" : "Guardar";
     $("guardar").setAttribute("aria-disabled", String(guardando || (!n && !errorRed)));
     dibujarBorrador();
@@ -593,7 +601,7 @@
 
   function actualizarCelda(r, k) {
     const c = celda(r, k);
-    const input = document.querySelector(`.notas-nivel[data-r="${r}"][data-k="${k}"]`);
+    const input = document.querySelector(`.hn-nivel[data-r="${r}"][data-k="${k}"]`);
     if (!input) return;
     const a = area();
     const rechazo = a.rechazos.get(idCelda(r, k));
@@ -605,15 +613,16 @@
     if (error) input.setAttribute("aria-invalid", "true");
     if (requiere(c)) input.setAttribute("aria-keyshortcuts", "Alt+Enter");
     else input.removeAttribute("aria-keyshortcuts");
-    input.closest("td").classList.toggle("notas-invalida", error);
-    input.parentElement.querySelector(".notas-nota")?.remove();
+    input.closest("td").classList.toggle("hn-invalida", error);
+    input.closest("td").toggleAttribute("data-cambio", a.cur.has(idCelda(r, k)));
+    input.parentElement.querySelector(".hn-nota")?.remove();
     input.insertAdjacentHTML("afterend", indicadorNota(r, k, c));
-    input.parentElement.querySelector(".notas-celda-movil").outerHTML = botonMovil(r, k, c, etiqueta);
+    input.parentElement.querySelector(".hn-celda-movil").outerHTML = botonMovil(r, k, c, etiqueta);
     const fila = input.closest("tr");
-    const marca = fila.querySelector(".notas-completa-marca");
+    const marca = fila.querySelector(".hn-completa-marca");
     if (marca) {
       marca.hidden = !filaCompleta(r);
-      fila.classList.toggle("notas-fila-completa", filaCompleta(r));
+      fila.classList.toggle("hn-fila-completa", filaCompleta(r));
     }
   }
 
@@ -683,7 +692,7 @@
     seleccion = null;
   }
 
-  const filasVisibles = () => [...document.querySelectorAll(".notas-tabla tbody tr[data-fila]:not(.notas-inactiva)")].map((tr) => Number(tr.dataset.fila));
+  const filasVisibles = () => [...document.querySelectorAll(".hn-tabla tbody tr[data-fila]:not(.hn-inactiva)")].map((tr) => Number(tr.dataset.fila));
 
   function focoCelda(r, k, conclusion = false, direccion = 1) {
     if (conclusion) {
@@ -695,7 +704,7 @@
     if (!visibles.includes(r)) {
       r = direccion > 0 ? (visibles.find((v) => v >= r) ?? visibles.at(-1)) : ([...visibles].reverse().find((v) => v <= r) ?? visibles[0]);
     }
-    const el = document.querySelector(`.notas-nivel[data-r="${r}"][data-k="${k}"]`);
+    const el = document.querySelector(`.hn-nivel[data-r="${r}"][data-k="${k}"]`);
     el?.focus();
     el?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
@@ -718,12 +727,12 @@
     $("conclusion-pc").value = c.conclusion;
     $("conclusion-pc").readOnly = lectura;
     $("conclusion-pc").setAttribute("aria-invalid", "false");
-    $("ayuda-nota").className = "notas-ayuda";
+    $("ayuda-nota").className = "small";
     $("ayuda-nota").textContent = lectura ? "Nota registrada en este bimestre." : "De 10 a 500 caracteres.";
     $("contador-nota").textContent = `${c.conclusion.length}/500`;
     $("listo-nota").textContent = lectura ? "Cerrar" : "Listo";
     $("nota-editor").hidden = false;
-    const ancla = document.querySelector(`.notas-nivel[data-r="${r}"][data-k="${k}"]`);
+    const ancla = document.querySelector(`.hn-nivel[data-r="${r}"][data-k="${k}"]`);
     ancla?.scrollIntoView({ block: "nearest", inline: "nearest" });
     if (ancla) posicionar($("nota-editor"), ancla, 350);
     if (lectura) $("cerrar-nota").focus({ preventScroll: true });
@@ -735,7 +744,7 @@
     const anterior = notaActiva;
     $("nota-editor").hidden = true;
     notaActiva = null;
-    if (volver && anterior) document.querySelector(`.notas-nivel[data-r="${anterior.r}"][data-k="${anterior.k}"]`)?.focus({ preventScroll: true });
+    if (volver && anterior) document.querySelector(`.hn-nivel[data-r="${anterior.r}"][data-k="${anterior.k}"]`)?.focus({ preventScroll: true });
   }
 
   function terminarNota() {
@@ -743,7 +752,7 @@
     const { r, k } = notaActiva;
     if (!area().lista[r].lectura && invalida(celda(r, k))) {
       $("conclusion-pc").setAttribute("aria-invalid", "true");
-      $("ayuda-nota").className = "notas-ayuda notas-error";
+      $("ayuda-nota").className = "small hn-error";
       $("ayuda-nota").textContent = celda(r, k).conclusion.trim() ? "Escribe de 10 a 500 caracteres." : "Falta conclusión.";
       $("conclusion-pc").focus();
       return;
@@ -776,7 +785,7 @@
     if (!$("panel-editor").open) $("panel-editor").showModal();
     if (area().lista[r].lectura) $("cerrar-panel").focus({ preventScroll: true });
     else if (conclusion && requiere(celda(r, k))) $("conclusion-movil").focus({ preventScroll: true });
-    else (document.querySelector(".notas-nivel-grande[aria-pressed=true]") || document.querySelector(".notas-nivel-grande"))?.focus({ preventScroll: true });
+    else (document.querySelector(".hn-nivel-grande[aria-pressed=true]") || document.querySelector(".hn-nivel-grande"))?.focus({ preventScroll: true });
   }
 
   function dibujarPanel() {
@@ -789,17 +798,17 @@
     $("panel-estudiante").textContent = a.lista[r].nombre;
     $("panel-competencia").textContent = `${etiquetaDe(k)} · ${a.columnas[k].nombre}`;
     $("panel-niveles").innerHTML = NIVELES.map(
-      (v) => `<button type="button" class="notas-nivel-grande" data-elegir="${v}" aria-pressed="${c.nivel === v}" aria-label="${v}: ${NOMBRES_NIVEL[v]}"${lectura ? " disabled" : ""}>${v}</button>`,
+      (v) => `<button type="button" class="hn-nivel-grande" data-elegir="${v}" aria-pressed="${c.nivel === v}" aria-label="${v}: ${NOMBRES_NIVEL[v]}"${lectura ? " disabled" : ""}>${v}</button>`,
     ).join("");
     $("panel-conclusion").hidden = !requiere(c);
     $("conclusion-movil").value = c.conclusion;
     $("conclusion-movil").readOnly = lectura;
     $("contador-movil").textContent = `${c.conclusion.length}/500`;
     $("conclusion-movil").setAttribute("aria-invalid", String(error));
-    $("ayuda-conclusion").className = error ? "notas-ayuda notas-error" : "notas-ayuda";
+    $("ayuda-conclusion").className = error ? "small hn-error" : "small";
     $("ayuda-conclusion").textContent = error ? (c.conclusion.length ? "Usa de 10 a 500 caracteres." : "Falta conclusión") : "Escribe de 10 a 500 caracteres.";
     $("ayuda-conclusion").hidden = lectura;
-    document.querySelector(".notas-panel__borrador").textContent = lectura ? "Notas registradas en este bimestre. Solo lectura." : "Los cambios quedan como borrador hasta guardar el área.";
+    document.querySelector("[data-panel-borrador]").textContent = lectura ? "Notas registradas en este bimestre. Solo lectura." : "Los cambios quedan como borrador hasta guardar el área.";
     const hayOtra = filtro ? !!siguienteFaltante(r, k) : r < a.activos - 1;
     $("siguiente").textContent = lectura || !hayOtra ? "Volver a la hoja" : "Siguiente ↓";
     if (filtro && !lectura) {
@@ -816,7 +825,7 @@
     $("panel-editor").close();
     seleccion = null;
     dibujarTabla();
-    const el = anterior && document.querySelector(`.notas-celda-movil[data-r="${anterior.r}"][data-k="${anterior.k}"]`);
+    const el = anterior && document.querySelector(`.hn-celda-movil[data-r="${anterior.r}"][data-k="${anterior.k}"]`);
     if (el) {
       el.focus({ preventScroll: true });
       const caja = el.getBoundingClientRect();
@@ -966,7 +975,7 @@
     if (errores) {
       dibujarTabla();
       const texto = `${errores === 1 ? "Falta 1 conclusión" : `Faltan ${errores} conclusiones`} en B y C. ${errores === 1 ? "Escríbela" : "Escríbelas"} con 10 a 500 caracteres y vuelve a guardar ${escapar(a.nombre)}. Tus cambios siguen en la hoja.`;
-      mensaje("No se guardó nada", texto, "error", '<button type="button" class="notas-texto" data-ir-error>Ir a la primera conclusión pendiente</button>');
+      mensaje("No se guardó nada", texto, "error", '<button type="button" class="btn btn--text" data-ir-error>Ir a la primera conclusión pendiente</button>');
       anunciar("No se guardó nada. Revisa las conclusiones marcadas.", true);
       actualizarEstado();
       $("mensaje-guardado").scrollIntoView({ block: "nearest" });
@@ -977,10 +986,10 @@
     ocultarLista();
     actualizarEstado();
     $("hoja").setAttribute("aria-busy", "true");
-    document.querySelectorAll(".notas-nivel").forEach((el) => {
+    document.querySelectorAll(".hn-nivel").forEach((el) => {
       el.readOnly = true;
     });
-    document.querySelectorAll(".notas-celda-movil,.notas-nota,.notas-rellenar,[data-area-pildora],#borrador button").forEach((el) => {
+    document.querySelectorAll(".hn-celda-movil,.hn-nota,.hn-rellenar,[data-area-pildora],#borrador button").forEach((el) => {
       el.disabled = true;
     });
     const respuesta = await pedir(a.url_guardar, { celdas: celdasDelEnvio(a) });
@@ -996,7 +1005,7 @@
         "Tu sesión venció",
         `Vuelve a ingresar para guardar. Tus cambios siguen aquí.`,
         "error",
-        `<a class="notas-texto" href="${escapar(redireccion)}">Volver a ingresar</a>`,
+        `<a class="btn btn--text" href="${escapar(redireccion)}">Volver a ingresar</a>`,
       );
       anunciar("Tu sesión venció. Vuelve a ingresar para guardar. Tus cambios siguen aquí.", true);
     } else if (respuesta?.status === 200) {
@@ -1021,12 +1030,12 @@
       if ((cuerpo.no_validas ?? []).length) {
         marcarPorClaves(cuerpo.no_validas, a.rechazos, (e, c) => a.cur.get(llave(e, c))?.nivel ?? "");
         redibujar();
-        mensaje("No se guardó nada", escapar(MENSAJE_ESCALA), "error", '<button type="button" class="notas-texto" data-ir-error>Ir a la celda marcada</button>');
+        mensaje("No se guardó nada", escapar(MENSAJE_ESCALA), "error", '<button type="button" class="btn btn--text" data-ir-error>Ir a la celda marcada</button>');
         anunciar(`No se guardó nada. ${MENSAJE_ESCALA}.`, true);
       } else if ((cuerpo.sin_conclusion ?? []).length) {
         validando = true;
         redibujar();
-        mensaje("No se guardó nada", escapar(cuerpo.mensaje ?? ""), "error", '<button type="button" class="notas-texto" data-ir-error>Ir a la primera conclusión pendiente</button>');
+        mensaje("No se guardó nada", escapar(cuerpo.mensaje ?? ""), "error", '<button type="button" class="btn btn--text" data-ir-error>Ir a la primera conclusión pendiente</button>');
         anunciar("No se guardó nada. Revisa las conclusiones marcadas.", true);
       } else {
         redibujar();
@@ -1091,7 +1100,7 @@
     }
     destinoSalida = destino;
     restaurarFoco = document.activeElement;
-    $("areas-pendientes").innerHTML = lista.map((p) => `<li>${escapar(p.nombre)} <span class="notas-ayuda">· ${escapar(p.periodo)}</span></li>`).join("");
+    $("areas-pendientes").innerHTML = lista.map((p) => `<li>${escapar(p.nombre)} <span class="muted">· ${escapar(p.periodo)}</span></li>`).join("");
     $("aviso-borradores").textContent = cierraSesion ? AVISO_SE_BORRAN : AVISO_QUEDAN;
     $("confirmar-salida").showModal();
   }
@@ -1100,7 +1109,7 @@
 
   $("hoja").addEventListener("click", (evento) => {
     if (evento.target.closest("[data-ir-error]")) {
-      const entrada = document.querySelector("td.notas-invalida .notas-nivel");
+      const entrada = document.querySelector("td.hn-invalida .hn-nivel");
       if (entrada) {
         const r = Number(entrada.dataset.r);
         const k = Number(entrada.dataset.k);
@@ -1127,8 +1136,8 @@
   $("superficie-hoja").addEventListener("click", (evento) => {
     const t = evento.target.closest("button,input");
     if (!t) return;
-    if (t.matches(".notas-nivel")) abrirLista(t);
-    if (t.matches(".notas-celda-movil")) abrirPanel(Number(t.dataset.r), Number(t.dataset.k));
+    if (t.matches(".hn-nivel")) abrirLista(t);
+    if (t.matches(".hn-celda-movil")) abrirPanel(Number(t.dataset.r), Number(t.dataset.k));
     if (t.hasAttribute("data-nota")) {
       const [r, k] = t.dataset.nota.split(":").map(Number);
       abrirNota(r, k);
@@ -1160,7 +1169,7 @@
   // Solo AD, A, B y C escriben en la celda; lo demás, incluido lo pegado, no escribe y no muestra mensaje.
   $("superficie-hoja").addEventListener("input", (evento) => {
     const t = evento.target;
-    if (!t.matches(".notas-nivel") || guardando) return;
+    if (!t.matches(".hn-nivel") || guardando) return;
     const r = Number(t.dataset.r);
     const k = Number(t.dataset.k);
     const valor = t.value.toUpperCase();
@@ -1174,7 +1183,7 @@
 
   $("superficie-hoja").addEventListener("keydown", (evento) => {
     const t = evento.target;
-    if (!t.matches(".notas-nivel")) return;
+    if (!t.matches(".hn-nivel")) return;
     const r = Number(t.dataset.r);
     const k = Number(t.dataset.k);
     if (t.readOnly) {
@@ -1196,7 +1205,7 @@
       }
       const destino = evento.shiftKey ? anteriorFaltante(r, k) : siguienteFaltante(r, k);
       if (destino) focoCelda(destino.r, destino.k);
-      else if (evento.shiftKey) document.querySelector(`.notas-rellenar[data-rellenar="${n - 1}"]`)?.focus();
+      else if (evento.shiftKey) document.querySelector(`.hn-rellenar[data-rellenar="${n - 1}"]`)?.focus();
       else $("guardar").focus();
       return;
     }
@@ -1209,7 +1218,7 @@
     if (evento.key === "Tab" && evento.shiftKey && r === visibles[0] && k === 0) {
       evento.preventDefault();
       ocultarLista();
-      document.querySelector(`.notas-rellenar[data-rellenar="${n - 1}"]`)?.focus();
+      document.querySelector(`.hn-rellenar[data-rellenar="${n - 1}"]`)?.focus();
       return;
     }
     if (evento.altKey && evento.key === "ArrowDown") {
@@ -1299,8 +1308,8 @@
   });
 
   document.addEventListener("click", (evento) => {
-    if (!evento.target.closest("#lista-niveles,.notas-nivel")) ocultarLista();
-    if (!evento.target.closest("#nota-editor,.notas-nivel,.notas-nota,#lista-niveles,[data-ir-error]")) cerrarNota(false);
+    if (!evento.target.closest("#lista-niveles,.hn-nivel")) ocultarLista();
+    if (!evento.target.closest("#nota-editor,.hn-nivel,.hn-nota,#lista-niveles,[data-ir-error]")) cerrarNota(false);
     if (!evento.target.closest("[data-competencia],#competencia-detalle")) ocultarCompetencia();
   });
   document.addEventListener("keydown", (evento) => {
@@ -1319,7 +1328,7 @@
     cambiarConclusion(r, k, evento.target.value);
     $("contador-nota").textContent = `${evento.target.value.length}/500`;
     $("conclusion-pc").setAttribute("aria-invalid", "false");
-    $("ayuda-nota").className = "notas-ayuda";
+    $("ayuda-nota").className = "small";
     $("ayuda-nota").textContent = "De 10 a 500 caracteres.";
   });
   $("conclusion-pc").addEventListener("keydown", (evento) => {
@@ -1346,7 +1355,7 @@
     $("contador-movil").textContent = `${evento.target.value.length}/500`;
     const error = invalida(celda(r, k));
     evento.target.setAttribute("aria-invalid", String(error));
-    $("ayuda-conclusion").className = error ? "notas-ayuda notas-error" : "notas-ayuda";
+    $("ayuda-conclusion").className = error ? "small hn-error" : "small";
     $("ayuda-conclusion").textContent = error ? (evento.target.value.length ? "Usa de 10 a 500 caracteres." : "Falta conclusión") : "Escribe de 10 a 500 caracteres.";
   });
   $("cerrar-panel").addEventListener("click", cerrarPanel);
@@ -1374,7 +1383,7 @@
       }
       seleccion = siguiente;
       dibujarPanel();
-      document.querySelector(".notas-nivel-grande")?.focus({ preventScroll: true });
+      document.querySelector(".hn-nivel-grande")?.focus({ preventScroll: true });
       return;
     }
     if (r >= a.activos - 1) {
@@ -1383,7 +1392,7 @@
     }
     seleccion = { r: r + 1, k };
     dibujarPanel();
-    (document.querySelector(".notas-nivel-grande[aria-pressed=true]") || document.querySelector(".notas-nivel-grande"))?.focus({ preventScroll: true });
+    (document.querySelector(".hn-nivel-grande[aria-pressed=true]") || document.querySelector(".hn-nivel-grande"))?.focus({ preventScroll: true });
   });
 
   document.querySelectorAll("[name=relleno]").forEach((input) =>
@@ -1393,7 +1402,7 @@
   );
   $("cancelar-relleno").addEventListener("click", () => $("confirmar-relleno").close());
   $("confirmar-relleno").addEventListener("close", () => {
-    const destino = restaurarFoco?.isConnected ? restaurarFoco : movil.matches ? $("rellenar-movil") : document.querySelector(`.notas-rellenar[data-rellenar="${columnaRelleno}"]`);
+    const destino = restaurarFoco?.isConnected ? restaurarFoco : movil.matches ? $("rellenar-movil") : document.querySelector(`.hn-rellenar[data-rellenar="${columnaRelleno}"]`);
     destino?.focus({ preventScroll: true });
   });
   $("aplicar-relleno").addEventListener("click", () => {
@@ -1409,7 +1418,7 @@
     actualizarEstado();
     const n = vacias.length;
     anunciar(`${n === 1 ? "1 celda rellenada" : `${n} celdas rellenadas`} con ${nivel}. ${n === 1 ? "Queda" : "Quedan"} sin guardar.`);
-    document.querySelector(`.notas-rellenar[data-rellenar="${columnaRelleno}"]`)?.focus({ preventScroll: true });
+    document.querySelector(`.hn-rellenar[data-rellenar="${columnaRelleno}"]`)?.focus({ preventScroll: true });
   });
 
   $("guardar").addEventListener("click", () => {
@@ -1534,7 +1543,7 @@
     cerrarNota(false);
     ocultarLista();
     ocultarCompetencia();
-    if (document.querySelector(".notas-tabla")) dibujarTabla();
+    if (document.querySelector(".hn-tabla")) dibujarTabla();
   });
   window.addEventListener("resize", () => {
     cerrarNota(false);
@@ -1548,14 +1557,14 @@
       if (!$("lista-niveles").hidden) ocultarLista();
       if (notaActiva && !$("nota-editor").contains(evento.target)) {
         const { r, k } = notaActiva;
-        const ancla = document.querySelector(`.notas-nivel[data-r="${r}"][data-k="${k}"]`);
+        const ancla = document.querySelector(`.hn-nivel[data-r="${r}"][data-k="${k}"]`);
         if (!ancla) {
           cerrarNota(false);
           return;
         }
         const caja = ancla.getBoundingClientRect();
         const superficie = $("superficie-hoja").getBoundingClientRect();
-        const cabecera = document.querySelector(".notas-tabla thead")?.offsetHeight || 0;
+        const cabecera = document.querySelector(".hn-tabla thead")?.offsetHeight || 0;
         if (caja.bottom < Math.max(0, superficie.top + cabecera) || caja.top > Math.min(innerHeight, superficie.bottom)) {
           cerrarNota();
           anunciar("Conclusión conservada en la hoja.");
@@ -1567,18 +1576,12 @@
     true,
   );
 
-  // La hoja descuenta el aviso y el borrador visibles para que la barra de Guardar no quede bajo el pliegue (mínimo útil: 300 px).
+  // La barra de guardar es fija al pie (D5): su alto real va a --alto-barra, que usan el scroll-padding-bottom de la página
+  // (la celda con el foco no queda debajo) y el margen de abajo de la hoja. Oculta (área sin celdas), mide 0.
   if ("ResizeObserver" in window) {
-    const extra = () => {
-      const alto = ["borrador", "mensaje-guardado"].reduce((total, id) => {
-        const el = $(id);
-        return total + (el.offsetHeight ? el.offsetHeight + parseFloat(getComputedStyle(el).marginBottom || 0) : 0);
-      }, 0);
-      $("hoja").style.setProperty("--extra-hoja", `${alto}px`);
-    };
-    const observador = new ResizeObserver(extra);
-    observador.observe($("borrador"));
-    observador.observe($("mensaje-guardado"));
+    const medirBarra = () => document.documentElement.style.setProperty("--alto-barra", `${$("barra-guardar").offsetHeight}px`);
+    new ResizeObserver(medirBarra).observe($("barra-guardar"));
+    medirBarra();
   }
 
   recuperarBorradores();

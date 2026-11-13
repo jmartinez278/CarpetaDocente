@@ -62,7 +62,7 @@ def otro_navegador(browser, live_server, docente, clave, seccion_tutora):
         ingresar(pagina, live_server, docente, clave)
         pagina.wait_for_url(f"{live_server.url}/docente/")
         pagina.goto(url_hoja(live_server, seccion_tutora, area=MATEMATICA))
-        expect(pagina.locator(".notas-tabla")).to_be_visible()
+        expect(pagina.get_by_role("grid")).to_be_visible()
         return pagina
 
     yield abrir
@@ -75,7 +75,7 @@ def otra_pestana(page, live_server, seccion):
     pagina = page.context.new_page()
     con_pantalla(pagina, 1280, "light")
     pagina.goto(url_hoja(live_server, seccion, area=MATEMATICA))
-    expect(pagina.locator(".notas-tabla")).to_be_visible()
+    expect(pagina.get_by_role("grid")).to_be_visible()
     return pagina
 
 
@@ -424,7 +424,7 @@ def test_salir_con_cambios_nombra_las_areas_de_todos_los_periodos_y_conserva_el_
     )
     escribir(page, ana, 1, "A")
     page.locator(f'[data-area-pildora="{COMUNICACION}"]').click()
-    page.locator(".notas-nivel").first.focus()
+    page.locator("[data-celda]").first.focus()
     page.keyboard.type("a")
     avisos = []
     page.on("dialog", lambda dialogo: (avisos.append(dialogo.type), dialogo.dismiss()))
@@ -435,7 +435,11 @@ def test_salir_con_cambios_nombra_las_areas_de_todos_los_periodos_y_conserva_el_
     expect(dialogo).to_be_visible()
     pendientes = page.locator("#areas-pendientes li")
     expect(pendientes).to_have_count(3)
-    for texto in ("Matemática · B3", "Comunicación · B3", "Matemática · B2"):
+    for texto in (
+        "Matemática · III bimestre",
+        "Comunicación · III bimestre",
+        "Matemática · II bimestre",
+    ):
         expect(pendientes.filter(has_text=texto)).to_have_count(1)
     expect(page.locator("#seguir-editando")).to_be_focused()
     expect(dialogo).to_contain_text("Los borradores quedan en este dispositivo.")
@@ -506,7 +510,7 @@ def test_seguir_editando_tras_cerrar_sesion_conserva_el_borrador(abrir_hoja, est
     page.locator("#seguir-editando").click()
 
     expect(page.locator("#confirmar-salida")).to_be_hidden()
-    expect(page.locator(".notas-tabla")).to_be_visible()
+    expect(page.get_by_role("grid")).to_be_visible()
     assert borradores_de(page, docente)
     page.get_by_role("link", name="Competencias").click()
     expect(page.locator("#aviso-borradores")).to_contain_text(
