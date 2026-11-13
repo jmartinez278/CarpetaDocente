@@ -434,7 +434,7 @@ def test_la_portada_carga_sus_scripts_sin_alpine(portada):
             "/static/js/marco.js",
         ]
     )
-    assert all("defer" in s for s in re.findall(r"<script\b[^>]*>", portada))
+    assert all("defer" in s for s in re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE))
 
 
 def test_la_portada_tiene_un_solo_main(portada):
