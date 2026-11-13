@@ -302,6 +302,34 @@ def test_el_resumen_fijo_no_tapa_las_filas_ni_el_foco(abrir_asistencia, veintici
     bajo_el_resumen(page, medio)
 
 
+def test_ninguna_parada_del_foco_queda_bajo_el_resumen(abrir_asistencia, veinticinco):
+    """A2 de rebrand-us-030: a 360 px, cada parada del foco hacia atrás y hacia adelante,
+    incluida la nota de justificación, queda debajo del resumen fijo."""
+    page = abrir_asistencia()
+    tocar(page, veinticinco[5], 4)
+    esperar_guardado(page)
+    nota = page.locator(f"#nota-{veinticinco[5].pk}")
+    expect(nota).to_be_visible()
+
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    circulo(page, veinticinco[24]).focus()
+    for estudiante in reversed(veinticinco[1:24]):
+        if estudiante == veinticinco[5]:
+            page.keyboard.press("Shift+Tab")
+            expect(nota).to_be_focused()
+            bajo_el_resumen(page, nota)
+        page.keyboard.press("Shift+Tab")
+        expect(circulo(page, estudiante)).to_be_focused()
+        bajo_el_resumen(page, circulo(page, estudiante))
+
+    # Hacia adelante, desde arriba de la lista con la página desplazada hasta abajo.
+    circulo(page, veinticinco[1]).focus()
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    page.keyboard.press("Shift+Tab")
+    page.keyboard.press("Tab")
+    bajo_el_resumen(page, circulo(page, veinticinco[1]))
+
+
 @pytest.fixture
 def sabado(monkeypatch):
     fijar_hora_de_lima(monkeypatch, datetime(2026, 10, 31, 9, 0, tzinfo=ZoneInfo("America/Lima")))

@@ -672,7 +672,9 @@
       padding-top: var(--s-5);
     }
 
+    /* La variable se define aquí: html es ancestro de .asistencia-hoy y no la hereda (A2). */
     html:has(.asistencia-rejilla) {
+      --asistencia-margen-fila: calc(var(--bar-height) + 136px);
       scroll-padding-top: var(--asistencia-margen-fila);
     }
 
