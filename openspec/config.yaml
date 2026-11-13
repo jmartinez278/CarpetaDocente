@@ -16,11 +16,15 @@ rules:
     - Corta, con qué cambia, por qué y qué queda fuera de alcance (con la historia a la que va).
     - Indica el RF y la dimensión de la tesis que cubre.
     - Solo decisiones nuevas; no repitas lo que ya dicen openspec/specs, DESIGN.md o decisiones.md.
+    - 'Cambios rebrand-* (solo rehacen la presentación): 10 líneas como máximo, con los encabezados "## Why" y "## What Changes" que pide OpenSpec: qué pantalla, qué boceto y qué queda fuera.'
   specs:
     - Los escenarios Gherkin del criterio de aceptación (docs/02 Planificación/01) pasan casi directo.
+    - 'Cambios rebrand-*: delta solo de los requisitos cuya conducta cambia (MODIFIED) o se retira (REMOVED, con Reason y Migration). Un MODIFIED reemplaza el requisito entero: copia todos sus escenarios actuales, también los que siguen igual, o validate y archive lo rechazan. Los requisitos que no cambian no van en el delta.'
+    - 'Cambios rebrand-* sin conducta que cambie: sin carpeta specs/ y con "skip_specs: true" en .openspec.yaml del cambio (sin eso, validate falla por falta de deltas).'
   design:
     - Decisiones numeradas (D1, D2, ...) con su porqué; los riesgos y las zonas delicadas primero.
     - Si la historia guarda datos que mide la tesis, di qué campo los guarda.
+    - 'Cambios rebrand-*: solo las decisiones que se apartan del boceto o de DESIGN.md, o que tocan conducta (JS, foco, diálogos). Máximo 5. Si no hay ninguna, una línea que lo diga.'
   tasks:
     - 'Agrupa por riesgo, no por cantidad: cada tramo de alto riesgo es una parte "(alto riesgo)" con su commit; todo lo demás va junto en una parte "(normal)" con verificar.py y commit. Una parte de alto riesgo lleva "(revisor)" en el título solo si toca modelos o migraciones, permisos y roles, o datos personales (RN-015). Unas 15 tareas.'
     - Cada tarea empieza por la prueba ("Prueba primero, <archivo>") y termina con "Verificar:" y lo que se comprueba.
@@ -36,6 +40,7 @@ rules:
     - Un commit por parte, nunca por tarea; la casilla va en ese commit.
     - 'Al final, la parte de cierre: A2 y verificacion.md.'
     - 'En los cambios de rebrand, las tareas no incluyen auditoría visual por pantalla: va una sola, al terminar todas las pantallas del rebrand.'
+    - 'Cambios rebrand-*: una sola parte "(normal)", salvo que toquen algo de alto riesgo; eso va en su propia parte "(alto riesgo)".'
     - Al final, "Workflow follow-up" con la deuda.
     - 'No repitas en tasks.md las reglas de config.yaml, CLAUDE.md ni CLAUDE.local.md: solo las tareas.'
 
