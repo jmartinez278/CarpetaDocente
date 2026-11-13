@@ -10,7 +10,11 @@
     --asistencia-margen-fila: calc(var(--bar-height) + var(--s-5));
   }
 
-  /* --- Encabezado --- */
+  /* --- Encabezado: el <main> del marco con el margen superior del boceto (32 px; 24 px hasta 699 px) --- */
+  .page:has(> .asistencia-hoy) {
+    padding-top: var(--s-6);
+  }
+
   .asistencia-cabecera {
     align-items: flex-end;
   }
@@ -662,6 +666,10 @@
   @media (max-width: 699px) {
     .asistencia-hoy {
       --asistencia-margen-fila: calc(var(--bar-height) + 136px);
+    }
+
+    .page:has(> .asistencia-hoy) {
+      padding-top: var(--s-5);
     }
 
     html:has(.asistencia-rejilla) {

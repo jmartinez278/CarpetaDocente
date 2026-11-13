@@ -106,6 +106,8 @@ def test_el_avance_y_los_totales_cambian_con_cada_toque(abrir_asistencia, veinti
     tocar(page, veinticinco[0])
     tocar(page, veinticinco[1], 2)
 
+    # Margen sobre el encabezado como el boceto: 32 px en PC (24 px en el celular).
+    assert page.evaluate("getComputedStyle(document.querySelector('main')).paddingTop") == "32px"
     panel = page.locator(".tarjeta-jornada")
     expect(panel.locator(".conteo__pc [data-marcados]")).to_have_text("2")
     expect(panel.locator(".sr-only [data-marcados]")).to_have_text("2")
@@ -285,6 +287,7 @@ def bajo_el_resumen(page, elemento):
 def test_el_resumen_fijo_no_tapa_las_filas_ni_el_foco(abrir_asistencia, veinticinco):
     """rebrand-us-030, D1: a 360 px el resumen queda fijo bajo la barra al bajar por la lista."""
     page = abrir_asistencia()
+    assert page.evaluate("getComputedStyle(document.querySelector('main')).paddingTop") == "24px"
 
     page.mouse.wheel(0, 1500)
     expect(page.locator(".tarjeta-jornada")).to_be_in_viewport()

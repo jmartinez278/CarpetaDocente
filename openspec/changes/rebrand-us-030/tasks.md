@@ -47,5 +47,6 @@ Comandos: `uv run pytest src/backend/asistencia` (vistas) y `uv run pytest -m e2
 - **(paso 8)** Borrar de `app.css` el CSS de asistencia (`.vista-asistencia`, `.panel-jornada`, `.franja-jornada`, `.franjas-cabecera`, `.leyenda`…) y los parciales que queden sin uso.
 - **(DESIGN.md)** El Layout de pantallas pide «N/M · K sin marcar» también con K en cero; la spec manda los totales. Anotarlo para la auditoría visual del final del rebrand.
 - **(T-04)** El lugar del botón de tema en la barra queda vacío.
+- **(auditoría visual)** El `.page` del marco común deja 48 px sobre el encabezado; los bocetos usan 32 px (24 px hasta 699 px). Asistencia lo ajusta en su CSS, como la portada; Sesiones y Estudiantes siguen con 48 px. Decidir en la auditoría si se cambia en `marco.css`.
 - **(auditoría visual)** Con todos marcados (y durante el lote, con todos marcados), la tarjeta oculta «N/M marcados» y muestra la frase «Asistió: 25 · Tarde: 0 · …» de la spec, que en PC repite los cuatro totales. Marco lo deja así; revisarlo junto con el resto de pantallas al final del rebrand.
 - Al proponer el paso 5 (Competencias), su primer commit archiva este con `/opsx:archive` y «Sync now».
