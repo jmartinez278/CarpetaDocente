@@ -400,10 +400,10 @@ def test_competencias_vuelve_a_las_notas_del_periodo_y_el_area(abrir_hoja, estud
     """Escenarios "Periodo anterior pedido" y "Volver a las notas" desde Competencias."""
     page = abrir_hoja()
     page.get_by_role("link", name="Competencias").click()
-    expect(page.get_by_role("link", name=re.compile("Registrar notas de B3"))).to_be_visible()
-    page.get_by_role("button", name=re.compile("B2")).click()
+    expect(page.get_by_role("link", name="Registrar notas del III bimestre")).to_be_visible()
+    page.get_by_role("button", name=re.compile(r"^II bimestre")).click()
 
-    page.get_by_role("link", name=re.compile("Registrar notas de B2")).click()
+    page.get_by_role("link", name="Registrar notas del II bimestre").click()
 
     expect(page.locator(".notas-periodo")).to_contain_text("B2")
     expect(page.locator(".notas-periodo")).to_contain_text("Anterior")

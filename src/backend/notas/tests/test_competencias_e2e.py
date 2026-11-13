@@ -258,6 +258,9 @@ def ultima_fila_de_personal_social(page):
     """Con Tab hasta la última competencia de Personal Social (la octava área)."""
     page.locator("#area-elegida").select_option(index=7)
     casillas = page.locator(".comp-area:visible input[data-competencia]")
+    # competencias-barra.js pone el margen de cada fila cuando su área se hace visible
+    # (ResizeObserver); sin esperarlo, el Tab puede llegar antes y la fila queda bajo la barra.
+    expect(casillas.last).to_have_attribute("style", re.compile("scroll-margin-bottom"))
     casillas.nth(casillas.count() - 2).focus()
     page.keyboard.press("Tab")
     expect(casillas.last).to_be_focused()

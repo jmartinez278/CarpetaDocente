@@ -234,6 +234,10 @@ def test_la_portada_con_el_aviso_carga_empezando_arriba(
 def test_cerrar_es_un_boton_con_borde_de_44_px_con_icono_y_texto(portada, tema):
     portada.emulate_media(color_scheme=tema)
     abrir(portada)
+    # El alto se mide al terminar la apertura: durante su escala mide una fracción menos de 44 px.
+    dialogo(portada).evaluate(
+        "(d) => Promise.all(d.getAnimations({ subtree: true }).map((a) => a.finished))"
+    )
 
     cerrar = dialogo(portada).get_by_role("button", name="Cerrar")
     estilo = cerrar.evaluate(
