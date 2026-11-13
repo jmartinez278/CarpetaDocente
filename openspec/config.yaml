@@ -26,6 +26,13 @@ rules:
     - Cada tarea empieza por la prueba ("Prueba primero, <archivo>") y termina con "Verificar:" y lo que se comprueba.
     - El "Verificar:" de cada tarea nombra solo pruebas de la app tocada. La regresión de otras historias la cubre `verificar.py --completo` en el cierre; las e2e de otras historias, también solo en el cierre.
     - 'Es de alto riesgo si toca: modelos, restricciones o migraciones; permisos y roles; transacciones o concurrencia; datos personales (RN-015); notas; seguridad, despliegue o workflows; o una "Zona de cuidado" de decisiones.md.'
+    - 'Una e2e solo si el escenario necesita un navegador real: conducta de JS (Alpine, intercambios de HTMX, foco, borradores en el dispositivo), desplazamiento horizontal o axe. Lo que el cliente de pruebas de Django puede comprobar (textos, enlaces, permisos, redirecciones, atributos del HTML) va como prueba de vista.'
+    - 'Sin e2e para valores de CSS (animación, color, tamaño, espaciado): eso lo ve Marco en la pantalla y lo cubre la auditoría visual.'
+    - 'Por pantalla: una e2e del flujo principal, las de conducta de JS que pida el spec, una de desplazamiento horizontal a 360 px y axe sobre el estado principal y cada diálogo abierto, en ambos temas. Sin matriz de estados × temas × anchos ni axe por variante de datos.'
+    - 'Un ancho por e2e: 360 px. 1280 px solo si la conducta cambia con el ancho, no la apariencia.'
+    - 'Más de 6 e2e nuevas en una historia: se justifica en design.md.'
+    - 'Al tocar una pantalla, las e2e existentes que no cumplen estas reglas se listan en tasks.md como "e2e a retirar" para que Marco las apruebe; no se borran por cuenta propia.'
+    - 'Durante las tareas se corre solo el archivo e2e tocado. `-m e2e` completo, una vez, en el cierre.'
     - Un commit por parte, nunca por tarea; la casilla va en ese commit.
     - 'Al final, la parte de cierre: A2 y verificacion.md.'
     - Al final, "Workflow follow-up" con la deuda.
