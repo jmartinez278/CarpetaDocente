@@ -775,38 +775,6 @@ def test_axe_con_notas_errores_filtro_y_dialogo(abrir_hoja, estudiantes, hoja_li
     revisar_con_axe(page, f"hoja-notas-dialogo-{sufijo}")
 
 
-@pytest.mark.parametrize("ancho", ANCHOS)
-@pytest.mark.parametrize("tema", TEMAS)
-def test_axe_en_vacaciones(
-    live_server, page, docente, clave, seccion_tutora, monkeypatch, ie, hoja_lista, ancho, tema
-):
-    """Escenario "Axe en ambos temas": en vacaciones."""
-    fijar_hora_de_lima(monkeypatch, datetime.datetime(2027, 8, 1, 9, 0, tzinfo=LIMA))
-    con_pantalla(page, ancho, tema)
-    ingresar(page, live_server, docente, clave)
-    page.wait_for_url(f"{live_server.url}/docente/")
-    page.goto(url_hoja(live_server, seccion_tutora, area=MATEMATICA))
-    expect(page.get_by_text("Hoy no hay un periodo vigente")).to_be_visible()
-    revisar_con_axe(page, f"hoja-notas-vacaciones-{ancho}-{tema}")
-    assert sin_desplazamiento_horizontal(page)
-
-
-@pytest.mark.parametrize("ancho", ANCHOS)
-@pytest.mark.parametrize("tema", TEMAS)
-def test_axe_sin_periodos(
-    live_server, page, docente, clave, seccion_tutora, monkeypatch, universo_ie, ancho, tema
-):
-    """Escenario "Axe en ambos temas": sin periodos."""
-    fijar_hora_de_lima(monkeypatch, datetime.datetime(2027, 10, 30, 9, 0, tzinfo=LIMA))
-    con_pantalla(page, ancho, tema)
-    ingresar(page, live_server, docente, clave)
-    page.wait_for_url(f"{live_server.url}/docente/")
-    page.goto(url_hoja(live_server, seccion_tutora))
-    expect(page.get_by_text("La dirección aún no configura los periodos")).to_be_visible()
-    revisar_con_axe(page, f"hoja-notas-sin-periodos-{ancho}-{tema}")
-    assert sin_desplazamiento_horizontal(page)
-
-
 @pytest.mark.parametrize("ancho", [320, 360])
 def test_personal_social_no_desplaza_la_pagina_y_la_tira_se_desplaza_sola(
     abrir_hoja, estudiantes, seccion_tutora, bimestres, ancho

@@ -25,8 +25,8 @@ Comandos: `uv run pytest src/backend/notas` (vistas y plantilla) y `uv run pytes
 - [x] 1.12 Prueba primero, `test_hoja_e2e.py` (D3, escenario «Recuadro en la última columna»; hallazgo 2): a 1280 px, en un área con una sola competencia marcada, elegir «B» abre el recuadro entero dentro de la ventana y junto a la celda; Escape lo cierra y el foco vuelve a la celda. Luego la colocación al lado de la celda. Verificar: rojo y luego verde; e2e de notas
 - [x] 1.13 Prueba primero, `test_hoja_e2e.py` (D3, escenario «Vista previa de la conclusión»): a 1280 px, el foco en el icono de una conclusión anotada muestra `#nota-previa` con su comienzo y el icono la referencia con `aria-describedby`; Escape la cierra y el foco sigue en el icono. Luego `#nota-previa` y sus eventos, sin el `title` del icono. Verificar: rojo y luego verde; e2e de notas
 - [x] 1.14 Prueba primero, `test_hoja_e2e.py` (D4, delta «Nivel en el celular»): a 360 px, elegir «B» en C1 sin conclusión y pulsar «Siguiente ↓» muestra al estudiante siguiente en C1; al cerrar el panel, la celda del primero dice «B» con «Falta conclusión». Y (delta «Rellenar vacías») `test_rellenar_vacias_solo_toca_las_vacias_y_queda_como_borrador` usa `#rellenar-movil` y elige C1 en `#elegir-columna` a 1280 px. Luego el manejador de `#siguiente` y `abrirRelleno` (D5). Verificar: rojo y luego verde; e2e de notas
-- [ ] 1.15 Axe y desplazamiento (delta «Hoja accesible…»): `test_axe_con_notas_errores_filtro_y_dialogo` suma la vista previa en su rama de 1280 px y el diálogo de «Rellenar vacías»; `test_personal_social_no_desplaza_la_pagina_y_la_tira_se_desplaza_sola` sigue a 320 y 360 px con el marco nuevo; `test_las_areas_tactiles_miden_44_px` mide píldoras, celdas y niveles del panel por `data-*` o rol, y suma el acceso a Competencias y «Rellenar vacías». Retirar las e2e de la lista de abajo si Marco las aprueba. Luego los ajustes de contraste o foco en `notas.css`. Verificar: e2e de notas en verde
-- [ ] 1.16 Pantalla vista en claro/oscuro y celular/escritorio con Personal Social desplazada, el recuadro en la última columna, la vista previa y el cambio de bimestre (la marca Marco). `verificar.py` y commit
+- [x] 1.15 Axe y desplazamiento (delta «Hoja accesible…»): `test_axe_con_notas_errores_filtro_y_dialogo` suma la vista previa en su rama de 1280 px y el diálogo de «Rellenar vacías»; `test_personal_social_no_desplaza_la_pagina_y_la_tira_se_desplaza_sola` sigue a 320 y 360 px con el marco nuevo; `test_las_areas_tactiles_miden_44_px` mide píldoras, celdas y niveles del panel por `data-*` o rol, y suma el acceso a Competencias y «Rellenar vacías». Retirar las e2e de la lista de abajo si Marco las aprueba. Luego los ajustes de contraste o foco en `notas.css`. Verificar: e2e de notas en verde
+- [x] 1.16 Pantalla vista en claro/oscuro y celular/escritorio con Personal Social desplazada, el recuadro en la última columna, la vista previa y el cambio de bimestre (la marca Marco). `verificar.py` y commit
 
 ## 2. Cierre
 
@@ -35,7 +35,7 @@ Comandos: `uv run pytest src/backend/notas` (vistas y plantilla) y `uv run pytes
 - [ ] 2.1 `-m e2e` completo una vez y `verificar.py --completo` (80 % o más). Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en la spec `registro-notas` del cambio y en D1–D5), corregir los Critical e Important con la prueba primero. Verificar: `verificar.py --antes-del-commit` en verde
 - [ ] 2.2 `verificacion.md` corta: DoD 1 a 9, escenarios del delta sin prueba con su motivo y los Minor. Verificar: commit
 
-## e2e a retirar (esperan la aprobación de Marco)
+## e2e retiradas (aprobadas por Marco)
 
 - `test_axe_en_vacaciones` y `test_axe_sin_periodos` (8 casos): son estados sin boceto, no diálogos; el escenario «Axe en ambos temas» queda en el estado principal, el panel, el rechazo, los diálogos, el recuadro y la vista previa.
 
