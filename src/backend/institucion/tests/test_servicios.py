@@ -298,3 +298,40 @@ def test_texto_ignora_las_secciones_de_otra_docente(seccion, docente, otra_docen
     asignar(seccion, otra_docente)
 
     assert servicios.texto_secciones_docente(docente) == SIN_SECCION
+
+
+# --- secciones_de_la_cuenta (spec cierre-sesion, «Menú de la cuenta»; rebrand-base, D7) ---
+
+
+def test_cuenta_con_una_seccion(seccion, docente):
+    asignar(seccion, docente)
+
+    assert servicios.secciones_de_la_cuenta(docente) == "2.º grado, sección A"
+
+
+def test_cuenta_con_dos_secciones_por_grado_y_nombre(seccion, docente):
+    asignar(Seccion.objects.create(anio_escolar=seccion.anio_escolar, grado=3, nombre="B"), docente)
+    asignar(Seccion.objects.create(anio_escolar=seccion.anio_escolar, grado=2, nombre="C"), docente)
+    asignar(seccion, docente)
+
+    assert servicios.secciones_de_la_cuenta(docente) == (
+        "2.º grado, sección A · 2.º grado, sección C · 3.º grado, sección B"
+    )
+
+
+def test_cuenta_sin_seccion_no_lleva_linea(docente):
+    assert servicios.secciones_de_la_cuenta(docente) is None
+
+
+def test_cuenta_con_la_unica_seccion_en_un_anio_cerrado(seccion, docente):
+    asignar(seccion, docente)
+    AnioEscolar.objects.filter(pk=seccion.anio_escolar_id).update(estado="CERRADO")
+
+    assert servicios.secciones_de_la_cuenta(docente) is None
+
+
+def test_cuenta_de_la_direccion_no_lleva_linea(seccion, direccion):
+    # Con update, que salta la validación de la asignación: la regla es por rol, no por datos.
+    Seccion.objects.filter(pk=seccion.pk).update(docente=direccion)
+
+    assert servicios.secciones_de_la_cuenta(direccion) is None

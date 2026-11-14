@@ -59,11 +59,19 @@ Solo la docente de la sección SHALL marcar o desmarcar, y solo en las áreas qu
 - **THEN** la marca de esa competencia sigue guardada
 
 ### Requirement: Periodos que se marcan
-Mientras el año esté ABIERTO, la tutora SHALL poder marcar el periodo vigente y los anteriores; los futuros se ven deshabilitados y un guardado para un periodo futuro no se guarda. La pantalla abre en el periodo vigente. Cada periodo muestra su nombre corto (B1 a B4, o T1 a T3), si es vigente, anterior o futuro, y sus fechas. La fecha de hoy es la de Lima.
+Mientras el año esté ABIERTO, la tutora SHALL poder marcar el periodo vigente y los anteriores; los futuros se ven deshabilitados y un guardado para un periodo futuro no se guarda. La pantalla abre en el periodo vigente. Cada periodo muestra su nombre en romanos (I a IV, o I a III) y, debajo, si es vigente, anterior o futuro. Sus fechas no se ven: van en el nombre accesible del botón, junto al nombre del periodo y su estado. Al elegir un periodo, el foco queda en su botón. La fecha de hoy es la de Lima.
 
 #### Scenario: Abre en el vigente
 - **WHEN** la tutora abre las competencias el 30 de octubre, con el bimestre 3 del 10 de agosto al 30 de octubre
 - **THEN** la pantalla muestra el bimestre 3 como vigente, el 1 y el 2 como anteriores y el 4 como futuro y deshabilitado
+
+#### Scenario: Nombres en romanos con las fechas para el lector
+- **WHEN** la tutora abre las competencias con el bimestre 4 vigente, del 13 de octubre al 19 de diciembre
+- **THEN** el selector muestra «I», «II», «III» e «IV» con su estado debajo, ninguna fecha a la vista, y el nombre accesible del botón del bimestre 4 es «IV bimestre, Vigente, del 13 de octubre al 19 de diciembre»
+
+#### Scenario: Cambiar de periodo con el teclado
+- **WHEN** la tutora llega con Tab al botón del bimestre 2 y pulsa Enter
+- **THEN** la pantalla muestra el bimestre 2 y el foco sigue en su botón, no en el cuerpo de la página
 
 #### Scenario: Corregir un periodo anterior
 - **WHEN** la tutora elige el bimestre 1, desmarca una competencia y guarda
@@ -146,11 +154,15 @@ Una competencia que ya tiene notas registradas en el periodo SHALL quedar marcad
 - **THEN** la tutora puede desmarcarla en el bimestre 3
 
 ### Requirement: Competencias obligatorias en el último periodo
-En el periodo de número mayor del año ABIERTO, las competencias que la tutora puede marcar y que no tienen ninguna nota de la sección en ningún periodo del año SHALL aparecer marcadas y bloqueadas, con «Debe tener nivel al cerrar el año», y se guardan con las demás aunque el envío no las traiga (RN-005). No cuentan como un cambio de la tutora. Las áreas del docente de curso quedan fuera.
+En el periodo de número mayor del año ABIERTO, las competencias que la tutora puede marcar y que no tienen ninguna nota de la sección en ningún periodo del año SHALL aparecer marcadas y bloqueadas, con «Debe tener nivel al cerrar el año», y se guardan con las demás aunque el envío no las traiga (RN-005). No cuentan como un cambio de la tutora. Las áreas del docente de curso quedan fuera. En ese periodo, un aviso arriba de la lista dice «IV bimestre: último del año» (o «III trimestre: último del año») y «Las competencias que no marcaste en bimestres anteriores quedan marcadas: deben tener nivel al cerrar el año.».
 
 #### Scenario: Flujo alternativo válido
 - **WHEN** la tutora abre el bimestre 4 y 5 de sus competencias no tienen notas en los bimestres 1 a 3
 - **THEN** esas 5 aparecen marcadas y bloqueadas con «Debe tener nivel al cerrar el año», para que todas terminen el año con un nivel de logro
+
+#### Scenario: Aviso del último periodo
+- **WHEN** la tutora abre el bimestre 4
+- **THEN** ve el aviso «IV bimestre: último del año» con «Las competencias que no marcaste en bimestres anteriores quedan marcadas: deben tener nivel al cerrar el año.»
 
 #### Scenario: Marcada antes, sin notas
 - **WHEN** una competencia se marcó en el bimestre 2 pero nunca se registró una nota suya, y la tutora abre el bimestre 4
@@ -165,7 +177,7 @@ En el periodo de número mayor del año ABIERTO, las competencias que la tutora 
 - **THEN** ninguna competencia aparece bloqueada por el cierre del año
 
 ### Requirement: Marcado en el celular y en la PC
-En el celular la pantalla SHALL mostrar un área a la vez, con una cápsula de flechas anterior y siguiente, la posición («1 de 10») y un selector para ir a cualquier área; las flechas no dan la vuelta. «Guardar» queda fijo abajo con el total del periodo («B3 · 20 de 21 en total»). Desde 960 px muestra la lista completa y el panel lateral «Tu selección» con el total y el guardado.
+Hasta 899 px la pantalla SHALL mostrar un área a la vez, con una cápsula de flechas anterior y siguiente, la posición («1 de 10») y un selector para ir a cualquier área; las flechas no dan la vuelta. «Guardar» queda fijo abajo, con el estado del guardado y el total del periodo («IV · 20 de 21 en total»), en lugar del panel lateral. Desde 900 px muestra la lista completa y el panel lateral «Tu selección», con el total escrito «20/21 para el IV bimestre» (el lector oye «20 de 21») y el guardado. Nunca se ven los dos a la vez.
 
 #### Scenario: Cápsula de áreas
 - **WHEN** en un celular de 360 px la tutora toca la flecha siguiente desde Arte y Cultura
@@ -175,9 +187,17 @@ En el celular la pantalla SHALL mostrar un área a la vez, con una cápsula de f
 - **WHEN** la tutora está en la última área
 - **THEN** la flecha siguiente está deshabilitada
 
+#### Scenario: Total en el celular
+- **WHEN** en un celular de 360 px la tutora tiene 20 de 21 competencias marcadas en el bimestre 4
+- **THEN** la barra fija de abajo dice «IV · 20 de 21 en total» junto a «Guardar», y el panel «Tu selección» no se ve
+
 #### Scenario: PC
-- **WHEN** la tutora abre la pantalla a 1280 px
-- **THEN** ve todas las áreas en una lista y el panel «Tu selección» con el total y «Guardar»
+- **WHEN** la tutora abre la pantalla a 1280 px con 20 de 21 competencias marcadas en el bimestre 4
+- **THEN** ve todas las áreas en una lista y el panel «Tu selección» con «20/21 para el IV bimestre» y «Guardar», sin la barra fija de abajo
+
+#### Scenario: Corte en 900 px
+- **WHEN** la tutora abre la pantalla a 900 px y luego a 899 px
+- **THEN** a 900 px ve la lista completa con el panel, y a 899 px un área a la vez con la cápsula
 
 ### Requirement: Borradores por periodo
 Los cambios sin guardar de cada periodo SHALL conservarse durante la visita al cambiar de área o de periodo, sin interrumpir. El botón de un periodo con cambios sin guardar lo dice. «Deshacer cambios» devuelve el periodo visible a lo guardado (o a todo marcado, si no tiene marcas), sin contar las competencias obligatorias como cambio.
@@ -221,10 +241,10 @@ La pantalla SHALL decir si el periodo visible está sin guardar, con cambios, gu
 - **THEN** no se guarda nada y la pantalla le dice que vuelva a ingresar
 
 ### Requirement: Competencias accesibles y sin desplazamiento horizontal
-La pantalla SHALL no tener infracciones graves de axe-core en ambos temas, a 360 y a 1280 px, ni desplazamiento horizontal desde 320 px. Cada fila de competencia es pulsable entera, con al menos 44 px de alto; una competencia bloqueada recibe el foco y explica su motivo al intentar cambiarla. La pantalla funciona en Slow 4G (RNF-002).
+La pantalla, con el marco del rebrand, SHALL no tener infracciones graves de axe-core en su estado principal ni con «¿Salir sin guardar?» abierto, en ambos temas, a 360 px, ni desplazamiento horizontal desde 320 px. Cada fila de competencia es pulsable entera, con al menos 44 px de alto; una competencia bloqueada recibe el foco y explica su motivo al intentar cambiarla. La pantalla funciona en Slow 4G (RNF-002).
 
 #### Scenario: Axe en ambos temas
-- **WHEN** se analiza la pantalla con axe-core en tema claro y oscuro, a 360 y 1280 px, con marcas, con bloqueos, sin periodos y en vacaciones
+- **WHEN** se analiza con axe-core, a 360 px y en tema claro y oscuro, la pantalla con el marco del rebrand en su estado principal y con «¿Salir sin guardar?» abierto
 - **THEN** no hay infracciones graves
 
 #### Scenario: Teclado en una competencia bloqueada
@@ -236,16 +256,16 @@ La pantalla SHALL no tener infracciones graves de axe-core en ambos temas, a 360
 - **THEN** la página no se desplaza horizontalmente
 
 ### Requirement: Ir a las notas del periodo
-La pantalla de competencias SHALL ofrecer «Registrar notas de B*n*» (o T*n*), que abre la hoja de notas del periodo visible y del área de la que vino la tutora. Si llega desde la hoja porque el periodo no tiene competencias guardadas, muestra arriba «B*n* aún no tiene competencias confirmadas» / «Confirma las que trabajaste para empezar a registrar los niveles de logro.». Con cambios sin guardar, el enlace abre «¿Salir sin guardar?».
+La pantalla de competencias SHALL ofrecer «Registrar notas del IV bimestre» (con el periodo visible, o «del III trimestre»), que abre la hoja de notas del periodo visible y del área de la que vino la tutora. Si llega desde la hoja porque el periodo no tiene competencias guardadas, muestra arriba «IV aún no tiene competencias confirmadas» / «Confirma las que trabajaste para empezar a registrar los niveles de logro.». Con cambios sin guardar, el enlace abre «¿Salir sin guardar?».
 
 #### Scenario: Volver a las notas
-- **WHEN** la tutora, que vino desde la hoja de Matemática, elige el bimestre 2 en Competencias y pulsa «Registrar notas de B2»
+- **WHEN** la tutora, que vino desde la hoja de Matemática, elige el bimestre 2 en Competencias y pulsa «Registrar notas del II bimestre»
 - **THEN** ve la hoja de Matemática del bimestre 2
 
 #### Scenario: Llega sin competencias confirmadas
 - **WHEN** la hoja de notas la lleva a Competencias porque el bimestre 3 no tiene competencias guardadas
-- **THEN** ve «B3 aún no tiene competencias confirmadas» y, tras guardar, «Registrar notas de B3» abre la hoja del bimestre 3
+- **THEN** ve «III aún no tiene competencias confirmadas» y, tras guardar, «Registrar notas del III bimestre» abre la hoja del bimestre 3
 
 #### Scenario: Con cambios sin guardar
-- **WHEN** la tutora desmarcó una competencia sin guardar y pulsa «Registrar notas de B3»
+- **WHEN** la tutora desmarcó una competencia sin guardar y pulsa «Registrar notas del III bimestre»
 - **THEN** ve «¿Salir sin guardar?» antes de salir

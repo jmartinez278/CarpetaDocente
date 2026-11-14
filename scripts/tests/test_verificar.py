@@ -3,9 +3,11 @@
 import json
 import os
 import shutil
+import socket
 import stat
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -44,6 +46,7 @@ class EjecutorFalso:
             verificar.RUFF_CHECK: Salida(0, "All checks passed!\n"),
             verificar.RUFF_FORMAT: Salida(0, "110 files already formatted\n"),
             verificar.PYTEST: Salida(0, SALIDA_PYTEST),
+            verificar.INDICE: Salida(0, "scripts/verificar.py\0"),
             verificar.comando_atraso("main"): Salida(0, "0\n"),
             verificar.comando_checks("53"): Salida(0, "Ruff\tpass\t20s\nPruebas\tpass\t1m\n"),
             verificar.comando_revisiones("53"): Salida(
@@ -78,9 +81,15 @@ class EjecutorFalso:
             if self.al_copiar:
                 self.al_copiar(destino)
             return self.copia
-        if comando == verificar.PYTEST and self.al_correr_pytest:
-            self.al_correr_pytest(carpeta)
+        if comando[:3] == verificar.PYTEST_BASE:
+            if self.al_correr_pytest:
+                self.al_correr_pytest(carpeta)
+            # Antes del commit, pytest lleva las rutas elegidas: responde como el de siempre.
+            return self.respuestas.get(comando, self.respuestas[verificar.PYTEST])
         return self.respuestas[comando]
+
+    def corridas_de_pytest(self):
+        return [c for c in self.ejecutados if c[:3] == verificar.PYTEST_BASE]
 
 
 @pytest.fixture
@@ -92,6 +101,15 @@ def ejecutor():
 def sin_env_de_la_laptop(tmp_path, monkeypatch):
     """Las pruebas no leen el .env real: cada una arma el suyo si lo necesita."""
     monkeypatch.setattr(verificar, "ARCHIVO_ENV", tmp_path / "sin-env" / ".env")
+
+
+COMPROBAR_BASE = verificar.comprobar_base
+
+
+@pytest.fixture(autouse=True)
+def base_encendida(monkeypatch):
+    """Las pruebas no dependen de Docker: la base responde salvo que una diga lo contrario."""
+    monkeypatch.setattr(verificar, "comprobar_base", lambda: True)
 
 
 def nombres_fallidos(informe):
@@ -518,7 +536,7 @@ def test_antes_del_commit_mantiene_commits_ruff_y_pytest(ejecutor):
     assert nombres_fallidos(informe) == [
         "Correo noreply en los commits",
         "ruff check",
-        "pytest --cov (mínimo 80 %)",
+        "pytest de scripts (sin cobertura)",
     ]
 
 
@@ -533,11 +551,11 @@ def test_texto_indica_el_modo_antes_del_commit(ejecutor):
     assert "Modo: antes del commit" in texto
 
 
-def test_modo_normal_no_cambia_con_cambios_en_el_indice(ejecutor):
+def test_modo_completo_no_cambia_con_cambios_en_el_indice(ejecutor):
     ejecutor.respuestas[verificar.ESTADO] = Salida(0, "M  README.md\n")
     informe = verificar.verificar(ejecutor)
     assert "git status limpio" in nombres_fallidos(informe)
-    assert "Modo:" not in verificar.formatear_texto(informe)
+    assert "Modo: completo" in verificar.formatear_texto(informe)
 
 
 def test_main_con_antes_del_commit(ejecutor, capsys):
@@ -566,11 +584,12 @@ def test_antes_del_commit_corre_ruff_y_pytest_en_la_copia(ejecutor, tmp_path):
     verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
 
     [copia] = ejecutor.copias
-    for comando in (verificar.RUFF_CHECK, verificar.RUFF_FORMAT, verificar.PYTEST):
+    [pytest_] = ejecutor.corridas_de_pytest()
+    for comando in (verificar.RUFF_CHECK, verificar.RUFF_FORMAT, pytest_):
         assert ejecutor.carpetas[comando] == copia
     assert ejecutor.entornos[verificar.RUFF_CHECK] == UV_SIN_SINCRONIZAR
     assert ejecutor.entornos[verificar.RUFF_FORMAT] == UV_SIN_SINCRONIZAR
-    assert ejecutor.entornos[verificar.PYTEST] == {
+    assert ejecutor.entornos[pytest_] == {
         **UV_SIN_SINCRONIZAR,
         "COVERAGE_FILE": str(copia / ".coverage"),
     }
@@ -594,7 +613,7 @@ def test_si_falla_la_copia_del_indice_no_corre_ruff_ni_pytest(ejecutor, tmp_path
     assert nombres_fallidos(informe) == ["Copia del índice"]
     assert informe.fallas == ["Copia del índice: fatal: unable to write new index file"]
     assert verificar.RUFF_CHECK not in ejecutor.ejecutados
-    assert verificar.PYTEST not in ejecutor.ejecutados
+    assert ejecutor.corridas_de_pytest() == []
     assert list(tmp_path.iterdir()) == []
 
 
@@ -613,7 +632,8 @@ def test_pytest_recibe_las_variables_del_env_sin_copiar_el_archivo(ejecutor, tmp
 
     verificar.verificar(ejecutor, antes_del_commit=True, temporal=temporal)
 
-    assert ejecutor.entornos[verificar.PYTEST]["VARIABLE_DE_PRUEBA"] == "valor-ficticio"
+    [pytest_] = ejecutor.corridas_de_pytest()
+    assert ejecutor.entornos[pytest_]["VARIABLE_DE_PRUEBA"] == "valor-ficticio"
     assert "VARIABLE_DE_PRUEBA" not in ejecutor.entornos[verificar.RUFF_CHECK]
     assert archivos_en_la_copia == []
 
@@ -629,7 +649,8 @@ def test_las_variables_de_la_terminal_tienen_prioridad_sobre_el_env(
 
     verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
 
-    assert "YA_DEFINIDA" not in ejecutor.entornos[verificar.PYTEST]
+    [pytest_] = ejecutor.corridas_de_pytest()
+    assert "YA_DEFINIDA" not in ejecutor.entornos[pytest_]
 
 
 def test_leer_env_como_django_environ(tmp_path):
@@ -790,9 +811,12 @@ class EjecutorMixto:
         self.pytest = []
 
     def __call__(self, comando, entorno=None, carpeta=None):
-        if comando == verificar.PYTEST:
-            archivos = {p.name: p.read_text(encoding="utf-8") for p in carpeta.glob("*.py")}
-            self.pytest.append({"carpeta": carpeta, "archivos": archivos})
+        if tuple(comando[:3]) == verificar.PYTEST_BASE:
+            archivos = {
+                p.relative_to(carpeta).as_posix(): p.read_text(encoding="utf-8")
+                for p in carpeta.rglob("*.py")
+            }
+            self.pytest.append({"carpeta": carpeta, "archivos": archivos, "comando": comando})
             return Salida(0, SALIDA_PYTEST)
         return verificar.ejecutar(comando, entorno, carpeta)
 
@@ -808,6 +832,7 @@ def repo(tmp_path, monkeypatch):
         ).stdout
 
     def escribir(nombre, texto):
+        (raiz / nombre).parent.mkdir(parents=True, exist_ok=True)
         (raiz / nombre).write_text(texto, encoding="utf-8")
 
     git("init", "-q", "-b", "main")
@@ -832,8 +857,8 @@ def verificar_indice(temporal, ejecutor=None):
 @requiere_uv
 def test_indice_correcto_y_error_de_ruff_fuera_del_indice_pasa_con_aviso(repo):
     git, escribir, temporal = repo
-    escribir("nuevo.py", "OTRO = 2\n")
-    git("add", "nuevo.py")
+    escribir("scripts/nuevo.py", "OTRO = 2\n")
+    git("add", "scripts/nuevo.py")
     escribir("bien.py", CON_ERROR_DE_RUFF)  # fuera del índice
 
     ejecutor = EjecutorMixto()
@@ -843,7 +868,8 @@ def test_indice_correcto_y_error_de_ruff_fuera_del_indice_pasa_con_aviso(repo):
     assert "Fuera de este commit (no se verifica):\n-  M bien.py" in informe.avisos
     [corrida] = ejecutor.pytest
     assert corrida["archivos"]["bien.py"].strip() == "VALOR = 1"
-    assert corrida["archivos"]["nuevo.py"].strip() == "OTRO = 2"
+    assert corrida["archivos"]["scripts/nuevo.py"].strip() == "OTRO = 2"
+    assert corrida["comando"] == (*verificar.PYTEST_BASE, "scripts")
 
 
 @requiere_uv
@@ -861,7 +887,9 @@ def test_indice_con_error_y_correccion_fuera_del_indice_no_pasa(repo):
 
 @requiere_uv
 def test_archivo_sin_seguimiento_avisa_y_no_falla(repo):
-    _, escribir, temporal = repo
+    git, escribir, temporal = repo
+    escribir("scripts/indexado.py", "INDEXADO = 1\n")
+    git("add", "scripts/indexado.py")
     escribir("suelto.py", CON_ERROR_DE_RUFF)
 
     ejecutor = EjecutorMixto()
@@ -1009,3 +1037,187 @@ def test_borra_su_archivo_de_cobertura_al_terminar(ejecutor, monkeypatch, tmp_pa
     verificar.verificar(pytest_que_deja_datos)
 
     assert not datos.exists()
+
+
+# --- PostgreSQL antes de pytest ---
+
+SIN_BASE = "la base no responde (docker compose up -d db)"
+
+
+@pytest.mark.parametrize("antes_del_commit", [False, True])
+def test_sin_base_no_corre_pytest_y_no_pasa(ejecutor, monkeypatch, tmp_path, antes_del_commit):
+    monkeypatch.setattr(verificar, "comprobar_base", lambda: False)
+    informe = verificar.verificar(ejecutor, antes_del_commit=antes_del_commit, temporal=tmp_path)
+
+    assert not informe.pasa
+    assert informe.fallas == [f"PostgreSQL: {SIN_BASE}"]
+    assert ejecutor.corridas_de_pytest() == []
+    assert verificar.formatear_texto(informe).rstrip().endswith(f"NO PASA: {SIN_BASE}")
+
+
+def test_sin_pruebas_que_correr_no_pregunta_por_la_base(ejecutor, monkeypatch, tmp_path):
+    monkeypatch.setattr(verificar, "comprobar_base", lambda: False)
+    ejecutor.respuestas[verificar.INDICE] = Salida(0, "README.md\0openspec/config.yaml\0")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    assert informe.pasa, informe.fallas
+    assert ejecutor.corridas_de_pytest() == []
+
+
+@pytest.fixture
+def puerto_abierto():
+    with socket.create_server(("127.0.0.1", 0)) as servidor:
+        yield servidor.getsockname()[1]
+
+
+def test_comprobar_base_con_el_puerto_abierto(puerto_abierto, monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", f"postgres://u:p@127.0.0.1:{puerto_abierto}/cd")  # ficticio
+    assert COMPROBAR_BASE() is True
+
+
+def test_comprobar_base_con_el_puerto_cerrado_responde_en_segundos(monkeypatch):
+    with socket.create_server(("127.0.0.1", 0)) as libre:
+        puerto = libre.getsockname()[1]  # al cerrarse, nadie escucha en ese puerto
+    monkeypatch.setenv("DATABASE_URL", f"postgres://u:p@127.0.0.1:{puerto}/cd")  # ficticio
+    inicio = time.monotonic()
+    assert COMPROBAR_BASE() is False
+    assert time.monotonic() - inicio < verificar.ESPERA_BASE + 1
+
+
+def test_comprobar_base_lee_database_url_del_env(puerto_abierto, monkeypatch, tmp_path):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    env = tmp_path / ".env"
+    url = f"postgres://u:p@127.0.0.1:{puerto_abierto}/cd"  # ficticio
+    env.write_text(f"DATABASE_URL={url}\n", "utf-8")
+    monkeypatch.setattr(verificar, "ARCHIVO_ENV", env)
+    assert COMPROBAR_BASE() is True
+
+
+def test_comprobar_base_sin_database_url_deja_que_pytest_lo_diga(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    assert COMPROBAR_BASE() is True
+
+
+# --- Antes del commit: solo las pruebas de lo que está en el índice ---
+
+APPS = {"asistencia", "notas", "cuentas", "config"}
+
+
+@pytest.mark.parametrize(
+    ("rutas", "esperado"),
+    [
+        (["src/backend/asistencia/servicios.py"], ("src/backend/asistencia",)),
+        (["src/backend/asistencia/tests/test_vistas.py"], ("src/backend/asistencia",)),
+        (["src/backend/templates/asistencia/hoy.html"], ("src/backend/asistencia",)),
+        (
+            ["src/backend/notas/views.py", "src/backend/asistencia/views.py"],
+            ("src/backend/asistencia", "src/backend/notas"),
+        ),
+        (["scripts/reglas.py"], ("scripts",)),
+        (
+            ["scripts/tests/test_hooks.py", "src/backend/cuentas/views.py"],
+            ("scripts", "src/backend/cuentas"),
+        ),
+        (["README.md", "openspec/config.yaml", ".github/workflows/ci.yml"], ()),
+        (["src/backend/static/js/portada.js", "src/backend/static/css/rebrand.css"], ()),
+        (["src/frontend/package.json"], ("scripts",)),
+        (
+            ["src/frontend/src/rebrand.css", "src/backend/notas/views.py"],
+            ("scripts", "src/backend/notas"),
+        ),
+        ([], ()),
+    ],
+)
+def test_pruebas_del_indice_por_app(rutas, esperado):
+    assert verificar.pruebas_del_indice(rutas, APPS) == esperado
+
+
+@pytest.mark.parametrize(
+    "compartido",
+    [
+        "src/backend/config/settings.py",
+        "src/backend/config/tests/test_settings.py",
+        "src/backend/templates/base.html",
+        "src/backend/templates/marco_rebrand.html",
+        "src/backend/templates/rb/boton.html",
+        "src/backend/templates/componentes/pie.html",
+        "src/backend/conftest.py",
+        "src/backend/cuentas/tests/conftest.py",
+        "pyproject.toml",
+        "uv.lock",
+        "src/backend/manage.py",
+        "src/backend/direccion/views.py",  # app sin pruebas propias
+    ],
+)
+def test_lo_compartido_corre_la_suite_completa(compartido):
+    rutas = ["src/backend/asistencia/views.py", compartido]
+    assert verificar.pruebas_del_indice(rutas, APPS) is None
+
+
+def _con_apps(*apps):
+    def crear(copia):
+        for app in apps:
+            (copia / "src" / "backend" / app / "tests").mkdir(parents=True)
+
+    return crear
+
+
+def test_antes_del_commit_corre_solo_la_app_del_indice_sin_cobertura(ejecutor, tmp_path):
+    ejecutor.al_copiar = _con_apps("asistencia", "notas", "config")
+    ejecutor.respuestas[verificar.INDICE] = Salida(0, "src/backend/asistencia/views.py\0")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    assert informe.pasa, informe.fallas
+    assert ejecutor.corridas_de_pytest() == [(*verificar.PYTEST_BASE, "src/backend/asistencia")]
+    assert "pytest de asistencia (sin cobertura)" in [r.nombre for r in informe.resultados]
+    assert informe.cobertura is None
+
+
+def test_antes_del_commit_con_algo_compartido_corre_toda_la_suite(ejecutor, tmp_path):
+    ejecutor.al_copiar = _con_apps("asistencia", "config")
+    ejecutor.respuestas[verificar.INDICE] = Salida(
+        0, "src/backend/asistencia/views.py\0src/backend/config/urls.py\0"
+    )
+    informe = verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    assert ejecutor.corridas_de_pytest() == [verificar.PYTEST_BASE]
+    assert "pytest, suite completa (sin cobertura)" in [r.nombre for r in informe.resultados]
+
+
+def test_antes_del_commit_sin_codigo_en_el_indice_no_corre_pytest(ejecutor, tmp_path):
+    ejecutor.respuestas[verificar.INDICE] = Salida(0, "openspec/config.yaml\0")
+    informe = verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+
+    assert informe.pasa
+    assert ejecutor.corridas_de_pytest() == []
+    assert any(r.nombre.startswith("pytest: sin pruebas") for r in informe.resultados)
+
+
+def test_antes_del_commit_si_no_se_puede_leer_el_indice_corre_toda_la_suite(ejecutor, tmp_path):
+    ejecutor.respuestas[verificar.INDICE] = Salida(128, "fatal\n")
+    verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+    assert ejecutor.corridas_de_pytest() == [verificar.PYTEST_BASE]
+
+
+def test_indice_lista_borrados_y_ambos_lados_de_un_renombre():
+    assert verificar.INDICE == ("git", "diff", "--cached", "--name-only", "--no-renames", "-z")
+
+
+def test_texto_antes_del_commit_no_mide_cobertura(ejecutor, tmp_path):
+    informe = verificar.verificar(ejecutor, antes_del_commit=True, temporal=tmp_path)
+    assert "Cobertura total: no se mide en este modo" in verificar.formatear_texto(informe)
+
+
+# --- Modo --completo ---
+
+
+def test_main_con_completo_corre_la_suite_con_cobertura(ejecutor, capsys):
+    assert verificar.main(["--completo"], ejecutar=ejecutor, gh=lambda _: None) == 0
+    assert ejecutor.corridas_de_pytest() == [verificar.PYTEST]
+    assert ejecutor.copias == []
+    assert "Modo: completo" in capsys.readouterr().out
+
+
+def test_completo_y_antes_del_commit_no_van_juntos(ejecutor):
+    with pytest.raises(SystemExit):
+        verificar.main(["--completo", "--antes-del-commit"], ejecutar=ejecutor, gh=lambda _: None)

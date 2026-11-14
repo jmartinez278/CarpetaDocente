@@ -5,8 +5,8 @@ de este dispositivo (design de US-020, D10): por eso el formulario lleva data-us
 {% endcomment %}
 <details class="menu-cuenta" data-menu-cuenta>
   <summary class="menu-cuenta__boton" aria-label="Menú de la cuenta">{% include "iconos/circle-user-round.svg" %}</summary>
-  <div class="menu-cuenta__panel">
-    <p class="menu-cuenta__nombre">{{ user.get_full_name|default:user.username }}</p>
+  <div class="menu-cuenta__panel" data-cuenta-panel>
+    <p class="menu-cuenta__nombre" data-cuenta-nombre>{{ user.get_full_name|default:user.username }}</p>
     <form method="post" action="{% url 'salir' %}" data-salir data-usuario="{{ user.pk }}">
       {% csrf_token %}
       <button class="menu-cuenta__salir" type="submit">{% include "iconos/log-out.svg" %}Cerrar sesión</button>

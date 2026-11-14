@@ -1,43 +1,44 @@
-{% extends "marco.html" %}
+{% extends "marco_rebrand.html" %}
 {% load static %}
 {% comment %}
-Competencias desarrolladas en el periodo (design de US-029, D8 y D9; DESIGN.md 0.4). El servidor dibuja la lista una vez, con el
-estado del periodo que abre, y pasa por json_script el de cada periodo; competencias.js agrega el cambio de periodo, la cápsula
-de áreas del celular, los borradores, el guardado y el diálogo de salida. Sin periodos que marcar no hay lista, selector ni Guardar.
+Competencias del periodo en el marco del rebrand (spec competencias-periodo; rebrand-us-029, D1 a D5), del boceto
+insumos/rebrand/competencias.html. El servidor dibuja la lista una vez, con el estado del periodo que abre, y pasa por
+json_script el de cada periodo; competencias.js agrega el cambio de periodo, la cápsula de áreas, los borradores, el guardado
+y el diálogo de salida. El <main> es del marco. Sin periodos que marcar no hay lista, selector ni «Guardar». PC (desde 900 px):
+la lista completa y el lateral con una sola tarjeta café; hasta 899 px, un área a la vez y la tarjeta es la barra fija de abajo.
 {% endcomment %}
 
 {% block titulo %}Competencias · {{ seccion_corta }} · CarpetaDocente{% endblock %}
 
+{% block titulo_barra %}Notas{% endblock %}
+
 {% block principal %}
-<main class="vista-competencias" data-dimension="notas">
-  <header class="comp-cabecera">
-    <h1>{% include "iconos/clipboard-list.svg" %}Competencias · {{ seccion_corta }}</h1>
-    <span class="comp-franjas" aria-hidden="true"></span>
-    <p class="comp-seccion">{{ seccion.grado }}.º grado, sección {{ seccion.nombre }} <span aria-hidden="true">·</span> {{ seccion.anio_escolar.anio }}</p>
-    {% if periodos_elegibles %}<p class="comp-instruccion" data-instruccion{% if not periodo_inicial %} hidden{% endif %}><span class="comp-instruccion__pc">Confirma qué competencias trabajaste. Desmarca las que no desarrollaste en este {{ palabra_periodo }}.</span><span class="comp-instruccion__movil">Desmarca las competencias que no trabajaste.</span></p>{% endif %}
+<div class="competencias" data-dimension="notas">
+  <nav class="breadcrumb" aria-label="Ruta"><a href="{{ url_notas }}">{% include "iconos/chevron-left.svg" %}Registrar notas</a></nav>
+  <header class="page-heading comp-heading">
+    <div>
+      <p class="small">{{ seccion.grado }}.º grado, sección {{ seccion.nombre }} · {{ seccion.anio_escolar.anio }}</p>
+      <h1>Competencias del {{ palabra_periodo }}</h1>
+      {% if periodos_elegibles %}<p class="comp-instruccion muted" data-instruccion{% if not periodo_inicial %} hidden{% endif %}><span class="solo-pc">Confirma qué competencias trabajaste. Desmarca las que no desarrollaste en este {{ palabra_periodo }}.</span><span class="solo-movil">Desmarca las que no trabajaste.</span></p>{% endif %}
+    </div>
+    {% if periodos %}{% include "notas/_periodos.html" %}{% endif %}
   </header>
 
   {% if not periodos %}
-  <div class="comp-vacio">{% include "iconos/inbox.svg" %}<h2>{{ aviso.titulo }}</h2><p>{{ aviso.texto }}</p></div>
+  {% include "rb/estado_vacio.html" with icono="inbox" titulo=aviso.titulo texto=aviso.texto %}
   {% else %}
-  {% if aviso %}<div class="mensaje mensaje--aviso comp-aviso" data-aviso>{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>{{ aviso.titulo }}</p><p>{{ aviso.texto }}</p></div></div>{% endif %}
-  {% if sin_marcas_de %}<div class="mensaje mensaje--aviso comp-aviso" data-aviso-sin-marcas>{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>{{ sin_marcas_de.nombre }} aún no tiene competencias confirmadas</p><p>Confirma las que trabajaste para empezar a registrar los niveles de logro.</p></div></div>{% endif %}
-  <div class="mensaje comp-nota" data-nota-periodo hidden></div>
-  {% include "notas/_periodos.html" %}
+  {% if aviso %}<div class="comp-mensaje" data-aviso>{% include "rb/mensaje.html" with tipo="aviso" titulo=aviso.titulo texto=aviso.texto %}</div>{% endif %}
+  {% if sin_marcas_de %}<div class="comp-mensaje" data-aviso-sin-marcas>{% include "rb/mensaje.html" with tipo="aviso" titulo=sin_marcas_de.romano|add:" aún no tiene competencias confirmadas" texto="Confirma las que trabajaste para empezar a registrar los niveles de logro." %}</div>{% endif %}
+  <div class="message message--aviso comp-mensaje" data-nota-periodo hidden></div>
   {% if periodos_elegibles %}
-  <p class="comp-notas"><a class="boton-secundario" data-registrar-notas href="{{ url_notas }}{% if periodo_inicial %}?periodo={{ periodo_inicial.numero }}&amp;area={{ area_inicial }}{% endif %}"{% if not periodo_inicial %} hidden{% endif %}>Registrar notas de <span data-nombre-periodo>{{ periodo_inicial.nombre }}</span>{% include "iconos/arrow-right.svg" %}</a></p>
-  <noscript><p class="mensaje mensaje--aviso comp-aviso">Activa JavaScript para guardar las competencias.</p></noscript>
-  {% if not periodo_inicial %}<div class="comp-vacio" data-vacio>{% include "iconos/clipboard-list.svg" %}<h2>Elige un {{ palabra_periodo }} anterior</h2><p>Puedes revisar y corregir las competencias de {{ periodos_elegibles }}.</p></div>{% endif %}
-  <div class="comp-distribucion" data-trabajo{% if not periodo_inicial %} hidden{% endif %}>
-    <div class="comp-zona-lista">
-      <div class="comp-lista-intro"><h2>Competencias por área</h2><p class="comp-ayuda">Marca las que trabajaste</p></div>
-      <nav class="comp-navegacion" aria-label="Áreas del {{ palabra_periodo }}">
-        <div class="comp-navegacion__contexto"><label for="area-elegida">Área</label><span data-posicion-area id="posicion-area">1 de {{ areas|length }}</span></div>
-        <div class="comp-capsula">
-          <button type="button" data-area-anterior aria-label="Área anterior" aria-controls="lista-areas">{% include "iconos/chevron-left.svg" %}</button>
-          <select id="area-elegida" aria-describedby="posicion-area" aria-controls="lista-areas">{% for a in areas %}<option value="{{ a.area.codigo_siagie }}">{{ a.area.nombre }}</option>{% endfor %}</select>
-          <button type="button" data-area-siguiente aria-label="Área siguiente" aria-controls="lista-areas">{% include "iconos/chevron-right.svg" %}</button>
-        </div>
+  <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Activa JavaScript para guardar las competencias." %}</noscript>
+  {% if not periodo_inicial %}<div class="comp-mensaje" data-vacio>{% include "rb/estado_vacio.html" with icono="clipboard-list" titulo="Elige un "|add:palabra_periodo|add:" anterior" texto="Puedes revisar y corregir las competencias del "|add:periodos_elegibles|add:" "|add:palabra_periodo|add:"." %}</div>{% endif %}
+  <div class="comp-grid" data-trabajo{% if not periodo_inicial %} hidden{% endif %}>
+    <div class="comp-zona">
+      <nav class="comp-capsula" aria-label="Áreas del {{ palabra_periodo }}">
+        <button class="btn icon-button" type="button" data-area-anterior aria-label="Área anterior" aria-controls="lista-areas">{% include "iconos/chevron-left.svg" %}</button>
+        <div class="capsula-centro"><label class="sr-only" for="area-elegida">Área</label><select class="input" id="area-elegida" aria-describedby="posicion-area" aria-controls="lista-areas">{% for a in areas %}<option value="{{ a.area.codigo_siagie }}">{{ a.area.nombre }}</option>{% endfor %}</select><span class="small" id="posicion-area" data-posicion-area>1 de {{ areas|length }}</span></div>
+        <button class="btn icon-button" type="button" data-area-siguiente aria-label="Área siguiente" aria-controls="lista-areas">{% include "iconos/chevron-right.svg" %}</button>
       </nav>
       <div class="comp-areas" id="lista-areas">
         {% for a in areas %}{% include "notas/_area.html" %}
@@ -49,16 +50,9 @@ de áreas del celular, los borradores, el guardado y el diálogo de salida. Sin 
   {% endif %}
   {% endif %}
   {{ datos|json_script:"datos-competencias" }}
-</main>
+</div>
 {% if periodos_elegibles %}
-<dialog id="confirmar-salida" class="comp-dialogo" aria-labelledby="titulo-salida" aria-describedby="texto-salida">
-  <h2 id="titulo-salida">¿Salir sin guardar?</h2>
-  <p id="texto-salida"></p>
-  <div class="comp-dialogo__acciones">
-    <button id="seguir-editando" class="boton-principal" type="button" autofocus>Seguir editando</button>
-    <button id="salir-sin-guardar" class="boton-secundario" type="button">Salir sin guardar</button>
-  </div>
-</dialog>
+{% include "rb/dialogo.html" with id="confirmar-salida" variante="chico" titulo="¿Salir sin guardar?" titulo_id="titulo-salida" descrito_por="texto-salida" cuerpo="notas/_salida_cuerpo.html" pie="notas/_salida_pie.html" %}
 <template data-iconos>
   <span data-icono="reloj">{% include "iconos/clock.svg" %}</span>
   <span data-icono="check">{% include "iconos/check.svg" %}</span>
@@ -68,5 +62,6 @@ de áreas del celular, los borradores, el guardado y el diálogo de salida. Sin 
 <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-anuncio></div>
 <div class="sr-only" role="alert" aria-atomic="true" data-alerta></div>
 <script src="{% static 'js/competencias.js' %}" defer></script>
+<script src="{% static 'js/competencias-barra.js' %}" defer></script>
 {% endif %}
 {% endblock %}

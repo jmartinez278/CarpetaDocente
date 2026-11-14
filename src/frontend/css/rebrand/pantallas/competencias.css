@@ -1,0 +1,627 @@
+/* Competencias del periodo (rebrand-us-029, D1 a D5), del boceto (insumos/rebrand/competencias.html y su
+   competencias.css): encabezado con el selector I–IV, la lista por área, el lateral de 320 px (280 px hasta 1100 px) con
+   una sola tarjeta café «Tu selección» y, hasta 899 px, un área a la vez con la cápsula y la tarjeta convertida en la
+   barra fija de abajo. Los nombres que pinta competencias.js (comp-fila--notas/--anual, motivo, comp-guardado--*) se
+   conservan o se renombran con él (D3). */
+
+@layer components {
+  /* --- Encabezado: el <main> del marco con el margen superior del boceto (20 px; 12 px en el celular) --- */
+  .page:has(> .competencias) {
+    padding-top: var(--s-5);
+  }
+
+  .competencias .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-bottom: var(--s-4);
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .competencias .breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: var(--touch-min);
+    color: var(--action);
+    text-decoration: none;
+  }
+
+  .competencias .breadcrumb a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .competencias .breadcrumb .icono {
+    width: 16px;
+    height: 16px;
+  }
+
+  .comp-heading {
+    align-items: flex-end;
+    margin-bottom: var(--s-5);
+  }
+
+  .comp-heading .small {
+    margin: 0 0 var(--s-2);
+  }
+
+  .comp-instruccion {
+    max-width: 60ch;
+    margin-top: var(--s-2);
+  }
+
+  .solo-movil {
+    display: none;
+  }
+
+  /* --- Selector de periodos: el romano y su estado; las fechas van solo en el nombre accesible (D2) --- */
+  .period-picker {
+    display: inline-flex;
+    flex: none;
+    gap: var(--s-1);
+    padding: var(--s-1);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+  }
+
+  .comp-periodo {
+    display: grid;
+    place-items: center;
+    gap: 0;
+    min-width: 72px;
+    min-height: var(--touch-min);
+    padding: var(--s-1) var(--s-3);
+    background: transparent;
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    line-height: 1.15;
+  }
+
+  .comp-periodo strong {
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .comp-periodo [data-estado-periodo] {
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .comp-periodo:hover:not(:disabled) {
+    background: var(--g-main);
+  }
+
+  .comp-periodo[aria-pressed="true"] {
+    background: var(--action);
+    color: var(--action-ink);
+  }
+
+  .comp-periodo[aria-pressed="true"] [data-estado-periodo] {
+    color: inherit;
+    opacity: 0.85;
+  }
+
+  .comp-periodo:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .comp-mensaje {
+    margin-bottom: var(--s-4);
+  }
+
+  /* El mensaje de periodo que pinta competencias.js (estás revisando…, último del año). */
+  .message.comp-mensaje {
+    margin-bottom: var(--s-4);
+  }
+
+  /* --- Rejilla: la lista a la izquierda y el lateral a la derecha, fijo al bajar --- */
+  .comp-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--s-5);
+    align-items: start;
+  }
+
+  .comp-zona {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .comp-side {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: calc(var(--bar-height) + var(--s-5));
+    min-width: 0;
+  }
+
+  .comp-capsula {
+    display: none;
+  }
+
+  /* --- Una tarjeta por área --- */
+  .comp-area {
+    overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+
+  .comp-area + .comp-area {
+    margin-top: var(--s-3);
+  }
+
+  .comp-area-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: 14px 20px var(--s-3);
+  }
+
+  .comp-area-head h3 {
+    font-size: 18px;
+  }
+
+  .comp-sub {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .comp-cuenta {
+    flex: none;
+    padding: 2px 10px;
+    background: var(--folder);
+    border-radius: var(--r-pill);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Filas: la etiqueta entera es pulsable, de 44 px o más (56 px de mínimo) --- */
+  .comp-fila {
+    border-top: 1px solid var(--grid-line);
+  }
+
+  .comp-fila label {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    min-height: 56px;
+    padding: 14px 20px;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .comp-fila label:hover {
+      background: var(--row-hover);
+    }
+  }
+
+  .comp-fila input {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    margin: 1px 0 0;
+    accent-color: var(--action);
+    cursor: pointer;
+  }
+
+  .comp-txt {
+    display: grid;
+    gap: var(--s-1);
+    min-width: 0;
+  }
+
+  .comp-n {
+    color: var(--muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .comp-motivos:empty {
+    display: none;
+  }
+
+  .comp-motivos {
+    display: grid;
+    gap: var(--s-1);
+  }
+
+  .motivo {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .motivo .icono {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+  }
+
+  .motivo--anual {
+    color: var(--warn-ink);
+  }
+
+  /* Bloqueada: marcada, con su motivo; sin rebote (E-01). */
+  .comp-fila--notas label,
+  .comp-fila--anual label {
+    cursor: not-allowed;
+  }
+
+  .comp-fila--notas input,
+  .comp-fila--anual input {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  .comp-area--curso {
+    background: transparent;
+    border-style: dashed;
+  }
+
+  .comp-area--curso .comp-area-head h3,
+  .comp-area--curso .comp-txt {
+    color: var(--muted);
+  }
+
+  .comp-area--curso label,
+  .comp-area--curso input {
+    cursor: default;
+  }
+
+  /* --- Tarjeta café «Tu selección»: un solo acento --- */
+  .comp-resumen {
+    padding: var(--s-5);
+    background: var(--cocoa);
+    border: 1px solid var(--cocoa-line);
+    border-radius: var(--r-lg);
+    color: var(--cocoa-ink);
+  }
+
+  .comp-resumen :focus-visible {
+    outline-color: var(--cocoa-ink);
+  }
+
+  .comp-resumen .small {
+    color: var(--cocoa-muted);
+  }
+
+  .comp-resumen__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    margin-bottom: var(--s-4);
+  }
+
+  .comp-resumen__cabecera h2 {
+    font-size: 18px;
+    letter-spacing: -0.015em;
+  }
+
+  .comp-conteo {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    color: var(--cocoa-muted);
+    font-size: 16px;
+  }
+
+  .comp-conteo strong {
+    color: var(--cocoa-ink);
+    font-size: var(--text-count);
+    line-height: var(--leading-count);
+    letter-spacing: var(--tracking-page);
+  }
+
+  .comp-resumen progress {
+    display: block;
+    width: 100%;
+    height: 6px;
+    margin-top: var(--s-4);
+    overflow: hidden;
+    appearance: none;
+    background: color-mix(in srgb, var(--cocoa-ink) 26%, transparent);
+    border: 0;
+    border-radius: 4px;
+  }
+
+  .comp-resumen progress::-webkit-progress-bar {
+    background: color-mix(in srgb, var(--cocoa-ink) 26%, transparent);
+  }
+
+  .comp-resumen progress::-webkit-progress-value {
+    background: var(--gold);
+    border-radius: 4px;
+  }
+
+  .comp-resumen progress::-moz-progress-bar {
+    background: var(--gold);
+    border-radius: 4px;
+  }
+
+  .comp-excluye {
+    margin-top: var(--s-3);
+  }
+
+  .comp-bloqueos:empty {
+    display: none;
+  }
+
+  .comp-bloqueos {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: 20px;
+    padding-top: var(--s-4);
+    border-top: 1px solid color-mix(in srgb, var(--cocoa-ink) 26%, transparent);
+  }
+
+  .comp-bloqueos div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-3);
+  }
+
+  .comp-bloqueos dd {
+    font-weight: 500;
+  }
+
+  .comp-guardado {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: var(--s-5);
+    padding-top: var(--s-4);
+    border-top: 1px solid color-mix(in srgb, var(--cocoa-ink) 26%, transparent);
+  }
+
+  .comp-guardado__estado {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  .comp-guardado__estado .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  .comp-guardado--fallo .comp-guardado__estado .icono {
+    color: var(--gold);
+  }
+
+  .comp-guardado__ayuda:empty {
+    display: none;
+  }
+
+  .comp-guardado__ayuda a {
+    color: var(--cocoa-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .comp-resumen .btn {
+    color: var(--cocoa-ink);
+  }
+
+  .comp-resumen .btn--primary {
+    width: 100%;
+    margin-top: var(--s-2);
+    background: var(--cocoa-ink);
+    border-color: var(--cocoa-ink);
+    color: var(--cocoa);
+  }
+
+  .comp-resumen .btn--primary[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  html .comp-resumen .btn.btn--primary:hover {
+    background: color-mix(in srgb, var(--cocoa-ink) 92%, var(--cocoa));
+    border-color: var(--cocoa-ink);
+    color: var(--cocoa);
+  }
+
+  .comp-deshacer {
+    width: 100%;
+  }
+
+  .comp-deshacer .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  .comp-registrar {
+    width: 100%;
+    margin-top: var(--s-3);
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .comp-registrar .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* El diálogo de salida: la lista de periodos con cambios. */
+  #texto-salida ul {
+    display: grid;
+    gap: 6px;
+    margin: var(--s-3) 0;
+    padding-left: 20px;
+    list-style: disc;
+  }
+
+  #texto-salida p + p {
+    margin-top: var(--s-3);
+  }
+
+  /* --- De 900 a 1100 px: lateral de 280 px --- */
+  @media (max-width: 1100px) {
+    .comp-grid {
+      grid-template-columns: minmax(0, 1fr) 280px;
+    }
+  }
+
+  /* --- Hasta 899 px: un área a la vez con la cápsula, y la tarjeta es la barra fija de abajo (D4) --- */
+  @media (max-width: 899px) {
+    html:has(.comp-grid) {
+      scroll-padding-bottom: calc(var(--comp-barra, 88px) + var(--s-3));
+    }
+
+    /* Sin JS: respaldo de dos filas. Con JS, --comp-barra ya trae el alto real de la barra (competencias-barra.js). */
+    html:has(.comp-grid #deshacer:not([hidden])) {
+      scroll-padding-bottom: calc(var(--comp-barra, 136px) + var(--s-3));
+    }
+
+    .page:has(> .competencias) {
+      padding-bottom: calc(var(--comp-barra, 88px) + var(--s-5));
+    }
+
+    .comp-grid {
+      display: block;
+    }
+
+    .comp-side {
+      position: static;
+    }
+
+    .comp-capsula {
+      position: sticky;
+      top: calc(var(--bar-height) + var(--s-2));
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      margin-bottom: var(--s-3);
+      padding: 6px;
+      background: var(--card);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-md);
+    }
+
+    .capsula-centro {
+      display: grid;
+      flex: 1;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .capsula-centro select {
+      min-height: var(--touch-min);
+      padding-block: 6px;
+      font-weight: 500;
+    }
+
+    .capsula-centro .small {
+      font-size: var(--text-label);
+      text-align: center;
+    }
+
+    .comp-area + .comp-area {
+      margin-top: 0;
+    }
+
+    /* La misma tarjeta, ahora barra fija: estado, total del celular y «Guardar»; «Deshacer cambios» en una segunda fila. */
+    .comp-resumen {
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 20;
+      padding: var(--s-3) var(--s-4) calc(var(--s-3) + env(safe-area-inset-bottom));
+      border-width: 1px 0 0;
+      border-radius: 0;
+    }
+
+    .comp-resumen__cabecera,
+    .comp-resumen__detalle {
+      display: none;
+    }
+
+    .comp-guardado {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        "estado guardar"
+        "ayuda guardar"
+        "deshacer deshacer";
+      align-items: center;
+      gap: 2px var(--s-3);
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .comp-guardado__estado {
+      grid-area: estado;
+    }
+
+    .comp-guardado__ayuda {
+      grid-area: ayuda;
+      font-size: var(--text-label);
+    }
+
+    .comp-resumen .comp-guardar {
+      grid-area: guardar;
+      width: auto;
+      min-width: 120px;
+      margin-top: 0;
+    }
+
+    .comp-resumen .comp-deshacer {
+      grid-area: deshacer;
+    }
+  }
+
+  /* --- Hasta 699 px: encabezado en columna, selector de ancho completo, textos del celular --- */
+  @media (max-width: 699px) {
+    .page:has(> .competencias) {
+      padding-top: var(--s-3);
+    }
+
+    .solo-pc {
+      display: none;
+    }
+
+    .solo-movil {
+      display: inline;
+    }
+
+    .comp-heading {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .period-picker {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      width: 100%;
+    }
+
+    .comp-periodo {
+      min-width: 0;
+      padding-inline: var(--s-1);
+    }
+
+    .comp-fila label {
+      padding: 14px var(--s-4);
+    }
+
+    .comp-area-head {
+      padding: 14px var(--s-4) 10px;
+    }
+  }
+}

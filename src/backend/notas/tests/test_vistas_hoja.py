@@ -110,16 +110,35 @@ def test_abre_en_el_vigente(cliente, seccion_tutora, matematica):
     respuesta = abrir(cliente, seccion_tutora)
 
     assert respuesta.status_code == 200
-    assert respuesta.context["periodo"].nombre == "B3"
+    assert respuesta.context["periodo"].numero == 3
     assert respuesta.context["aviso"] is None
-    assert datos(respuesta)["periodo"] == {"numero": 3, "nombre": "B3", "estado": "VIGENTE"}
+    assert datos(respuesta)["periodo"] == {
+        "numero": 3,
+        "nombre": "III bimestre",
+        "estado": "VIGENTE",
+    }
+
+
+def test_el_contexto_trae_todos_los_periodos_del_anio_para_el_selector(
+    cliente, seccion_tutora, matematica
+):
+    """Delta «Periodo de la hoja» (rebrand-us-020, D1): el selector pinta los cuatro, también el
+    futuro, que no se elige."""
+    respuesta = abrir(cliente, seccion_tutora)
+
+    assert [p.numero for p in respuesta.context["periodos"]] == [1, 2, 3, 4]
+    assert [p.estado for p in respuesta.context["periodos"]][-1] == "FUTURO"
 
 
 def test_abre_el_periodo_anterior_pedido(cliente, seccion_tutora, matematica):
     """Escenario "Periodo anterior pedido"."""
     respuesta = abrir(cliente, seccion_tutora, periodo="2")
 
-    assert datos(respuesta)["periodo"] == {"numero": 2, "nombre": "B2", "estado": "ANTERIOR"}
+    assert datos(respuesta)["periodo"] == {
+        "numero": 2,
+        "nombre": "II bimestre",
+        "estado": "ANTERIOR",
+    }
 
 
 @pytest.mark.parametrize("pedido", ["4", "9", "abc", ""])
@@ -150,7 +169,11 @@ def test_en_vacaciones_abre_el_ultimo_periodo_pasado(cliente, seccion_tutora, ma
     respuesta = abrir(cliente, seccion_tutora)
 
     assert respuesta.context["aviso"]["titulo"] == "Hoy no hay un periodo vigente"
-    assert datos(respuesta)["periodo"] == {"numero": 2, "nombre": "B2", "estado": "ANTERIOR"}
+    assert datos(respuesta)["periodo"] == {
+        "numero": 2,
+        "nombre": "II bimestre",
+        "estado": "ANTERIOR",
+    }
 
 
 def test_antes_del_primer_periodo_avisa_la_fecha_sin_hoja(cliente, seccion_tutora, matematica, hoy):
@@ -162,7 +185,7 @@ def test_antes_del_primer_periodo_avisa_la_fecha_sin_hoja(cliente, seccion_tutor
     assert respuesta.status_code == 200
     assert respuesta.context["aviso"] == {
         "titulo": "Hoy no hay un periodo vigente",
-        "texto": "El bimestre 1 empieza el 9 de marzo.",
+        "texto": "El I bimestre empieza el 9 de marzo.",
     }
     assert respuesta.context["periodo"] is None
     assert "datos-notas" not in respuesta.content.decode()
@@ -325,9 +348,9 @@ def test_lleva_los_periodos_editables_para_nombrar_los_borradores(
     dato = datos(abrir(cliente, seccion_tutora))
 
     assert dato["periodos"] == [
-        {"numero": 1, "nombre": "B1"},
-        {"numero": 2, "nombre": "B2"},
-        {"numero": 3, "nombre": "B3"},
+        {"numero": 1, "nombre": "I bimestre"},
+        {"numero": 2, "nombre": "II bimestre"},
+        {"numero": 3, "nombre": "III bimestre"},
     ]
 
 

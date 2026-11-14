@@ -1,124 +1,113 @@
-{% extends "marco.html" %}
+{% extends "marco_rebrand.html" %}
 {% load static %}
 {% comment %}
-Hoja de notas por área y periodo (design de US-020, D9; boceto de prototipos-cd/US-020; DESIGN.md 0.4). El servidor dibuja el
-marco: título, periodo, «Competencias», avisos, tira de áreas, barra de guardar, diálogos y regiones del lector de pantalla.
-notas.js dibuja la rejilla del área visible desde el json_script (#datos-notas), así que PC, celular, filtro y cambio de
-área comparten un solo dibujante. Sin periodo que abrir (sin periodos o antes del primero) solo hay el aviso.
+Hoja de notas por área y periodo en el marco del rebrand (spec registro-notas; design de US-020, D9; rebrand-us-020, D1 y
+D5), del boceto insumos/rebrand/notas.html. El servidor dibuja el encabezado con el selector de periodo, la tira de áreas
+con el acceso fijo a Competencias, la tarjeta del área, la leyenda, la barra café de guardar (fija al pie, fuera de la
+hoja), los diálogos y las regiones del lector de pantalla. notas.js dibuja la rejilla del área visible desde el
+json_script (#datos-notas). El <main> es del marco. Sin periodo que abrir (sin periodos o antes del primero) solo hay el
+aviso.
 {% endcomment %}
 
 {% block titulo %}Notas · {{ seccion_corta }} · CarpetaDocente{% endblock %}
 
+{% block titulo_barra %}Notas{% endblock %}
+
 {% block principal %}
-<main class="vista-notas" data-dimension="notas" id="contenido">
-  <header class="notas-cabecera">
-    <div class="notas-cabecera__principal">
-      <h1>{% include "iconos/clipboard-list.svg" %}Notas · {{ seccion_corta }}</h1>
-      <span class="notas-franjas" aria-hidden="true"></span>
-      <p class="notas-seccion">{{ seccion.grado }}.º grado, sección {{ seccion.nombre }} <span aria-hidden="true">·</span> {{ seccion.anio_escolar.anio }}</p>
+<div class="hn" data-dimension="notas">
+  <header class="page-heading hn-cabecera">
+    <div>
+      <p class="small">{{ seccion.grado }}.º grado, sección {{ seccion.nombre }} · {{ seccion.anio_escolar.anio }}</p>
+      <h1>Registrar notas</h1>
     </div>
-    {% if periodo %}
-    <div class="notas-cabecera__acciones">
-      <p class="notas-periodo"><strong>{{ periodo.nombre }}</strong> <span aria-hidden="true">·</span> <span>{{ estado_periodo }}</span></p>
-      <a class="boton-secundario notas-competencias" data-ir-competencias href="{{ url_competencias }}">{% include "iconos/clipboard-list.svg" %}Competencias</a>
-    </div>
-    {% endif %}
+    {% if periodo %}{% include "notas/_selector_periodo.html" %}{% endif %}
   </header>
 
-  {% if aviso %}<div class="mensaje mensaje--aviso notas-aviso">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>{{ aviso.titulo }}</p><p>{{ aviso.texto }}</p></div></div>{% endif %}
-  {% if periodo and periodo.estado == "ANTERIOR" and not aviso %}<div class="mensaje mensaje--aviso notas-aviso">{% include "iconos/file-text.svg" %}<div class="mensaje__texto"><p>Estás revisando un {{ palabra_periodo }} anterior</p><p>Puedes corregirlo mientras el año esté abierto.</p></div></div>{% endif %}
+  {% if not periodos %}
+  {% include "rb/estado_vacio.html" with icono="inbox" titulo=aviso.titulo texto=aviso.texto %}
+  {% else %}
+  {% if aviso %}<div class="hn-aviso">{% include "rb/mensaje.html" with tipo="aviso" titulo=aviso.titulo texto=aviso.texto %}</div>{% endif %}
+  {% if periodo and periodo.estado == "ANTERIOR" and not aviso %}<div class="hn-aviso">{% include "rb/mensaje.html" with tipo="aviso" icono="file-text" titulo="Estás revisando un "|add:palabra_periodo|add:" anterior" texto="Puedes corregirlo mientras el año esté abierto." %}</div>{% endif %}
+  {% endif %}
 
   {% if periodo %}
-  <noscript><p class="mensaje mensaje--aviso notas-aviso">Activa JavaScript para registrar las notas.</p></noscript>
-  <div class="notas-trabajo" data-trabajo>
-    <nav class="notas-areas" aria-label="Áreas del {{ palabra_periodo }}">
-      <div class="notas-areas__contexto"><span>Área</span><span class="notas-ayuda">Desliza para ver más áreas</span></div>
-      <div class="notas-tira"><div class="notas-tira__lista" data-tira>
-        {% for hoja in hojas %}<button type="button" class="notas-pildora{% if hoja.a_cargo %} notas-pildora--curso{% endif %}" data-area-pildora="{{ hoja.area.codigo_siagie }}" aria-pressed="{% if hoja.area.codigo_siagie == area_inicial %}true{% else %}false{% endif %}"{% if hoja.a_cargo %} aria-description="A cargo del docente de curso"{% endif %}>{{ hoja.area.nombre }}</button>{% endfor %}
-      </div></div>
+  <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Activa JavaScript para registrar las notas." %}</noscript>
+  <div class="hn-trabajo" data-trabajo>
+    <nav class="hn-tira" aria-label="Áreas del {{ palabra_periodo }}">
+      <div class="hn-tira__lista" data-tira>
+        {% for hoja in hojas %}<button type="button" class="hn-pildora{% if hoja.a_cargo %} hn-pildora--curso{% endif %}" data-area-pildora="{{ hoja.area.codigo_siagie }}" aria-pressed="{% if hoja.area.codigo_siagie == area_inicial %}true{% else %}false{% endif %}"{% if hoja.a_cargo %} aria-description="A cargo del docente de curso"{% endif %}>{{ hoja.area.nombre }}</button>{% endfor %}
+      </div>
+      <span class="hn-tira__separador" aria-hidden="true"></span>
+      <a class="hn-ir-competencias" data-ir-competencias href="{{ url_competencias }}">{% include "iconos/list-checks.svg" %}<span class="hn-ir-competencias__texto">Competencias</span></a>
     </nav>
 
-    <section id="hoja" class="notas-hoja" aria-labelledby="titulo-area" tabindex="-1">
-      <header class="notas-hoja__cabecera">
+    <section id="hoja" class="hn-hoja" aria-labelledby="titulo-area" tabindex="-1">
+      <header class="hn-hoja__cabecera">
         <div>
           <h2 id="titulo-area"></h2>
-          <p class="notas-detalle"><span id="detalle-hoja" class="notas-ayuda"></span><button id="ver-todos" class="notas-texto" type="button" hidden>Ver todos</button></p>
+          <p class="hn-hoja__detalle"><span id="detalle-hoja"></span><button id="ver-todos" class="btn btn--text hn-ver-todos" type="button" hidden>Ver todos</button></p>
         </div>
-        <button id="rellenar-movil" class="notas-texto notas-solo-celular" type="button" hidden>Rellenar vacías</button>
-        <p id="ayuda-teclas" class="notas-ayuda notas-solo-pc"></p>
+        <button id="rellenar-movil" class="btn btn--secondary hn-rellenar-area" type="button" hidden>Rellenar vacías</button>
       </header>
-      <div id="borrador" class="notas-borrador" data-borrador hidden></div>
-      <div id="mensaje-guardado" class="mensaje notas-mensaje" role="status" hidden></div>
-      <div id="superficie-hoja" class="notas-superficie" data-superficie></div>
-      <div id="barra-guardar" class="notas-barra">
-        <div class="notas-barra__estado">
-          <p id="cierre-area" class="notas-cierre" tabindex="-1" hidden></p>
-          <p class="notas-estado-linea"><span id="estado-guardado" class="notas-estado"></span><span id="separador-estado" class="notas-separador" aria-hidden="true" hidden>·</span><button id="faltantes" class="notas-faltantes" type="button" aria-describedby="faltantes-ayuda" hidden></button><span id="sin-faltantes" class="notas-sin-faltantes" tabindex="-1" hidden>Sin notas faltantes</span><span id="no-validos" class="notas-no-validos" hidden><span class="notas-separador" aria-hidden="true">·</span><span id="texto-no-validos"></span></span></p>
-          <p id="alcance" class="notas-ayuda"></p>
-          <span id="faltantes-ayuda" class="sr-only">Muestra solo los estudiantes con notas pendientes.</span>
-          <p id="conteo-vivo" class="sr-only" aria-live="polite"></p>
-        </div>
-        <button id="guardar" class="boton-principal notas-guardar" type="button" aria-describedby="alcance" aria-disabled="true">Guardar</button>
-      </div>
+      <div id="borrador" class="hn-borrador" data-borrador hidden></div>
+      <div id="mensaje-guardado" class="message hn-mensaje" role="status" hidden></div>
+      <div id="superficie-hoja" class="hn-superficie" data-superficie></div>
     </section>
-    <div id="pie-hoja" class="notas-pie" hidden>
-      <p>B y C llevan conclusión. <span class="notas-solo-pc">El icono de nota o <kbd>Alt</kbd> + <kbd>Enter</kbd> permiten leerla o editarla.</span></p>
-      <p class="notas-solo-pc">Clic o <kbd>Alt</kbd> + <kbd>↓</kbd> para elegir nivel. Pasa el mouse por <span data-rango></span> para ver la competencia.</p>
-      <p class="notas-solo-celular">Toca un nivel para editar. Toca <span data-rango></span> para leer la competencia.</p>
+
+    <div id="pie-hoja" class="hn-leyenda" hidden>
+      <p>B y C llevan conclusión, de 10 a 500 caracteres.</p>
+      <p><span class="hn-leyenda__cambio" aria-hidden="true"></span>Cambio sin guardar</p>
+      <p id="ayuda-teclas" class="hn-solo-pc"></p>
+      <p class="hn-solo-pc">El icono de nota o <kbd>Alt</kbd> + <kbd>Enter</kbd> abren la conclusión. Clic o <kbd>Alt</kbd> + <kbd>↓</kbd> para elegir nivel. Pasa el mouse por <span data-rango></span> para ver la competencia.</p>
+      <p class="hn-solo-celular">Toca un nivel para editar. Toca <span data-rango></span> para leer la competencia.</p>
+    </div>
+
+    <div id="barra-guardar" class="hn-barra">
+      <div class="hn-barra__estado">
+        <p id="cierre-area" class="hn-cierre" tabindex="-1" hidden></p>
+        <p class="hn-barra__linea"><span id="estado-guardado" class="hn-estado"></span><span id="separador-estado" class="hn-separador" aria-hidden="true" hidden>·</span><button id="faltantes" class="hn-faltantes" type="button" aria-describedby="faltantes-ayuda" hidden></button><span id="sin-faltantes" class="hn-sin-faltantes" tabindex="-1" hidden>Sin notas faltantes</span><span id="no-validos" class="hn-no-validos" hidden><span class="hn-separador" aria-hidden="true">·</span><span id="texto-no-validos"></span></span></p>
+        <p id="alcance" class="hn-barra__alcance"></p>
+        <span id="faltantes-ayuda" class="sr-only">Muestra solo los estudiantes con notas pendientes.</span>
+        <p id="conteo-vivo" class="sr-only" aria-live="polite"></p>
+      </div>
+      <button id="guardar" class="btn hn-guardar" type="button" aria-describedby="alcance" aria-disabled="true">Guardar</button>
     </div>
   </div>
-  {% endif %}
-  {% if datos %}{{ datos|json_script:"datos-notas" }}{% endif %}
-</main>
+  {{ datos|json_script:"datos-notas" }}
 
-{% if periodo %}
-<div id="lista-niveles" class="notas-lista" role="listbox" aria-label="Nivel de logro" hidden></div>
-<dialog id="panel-editor" class="notas-panel" aria-labelledby="panel-estudiante" aria-describedby="panel-competencia">
-  <div class="notas-panel__cabecera"><div><p id="panel-posicion" class="notas-ayuda"></p><h2 id="panel-estudiante"></h2></div><button id="cerrar-panel" class="notas-cerrar" type="button" aria-label="Cerrar edición">{% include "iconos/x.svg" %}</button></div>
-  <p id="panel-competencia"></p>
-  <fieldset class="notas-niveles-grandes"><legend>Nivel de logro</legend><div id="panel-niveles"></div></fieldset>
-  <div id="panel-conclusion" hidden><div class="notas-conclusion-etiqueta"><label for="conclusion-movil">Conclusión descriptiva <span>(obligatoria)</span></label><span id="contador-movil" class="notas-ayuda">0/500</span></div><textarea id="conclusion-movil" rows="3" maxlength="500" aria-describedby="ayuda-conclusion"></textarea><p id="ayuda-conclusion" class="notas-ayuda">Escribe de 10 a 500 caracteres.</p></div>
-  <p id="panel-rechazo" class="notas-panel__rechazo" role="alert" hidden></p>
-  <p class="notas-panel__borrador notas-ayuda">Los cambios quedan como borrador hasta guardar el área.</p>
-  <button id="siguiente" class="boton-principal" type="button">Siguiente ↓</button>
-</dialog>
-<dialog id="confirmar-relleno" class="comp-dialogo" aria-labelledby="titulo-relleno" aria-describedby="texto-relleno">
-  <h2 id="titulo-relleno">Rellenar vacías</h2>
-  <p id="texto-relleno"></p>
-  <div id="columna-relleno" hidden><label for="elegir-columna">Competencia</label><select id="elegir-columna"></select></div>
-  <fieldset class="notas-relleno"><legend>Nivel para las celdas vacías</legend><label><input type="radio" name="relleno" value="AD"> AD</label><label><input type="radio" name="relleno" value="A" checked> A</label></fieldset>
-  <p class="notas-ayuda">Las notas existentes y los estudiantes trasladados o retirados se conservan. Quedará como borrador hasta guardar.</p>
-  <div class="comp-dialogo__acciones"><button id="aplicar-relleno" class="boton-principal" type="button">Rellenar con A</button><button id="cancelar-relleno" class="boton-secundario" type="button" autofocus>Cancelar</button></div>
-</dialog>
-<dialog id="confirmar-salida" class="comp-dialogo" aria-labelledby="titulo-salida" aria-describedby="texto-salida">
-  <h2 id="titulo-salida">¿Salir sin guardar?</h2>
-  <p id="texto-salida">Tienes cambios pendientes en estas áreas:</p>
-  <ul id="areas-pendientes" data-areas-pendientes></ul>
-  <p id="aviso-borradores">Los borradores quedan en este dispositivo. Puedes retomarlos al volver con tu cuenta.</p>
-  <div class="comp-dialogo__acciones">
-    <button id="seguir-editando" class="boton-principal" type="button" autofocus>Seguir editando</button>
-    <button id="salir-sin-guardar" class="boton-secundario" type="button">Salir sin guardar</button>
-  </div>
-</dialog>
-<div id="competencia-detalle" class="notas-detalle-competencia" role="tooltip" hidden></div>
-<section id="nota-editor" class="notas-editor" aria-labelledby="nota-titulo" hidden>
-  <header><div><h2 id="nota-titulo">Rellena la conclusión</h2><p id="nota-contexto" class="notas-ayuda"></p></div><button id="cerrar-nota" class="notas-cerrar" type="button" aria-label="Cerrar conclusión">{% include "iconos/x.svg" %}</button></header>
-  <label for="conclusion-pc" class="sr-only">Conclusión descriptiva</label>
-  <textarea id="conclusion-pc" class="notas-conclusion" rows="3" maxlength="500" aria-describedby="ayuda-nota" placeholder="Escribe qué logró y qué necesita reforzar."></textarea>
-  <p id="ayuda-nota" class="notas-ayuda">De 10 a 500 caracteres.</p>
-  <div class="notas-editor__pie"><span id="contador-nota" class="notas-ayuda">0/500</span><button id="listo-nota" class="boton-principal" type="button">Listo</button></div>
-</section>
-<template data-iconos>
-  <span data-icono="reloj">{% include "iconos/clock.svg" %}</span>
-  <span data-icono="check">{% include "iconos/check.svg" %}</span>
-  <span data-icono="aviso">{% include "iconos/circle-alert.svg" %}</span>
-  <span data-icono="nota">{% include "iconos/file-text.svg" %}</span>
-  <span data-icono="derecha">{% include "iconos/arrow-right.svg" %}</span>
-  <span data-icono="vacio">{% include "iconos/inbox.svg" %}</span>
-  <span data-icono="notas">{% include "iconos/clipboard-list.svg" %}</span>
-</template>
-<div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-anuncio></div>
-<div class="sr-only" role="alert" aria-atomic="true" data-alerta></div>
-<script src="{% static 'js/notas.js' %}" defer></script>
-{% endif %}
+  <div id="lista-niveles" class="hn-lista" role="listbox" aria-label="Nivel de logro" hidden></div>
+  <dialog id="panel-editor" class="hn-panel" aria-labelledby="panel-estudiante" aria-describedby="panel-competencia">
+    <div class="hn-panel__cabecera"><div><p id="panel-posicion" class="small"></p><h2 id="panel-estudiante"></h2></div><button id="cerrar-panel" class="btn icon-button" type="button" aria-label="Cerrar edición">{% include "iconos/x.svg" %}</button></div>
+    <p id="panel-competencia" class="hn-panel__competencia"></p>
+    <fieldset class="hn-panel__niveles"><legend>Nivel de logro</legend><div id="panel-niveles"></div></fieldset>
+    <div id="panel-conclusion" class="hn-panel__conclusion" hidden><div class="hn-conclusion-etiqueta"><label for="conclusion-movil">Conclusión descriptiva <span>(obligatoria)</span></label><span id="contador-movil" class="small">0/500</span></div><textarea id="conclusion-movil" class="input" rows="3" maxlength="500" aria-describedby="ayuda-conclusion"></textarea><p id="ayuda-conclusion" class="small">Escribe de 10 a 500 caracteres.</p></div>
+    <p id="panel-rechazo" class="hn-panel__rechazo" role="alert" hidden></p>
+    <p class="small" data-panel-borrador>Los cambios quedan como borrador hasta guardar el área.</p>
+    <button id="siguiente" class="btn btn--primary hn-siguiente" type="button">Siguiente ↓</button>
+  </dialog>
+  {% include "rb/dialogo.html" with id="confirmar-relleno" variante="chico" titulo="Rellenar vacías" titulo_id="titulo-relleno" descrito_por="texto-relleno" cuerpo="notas/_relleno_cuerpo.html" pie="notas/_relleno_pie.html" %}
+  {% include "rb/dialogo.html" with id="confirmar-salida" variante="chico" titulo="¿Salir sin guardar?" titulo_id="titulo-salida" descrito_por="texto-salida" cuerpo="notas/_hoja_salida_cuerpo.html" pie="notas/_salida_pie.html" %}
+  <div id="competencia-detalle" class="hn-tip" role="tooltip" hidden></div>
+  <div id="nota-previa" class="hn-tip hn-previa" role="tooltip" hidden></div>
+  <section id="nota-editor" class="hn-editor" aria-labelledby="nota-titulo" hidden>
+    <header class="hn-editor__cabecera"><div><h2 id="nota-titulo">Rellena la conclusión</h2><p id="nota-contexto" class="small"></p></div><button id="cerrar-nota" class="btn icon-button" type="button" aria-label="Cerrar conclusión">{% include "iconos/x.svg" %}</button></header>
+    <label for="conclusion-pc" class="sr-only">Conclusión descriptiva</label>
+    <textarea id="conclusion-pc" class="input hn-editor__texto" rows="4" maxlength="500" aria-describedby="ayuda-nota" placeholder="Escribe qué logró y qué necesita reforzar."></textarea>
+    <p id="ayuda-nota" class="small">De 10 a 500 caracteres.</p>
+    <div class="hn-editor__pie"><span id="contador-nota" class="small">0/500</span><button id="listo-nota" class="btn btn--secondary" type="button">Listo</button></div>
+  </section>
+  <template data-iconos>
+    <span data-icono="reloj">{% include "iconos/clock.svg" %}</span>
+    <span data-icono="check">{% include "iconos/check.svg" %}</span>
+    <span data-icono="aviso">{% include "iconos/circle-alert.svg" %}</span>
+    <span data-icono="nota">{% include "iconos/file-text.svg" %}</span>
+    <span data-icono="derecha">{% include "iconos/arrow-right.svg" %}</span>
+    <span data-icono="vacio">{% include "iconos/inbox.svg" %}</span>
+    <span data-icono="notas">{% include "iconos/clipboard-list.svg" %}</span>
+  </template>
+  <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-anuncio></div>
+  <div class="sr-only" role="alert" aria-atomic="true" data-alerta></div>
+  <script src="{% static 'js/notas.js' %}" defer></script>
+  {% endif %}
+</div>
 {% endblock %}

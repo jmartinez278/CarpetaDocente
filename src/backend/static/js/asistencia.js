@@ -36,7 +36,7 @@
   const RECARGAR = new Set([400, 404, 409]);
   const ASISTIO = { estado: "ASISTIO", nota: "" };
 
-  const vista = raiz.closest(".vista-asistencia");
+  const vista = raiz.closest(".asistencia-hoy");
   const urlMarcar = raiz.dataset.urlMarcar;
   const urlRestantes = raiz.dataset.urlRestantes;
   const prefijoClave = `asistencia:${raiz.dataset.seccion}:`;
@@ -44,13 +44,13 @@
   const barra = document.querySelector("[data-barra-deshacer]");
   const botonDeshacer = barra.querySelector("[data-deshacer]");
   const anuncio = document.getElementById("anuncio");
-  // Los círculos de la leyenda del panel sirven de molde para el círculo de cada estado.
+  // Los círculos de la leyenda lateral sirven de molde para el círculo de cada estado (rebrand-us-030, D3).
   const moldes = {};
-  for (const circulo of raiz.querySelectorAll(".panel-jornada .leyenda .estado")) {
+  for (const circulo of raiz.querySelectorAll(".leyenda--lateral .estado")) {
     const estado = [...circulo.classList].find((c) => c.startsWith("estado--")).slice(8).toUpperCase();
     moldes[estado] = circulo;
   }
-  // Sin marcar no está en la leyenda; vuelve a verse al deshacer el lote.
+  // Sin marcar vuelve a verse al deshacer el lote; su molde es este (el de la leyenda queda con otra clave, sin uso).
   moldes[""] = Object.assign(document.createElement("span"), { className: "estado estado--sin-marcar" });
   moldes[""].setAttribute("aria-hidden", "true");
   const iconoGuardado = raiz.querySelector("[data-cierre] .icono");

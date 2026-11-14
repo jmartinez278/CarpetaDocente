@@ -56,7 +56,10 @@ def test_el_administrador_crea_una_docente_que_ingresa_y_luego_la_desactiva(
             campo_clave(otra).fill(clave)
             boton_ingresar(otra).click()
             expect(otra).to_have_url(f"{live_server.url}/ingresar/")
-            expect(otra.get_by_role("alert")).to_contain_text(MENSAJE_GENERICO)
+            # El error recibe el foco, sin role="alert" (rebrand-us-001, D2).
+            error = otra.locator(".message--error")
+            expect(error).to_be_focused()
+            expect(error).to_contain_text(MENSAJE_GENERICO)
         finally:
             contexto_nuevo.close()
     finally:

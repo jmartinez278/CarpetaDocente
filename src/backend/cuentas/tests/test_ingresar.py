@@ -20,7 +20,8 @@ CLAVE_INCORRECTA = "no-es-la-clave"
 # Más saltos que estos indicarían un ciclo: el más largo es /admin/ → /admin/login/ → destino.
 SALTOS_MAXIMOS = 3
 
-_ALERTA = re.compile(r'<[^>]*role="alert".*?</div>', re.DOTALL)
+# El error general (rebrand-us-001, D2): sin role="alert"; se anuncia al recibir el foco.
+_ALERTA = re.compile(r'<div class="message message--error".*?</div></div>', re.DOTALL)
 _TOKEN = re.compile(r'name="csrfmiddlewaretoken" value="[^"]*"')
 
 
@@ -35,7 +36,7 @@ def con_sesion(client, usuario):
 
 def alerta(respuesta):
     encontrada = _ALERTA.search(respuesta.content.decode())
-    assert encontrada, "la respuesta no tiene el mensaje con role=alert"
+    assert encontrada, "la respuesta no tiene el mensaje de error general"
     return encontrada.group(0)
 
 

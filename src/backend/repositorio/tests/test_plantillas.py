@@ -69,22 +69,66 @@ def describe(etiqueta):
 # --- Pantalla ---
 
 
-def test_la_cabecera_tiene_el_titulo_las_franjas_de_sesiones_y_el_boton(cliente):
+def principal(html):
+    """El contenido del único ``<main>`` (el del marco del rebrand)."""
+    assert html.count("<main") == 1, "un solo <main>: el del marco"
+    return re.search(r"<main\b.*?</main>", html, re.DOTALL).group(0)
+
+
+def menu_navegacion(html):
+    """El diálogo del ☰ (el primero de la página, antes del <main>)."""
+    return re.search(
+        r'<dialog\b[^>]*aria-labelledby="navegacion-titulo".*?</dialog>', html, re.DOTALL
+    ).group(0)
+
+
+def test_la_pantalla_carga_solo_la_hoja_del_rebrand(cliente):
     html = pagina(cliente)
 
-    assert 'data-dimension="sesiones"' in html
-    assert 'class="franjas-cabecera"' in html
-    assert "Planificación de sesiones de aprendizaje" in html
-    boton = elemento(html, r"button[^>]*data-abrir-subir")
+    assert "dist/rebrand.css" in html
+    assert "dist/app.css" not in html
+
+
+def test_la_barra_dice_sesiones_y_el_menu_la_deja_en_proximamente(cliente):
+    """Escenario «Primera visita» (barra); el ☰ sigue como en rebrand-base, D6."""
+    html = pagina(cliente)
+
+    assert re.search(r'<span class="bar-title">Sesiones</span>', html)
+    menu = menu_navegacion(html)
+    sesiones = re.search(r"<li\b(?:(?!</li>).)*Sesiones(?:(?!</li>).)*</li>", menu, re.DOTALL)
+    assert sesiones and "Próximamente" in sesiones.group(0)
+    assert "href=" not in sesiones.group(0)
+    assert "aria-current" not in menu
+
+
+def test_la_cabecera_tiene_titulo_subtitulo_y_boton_sin_icono_ni_franjas(cliente):
+    """Escenarios «Primera visita» y «Cabecera sin ícono ni franjas»."""
+    contenido = principal(pagina(cliente))
+
+    assert "<h1>Sesiones</h1>" in contenido
+    assert "franjas-cabecera" not in contenido
+    assert "Planificación de sesiones de aprendizaje" in contenido
+    boton = elemento(contenido, r"button[^>]*data-abrir-subir")
     assert 'type="button"' in boton
-    assert "Subir una sesión</button>" in html
+    assert "btn--primary" in boton
+    assert re.search(r"<button[^>]*data-abrir-subir[^>]*>Subir una sesión</button>", contenido)
+
+
+def test_la_marca_de_sesiones_va_dentro_del_main_del_marco(cliente):
+    contenido = principal(pagina(cliente))
+
+    assert re.search(r'<main id="contenido"', contenido)
+    assert 'data-dimension="sesiones"' in contenido
 
 
 def test_el_estado_vacio_y_la_region_del_resultado(cliente):
-    html = pagina(cliente)
+    contenido = principal(pagina(cliente))
 
-    assert "Aquí verás las sesiones que envíes y su estado." in html
-    region = elemento(html, r"section[^>]*data-resultado")
+    vacio = re.search(r'<div class="empty">.*?</div>', contenido, re.DOTALL)
+    assert vacio, "el estado vacío del rebrand"
+    assert "Aquí verás las sesiones que envíes y su estado." in vacio.group(0)
+    assert 'aria-hidden="true"' in vacio.group(0)
+    region = elemento(contenido, r"section[^>]*data-resultado")
     assert 'role="status"' in region
 
 
@@ -109,6 +153,8 @@ def test_el_popup_tiene_su_titulo_y_su_descripcion(cliente):
     subir = bloque(pagina(cliente), "dialog", "subir")
 
     apertura = elemento(subir, 'dialog[^>]*id="subir"')
+    assert 'class="dialog dialog--hoja"' in apertura
+    assert " open" not in apertura
     assert 'aria-labelledby="subir-titulo"' in apertura
     assert 'aria-describedby="subir-descripcion"' in apertura
     assert re.search(
@@ -120,9 +166,10 @@ def test_el_popup_tiene_su_titulo_y_su_descripcion(cliente):
 def test_el_cuerpo_del_popup_se_alcanza_con_el_teclado(cliente):
     subir = bloque(pagina(cliente), "dialog", "subir")
 
-    cuerpo = elemento(subir, r'div class="modal-cuerpo"')
+    cuerpo = elemento(subir, r"div[^>]*data-cuerpo")
     assert 'tabindex="0"' in cuerpo
     assert 'role="region"' in cuerpo
+    assert 'aria-labelledby="subir-titulo"' in cuerpo
 
 
 def test_el_formulario_envia_a_la_ruta_con_el_token_y_el_id_oculto(cliente):
@@ -156,7 +203,7 @@ def test_cada_campo_tiene_su_ayuda_y_su_error_asociados(cliente, campo, ayuda):
     assert re.search(rf'<label[^>]*for="{campo}"', subir), "el campo tiene su etiqueta"
     asociados = describe(control)
     assert f"{campo}-error" in asociados
-    assert re.search(rf'<p class="campo__error"[^>]*id="{campo}-error"[^>]*hidden', subir)
+    assert re.search(rf'<p class="field-error"[^>]*id="{campo}-error"[^>]*hidden', subir)
     if ayuda:
         assert f"{campo}-ayuda" in asociados
         assert re.search(rf'id="{campo}-ayuda"[^>]*>{re.escape(ayuda)}</p>', subir)
@@ -176,7 +223,7 @@ def test_titulo_y_proposito_con_su_tope(cliente):
 
     assert 'maxlength="200"' in elemento(subir, r'input[^>]*id="titulo"')
     assert 'maxlength="1000"' in elemento(subir, r'textarea[^>]*id="proposito"')
-    assert re.search(r'for="proposito"[^>]*>Propósito <span class="opcional">\(opcional\)', subir)
+    assert re.search(r'for="proposito"[^>]*>Propósito <span class="muted">\(opcional\)', subir)
 
 
 def test_las_areas_son_las_de_la_institucion_con_una_opcion_vacia(cliente, comunicacion):
@@ -203,8 +250,9 @@ def test_la_casilla_de_compartir_desmarcada_con_su_ayuda(cliente):
 def test_el_aviso_de_corte_de_red_esta_oculto(cliente):
     subir = bloque(pagina(cliente), "dialog", "subir")
 
-    aviso = re.search(r'<div class="mensaje mensaje--error"[^>]*data-error-red[^>]*>', subir)
-    assert aviso and "hidden" in aviso.group(0)
+    aviso = elemento(subir, r'div class="message message--error"[^>]*data-error-red')
+    assert "hidden" in aviso
+    assert 'role="alert"' in aviso
     assert "Se cortó la conexión" in subir
     assert (
         "Tus datos y tu archivo siguen aquí. Revisa tu conexión e intenta enviar de nuevo." in subir
@@ -217,11 +265,43 @@ def test_el_pie_tiene_el_avance_y_los_botones_en_su_orden(cliente):
     barra = elemento(subir, "progress")
     assert 'max="100"' in barra
     assert "aria-label=" in barra
-    acciones = re.search(r'<div class="acciones-modal">(.*?)</div>', subir, re.DOTALL).group(1)
+    acciones = re.search(r'<div class="dialog-pie">(.*?)</dialog>', subir, re.DOTALL).group(1)
     enviar = acciones.index("Enviar a la dirección")
     cancelar = acciones.index("Cancelar")
     assert enviar < cancelar, "en el celular «Enviar» va arriba; en la PC, el CSS lo invierte"
     assert 'form="formulario-sesion"' in elemento(acciones, r'button[^>]*type="submit"')
+
+
+def test_el_error_general_tiene_su_primer_parrafo_vacio(cliente):
+    """sesiones.js escribe el error general en el primer <p> de [data-error-general]."""
+    subir = bloque(pagina(cliente), "dialog", "subir")
+
+    general = re.search(r"<div[^>]*data-error-general[^>]*>(.*?)</div></div>", subir, re.DOTALL)
+    assert general and 'role="alert"' in general.group(0) and "hidden" in general.group(0)
+    primero = re.search(r"<p\b[^>]*>(.*?)</p>", general.group(1), re.DOTALL)
+    assert primero.group(1) == ""
+
+
+@pytest.mark.parametrize("dialogo", ["subir", "terminos"])
+def test_los_popups_no_llevan_boton_de_cerrar(cliente, dialogo):
+    """Se cierran con «Cancelar», «Volver» o Esc (rebrand-us-010, D2)."""
+    html = bloque(pagina(cliente), "dialog", dialogo)
+
+    assert "data-cerrar" not in html
+    assert "Cerrar" not in html
+    assert "✕" not in html
+
+
+def test_la_pagina_conserva_los_ganchos_de_sesiones_js(cliente):
+    """decisiones.md, «Se conserva»: los data-* que usa sesiones.js."""
+    html = pagina(cliente)
+
+    for gancho in (
+        "abrir-subir", "aceptar", "archivo-accion", "archivo-control", "archivo-detalle",
+        "archivo-nombre", "barra", "campos", "cancelar", "cuerpo", "dimension", "enviar",
+        "error-general", "error-red", "progreso", "progreso-texto", "resultado", "volver",
+    ):  # fmt: skip
+        assert re.search(rf"\sdata-{gancho}[\s=>]", html), f"falta data-{gancho}"
 
 
 def test_hay_una_region_aria_live_para_el_avance(cliente):
@@ -238,6 +318,7 @@ def test_los_terminos_van_en_su_propio_popup_con_titulo_y_descripcion(cliente):
     terminos = bloque(pagina(cliente), "dialog", "terminos")
 
     apertura = elemento(terminos, 'dialog[^>]*id="terminos"')
+    assert 'class="dialog dialog--chico"' in apertura
     assert 'aria-labelledby="terminos-titulo"' in apertura
     assert 'aria-describedby="terminos-descripcion"' in apertura
     assert re.search(
@@ -264,8 +345,10 @@ def test_los_terminos_tienen_acepto_y_volver(cliente):
 
     assert re.search(r"<button[^>]*data-aceptar[^>]*>Acepto y envío</button>", terminos)
     assert re.search(r"<button[^>]*data-volver[^>]*>[\s\S]*?Volver</button>", terminos)
-    cuerpo = elemento(terminos, r'div class="modal-cuerpo"')
+    cuerpo = elemento(terminos, r"div[^>]*data-cuerpo")
     assert 'tabindex="0"' in cuerpo and 'role="region"' in cuerpo
+    pie = re.search(r'<div class="dialog-pie">(.*?)</dialog>', terminos, re.DOTALL).group(1)
+    assert pie.index("Acepto y envío") < pie.index("Volver")
 
 
 # --- Grado por defecto ---
@@ -329,3 +412,5 @@ def test_el_fragmento_del_exito_dice_el_mensaje_y_el_titulo_enfocable(
     assert mensaje in html
     assert re.search(r'<h2[^>]*tabindex="-1"[^>]*>Leemos un cuento</h2>', html)
     assert re.search(r"<button[^>]*data-subir-otra[^>]*>Subir otra</button>", html)
+    assert 'class="message message--exito"' in html
+    assert "btn--primary" in elemento(html, r"button[^>]*data-subir-otra")

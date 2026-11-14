@@ -1,0 +1,43 @@
+/* Segunda entrada de Tailwind CSS v4, la del rebrand (rebrand-base, D1).
+   Se compila a src/backend/static/dist/rebrand.css. Una página carga esta hoja o app.css, nunca
+   las dos (D9). */
+@import "tailwindcss" source(none);
+@import "./rebrand/tokens.css";
+@import "./rebrand/base.css";
+@import "./rebrand/marco.css";
+@import "./rebrand/componentes.css";
+@import "./rebrand/pantallas/sin-permiso.css";
+@import "./rebrand/pantallas/sesiones.css";
+@import "./rebrand/pantallas/ingreso.css";
+@import "./rebrand/pantallas/estudiantes.css";
+@import "./rebrand/pantallas/portada.css";
+@import "./rebrand/pantallas/asistencia.css";
+@import "./rebrand/pantallas/competencias.css";
+@import "./rebrand/pantallas/notas.css";
+
+/* Solo las plantillas del marco nuevo y las pantallas ya migradas (rutas relativas a este
+   archivo). Cada pantalla del rebrand suma aquí su línea. */
+@source "../../backend/templates/base_rebrand.html";
+@source "../../backend/templates/marco_rebrand.html";
+@source "../../backend/templates/rb";
+@source "../../backend/templates/cuentas/sin_permiso.html";
+@source "../../backend/templates/cuentas/ingresar.html";
+@source "../../backend/templates/repositorio";
+@source "../../backend/templates/institucion/estudiantes";
+@source "../../backend/templates/cuentas/portada_docente.html";
+@source "../../backend/templates/asistencia";
+@source "../../backend/templates/notas/competencias.html";
+@source "../../backend/templates/notas/_area.html";
+@source "../../backend/templates/notas/_panel.html";
+@source "../../backend/templates/notas/_periodos.html";
+@source "../../backend/templates/notas/_salida_cuerpo.html";
+@source "../../backend/templates/notas/_salida_pie.html";
+@source "../../backend/templates/notas/hoja.html";
+@source "../../backend/templates/notas/_selector_periodo.html";
+@source "../../backend/templates/notas/_relleno_cuerpo.html";
+@source "../../backend/templates/notas/_relleno_pie.html";
+@source "../../backend/templates/notas/_hoja_salida_cuerpo.html";
+
+/* Los parciales de abajo también son fuente: con --poll (contenedor) la CLI solo ve cambios en sus
+   @source y en la entrada, no en los archivos importados. */
+@source "./rebrand";

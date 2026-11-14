@@ -96,7 +96,8 @@ jobs:
   playwright:
     name: Playwright
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 602 e2e tardan ~14 min solo en pytest y crecen con cada pantalla: 15 y luego 25 no alcanzaron.
+    timeout-minutes: 40
     permissions:
       contents: read
     services:

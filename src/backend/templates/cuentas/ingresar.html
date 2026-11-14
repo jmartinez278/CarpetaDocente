@@ -1,33 +1,44 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends "base_rebrand.html" %}
+{% load static marco %}
+{% comment %}
+Inicio de sesión del rebrand (rebrand-us-001, D1; boceto insumos/rebrand/ingreso.html, propuesta D). Sin barra ni ☰:
+identidad, mensajes, la ficha con el formulario y el pie con la marca. ingresar.js usa solo los ganchos data-*.
+{% endcomment %}
 
 {% block titulo %}Ingresar · I.E. Virgen del Carmen{% endblock %}
+
+{% block precargas %}<link rel="preload" href="{% static 'dist/fuentes/besley-latin-600-normal.woff2' %}" as="font" type="font/woff2" crossorigin>{% endblock %}
 
 {% block scripts %}<script src="{% static 'js/ingresar.js' %}" defer></script>{% endblock %}
 
 {% block contenido %}
-<main class="mx-auto flex w-full max-w-110 flex-1 flex-col px-4 pt-8 min-[960px]:max-w-140 min-[960px]:justify-center min-[960px]:px-6 min-[960px]:pt-12">
-  <header class="text-center">
-    <div class="mx-auto mb-4 size-14 min-[960px]:mb-6 min-[960px]:size-20" aria-hidden="true"></div>
-    <h1 class="text-balance font-display text-display leading-[1.15] font-semibold text-primario">I.E. Virgen del Carmen</h1>
-    <p class="mt-1 text-subheading leading-[26px] min-[960px]:mt-2 min-[960px]:text-xl min-[960px]:leading-7">Huayucachi</p>
-    <p class="mt-2 text-caption leading-5 text-texto-suave">Sesiones · Notas · Asistencia</p>
+<main id="contenido" class="login">
+  <header class="login-identidad">
+    <div class="login-escudo" aria-hidden="true"></div>
+    <h1 class="login-ie">I.E. Virgen del Carmen</h1>
+    <div class="login-filete" aria-hidden="true"></div>
+    <p class="login-lugar">Huayucachi</p>
+    <p class="login-dimensiones">Sesiones · Notas · Asistencia</p>
   </header>
-  {% for mensaje in messages %}{% if "inactividad" in mensaje.tags %}
-  <div class="mensaje mensaje--aviso mt-6 min-[960px]:mx-auto min-[960px]:w-full min-[960px]:max-w-110" role="status">{% include "iconos/clock.svg" %}<div class="mensaje__texto">{{ mensaje.message|linebreaks }}</div></div>
-  {% endif %}{% endfor %}
+  {% comment %}Aviso de inactividad (cierre-sesion): role="status", sin foco. El error general recibe el foco al cargar y se
+  anuncia una sola vez, sin role="alert" (D2).{% endcomment %}
+  {% for mensaje in messages %}{% if "inactividad" in mensaje.tags %}{% with partes=mensaje.message|partes_aviso %}
+  <div class="login-mensaje" role="status">{% include "rb/mensaje.html" with tipo="aviso" icono="clock" titulo=partes.0 texto=partes.1 %}</div>
+  {% endwith %}{% endif %}{% endfor %}
   {% if form.non_field_errors %}
-  <div class="mensaje mensaje--error mt-6 min-[960px]:mx-auto min-[960px]:w-full min-[960px]:max-w-110" role="alert">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}<p>Revisa tus datos. Si el problema sigue, pide ayuda al administrador.</p></div></div>
+  <div class="login-mensaje">{% include "rb/mensaje.html" with tipo="error" titulo=form.non_field_errors.0 texto="Revisa tus datos. Si el problema sigue, pide ayuda al administrador." enfocar=True %}</div>
   {% endif %}
-  <form class="flex flex-col gap-4 rounded-dimension [.mensaje+&]:mt-4 border border-linea bg-superficie p-6 {% if form.non_field_errors %}mt-4{% else %}mt-8{% endif %} min-[960px]:mx-auto min-[960px]:w-full min-[960px]:max-w-110 min-[960px]:p-8" method="post" novalidate aria-label="Iniciar sesión" data-formulario-ingreso>
-    {% csrf_token %}
-    <input type="hidden" name="next" value="{{ next }}">
-    {% include "componentes/campo.html" with campo=form.username autocompletar="username" ayuda="Ejemplo: jperez (inicial y apellido)" %}
-    {% include "componentes/campo.html" with campo=form.password autocompletar="current-password" es_clave=True %}
-    <button class="boton-principal" type="submit" data-boton-ingresar>Ingresar</button>
-    <p class="text-pretty text-caption leading-5 text-texto-suave">Si olvidaste tu contraseña, pide al administrador que la restablezca.</p>
-  </form>
+  <section class="login-ficha">
+    <form class="login-form" method="post" novalidate aria-label="Iniciar sesión" data-formulario-ingreso>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {% include "rb/campo.html" with campo=form.username autocompletar="username" ayuda="Ejemplo: jperez (inicial y apellido)" variante="ingreso" sin_correccion=True %}
+      {% include "rb/campo.html" with campo=form.password autocompletar="current-password" variante="ingreso" mostrar_clave=True %}
+      {% include "rb/boton.html" with texto="Ingresar" tipo="submit" variante="principal" datos="boton-ingresar" clase="login-ingresar" %}
+      <p class="small login-ayuda">Si olvidaste tu contraseña, pide al administrador que la restablezca.</p>
+    </form>
+  </section>
   <p class="sr-only" role="status" data-estado-ingreso></p>
 </main>
-{% include "componentes/pie.html" %}
+{% include "rb/pie.html" with solo_marca=True %}
 {% endblock %}

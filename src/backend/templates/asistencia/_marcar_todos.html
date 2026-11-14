@@ -1,2 +1,4 @@
-{% comment %}"Marcar los N restantes como Asistió" (decisión 3): Botón secundario, solo mientras haya estudiantes Sin marcar.{% endcomment %}
-<button type="button" class="boton-secundario marcar-todos" data-marcar-todos{% if not lista.sin_marcar %} hidden{% endif %}>{{ lista.texto_marcar_restantes }}</button>
+{% comment %}"Marcar los N restantes como Asistió" (rebrand-us-030, D1): dos en el DOM, uno por ancho. variante="tarjeta",
+principal claro dentro de la tarjeta café (PC); variante="debajo", secundario bajo la tarjeta (celular). Solo mientras haya
+estudiantes Sin marcar; el JS pinta y enfoca el visible.{% endcomment %}
+<button type="button" class="btn {% if variante == "tarjeta" %}btn--primary{% else %}btn--secondary{% endif %} marcar-todos marcar-todos--{{ variante }}" data-marcar-todos{% if not lista.sin_marcar %} hidden{% endif %}>{{ lista.texto_marcar_restantes }}</button>

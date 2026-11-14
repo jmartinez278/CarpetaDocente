@@ -352,10 +352,10 @@ def test_el_aviso_de_importados_lleva_a_tomar_la_asistencia_de_hoy(cliente, secc
     html = cliente.post(url_pegar, {"lista": "QUISPE, ANA\nROJAS, LUIS"}, follow=True)
     html = html.content.decode()
 
-    aviso = html[html.index("mensaje--exito") : html.index('<ol class="estudiantes"')]
+    aviso = html[html.index("message--exito") : html.index('<ol class="estudiantes-lista"')]
     assert "2 estudiantes importados" in aviso
     enlace = (
-        f'<a class="mensaje-enlace" href="{url_hoy(seccion_docente)}">Tomar la asistencia de hoy'
+        f'<a class="btn btn--text" href="{url_hoy(seccion_docente)}">Tomar la asistencia de hoy'
     )
     assert enlace in aviso
     assert "hx-get" not in aviso, "un enlace normal: también en el diálogo abre la página completa"
@@ -369,13 +369,19 @@ def test_sin_aviso_de_importados_no_hay_enlace_a_la_asistencia(cliente, seccion_
     assert "Tomar la asistencia de hoy" not in html
 
 
-# --- HTML de la pantalla (spec asistencia-jornada; design D10 y D12) ---
+# --- HTML de la pantalla (spec asistencia-jornada; rebrand-us-030, D1 a D5) ---
 
 
 def abrir(cliente, seccion):
     respuesta = cliente.get(url_hoy(seccion))
     assert respuesta.status_code == 200
     return respuesta.content.decode()
+
+
+def principal(html):
+    """El contenido del único ``<main>`` (el del marco del rebrand)."""
+    assert html.count("<main") == 1, "un solo <main>: el del marco"
+    return re.search(r"<main\b.*?</main>", html, re.DOTALL).group(0)
 
 
 def botones(html, clase):
@@ -390,6 +396,16 @@ def fila(html, estudiante):
 
 def nombre(estudiante):
     return f"{estudiante.apellidos}, {estudiante.nombres}"
+
+
+def tarjeta(html):
+    """La tarjeta café «Tu jornada», hasta el aviso «Sin conexión» que la sigue (D1)."""
+    inicio = html.index('class="tarjeta-jornada"')
+    return html[inicio : html.index("data-sin-conexion", inicio)]
+
+
+def texto(fragmento):
+    return re.sub(r"<[^>]+>", "", fragmento)
 
 
 @pytest.fixture
@@ -408,12 +424,35 @@ def poner(seccion, estudiantes, estado, nota=""):
         )
 
 
-def test_la_cabecera_dice_la_seccion_y_la_fecha_de_hoy(cliente, seccion_docente, lista):
+LISTA = '<ol class="filas-asistencia"'
+
+
+# 1.1 Marco y encabezado
+
+
+def test_la_pantalla_va_en_el_marco_del_rebrand(cliente, seccion_docente, lista):
     html = abrir(cliente, seccion_docente)
 
-    assert "Asistencia · 2.º A" in html
-    assert 'data-dimension="asistencia"' in html
-    assert "Miércoles 28 de octubre" in html
+    hojas = re.findall(r'<link rel="stylesheet" href="([^"]+)"', html)
+    assert len(hojas) == 1
+    assert hojas[0].endswith("dist/rebrand.css")
+    assert "dist/app.css" not in html
+    assert "js/asistencia.js" in html
+    assert '<span class="bar-title">Asistencia</span>' in html
+    actuales = re.findall(r'<a [^>]*aria-current="page"[^>]*>(.*?)</a>', html, re.DOTALL)
+    assert [texto(a).strip() for a in actuales] == ["Asistencia"]
+    assert 'data-dimension="asistencia"' in principal(html)
+
+
+def test_la_cabecera_dice_la_seccion_el_titulo_y_la_fecha(cliente, seccion_docente, lista):
+    html = abrir(cliente, seccion_docente)
+    contenido = principal(html)
+
+    assert "2.º grado, sección A · 2027" in contenido
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == ["Asistencia de hoy"]
+    assert '<time datetime="2026-10-28">Miércoles 28 de octubre</time>' in contenido
+    assert "Asistencia · 2.º A" not in contenido
+    assert "<title>Asistencia · 2.º A · CarpetaDocente</title>" in html
 
 
 def test_a_las_23_30_de_lima_es_el_dia_de_lima_y_no_el_de_utc(
@@ -432,23 +471,170 @@ def test_a_las_23_30_de_lima_es_el_dia_de_lima_y_no_el_de_utc(
     assert Jornada.objects.get().fecha == MIERCOLES
 
 
+# 1.2 Una sola tarjeta (D1)
+
+
+def test_una_sola_tarjeta_cafe_con_la_jornada(cliente, seccion_docente, lista):
+    poner(seccion_docente, lista[:18], "ASISTIO")
+
+    html = principal(abrir(cliente, seccion_docente))
+    caja = tarjeta(html)
+
+    assert html.count('class="tarjeta-jornada"') == 1
+    assert html.count("Tu jornada") == 1
+    for viejo in ('class="controles"', "franja-jornada", "panel-jornada"):
+        assert viejo not in html
+    assert "data-guardado" in caja
+    progreso = '<progress max="25" value="18" aria-label="Estudiantes marcados" data-progreso>'
+    assert progreso in caja
+    for estado in ("ASISTIO", "TARDE", "FALTO", "JUSTIFICADO"):
+        assert f'data-total="{estado}"' in caja
+    assert "data-cierre" in caja
+    assert "data-resumen-completo" in caja
+    assert caja.count("data-marcar-todos") == 1
+    assert html.count("data-marcar-todos") == 2
+    debajo = html.index("data-marcar-todos", html.index("data-sin-conexion"))
+    assert debajo < html.index(LISTA), "el segundo, debajo de la tarjeta y antes de la lista"
+
+
+def test_marcar_los_n_restantes_cuenta_los_sin_marcar(cliente, seccion_docente, lista):
+    poner(seccion_docente, lista[:18], "ASISTIO")
+
+    html = abrir(cliente, seccion_docente)
+
+    assert html.count("Marcar los 7 restantes como Asistió") == 2
+    marcar = re.findall(r"<button[^>]*data-marcar-todos[^>]*>", html)
+    assert "btn--primary" in marcar[0]
+    assert "btn--secondary" in marcar[1]
+    assert all("hidden" not in b for b in marcar)
+
+
+def test_con_un_sin_marcar_dice_el_restante(cliente, seccion_docente, lista):
+    poner(seccion_docente, lista[:24], "ASISTIO")
+
+    html = abrir(cliente, seccion_docente)
+
+    assert "Marcar el restante como Asistió" in html
+    assert "Marcar los 1 restantes" not in html
+
+
+def test_los_totales_de_la_tarjeta_a_medio_marcar(cliente, seccion_docente, lista):
+    poner(seccion_docente, lista[:14], "ASISTIO")
+    poner(seccion_docente, [lista[14]], "TARDE")
+    poner(seccion_docente, lista[15:17], "FALTO")
+    poner(seccion_docente, [lista[17]], "JUSTIFICADO")
+
+    caja = tarjeta(abrir(cliente, seccion_docente))
+
+    for palabra, estado, total in [
+        ("Asistió", "ASISTIO", 14),
+        ("Tarde", "TARDE", 1),
+        ("Faltó", "FALTO", 2),
+        ("Justificado", "JUSTIFICADO", 1),
+    ]:
+        assert f'<dt>{palabra}</dt><dd data-total="{estado}">{total}</dd>' in caja
+
+
+def test_la_jornada_completa_se_dibuja_con_el_cierre(cliente, seccion_docente, lista):
+    poner(seccion_docente, lista[:21], "ASISTIO")
+    poner(seccion_docente, [lista[21]], "TARDE")
+    poner(seccion_docente, lista[22:24], "FALTO")
+    poner(seccion_docente, [lista[24]], "JUSTIFICADO")
+
+    html = abrir(cliente, seccion_docente)
+    caja = tarjeta(html)
+
+    assert "jornada-completa" in html
+    assert "Jornada completa" in caja
+    assert re.search(r"<p [^>]*data-cierre>.*?Asistencia de hoy completa</p>", caja, re.DOTALL)
+    assert "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1" in caja
+    assert re.search(r"<p [^>]*data-avance hidden>", caja)
+    assert "restantes como Asistió" not in html
+    assert "Marcar el restante" not in html
+    assert "cierre-animado" not in html, "al abrirla ya completa, sin animación (D3)"
+
+
+def test_sin_completar_no_hay_cierre(cliente, seccion_docente, lista):
+    poner(seccion_docente, lista[:24], "ASISTIO")
+
+    html = abrir(cliente, seccion_docente)
+
+    assert "jornada-completa" not in html
+    assert re.search(r"<p [^>]*data-cierre hidden>", html)
+    assert re.search(r"<p [^>]*data-resumen-completo hidden>", html)
+    assert f'"#fila-{lista[24].pk}"' in html
+    assert ">1 sin marcar</a>" in html
+
+
+# 1.3 Conteo visible y accesible (delta «Avance de la jornada», D2)
+
+
+def test_caso_de_error_el_conteo_visible_y_el_accesible(cliente, seccion_docente, lista):
+    """Escenario "Caso de error": 7 de 25 sin estado."""
+    poner(seccion_docente, lista[:18], "ASISTIO")
+
+    html = abrir(cliente, seccion_docente)
+    caja = tarjeta(html)
+
+    pc = '<span class="conteo__pc" aria-hidden="true"><strong data-marcados>18</strong>/25 marcados'
+    movil = (
+        '<span class="conteo__movil" aria-hidden="true"><span data-marcados>18</span>/25 ·</span>'
+    )
+    assert pc + "</span>" in caja
+    assert movil in caja
+    assert html.count("de 25 marcados") == 1
+    assert '<span class="sr-only"><span data-marcados>18</span> de 25 marcados</span>' in caja
+    enlaces = re.findall(r"<a [^>]*data-sin-marcar[^>]*>[^<]*</a>", caja)
+    assert len(enlaces) == 2
+    for enlace in enlaces:
+        assert f'href="#fila-{lista[18].pk}"' in enlace
+        assert enlace.endswith(">7 sin marcar</a>")
+    assert "jornada-completa" not in html
+    assert re.search(r"<p [^>]*data-cierre hidden>", caja)
+
+
+def test_primera_vez_en_el_dia_todos_sin_marcar(cliente, seccion_docente, lista):
+    html = abrir(cliente, seccion_docente)
+
+    assert '<span class="sr-only"><span data-marcados>0</span> de 25 marcados</span>' in html
+    assert "<strong data-marcados>0</strong>/25 marcados" in html
+    assert ">25 sin marcar</a>" in html
+    assert html.count("data-estudiante=") == 25
+    assert html.count("data-etiqueta>Sin marcar</span>") == 25
+    assert "Sin cambios" in html
+
+
+# 1.4 Selector y cabecera de la hoja (D1, D4)
+
+
+def test_el_selector_va_en_la_cabecera_de_la_hoja(cliente, seccion_docente, lista):
+    html = principal(abrir(cliente, seccion_docente))
+
+    hoja = html.index('class="hoja-asistencia"')
+    selector = html.index('role="group" aria-label="Semana del 26 al 30 de octubre"')
+    cabecera = html.index(
+        '<div class="hoja-cabecera"><span>25 estudiantes activos</span><span>Hoy</span></div>'
+    )
+    assert hoja < selector < cabecera < html.index(LISTA)
+    assert html.count("Solo puedes marcar hoy.") == 1
+    assert selector < html.index("Solo puedes marcar hoy.") < cabecera
+    assert html.index("data-sin-conexion") < hoja, "la tarjeta va antes de la hoja"
+
+
 def test_el_selector_tiene_hoy_como_unico_dia_activo(cliente, seccion_docente, lista):
     html = abrir(cliente, seccion_docente)
 
-    assert 'role="group" aria-label="Semana del 26 al 30 de octubre"' in html
     dias = botones(html, "dia")
-    # El selector va en la franja del celular y en el panel de PC: dos veces cinco días.
-    assert len(dias) == 10
+    assert len(dias) == 5, "un solo selector"
     hoy = [d for d in dias if 'aria-current="date"' in d]
-    assert len(hoy) == 2
-    assert all('aria-label="Mié 28 de octubre, hoy"' in d for d in hoy)
-    assert all("aria-disabled" not in d for d in hoy)
-    otros = [d for d in dias if d not in hoy]
-    assert all('aria-disabled="true"' in d for d in otros)
+    assert len(hoy) == 1
+    assert 'aria-label="Mié 28 de octubre, hoy"' in hoy[0]
+    assert "aria-disabled" not in hoy[0]
+    assert all('aria-disabled="true"' in d for d in dias if d not in hoy)
     assert 'aria-label="Lun 26 de octubre, no disponible"' in html
     assert 'aria-label="Vie 30 de octubre, no disponible"' in html
     flechas = botones(html, "flecha")
-    assert len(flechas) == 4
+    assert len(flechas) == 2
     assert all('aria-disabled="true"' in f for f in flechas)
     assert 'aria-label="Semana anterior no disponible"' in html
     assert 'aria-label="Semana siguiente no disponible"' in html
@@ -464,15 +650,7 @@ def test_la_semana_que_cruza_de_mes_lo_dice(cliente, seccion_docente, lista, hoy
     assert 'aria-label="Jue 1 de octubre, hoy"' in html
 
 
-def test_primera_vez_en_el_dia_todos_sin_marcar(cliente, seccion_docente, lista):
-    html = abrir(cliente, seccion_docente)
-
-    assert "<strong data-marcados>0</strong>" in html
-    assert '<span class="avance__largo"> de 25 marcados</span>' in html
-    assert "25 sin marcar" in html
-    assert html.count('class="estudiante fila-asistencia"') == 25
-    assert html.count('<span class="etiqueta-estado" data-etiqueta>Sin marcar</span>') == 25
-    assert "Sin cambios" in html
+# 1.5 Filas (D3)
 
 
 def test_las_filas_van_en_orden_con_nombre_completo_y_su_circulo(cliente, seccion_docente, lista):
@@ -481,12 +659,19 @@ def test_las_filas_van_en_orden_con_nombre_completo_y_su_circulo(cliente, seccio
     posiciones = [html.index(f'id="fila-{e.pk}"') for e in lista]
     assert posiciones == sorted(posiciones)
     primera = fila(html, lista[0])
-    assert '<span class="estudiante__numero" aria-hidden="true">1</span>' in primera
-    assert '<span class="estudiante__nombre">AGUILAR FLORES, LUCIANA</span>' in primera
+    assert f'data-estudiante="{lista[0].pk}"' in primera
+    assert 'data-estado=""' in primera
+    assert '<span class="fila__numero" aria-hidden="true">01</span>' in primera
+    nombre_html = '<span class="estudiante__nombre"><strong>AGUILAR FLORES,</strong> LUCIANA</span>'
+    assert nombre_html in primera
+    assert texto(nombre_html) == "AGUILAR FLORES, LUCIANA"
+    assert primera.index(nombre_html) < primera.index("data-etiqueta>Sin marcar</span>")
+    assert re.search(r"<button [^>]*data-marcar ", primera)
     assert 'aria-label="AGUILAR FLORES, LUCIANA: Sin marcar. Cambiar a Asistió"' in primera
     assert 'class="estado estado--sin-marcar"' in primera
-    assert f'data-estudiante="{lista[0].pk}"' in primera
-    assert '<span class="estudiante__numero" aria-hidden="true">25</span>' in fila(html, lista[24])
+    assert f'id="fallo-{lista[0].pk}" data-fallo hidden' in primera
+    assert f'id="nota-{lista[0].pk}"' in primera
+    assert '<span class="fila__numero" aria-hidden="true">25</span>' in fila(html, lista[24])
 
 
 @pytest.mark.parametrize(
@@ -505,10 +690,62 @@ def test_un_estado_guardado_se_dibuja_en_palabras_y_en_el_circulo(
 
     html = fila(abrir(cliente, seccion_docente), lista[2])
 
-    assert f'<span class="etiqueta-estado" data-etiqueta>{palabra}</span>' in html
+    assert f"data-etiqueta>{palabra}</span>" in html
     assert f'aria-label="{nombre(lista[2])}: {palabra}. Cambiar a {siguiente}"' in html
     assert f'class="estado {clase}"' in html
     assert f'data-estado="{estado}"' in html
+
+
+def test_la_nota_se_ve_solo_en_justificado(cliente, seccion_docente, lista):
+    poner(seccion_docente, [lista[1]], "JUSTIFICADO", "Constancia entregada a la docente")
+    poner(seccion_docente, [lista[2]], "FALTO")
+
+    html = abrir(cliente, seccion_docente)
+
+    justificado = fila(html, lista[1])
+    assert re.search(r"<div [^>]*data-nota>", justificado)
+    assert re.search(r"Nota de justificación <span [^>]*>\(opcional\)</span>", justificado)
+    assert 'maxlength="100"' in justificado
+    assert 'placeholder="Ej.: constancia entregada"' in justificado
+    assert 'value="Constancia entregada a la docente"' in justificado
+    assert f'aria-describedby="ayuda-nota-{lista[1].pk}"' in justificado
+    assert "<span data-contador>33</span>/100" in justificado
+    for otro in (lista[0], lista[2]):
+        assert re.search(r"<div [^>]*data-nota hidden>", fila(html, otro))
+        assert 'maxlength="100"' in fila(html, otro)
+
+
+# 1.6 Leyenda
+
+
+LEYENDA = ["Sin marcar", "Asistió", "Faltó", "Tarde", "Justificado"]
+NOTA_LEYENDA = "Después de Justificado, sigue Asistió. Una marca guardada ya no queda Sin marcar."
+
+
+def test_la_leyenda_lateral_tiene_los_cinco_estados(cliente, seccion_docente, lista):
+    html = principal(abrir(cliente, seccion_docente))
+
+    inicio = html.index('class="leyenda leyenda--lateral"')
+    lateral = html[inicio : html.index("</div>", inicio)]
+    assert "Cada toque cambia el estado" in lateral
+    assert re.findall(r"<li>.*?<span>([^<]+)</span></li>", lateral, re.DOTALL) == LEYENDA
+    assert lateral.count('class="estado ') == 5
+    assert NOTA_LEYENDA in lateral
+    assert inicio < html.index('class="hoja-asistencia"'), "en el lateral, bajo la tarjeta"
+
+
+def test_la_leyenda_del_celular_es_plegable(cliente, seccion_docente, lista):
+    html = principal(abrir(cliente, seccion_docente))
+
+    inicio = html.index('<details class="leyenda leyenda--plegable">')
+    plegable = html[inicio : html.index("</details>", inicio)]
+    assert re.search(r"<summary>Un toque cambia el estado", plegable)
+    assert re.findall(r"<li>.*?<span>([^<]+)</span></li>", plegable, re.DOTALL) == LEYENDA
+    assert NOTA_LEYENDA in plegable
+    assert html.index('class="hoja-asistencia"') < inicio < html.index(LISTA)
+
+
+# 1.7 Inactivos, «Deshacer», anuncio y «Sin conexión» (D1, D5)
 
 
 def test_los_no_activos_van_al_final_sin_circulo_y_sin_contar(cliente, seccion_docente, lista):
@@ -524,142 +761,22 @@ def test_los_no_activos_van_al_final_sin_circulo_y_sin_contar(cliente, seccion_d
 
     html = abrir(cliente, seccion_docente)
 
-    assert html.count('class="estudiante fila-asistencia"') == 25
-    assert '<span class="avance__largo"> de 25 marcados</span>' in html
-    inactivos = html[html.index('class="inactivos"') :]
-    assert html.index('class="inactivos"') > html.index(f'id="fila-{lista[24].pk}"')
-    assert "Fuera del registro de hoy" in inactivos
-    assert "No cuentan entre los 25 estudiantes." in inactivos
-    assert '<span class="estudiante__nombre">ESPINOZA VARGAS, RENATO</span>' in inactivos
-    assert '<span class="marca-inactivo">RETIRADO</span>' in inactivos
-    assert '<span class="marca-inactivo">TRASLADADO</span>' in inactivos
+    assert html.count("data-estudiante=") == 25
+    assert "<span data-marcados>0</span> de 25 marcados" in html
+    inicio = html.index("data-fuera-registro")
+    assert inicio > html.index(f'id="fila-{lista[24].pk}"')
+    fuera = html[inicio:]
+    assert "Fuera del registro de hoy" in fuera
+    assert "No cuentan entre los 25 estudiantes." in fuera
+    assert "ESPINOZA VARGAS, RENATO" in texto(fuera)
+    assert re.search(r"<span [^>]*data-marca-fuera>RETIRADO</span>", fuera)
+    assert re.search(r"<span [^>]*data-marca-fuera>TRASLADADO</span>", fuera)
     assert "ESPINOZA VARGAS, RENATO:" not in html, "sin círculo"
     assert f'id="fila-{retirado.pk}"' not in html
 
 
 def test_sin_no_activos_no_hay_seccion_fuera_del_registro(cliente, seccion_docente, lista):
     assert "Fuera del registro de hoy" not in abrir(cliente, seccion_docente)
-
-
-def test_la_nota_se_ve_solo_en_justificado(cliente, seccion_docente, lista):
-    poner(seccion_docente, [lista[1]], "JUSTIFICADO", "Constancia entregada a la docente")
-    poner(seccion_docente, [lista[2]], "FALTO")
-
-    html = abrir(cliente, seccion_docente)
-
-    justificado = fila(html, lista[1])
-    assert '<div class="nota-justificacion" data-nota>' in justificado
-    assert "Nota de justificación" in justificado
-    assert '<span class="opcional">(opcional)</span>' in justificado
-    assert 'maxlength="100"' in justificado
-    assert 'placeholder="Ej.: constancia entregada"' in justificado
-    assert 'value="Constancia entregada a la docente"' in justificado
-    assert "<span data-contador>33</span>/100" in justificado
-    for otro in (lista[0], lista[2]):
-        assert '<div class="nota-justificacion" data-nota hidden>' in fila(html, otro)
-        assert 'maxlength="100"' in fila(html, otro)
-
-
-def test_marcar_los_n_restantes_cuenta_los_sin_marcar(cliente, seccion_docente, lista):
-    poner(seccion_docente, lista[:18], "ASISTIO")
-
-    html = abrir(cliente, seccion_docente)
-
-    assert html.count("Marcar los 7 restantes como Asistió") == 2
-    assert 'class="boton-secundario marcar-todos"' in html
-    assert "7 sin marcar" in html
-    assert "<strong data-marcados>18</strong>" in html
-
-
-def test_con_un_sin_marcar_dice_el_restante(cliente, seccion_docente, lista):
-    poner(seccion_docente, lista[:24], "ASISTIO")
-
-    html = abrir(cliente, seccion_docente)
-
-    assert "Marcar el restante como Asistió" in html
-    assert "Marcar los 1 restantes" not in html
-
-
-def test_los_totales_del_panel_a_medio_marcar(cliente, seccion_docente, lista):
-    poner(seccion_docente, lista[:14], "ASISTIO")
-    poner(seccion_docente, [lista[14]], "TARDE")
-    poner(seccion_docente, lista[15:17], "FALTO")
-    poner(seccion_docente, [lista[17]], "JUSTIFICADO")
-
-    html = abrir(cliente, seccion_docente)
-
-    for palabra, estado, total in [
-        ("Asistió", "ASISTIO", 14),
-        ("Tarde", "TARDE", 1),
-        ("Faltó", "FALTO", 2),
-        ("Justificado", "JUSTIFICADO", 1),
-    ]:
-        assert f'<dt>{palabra}</dt><dd data-total="{estado}">{total}</dd>' in html
-    assert '<progress max="25" value="18" aria-label="Estudiantes marcados"' in html
-
-
-def test_la_jornada_completa_se_dibuja_con_el_cierre(cliente, seccion_docente, lista):
-    poner(seccion_docente, lista[:21], "ASISTIO")
-    poner(seccion_docente, [lista[21]], "TARDE")
-    poner(seccion_docente, lista[22:24], "FALTO")
-    poner(seccion_docente, [lista[24]], "JUSTIFICADO")
-
-    html = abrir(cliente, seccion_docente)
-
-    assert "jornada-completa" in html
-    assert "Asistencia de hoy completa" in html
-    assert "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1" in html
-    assert "restantes como Asistió" not in html
-    assert "Marcar el restante" not in html
-    assert "cierre-animado" not in html, "al abrirla ya completa, sin trazo (D8)"
-
-
-def test_sin_completar_no_hay_cierre(cliente, seccion_docente, lista):
-    poner(seccion_docente, lista[:24], "ASISTIO")
-
-    html = abrir(cliente, seccion_docente)
-
-    assert "jornada-completa" not in html
-    assert '<p class="cierre-jornada" data-cierre hidden>' in html
-    assert '"#fila-' in html and "1 sin marcar" in html
-
-
-def test_el_sabado_no_hay_clases(cliente, seccion_docente, lista, hoy_miercoles):
-    hoy_miercoles["valor"] = SABADO
-
-    html = abrir(cliente, seccion_docente)
-
-    assert "Hoy no hay clases" in html
-    assert "La asistencia se registra de lunes a viernes." in html
-    assert "Sábado 31 de octubre" in html
-    assert "fila-asistencia" not in html
-    assert "restantes como Asistió" not in html
-    assert 'aria-current="date"' not in html
-    assert len(botones(html, "dia")) == 5, "sin panel: un solo selector"
-    assert 'aria-label="Semana del 26 al 30 de octubre"' in html
-    assert "asistencia.js" not in html
-    assert not Jornada.objects.exists()
-
-
-def test_sin_estudiantes_un_aviso_lleva_a_la_lista(cliente, seccion_docente):
-    html = abrir(cliente, seccion_docente)
-
-    assert "Tu sección aún no tiene estudiantes" in html
-    assert "Agrégalos para poder tomar asistencia." in html
-    url_lista = reverse("estudiantes:lista", args=[seccion_docente.pk])
-    assert f'href="{url_lista}"' in html
-    assert ">Ver estudiantes</a>" in html
-    assert "fila-asistencia" not in html
-    assert "asistencia.js" not in html
-    assert not Jornada.objects.exists()
-
-
-def test_solo_con_retirados_es_una_seccion_sin_estudiantes(cliente, seccion_docente):
-    Estudiante.objects.create(
-        seccion=seccion_docente, apellidos="ESPINOZA", nombres="RENATO", estado="RETIRADO"
-    )
-
-    assert "Tu sección aún no tiene estudiantes" in abrir(cliente, seccion_docente)
 
 
 def test_sin_javascript_lo_dice_y_la_pantalla_carga_su_script(cliente, seccion_docente, lista):
@@ -669,7 +786,26 @@ def test_sin_javascript_lo_dice_y_la_pantalla_carga_su_script(cliente, seccion_d
     assert "Activa JavaScript para registrar la asistencia." in html
     assert "js/asistencia.js" in html
     assert 'id="anuncio" class="sr-only" role="status" aria-live="polite"' in html
-    assert 'class="barra-deshacer" data-barra-deshacer hidden' in html
+    barra = re.search(r"<div [^>]*data-barra-deshacer hidden>.*?</div>", html, re.DOTALL)
+    assert "data-deshacer-mensaje" in barra.group(0)
+    deshacer = 'data-deshacer>Deshacer <span data-segundos aria-hidden="true">(5)</span></button>'
+    assert deshacer in barra.group(0)
+
+
+def test_sin_conexion_va_justo_despues_de_la_tarjeta(cliente, seccion_docente, lista):
+    html = principal(abrir(cliente, seccion_docente))
+
+    envoltorio = re.search(
+        r"<div [^>]*data-sin-conexion hidden>(.*?)</div></div>\s*</div>", html, re.DOTALL
+    )
+    assert envoltorio
+    aviso = envoltorio.group(1)
+    assert 'class="message message--error"' in aviso
+    assert "Sin conexión" in aviso
+    assert "Tus marcas se guardarán cuando vuelva la señal. No cierres esta pantalla." in aviso
+    assert html.count("data-sin-conexion") == 1
+    assert html.index('class="tarjeta-jornada"') < envoltorio.start()
+    assert envoltorio.start() < html.index("data-marcar-todos", envoltorio.start())
 
 
 def test_la_pantalla_lleva_las_rutas_de_guardado(cliente, seccion_docente, lista):
@@ -681,3 +817,54 @@ def test_la_pantalla_lleva_las_rutas_de_guardado(cliente, seccion_docente, lista
     assert f'data-url-marcar="{plantilla}"' in html
     assert 'data-fecha="2026-10-28"' in html
     assert f'data-seccion="{seccion_docente.pk}"' in html
+
+
+# 1.8 Fin de semana y sección sin estudiantes (D5)
+
+
+def vacio(contenido):
+    return re.search(r'<div class="empty">.*?</div>', contenido, re.DOTALL).group(0)
+
+
+def test_el_sabado_no_hay_clases(cliente, seccion_docente, lista, hoy_miercoles):
+    hoy_miercoles["valor"] = SABADO
+
+    html = abrir(cliente, seccion_docente)
+    contenido = principal(html)
+
+    caja = vacio(contenido)
+    assert caja.index("Hoy no hay clases") < caja.index(
+        "La asistencia se registra de lunes a viernes."
+    )
+    assert "Sábado 31 de octubre" in contenido
+    assert "data-estudiante=" not in html
+    assert "restantes como Asistió" not in html
+    assert "tarjeta-jornada" not in html
+    assert 'aria-current="date"' not in html
+    assert len(botones(html, "dia")) == 5
+    assert 'aria-label="Semana del 26 al 30 de octubre"' in html
+    assert "asistencia.js" not in html
+    assert not Jornada.objects.exists()
+
+
+def test_sin_estudiantes_un_vacio_lleva_a_la_lista(cliente, seccion_docente):
+    html = abrir(cliente, seccion_docente)
+
+    caja = vacio(principal(html))
+    assert caja.index("Tu sección aún no tiene estudiantes") < caja.index(
+        "Agrégalos para poder tomar asistencia."
+    )
+    url_lista = reverse("estudiantes:lista", args=[seccion_docente.pk])
+    assert re.search(rf'<a [^>]*href="{url_lista}">Ver estudiantes</a>', caja)
+    assert "data-estudiante=" not in html
+    assert "tarjeta-jornada" not in html
+    assert "asistencia.js" not in html
+    assert not Jornada.objects.exists()
+
+
+def test_solo_con_retirados_es_una_seccion_sin_estudiantes(cliente, seccion_docente):
+    Estudiante.objects.create(
+        seccion=seccion_docente, apellidos="ESPINOZA", nombres="RENATO", estado="RETIRADO"
+    )
+
+    assert "Tu sección aún no tiene estudiantes" in abrir(cliente, seccion_docente)

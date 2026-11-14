@@ -1,0 +1,29 @@
+{% extends "base_rebrand.html" %}
+{% load static marco %}
+{% comment %}
+Marco del rebrand (spec pantallas-de-inicio, «Marco común»; rebrand-base, D8): «Ir al contenido», barra fija con el ☰
+(bloque navegacion, solo interiores de la docente), el texto de la barra (bloque titulo_barra: no es encabezado, el <h1>
+es de cada pantalla), el lugar del tema (vacío hasta T-04) y la cuenta; luego <main> y el pie. Cada pantalla llena el
+bloque "principal". El bloque clase_barra suma una variante a la barra: la portada la deja sin fijar con
+" appbar--portada" (rebrand-portada, D1).
+{% endcomment %}
+
+{% block contenido %}
+<a class="skip" href="#contenido">Ir al contenido</a>
+<header class="appbar{% block clase_barra %}{% endblock %}">
+  <div class="wrap appbar-inner">
+    {% block navegacion %}{% menu_docente %}{% endblock %}
+    <span class="bar-title">{% block titulo_barra %}{% endblock %}</span>
+    <div class="bar-actions">
+      {% comment %}Lugar del botón de tema (T-04).{% endcomment %}
+      {% menu_cuenta %}
+    </div>
+  </div>
+</header>
+<main id="contenido" class="wrap page" tabindex="-1">
+{% block principal %}{% endblock %}
+</main>
+{% include "rb/pie.html" %}
+<script src="{% static 'js/bfcache.js' %}" defer></script>
+<script src="{% static 'js/marco.js' %}" defer></script>
+{% endblock %}

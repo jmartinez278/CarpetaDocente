@@ -62,7 +62,7 @@ def otro_navegador(browser, live_server, docente, clave, seccion_tutora):
         ingresar(pagina, live_server, docente, clave)
         pagina.wait_for_url(f"{live_server.url}/docente/")
         pagina.goto(url_hoja(live_server, seccion_tutora, area=MATEMATICA))
-        expect(pagina.locator(".notas-tabla")).to_be_visible()
+        expect(pagina.get_by_role("grid")).to_be_visible()
         return pagina
 
     yield abrir
@@ -75,7 +75,7 @@ def otra_pestana(page, live_server, seccion):
     pagina = page.context.new_page()
     con_pantalla(pagina, 1280, "light")
     pagina.goto(url_hoja(live_server, seccion, area=MATEMATICA))
-    expect(pagina.locator(".notas-tabla")).to_be_visible()
+    expect(pagina.get_by_role("grid")).to_be_visible()
     return pagina
 
 
@@ -215,6 +215,16 @@ def test_sin_almacenamiento_la_hoja_guarda_igual(abrir_hoja, estudiantes, page):
     page = abrir_hoja()
     escribir(page, ana, 1, "A")
     expect(estado(page)).to_have_text("1 cambio sin guardar")
+
+    # Escenario "Cambiar de periodo sin almacenamiento" (rebrand-us-020, D1): el cambio solo vive en
+    # memoria, así que elegir otro periodo pregunta como cualquier salida.
+    page.locator('[data-selector-periodo] [data-periodo="2"]').click()
+    expect(page.locator("#confirmar-salida")).to_be_visible()
+    expect(page.locator("#areas-pendientes")).to_contain_text("Matemática · III bimestre")
+    page.locator("#seguir-editando").click()
+    expect(page.locator("#confirmar-salida")).to_be_hidden()
+    expect(page).to_have_url(re.compile(r"^(?!.*periodo=2)"))
+    expect(entrada(page, ana, 1)).to_have_value("A")
 
     guardar(page)
 
@@ -424,7 +434,7 @@ def test_salir_con_cambios_nombra_las_areas_de_todos_los_periodos_y_conserva_el_
     )
     escribir(page, ana, 1, "A")
     page.locator(f'[data-area-pildora="{COMUNICACION}"]').click()
-    page.locator(".notas-nivel").first.focus()
+    page.locator("[data-celda]").first.focus()
     page.keyboard.type("a")
     avisos = []
     page.on("dialog", lambda dialogo: (avisos.append(dialogo.type), dialogo.dismiss()))
@@ -435,7 +445,11 @@ def test_salir_con_cambios_nombra_las_areas_de_todos_los_periodos_y_conserva_el_
     expect(dialogo).to_be_visible()
     pendientes = page.locator("#areas-pendientes li")
     expect(pendientes).to_have_count(3)
-    for texto in ("Matemática · B3", "Comunicación · B3", "Matemática · B2"):
+    for texto in (
+        "Matemática · III bimestre",
+        "Comunicación · III bimestre",
+        "Matemática · II bimestre",
+    ):
         expect(pendientes.filter(has_text=texto)).to_have_count(1)
     expect(page.locator("#seguir-editando")).to_be_focused()
     expect(dialogo).to_contain_text("Los borradores quedan en este dispositivo.")
@@ -448,6 +462,37 @@ def test_salir_con_cambios_nombra_las_areas_de_todos_los_periodos_y_conserva_el_
     assert llave_borrador(docente, seccion_tutora) in guardados
     assert llave_borrador(docente, seccion_tutora, area=COMUNICACION) in guardados
     assert de_b2 in guardados
+
+
+def test_cambiar_de_periodo_no_pregunta_y_conserva_el_borrador(abrir_hoja, estudiantes):
+    """Escenarios "Elegir otro periodo" y "Cambiar de periodo conserva el borrador" (rebrand-us-020,
+    D1): el selector son enlaces en el área visible; con almacenamiento no pregunta ni avisa."""
+    ana, _ = estudiantes
+    page = abrir_hoja()
+    selector = page.locator("[data-selector-periodo]")
+    page.locator(f'[data-area-pildora="{COMUNICACION}"]').click()
+    expect(selector.locator('[data-periodo="2"]')).to_have_attribute(
+        "href", re.compile(f"periodo=2&area={COMUNICACION}$")
+    )
+    page.locator(f'[data-area-pildora="{MATEMATICA}"]').click()
+    escribir(page, ana, 1, "A")
+    avisos = []
+    page.on("dialog", lambda dialogo: (avisos.append(dialogo.type), dialogo.dismiss()))
+
+    selector.locator('[data-periodo="2"]').click()
+
+    page.wait_for_url(re.compile(f"periodo=2&area={MATEMATICA}$"))
+    expect(selector.locator('[aria-current="page"]')).to_contain_text("II")
+    expect(page.locator("#alcance")).to_have_text("Matemática · II bimestre")
+    expect(entrada(page, ana, 1)).to_have_value("")
+    assert avisos == []
+
+    selector.locator('[data-periodo="3"]').click()
+
+    page.wait_for_url(re.compile(f"periodo=3&area={MATEMATICA}$"))
+    expect(entrada(page, ana, 1)).to_have_value("A")
+    expect(estado(page)).to_have_text("1 cambio sin guardar")
+    assert avisos == []
 
 
 def test_cerrar_sesion_con_cambios_dice_que_los_borradores_se_borraran(
@@ -506,7 +551,7 @@ def test_seguir_editando_tras_cerrar_sesion_conserva_el_borrador(abrir_hoja, est
     page.locator("#seguir-editando").click()
 
     expect(page.locator("#confirmar-salida")).to_be_hidden()
-    expect(page.locator(".notas-tabla")).to_be_visible()
+    expect(page.get_by_role("grid")).to_be_visible()
     assert borradores_de(page, docente)
     page.get_by_role("link", name="Competencias").click()
     expect(page.locator("#aviso-borradores")).to_contain_text(

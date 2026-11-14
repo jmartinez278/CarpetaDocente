@@ -1,0 +1,18 @@
+{% comment %}
+Campo del rebrand (rebrand-base, D8; decisión 11). Recibe: campo (BoundField), ayuda (opcional), tipo (opcional; el del
+widget por omisión) y autocompletar (opcional). Opcionales del ingreso (rebrand-us-001, D3): mostrar_clave (el campo
+va en .input-grupo con el botón del ojo, oculto hasta que ingresar.js lo muestra), variante="ingreso" (.field--ingreso)
+y sin_correccion (autocapitalize="none" spellcheck="false"). Rebrand-us-006 (D6), todos opcionales: maxlength sale solo de
+campo.field.max_length; autocapitalize="valor" pinta ese atributo y spellcheck="false" (gana sobre sin_correccion);
+descrito_por (id de una ayuda fuera del campo) se suma a aria-describedby; foco (nombre de un campo) pone data-foco en ese
+campo. La etiqueta va con for/id; la ayuda y el error se nombran en
+aria-describedby y aria-invalid aparece solo con error. Sin placeholder: la etiqueta siempre está a la vista. La
+contraseña nunca se vuelve a escribir en la página.
+{% endcomment %}
+{% with control=campo.id_for_label tipo=tipo|default:campo.field.widget.input_type|default:"text" %}<div class="field{% if variante == "ingreso" %} field--ingreso{% endif %}">
+  <label for="{{ control }}">{{ campo.label }}</label>
+  {% if mostrar_clave %}<div class="input-grupo">{% endif %}<input class="input" id="{{ control }}" name="{{ campo.html_name }}" type="{{ tipo }}"{% if tipo != "password" and campo.value %} value="{{ campo.value }}"{% endif %}{% if autocompletar %} autocomplete="{{ autocompletar }}"{% endif %}{% if autocapitalize %} autocapitalize="{{ autocapitalize }}" spellcheck="false"{% elif sin_correccion %} autocapitalize="none" spellcheck="false"{% endif %}{% if campo.field.max_length %} maxlength="{{ campo.field.max_length }}"{% endif %}{% if foco and foco == campo.name %} data-foco{% endif %}{% if campo.field.required %} required{% endif %}{% if campo.errors %} aria-invalid="true"{% endif %}{% if ayuda or campo.errors or descrito_por %} aria-describedby="{% if ayuda %}{{ control }}_ayuda{% endif %}{% if ayuda and campo.errors %} {% endif %}{% if campo.errors %}{{ control }}_error{% endif %}{% if descrito_por %}{% if ayuda or campo.errors %} {% endif %}{{ descrito_por }}{% endif %}"{% endif %}>
+  {% if mostrar_clave %}<button class="input-ojo" type="button" data-mostrar-clave aria-controls="{{ control }}" aria-pressed="false" aria-label="Mostrar contraseña" hidden>{% include "iconos/eye.svg" with clase="ojo-ver" %}{% include "iconos/eye-off.svg" with clase="ojo-ocultar" %}</button></div>{% endif %}
+  {% if ayuda %}<p class="small" id="{{ control }}_ayuda">{{ ayuda }}</p>{% endif %}
+  {% if campo.errors %}<p class="field-error" id="{{ control }}_error">{% include "iconos/circle-alert.svg" with clase=None %}<span>{{ campo.errors.0 }}</span></p>{% endif %}
+</div>{% endwith %}

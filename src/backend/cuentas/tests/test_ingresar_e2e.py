@@ -23,7 +23,7 @@ pytestmark = pytest.mark.e2e
 
 
 def test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada(live_server, page, docente, clave):
-    with page.expect_response("**/static/dist/app.css") as respuesta:
+    with page.expect_response("**/static/dist/rebrand.css") as respuesta:
         page.goto(f"{live_server.url}/")
 
     assert respuesta.value.status == 200
@@ -39,9 +39,10 @@ def test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada(live_server, page, docent
 
     expect(page).to_have_url(f"{live_server.url}/docente/")
     expect(page.get_by_role("heading", level=1)).to_have_text(saludo_de("Ana Quispe"))
-    expect(page.get_by_role("heading", level=2)).to_have_text(["Sesiones", "Notas", "Asistencia"])
-    # Alpine se carga con defer: se espera a que termine, no a que aparezca el marcado.
-    page.wait_for_function("typeof Alpine === 'object'", timeout=5000)
+    expect(page.get_by_role("heading", level=2)).to_have_text(["Asistencia", "Sesiones", "Notas"])
+    # Desde rebrand-portada, la portada tampoco carga Alpine.js (D5).
+    page.wait_for_load_state("load")
+    assert page.evaluate("typeof Alpine") == "undefined"
 
 
 def test_la_direccion_llega_a_su_inicio(live_server, page, direccion, clave):
@@ -108,6 +109,88 @@ def test_envio_en_curso_cambia_el_boton_y_deja_los_campos_de_solo_lectura(
     expect(campo_usuario(page)).to_have_attribute("readonly", "")
     expect(campo_clave(page)).to_have_attribute("readonly", "")
     expect(page).to_have_url(f"{live_server.url}/ingresar/")
+
+
+# --- Foco del error (rebrand-us-001, D2) ---
+
+EN_REGION_VIVA = "(el) => !!el.closest('[role=alert], [role=status], [role=log], [aria-live]')"
+
+
+def test_tras_un_rechazo_el_foco_va_al_error_y_tab_lleva_a_usuario(
+    live_server, page, docente, clave
+):
+    """Escenarios «Mensaje de error sobre el formulario» y «Error y teclado»."""
+    abrir_ingresar(page, live_server)
+    campo_usuario(page).fill(docente.username)
+    campo_clave(page).fill(f"{clave}-incorrecta")
+    boton_ingresar(page).click()
+
+    error = page.locator(".message--error")
+    expect(error).to_be_focused()
+    expect(error).to_contain_text("Usuario o contraseña incorrectos, o cuenta inactiva")
+    assert not error.evaluate(EN_REGION_VIVA), "el error no se anuncia también por una región viva"
+
+    page.keyboard.press("Tab")
+
+    expect(campo_usuario(page)).to_be_focused()
+    expect(campo_usuario(page)).to_have_value(docente.username)
+    expect(campo_clave(page)).to_have_value("")
+
+
+# --- «Ingresando…» solo con CSS (D4) ---
+
+COLOR_DE = """(token) => {
+    const muestra = document.createElement("div");
+    muestra.style.background = `var(${token})`;
+    document.body.append(muestra);
+    const color = getComputedStyle(muestra).backgroundColor;
+    muestra.remove();
+    return color;
+}"""
+GIRO = """(el) => {
+    const giro = getComputedStyle(el, "::before");
+    return { content: giro.content, animacion: giro.animationName };
+}"""
+
+
+def retener_envio(page, docente, clave):
+    detener_navegacion_tras_marcar_envio(page)
+    campo_usuario(page).fill(docente.username)
+    campo_clave(page).fill(clave)
+
+
+def test_ingresando_cambia_el_fondo_a_folder_con_giro_y_campos_punteados(
+    live_server, page, docente, clave
+):
+    abrir_ingresar(page, live_server)
+    fondo_normal = boton_ingresar(page).evaluate("(el) => getComputedStyle(el).backgroundColor")
+    retener_envio(page, docente, clave)
+
+    boton_ingresar(page).click()
+
+    boton = page.get_by_role("button", name="Ingresando…")
+    expect(boton).to_be_visible()
+    fondo = boton.evaluate("(el) => getComputedStyle(el).backgroundColor")
+    assert fondo == page.evaluate(COLOR_DE, "--folder")
+    assert fondo != fondo_normal
+    giro = boton.evaluate(GIRO)
+    assert giro["content"] not in ("none", "normal"), "el giro es un ::before del botón"
+    assert giro["animacion"] != "none"
+    for campo in (campo_usuario(page), campo_clave(page)):
+        expect(campo).to_have_attribute("readonly", "")
+        assert campo.evaluate("(el) => getComputedStyle(el).borderTopStyle") == "dotted"
+
+
+def test_con_movimiento_reducido_el_giro_no_gira(live_server, page, docente, clave):
+    page.emulate_media(reduced_motion="reduce")
+    abrir_ingresar(page, live_server)
+    retener_envio(page, docente, clave)
+
+    boton_ingresar(page).click()
+
+    giro = page.get_by_role("button", name="Ingresando…").evaluate(GIRO)
+    assert giro["content"] not in ("none", "normal")
+    assert giro["animacion"] == "none"
 
 
 def estado_ingreso(page):

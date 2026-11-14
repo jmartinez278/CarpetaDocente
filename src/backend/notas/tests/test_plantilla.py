@@ -9,6 +9,7 @@ import re
 import pytest
 from django.urls import reverse
 
+from catalogo.models import Competencia
 from notas.models import CompetenciaPeriodo
 from notas.tests.conftest import (
     AGO_1,
@@ -50,7 +51,7 @@ def area(html, codigo):
 def fila(html, competencia):
     """La fila de una competencia por su id."""
     encontrado = re.search(
-        rf'<li class="comp-competencia[^"]*" data-competencia-fila="{competencia}".*?</li>',
+        rf'<li class="comp-fila[^"]*" data-competencia-fila="{competencia}".*?</li>',
         html,
         re.DOTALL,
     )
@@ -62,6 +63,17 @@ def boton_de_periodo(html, numero):
     encontrado = re.search(rf'<button [^>]*data-periodo="{numero}".*?</button>', html, re.DOTALL)
     assert encontrado, f"el botón del periodo {numero} está en la página"
     return encontrado.group(0)
+
+
+def texto(fragmento):
+    """El texto visible y para el lector de un fragmento, con los espacios normalizados."""
+    return " ".join(re.sub(r"<[^>]+>", "", fragmento).split())
+
+
+def principal(html):
+    """El contenido del único ``<main>`` (el del marco del rebrand)."""
+    assert html.count("<main") == 1, "un solo <main>: el del marco"
+    return re.search(r"<main\b.*?</main>", html, re.DOTALL).group(0)
 
 
 def marcar(seccion, periodo, ids):
@@ -100,6 +112,8 @@ def test_cada_competencia_tiene_su_casilla_con_etiqueta(cliente, seccion_tutora,
         assert f'<label for="c-{competencia}">' in texto
         assert f'id="c-{competencia}"' in texto
         assert f'data-competencia="{competencia}"' in texto
+        # La casilla va dentro de la etiqueta: la fila entera es pulsable.
+        assert re.search(r'<label [^>]*>.*<input type="checkbox".*</label>', texto, re.DOTALL)
 
 
 def test_cada_area_marcable_lleva_su_contador(cliente, seccion_tutora, ie):
@@ -107,7 +121,9 @@ def test_cada_area_marcable_lleva_su_contador(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
     arte = ids_de(ARTE)
-    contador = re.search(r'<span class="comp-area__cuenta"[^>]*>([^<]*)</span>', area(html, ARTE))
+    contador = re.search(
+        r'<span class="comp-cuenta" data-cuenta[^>]*>([^<]*)</span>', area(html, ARTE)
+    )
     assert contador.group(1) == f"{len(arte)}/{len(arte)}"
     assert f'aria-label="{len(arte)} de {len(arte)} seleccionadas"' in area(html, ARTE)
 
@@ -128,6 +144,15 @@ def test_el_contador_cuenta_solo_las_marcadas_del_periodo_que_abre(
     assert " checked" not in fila(html, otra)
 
 
+def test_cada_competencia_lleva_su_codigo_y_su_nombre_completo(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora)
+
+    codigos = re.findall(r'<span class="comp-n">(C\d+)</span>', area(html, MATEMATICA))
+    assert codigos == [f"C{n}" for n in range(1, len(ids_de(MATEMATICA)) + 1)]
+    nombre = Competencia.objects.get(pk=min(ids_de(MATEMATICA))).nombre
+    assert nombre in fila(html, min(ids_de(MATEMATICA)))
+
+
 def test_sin_marcas_abre_con_todo_marcado(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
@@ -138,7 +163,7 @@ def test_sin_marcas_abre_con_todo_marcado(cliente, seccion_tutora, ie):
 def test_las_transversales_dicen_competencia_transversal(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
-    assert html.count("Competencia transversal") == 2
+    assert html.count('<p class="comp-sub">Competencia transversal</p>') == 2
 
 
 # --- Áreas a cargo del docente de curso ---
@@ -153,12 +178,12 @@ def test_un_area_a_cargo_va_atenuada_con_su_aviso_y_casillas_deshabilitadas(
         bloque = area(html, codigo)
         assert "comp-area--curso" in bloque
         assert "A cargo del docente de curso" in bloque
-        assert "comp-area__cuenta" not in bloque
+        assert "comp-cuenta" not in bloque
         casillas = re.findall(r'<input type="checkbox"[^>]*>', bloque)
         assert casillas
         assert all(" disabled" in c and " checked" not in c for c in casillas)
         assert all(f'aria-describedby="curso-{codigo}"' in c for c in casillas)
-        assert f'<p class="comp-area__subtitulo" id="curso-{codigo}">' in bloque
+        assert f'<p class="comp-sub" id="curso-{codigo}">' in bloque
 
 
 def test_un_area_de_la_tutora_no_dice_a_cargo(cliente, seccion_tutora, ie):
@@ -172,21 +197,34 @@ def test_un_area_de_la_tutora_no_dice_a_cargo(cliente, seccion_tutora, ie):
 # --- Periodos (spec "Periodos que se marcan") ---
 
 
-def test_los_botones_de_periodo_dicen_su_nombre_estado_y_fechas(cliente, seccion_tutora, ie):
+def test_los_botones_de_periodo_dicen_romano_estado_y_guardan_las_fechas_para_el_lector(
+    cliente, seccion_tutora, ie
+):
     html = pagina(cliente, seccion_tutora)
 
     assert 'role="group" aria-label="Bimestres de 2027"' in html
     textos = {
-        1: ("B1", "Anterior", "9 mar. – 15 may."),
-        2: ("B2", "Anterior", "25 may. – 24 jul."),
-        3: ("B3", "Vigente", "10 ago. – 30 oct."),
-        4: ("B4", "Futuro", "8 nov. – 18 dic."),
+        1: ("I", "Anterior", "del 9 de marzo al 15 de mayo"),
+        2: ("II", "Anterior", "del 25 de mayo al 24 de julio"),
+        3: ("III", "Vigente", "del 10 de agosto al 30 de octubre"),
+        4: ("IV", "Futuro", "del 8 de noviembre al 18 de diciembre"),
     }
-    for numero, (nombre, estado, fechas) in textos.items():
+    for numero, (romano, estado, fechas) in textos.items():
         boton = boton_de_periodo(html, numero)
-        assert f"<strong>{nombre}</strong>" in boton
-        assert f"{estado}</span>" in boton
-        assert fechas in boton
+        assert f"<strong>{romano}</strong>" in boton
+        assert f"<span data-estado-periodo>{estado}</span>" in boton
+        assert texto(boton) == f"{romano} bimestre, {estado}, {fechas}"
+        # Las fechas solo van en el sr-only: a la vista, el botón dice el romano y el estado.
+        assert f'<span class="sr-only">, {fechas}</span>' in boton
+        assert "aria-label" not in boton
+
+
+def test_las_fechas_del_periodo_quedan_ocultas_para_el_js(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora)
+
+    assert re.search(r"<span[^>]* data-fecha-periodo[^>]* hidden[^>]*>", html)
+    assert "Puedes volver a los bimestres anteriores." not in html
+    assert 'id="titulo-periodos"' not in html
 
 
 def test_el_vigente_va_presionado_y_los_demas_no(cliente, seccion_tutora, ie):
@@ -211,14 +249,16 @@ def test_el_periodo_pedido_abre_presionado(cliente, seccion_tutora, ie):
     assert 'aria-pressed="false"' in boton_de_periodo(html, 3)
 
 
-def test_con_trimestres_los_botones_dicen_t(cliente, institucion, seccion_tutora, ie):
+def test_con_trimestres_los_botones_dicen_romanos(cliente, institucion, seccion_tutora, ie):
     institucion.organizacion_periodos = institucion.OrganizacionPeriodos.TRIMESTRE
     institucion.save()
 
     html = pagina(cliente, seccion_tutora)
 
-    assert "<strong>T1</strong>" in boton_de_periodo(html, 1)
+    assert "<strong>I</strong>" in boton_de_periodo(html, 1)
+    assert texto(boton_de_periodo(html, 3)).startswith("III trimestre, Vigente")
     assert 'aria-label="Trimestres de 2027"' in html
+    assert "<h1>Competencias del trimestre</h1>" in html
     assert "Desmarca las que no desarrollaste en este trimestre." in html
 
 
@@ -235,8 +275,9 @@ def test_una_competencia_con_notas_va_marcada_bloqueada_con_su_motivo(
 
     texto = fila(html, elegida)
     assert 'aria-disabled="true"' in texto and " checked" in texto
-    assert "comp-competencia--notas" in texto
+    assert "comp-fila--notas" in texto
     assert "La competencia tiene notas registradas en este periodo" in texto
+    assert '<span class="motivo">' in texto and "<svg" in texto
     otra = fila(html, max(ie))
     assert "aria-disabled" not in otra
     assert "La competencia tiene notas" not in otra
@@ -256,7 +297,7 @@ def test_las_obligatorias_del_ultimo_periodo_dicen_su_motivo(
     for competencia in faltan:
         texto = fila(html, competencia)
         assert 'aria-disabled="true"' in texto and " checked" in texto
-        assert "comp-competencia--anual" in texto
+        assert "comp-fila--anual" in texto
         assert "Debe tener nivel al cerrar el año" in texto
     assert html.count("Debe tener nivel al cerrar el año") == 5
 
@@ -271,19 +312,39 @@ def test_en_otro_periodo_ninguna_competencia_va_bloqueada(cliente, seccion_tutor
 # --- Panel, guardado y avisos ---
 
 
-def test_el_panel_dice_el_total_del_periodo(cliente, seccion_tutora, ie):
+def test_el_panel_es_una_sola_tarjeta_con_el_total_del_periodo(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
-    assert "Tu selección" in html
-    assert "<strong data-conteo>21 de 21 seleccionadas</strong>" in html
-    assert "<span data-conteo-periodo>competencias para B3</span>" in html
+    assert html.count("Tu selección") == 1
+    assert "<strong data-conteo>21/21</strong>" in html
+    assert "<span data-conteo-periodo>para el III bimestre</span>" in html
+    # El total escrito es decorativo: el lector oye la copia sr-only.
+    conteo = re.search(r'<p class="comp-conteo"[^>]*>', html).group(0)
+    assert 'aria-hidden="true"' in conteo
+    assert '<p class="sr-only" data-conteo-lector>21 de 21 para el III bimestre</p>' in html
+    assert re.search(r'<progress[^>]*data-progreso[^>]*aria-hidden="true"[^>]*>', html)
     assert "Las áreas del docente de curso no se incluyen." in html
+    assert "data-resumen-bloqueos" in html and "data-guardado" in html
+    assert html.count('id="guardar"') == 1 and html.count('id="deshacer"') == 1
+    assert "21 de 21 seleccionadas" not in html and "competencias para B3" not in html
 
 
 def test_con_marcas_el_panel_cuenta_las_guardadas(cliente, seccion_tutora, bimestres, ie):
     marcar(seccion_tutora, bimestres[2], sorted(ie)[:18])
 
-    assert "<strong data-conteo>18 de 21 seleccionadas</strong>" in pagina(cliente, seccion_tutora)
+    html = pagina(cliente, seccion_tutora)
+
+    assert "<strong data-conteo>18/21</strong>" in html
+    assert "18 de 21 para el III bimestre" in html
+
+
+def test_registrar_notas_del_periodo_va_fuera_de_la_tarjeta(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora)
+
+    enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>.*?</a>", html, re.DOTALL).group(0)
+    assert texto(enlace) == "Registrar notas del III bimestre"
+    tarjeta = re.search(r'<section class="comp-resumen".*?</section>', html, re.DOTALL).group(0)
+    assert "data-registrar-notas" not in tarjeta
 
 
 def test_el_boton_guardar_y_deshacer(cliente, seccion_tutora, ie):
@@ -292,14 +353,18 @@ def test_el_boton_guardar_y_deshacer(cliente, seccion_tutora, ie):
     assert re.search(r'<button[^>]*id="guardar"[^>]*>Guardar</button>', html)
     assert 'aria-disabled="true"' in re.search(r'<button[^>]*id="guardar"[^>]*>', html).group(0)
     assert "Guarda la selección de todas las áreas del" in html
-    assert re.search(r'<button[^>]*id="deshacer"[^>]* hidden[^>]*>Deshacer cambios</button>', html)
+    assert re.search(
+        r'<button[^>]*id="deshacer"[^>]* hidden[^>]*>(<svg.*?</svg>\s*)?Deshacer cambios</button>',
+        html,
+        re.DOTALL,
+    )
 
 
 def test_la_capsula_de_areas_lleva_flechas_posicion_y_selector(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
     assert 'aria-label="Área anterior"' in html and 'aria-label="Área siguiente"' in html
-    assert re.search(r"<span data-posicion-area[^>]*>1 de 10</span>", html)
+    assert re.search(r"<span[^>]* data-posicion-area[^>]*>1 de 10</span>", html)
     selector = re.search(r'<select[^>]*id="area-elegida".*?</select>', html, re.DOTALL).group(0)
     assert len(re.findall(r"<option ", selector)) == 10
     assert "Arte y Cultura" in selector
@@ -308,12 +373,22 @@ def test_la_capsula_de_areas_lleva_flechas_posicion_y_selector(cliente, seccion_
 def test_el_dialogo_de_salida(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
-    dialogo = re.search(r"<dialog [^>]*>.*?</dialog>", html, re.DOTALL).group(0)
+    dialogo = re.search(
+        r'<dialog [^>]*id="confirmar-salida"[^>]*>.*?</dialog>', html, re.DOTALL
+    ).group(0)
     assert 'id="confirmar-salida"' in dialogo
-    assert "¿Salir sin guardar?" in dialogo
-    assert re.search(r"<button[^>]*autofocus[^>]*>Seguir editando</button>", dialogo)
-    assert "Salir sin guardar</button>" in dialogo
     assert 'aria-labelledby="titulo-salida"' in dialogo
+    assert 'aria-describedby="texto-salida"' in dialogo
+    assert re.search(r'<h2 id="titulo-salida"[^>]*>¿Salir sin guardar\?</h2>', dialogo)
+    assert '<p class="small"' not in dialogo
+    assert '<div id="texto-salida">' in dialogo
+    assert "Tienes cambios pendientes en:" in dialogo
+    assert re.search(r"<ul[^>]* data-pendientes[^>]*></ul>", dialogo)
+    assert "Si sales, estos cambios se pierden." in dialogo
+    seguir = re.search(r'<button[^>]*id="seguir-editando"[^>]*>', dialogo).group(0)
+    assert "autofocus" in seguir and "btn--primary" in seguir
+    assert dialogo.index('id="seguir-editando"') < dialogo.index('id="salir-sin-guardar"')
+    assert "Salir sin guardar</button>" in dialogo
 
 
 def test_las_regiones_del_lector_de_pantalla_y_el_noscript(cliente, seccion_tutora, ie):
@@ -321,27 +396,56 @@ def test_las_regiones_del_lector_de_pantalla_y_el_noscript(cliente, seccion_tuto
 
     assert html.count('role="status"') == 1
     assert html.count('role="alert"') == 1
-    assert "<noscript>" in html
-    assert "Activa JavaScript para guardar las competencias." in html
+    noscript = re.search(r"<noscript>.*?</noscript>", html, re.DOTALL).group(0)
+    assert "Activa JavaScript para guardar las competencias." in noscript
+    assert 'class="message message--aviso"' in noscript
 
 
 def test_la_pagina_lleva_su_titulo_y_los_datos_de_los_periodos(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
     assert html.count("<h1") == 1
-    assert "Competencias · 2.º A" in html
+    assert "<title>Competencias · 2.º A · CarpetaDocente</title>" in html
     assert '<script id="datos-competencias" type="application/json">' in html
     assert "js/competencias.js" in html
+
+
+def test_la_pantalla_va_en_el_marco_del_rebrand(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora)
+
+    hojas = re.findall(r'<link rel="stylesheet" href="([^"]+)"', html)
+    assert len(hojas) == 1 and hojas[0].endswith("dist/rebrand.css")
+    assert "dist/app.css" not in html
+    assert "js/competencias.js" in html
+    assert 'data-dimension="notas"' in principal(html)
+    assert '<span class="bar-title">Notas</span>' in html
+    actuales = re.findall(r'<a [^>]*aria-current="page"[^>]*>(.*?)</a>', html, re.DOTALL)
+    assert [texto(a) for a in actuales] == ["Notas"]
+
+
+def test_el_encabezado_lleva_la_vuelta_a_la_hoja_la_seccion_y_el_titulo(
+    cliente, seccion_tutora, ie
+):
+    html = pagina(cliente, seccion_tutora, periodo="2", area=MATEMATICA)
+
+    contenido = principal(html)
+    volver = re.search(r'<nav class="breadcrumb"[^>]*>.*?</nav>', contenido, re.DOTALL).group(0)
+    assert f'href="{reverse("notas:hoja", args=[seccion_tutora.pk])}"' in volver
+    assert "?" not in re.search(r'href="([^"]+)"', volver).group(1)
+    assert texto(volver) == "Registrar notas"
+    assert '<p class="small">2.º grado, sección A · 2027</p>' in contenido
+    assert "<h1>Competencias del bimestre</h1>" in contenido
 
 
 def test_las_instrucciones_de_celular_y_de_pc(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
+    instruccion = re.search(r"<p[^>]* data-instruccion[^>]*>.*?</p>", html, re.DOTALL).group(0)
     assert (
         "Confirma qué competencias trabajaste. Desmarca las que no desarrollaste en este bimestre."
-        in html
+        in instruccion
     )
-    assert "Desmarca las competencias que no trabajaste." in html
+    assert "Desmarca las que no trabajaste." in instruccion
 
 
 def test_sin_estilos_en_linea_ni_colores_hex(cliente, seccion_tutora, ie):
@@ -354,11 +458,12 @@ def test_sin_estilos_en_linea_ni_colores_hex(cliente, seccion_tutora, ie):
 # --- Estados vacíos ---
 
 
-def test_sin_periodos_solo_el_aviso(cliente, seccion_tutora, universo_ie):
+def test_sin_periodos_solo_el_estado_vacio(cliente, seccion_tutora, universo_ie):
     html = pagina(cliente, seccion_tutora)
 
-    assert "La dirección aún no configura los periodos" in html
-    assert "Cuando estén listos, podrás confirmar las competencias de tu sección." in html
+    vacio = re.search(r'<div class="empty">.*?</div>', html, re.DOTALL).group(0)
+    assert "La dirección aún no configura los periodos" in vacio
+    assert "Cuando estén listos, podrás confirmar las competencias de tu sección." in vacio
     assert "data-periodo=" not in html
     assert 'id="guardar"' not in html
     assert "Guardar" not in html.replace("Guarda la selección", "")
@@ -374,8 +479,10 @@ def test_en_vacaciones_el_aviso_y_los_periodos_pasados_sin_ninguno_elegido(
 
     html = pagina(cliente, seccion_tutora)
 
-    assert "Hoy no hay un periodo vigente" in html
-    assert "Elige uno de los bimestres ya pasados para revisar sus competencias." in html
+    aviso = re.search(r"<div[^>]* data-aviso[^>]*>.*?</div></div>", html, re.DOTALL).group(0)
+    assert 'class="message message--aviso"' in aviso
+    assert "Hoy no hay un periodo vigente" in aviso
+    assert "Elige uno de los bimestres ya pasados para revisar sus competencias." in aviso
     assert [" disabled" in boton_de_periodo(html, n) for n in (1, 2, 3, 4)] == [
         False,
         False,
@@ -383,7 +490,9 @@ def test_en_vacaciones_el_aviso_y_los_periodos_pasados_sin_ninguno_elegido(
         True,
     ]
     assert 'aria-pressed="true"' not in html
-    assert "Puedes revisar y corregir las competencias de B1 y B2." in html
+    vacio = re.search(r"<div[^>]* data-vacio[^>]*>.*?</div>", html, re.DOTALL).group(0)
+    assert "Elige un bimestre anterior" in vacio
+    assert "Puedes revisar y corregir las competencias del I y II bimestre." in vacio
     trabajo = re.search(r"<div[^>]* data-trabajo[^>]*>", html).group(0)
     assert " hidden" in trabajo
     assert re.search(r"<p[^>]* data-instruccion[^>]* hidden", html)
@@ -405,12 +514,13 @@ def test_antes_del_primer_periodo_el_aviso_con_la_fecha_y_nada_que_elegir(
     html = pagina(cliente, seccion_tutora)
 
     assert "Hoy no hay un periodo vigente" in html
-    assert "El bimestre 1 empieza el 9 de marzo." in html
+    assert "El I bimestre empieza el 9 de marzo." in html
     assert all(" disabled" in boton_de_periodo(html, n) for n in (1, 2, 3, 4))
     assert 'id="guardar"' not in html
     assert "data-trabajo" not in html
     assert "Desmarca" not in html
     assert "Puedes revisar y corregir" not in html
+    assert 'class="message message--aviso"' in html
 
 
 # --- Vuelta a las notas (design de US-029 / US-020, D15) ---
@@ -422,7 +532,7 @@ def test_registrar_notas_lleva_el_periodo_y_el_area(cliente, seccion_tutora, ie)
     enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>.*?</a>", html, re.DOTALL).group(0)
     base = reverse("notas:hoja", args=[seccion_tutora.pk])
     assert f'href="{base}?periodo=3&amp;area={MATEMATICA}"' in enlace
-    assert "Registrar notas de B3" in " ".join(re.sub(r"<[^>]+>", " ", enlace).split())
+    assert texto(enlace) == "Registrar notas del III bimestre"
     assert " hidden" not in enlace
 
 
@@ -438,7 +548,7 @@ def test_el_periodo_pedido_cambia_el_enlace_de_notas(cliente, seccion_tutora, ie
 
     enlace = re.search(r"<a [^>]*data-registrar-notas[^>]*>.*?</a>", html, re.DOTALL).group(0)
     assert "periodo=2" in enlace
-    assert "Registrar notas de B2" in " ".join(re.sub(r"<[^>]+>", " ", enlace).split())
+    assert texto(enlace) == "Registrar notas del II bimestre"
 
 
 def test_en_vacaciones_el_enlace_de_notas_va_oculto_hasta_elegir(cliente, seccion_tutora, ie, hoy):
@@ -452,7 +562,9 @@ def test_en_vacaciones_el_enlace_de_notas_va_oculto_hasta_elegir(cliente, seccio
 def test_con_desde_notas_avisa_que_el_bimestre_no_tiene_competencias(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora, desde="notas", periodo="3", area=MATEMATICA)
 
-    assert "B3 aún no tiene competencias confirmadas" in html
+    aviso = re.search(r"<div[^>]* data-aviso-sin-marcas[^>]*>.*?</div></div>", html, re.DOTALL)
+    assert "III aún no tiene competencias confirmadas" in aviso.group(0)
+    assert "B3" not in html
     assert "Confirma las que trabajaste para empezar a registrar los niveles de logro." in html
 
 
@@ -460,6 +572,13 @@ def test_sin_desde_notas_no_hay_aviso_de_confirmar(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora, periodo="3")
 
     assert "aún no tiene competencias confirmadas" not in html
+
+
+def test_la_nota_del_periodo_nace_oculta_con_el_mensaje_del_rebrand(cliente, seccion_tutora, ie):
+    html = pagina(cliente, seccion_tutora)
+
+    nota = re.search(r"<div[^>]* data-nota-periodo[^>]*>", html).group(0)
+    assert " hidden" in nota and "message message--aviso" in nota
 
 
 def test_el_area_pedida_va_en_los_datos(cliente, seccion_tutora, ie):

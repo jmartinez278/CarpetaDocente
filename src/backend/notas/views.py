@@ -27,11 +27,6 @@ SIN_PERIODOS = {
     "texto": "Cuando estén listos, podrás confirmar las competencias de tu sección.",
 }
 SIN_VIGENTE = "Hoy no hay un periodo vigente"
-ESTADOS_PERIODO = {
-    servicios.VIGENTE: "Vigente",
-    servicios.ANTERIOR: "Anterior",
-    servicios.FUTURO: "Futuro",
-}
 
 
 def _dia_y_mes_corto(fecha):
@@ -44,7 +39,7 @@ def _dia_y_mes(fecha):
     return dateformat.format(fecha, r"j \d\e F")
 
 
-def _aviso(periodos):
+def _aviso(periodos, romanos=False):
     """El aviso de la pantalla cuando no hay un periodo vigente (spec «Sin periodo para marcar»)."""
     if not periodos:
         return SIN_PERIODOS
@@ -57,7 +52,8 @@ def _aviso(periodos):
         )
     else:
         primero = periodos[0]
-        texto = f"El {primero.nombre_largo.lower()} empieza el {_dia_y_mes(primero.fecha_inicio)}."
+        nombre = primero.nombre_romano if romanos else primero.nombre_largo.lower()
+        texto = f"El {nombre} empieza el {_dia_y_mes(primero.fecha_inicio)}."
     return {"titulo": SIN_VIGENTE, "texto": texto}
 
 
@@ -67,8 +63,8 @@ def _palabra_periodo(periodos):
 
 
 def _nombres_elegibles(periodos):
-    """Los periodos que se marcan, en lista de lectura: «B1», «B1 y B2», «B1, B2 y B3»."""
-    nombres = [p.nombre for p in periodos if p.editable]
+    """Los periodos que se marcan, en lista de lectura: «I», «I y II», «I, II y III»."""
+    nombres = [p.romano for p in periodos if p.editable]
     if len(nombres) < 2:
         return "".join(nombres)
     return f"{', '.join(nombres[:-1])} y {nombres[-1]}"
@@ -113,7 +109,8 @@ class CompetenciasView(SeccionDocenteMixin, View):
             por_periodo.append(
                 {
                     "numero": periodo.numero,
-                    "nombre": periodo.nombre,
+                    "nombre": periodo.nombre_romano,
+                    "corto": periodo.romano,
                     "nombre_largo": periodo.nombre_largo,
                     "estado": periodo.estado,
                     "inicio": periodo.fecha_inicio.isoformat(),
@@ -145,7 +142,7 @@ class CompetenciasView(SeccionDocenteMixin, View):
             "areas": areas,
             "periodos": periodos,
             "periodo_inicial": inicial,
-            "aviso": _aviso(periodos),
+            "aviso": _aviso(periodos, romanos=True),
             "total": len(permitido),
             "marcadas_iniciales": marcadas_iniciales,
             "con_notas_iniciales": con_notas_iniciales,
@@ -278,7 +275,9 @@ class HojaView(SeccionDocenteMixin, View):
             "seccion": seccion,
             "seccion_corta": texto_seccion_corto(seccion),
             "periodo": periodo,
-            "aviso": _aviso(periodos),
+            # Todos los del año, también el futuro: el selector los pinta (rebrand-us-020, D1).
+            "periodos": periodos,
+            "aviso": _aviso(periodos, romanos=True),
             "palabra_periodo": _palabra_periodo(periodos),
         }
         if periodo is None:
@@ -294,14 +293,15 @@ class HojaView(SeccionDocenteMixin, View):
             {
                 "hojas": hojas,
                 "area_inicial": inicial,
-                "estado_periodo": ESTADOS_PERIODO[periodo.estado],
+                # Los enlaces del selector de periodo (rebrand-us-020, D1).
+                "url_hoja": reverse("notas:hoja", args=[seccion.pk]),
                 "url_competencias": (
                     f"{reverse('competencias:pantalla', args=[seccion.pk])}?{consulta}"
                 ),
                 "datos": {
                     "periodo": {
                         "numero": periodo.numero,
-                        "nombre": periodo.nombre,
+                        "nombre": periodo.nombre_romano,
                         "estado": periodo.estado,
                     },
                     "area_inicial": inicial,
@@ -310,7 +310,9 @@ class HojaView(SeccionDocenteMixin, View):
                     ),
                     # Para nombrar en el diálogo de salida los borradores de otros periodos (D11).
                     "periodos": [
-                        {"numero": p.numero, "nombre": p.nombre} for p in periodos if p.editable
+                        {"numero": p.numero, "nombre": p.nombre_romano}
+                        for p in periodos
+                        if p.editable
                     ],
                     "areas": [_datos_del_area(hoja, seccion, periodo) for hoja in hojas],
                 },

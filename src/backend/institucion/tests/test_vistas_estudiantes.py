@@ -154,6 +154,11 @@ def test_con_htmx_responde_el_parcial_sin_marco(entrar, docente, seccion_docente
     assert "<html" not in html
     assert "<h1" not in html
     assert re.search(r'<h2[^>]*id="modal-titulo"[^>]*>\s*Estudiantes de 2\.º A\s*</h2>', html)
+    assert re.search(r"<button[^>]*data-cerrar[^>]*>.*?Cerrar.*?</button>", html, re.S)
+    cuerpo = re.search(r'<div[^>]*id="modal-cuerpo"[^>]*>', html).group(0)
+    assert 'tabindex="0"' in cuerpo
+    assert 'role="region"' in cuerpo
+    assert 'aria-labelledby="modal-titulo"' in cuerpo
 
 
 def test_con_htmx_lleva_el_aviso_de_la_portada_fuera_de_banda(entrar, docente, seccion_docente):
@@ -169,6 +174,7 @@ def test_sin_htmx_responde_la_pagina_completa_con_h1(entrar, docente, seccion_do
 
     assert html.lstrip().lower().startswith("<!doctype html>")
     assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == ["Estudiantes de 2.º A"]
+    assert re.search(r'<h1[^>]*id="modal-titulo"', html)
     assert "<h2" not in html.split("<main")[1]
     assert "hx-swap-oob" not in html
 
@@ -176,9 +182,30 @@ def test_sin_htmx_responde_la_pagina_completa_con_h1(entrar, docente, seccion_do
 def test_la_pagina_completa_no_tiene_cerrar_y_vuelve_a_la_portada(entrar, docente, seccion_docente):
     html = entrar(docente).get(url_lista(seccion_docente)).content.decode()
 
-    assert "data-cerrar" not in html
-    assert 'href="/docente/"' in html
+    principal = re.search(r"<main\b.*?</main>", html, re.S).group(0)
+    assert "data-cerrar" not in principal
+    assert "Cerrar" not in principal
+    assert re.search(r'<a[^>]*href="/docente/"[^>]*>.*?Volver a la portada</a>', html, re.S)
     assert "<title>Estudiantes de 2.º A · CarpetaDocente</title>" in html
+
+
+@pytest.mark.parametrize("vista", ["lista", "agregar", "pegar"])
+def test_la_pagina_completa_va_en_el_marco_del_rebrand(entrar, docente, seccion_docente, vista):
+    url = reverse(f"estudiantes:{vista}", args=[seccion_docente.pk])
+
+    html = entrar(docente).get(url).content.decode()
+
+    assert "dist/rebrand.css" in html
+    assert "dist/app.css" not in html
+    assert re.search(r'<span class="bar-title">Estudiantes</span>', html)
+    assert html.count("<main") == 1, "un solo <main>: el del marco"
+    principal = re.search(r"<main\b.*?</main>", html, re.S).group(0)
+    assert '<section class="panel-lista" aria-labelledby="modal-titulo">' in principal
+    assert re.search(r'<h1[^>]*id="modal-titulo"', principal)
+    assert 'id="modal-cabecera"' in principal
+    assert 'id="modal-pie"' in principal
+    cuerpo = re.search(r'<div[^>]*id="modal-cuerpo"[^>]*>', principal).group(0)
+    assert "tabindex" not in cuerpo
 
 
 # --- Lista vacía (spec "Lista vacía") ---
@@ -190,10 +217,12 @@ def test_lista_vacia_con_sus_dos_acciones(entrar, docente, seccion_docente, cabe
 
     assert "Tu sección aún no tiene estudiantes." in html
     assert "0 estudiantes" in html
-    principal = re.search(r'<a[^>]*class="[^"]*boton-principal[^"]*"[^>]*>(.*?)</a>', html, re.S)
+    pie = re.search(r'<footer[^>]*id="modal-pie"[^>]*>(.*?)</footer>', html, re.S).group(1)
+    principal = re.search(r'<a[^>]*class="[^"]*btn--primary[^"]*"[^>]*>(.*?)</a>', pie, re.S)
     assert principal and principal.group(1).strip() == "Agregar uno por uno"
-    secundario = re.search(r'<a[^>]*class="[^"]*boton-secundario[^"]*"[^>]*>(.*?)</a>', html, re.S)
+    secundario = re.search(r'<a[^>]*class="[^"]*btn--secondary[^"]*"[^>]*>(.*?)</a>', pie, re.S)
     assert secundario and secundario.group(1).strip() == "Pegar lista"
+    assert re.search(r'<div class="empty">.*?Tu sección aún no tiene estudiantes\.', html, re.S)
 
 
 def test_las_acciones_de_la_lista_vacia_son_enlaces_reales_con_hx_get(
@@ -358,7 +387,7 @@ def test_con_errores_responde_200_con_el_formulario_y_no_guarda(entrar, docente,
     assert "Escribe apellidos y nombres separados por una coma." in html
     assert "localizar-linea" not in html
     assert html.index("Línea 2") < html.index("Líneas 3 y 4")
-    assert re.search(r'<div[^>]*class="mensaje mensaje--error"[^>]*role="alert"', html)
+    assert re.search(r'<div[^>]*class="message message--error"[^>]*role="alert"', html)
     assert len(formularios(html)) == 1
     assert 'name="csrfmiddlewaretoken"' in formularios(html)[0]
 
@@ -372,6 +401,8 @@ def test_con_errores_el_texto_vuelve_intacto_con_aria_invalid(entrar, docente, s
 
     assert textarea(html) == texto
     assert re.search(r'<textarea[^>]*aria-invalid="true"', html)
+    describe = re.search(r'<textarea[^>]*aria-describedby="([^"]*)"', html).group(1).split()
+    assert "pegar-errores" in describe
     assert "<b>ROJAS</b>" not in html
     assert "Línea 4: falta la coma entre apellidos y nombres" in html
 
@@ -392,6 +423,28 @@ def test_la_vista_lleva_h2_como_pagina_completa(entrar, docente, seccion_docente
     html = entrar(docente).get(url_pegar(seccion_docente)).content.decode()
 
     assert re.search(r'<h2[^>]*class="vista-titulo"[^>]*>Pegar lista</h2>', html)
+
+
+def test_una_primera_linea_vacia_se_conserva_y_los_numeros_de_error_no_se_corren(
+    entrar, docente, seccion_docente
+):
+    texto = "\nAGUILAR FLORES, LUCIANA\nSIN COMA"
+
+    html = entrar(docente).post(url_pegar(seccion_docente), {"lista": texto}).content.decode()
+
+    assert textarea(html) == texto
+    assert re.search(r"<textarea[^>]*>\n\n", html), "el salto tras la etiqueta se conserva"
+    assert "Línea 3: falta la coma entre apellidos y nombres" in html
+
+
+def test_importar_envia_el_formulario_de_pegar_desde_el_pie(entrar, docente, seccion_docente):
+    html = entrar(docente).get(url_pegar(seccion_docente), **HTMX).content.decode()
+
+    assert re.search(
+        r'<button[^>]*class="btn btn--primary"[^>]*type="submit"[^>]*form="form-pegar"[^>]*>'
+        r"Importar</button>",
+        html,
+    )
 
 
 def test_el_texto_vacio_pide_pegar_al_menos_uno(entrar, docente, seccion_docente):
@@ -429,6 +482,7 @@ def test_pegar_con_estudiantes_muestra_el_aviso_sin_el_cuadro(
     assert "Agrega a los que falten con Agregar estudiante." in html
     assert "<textarea" not in html
     assert "Importar" not in html
+    assert '<div class="message message--aviso" role="status">' in html
 
 
 def test_el_envio_a_una_seccion_con_estudiantes_no_guarda_nada(
@@ -455,7 +509,7 @@ def lista_de_tres(seccion_docente):
 
 
 def filas(html):
-    return re.findall(r'<li class="estudiante">(.*?)</li>', html, re.S)
+    return re.findall(r'<li class="estudiante-fila" data-estudiante>(.*?)</li>', html, re.S)
 
 
 @pytest.mark.parametrize("cabeceras", [{}, HTMX])
@@ -468,9 +522,9 @@ def test_la_lista_numera_en_orden_con_el_nombre_completo_y_editar(
     assert len(encontradas) == 3
     esperado = ["ÁLVAREZ SOTO, ANA LUCÍA", "ÑAUPA ROJAS, LUIS", "RAMOS HUAMÁN, VALENTÍN"]
     for numero, (fila, nombre) in enumerate(zip(encontradas, esperado, strict=True), start=1):
-        assert re.search(rf'class="estudiante__numero"[^>]*>{numero}</span>', fila)
-        assert f'<span class="estudiante__nombre">{nombre}</span>' in fila
-        editar = re.search(r'<a[^>]*class="editar-fila"[^>]*>Editar</a>', fila).group(0)
+        assert re.search(rf'class="estudiante-numero"[^>]*>{numero}</span>', fila)
+        assert f'<span class="estudiante-nombre">{nombre}</span>' in fila
+        editar = re.search(r'<a[^>]*class="btn btn--text"[^>]*>Editar</a>', fila).group(0)
         assert f'aria-label="Editar a {nombre}"' in editar
     assert "…" not in html
 
@@ -491,16 +545,16 @@ def test_agregar_va_arriba_y_vaciar_al_final(
     agregar = reverse("estudiantes:agregar", args=[seccion_docente.pk])
     vaciar = reverse("estudiantes:vaciar", args=[seccion_docente.pk])
 
-    cabecera = re.search(r'<header class="modal-cabecera">.*?</header>', html, re.S).group(0)
+    cabecera = re.search(r'<header[^>]*id="modal-cabecera"[^>]*>.*?</header>', html, re.S).group(0)
     assert re.search(
-        rf'<a[^>]*class="boton-principal"[^>]*href="{agregar}"[^>]*>Agregar estudiante</a>',
+        rf'<a[^>]*class="btn btn--primary"[^>]*href="{agregar}"[^>]*>Agregar estudiante</a>',
         cabecera,
     )
     final = re.search(r'<div class="fin-lista">(.*?)</div>', html, re.S)
     assert final, "falta el final de la lista"
     assert html.index("</ol>") < final.start()
     assert re.search(
-        rf'<a[^>]*class="accion-peligro"[^>]*href="{vaciar}"[^>]*>Vaciar lista</a>',
+        rf'<a[^>]*class="btn btn--text btn--peligro"[^>]*href="{vaciar}"[^>]*>Vaciar lista</a>',
         final.group(1),
     )
 
@@ -512,10 +566,21 @@ def test_el_aviso_de_exito_es_un_estado_que_no_se_va_solo(entrar, docente, secci
         .content.decode()
     )
 
-    aviso = re.search(r'<div class="mensaje mensaje--exito"[^>]*>', html).group(0)
+    aviso = re.search(r'<div class="message message--exito"[^>]*>', html).group(0)
     assert 'role="status"' in aviso
     assert "data-ocultar" not in aviso
-    assert html.index("3 estudiantes importados") < html.index('<ol class="estudiantes"')
+    assert html.index("3 estudiantes importados") < html.index('<ol class="estudiantes-lista"')
+    enlace = re.search(r'<a[^>]*class="btn btn--text"[^>]*>\s*Tomar la asistencia de hoy', html)
+    assert enlace and "hx-get" not in enlace.group(0)
+
+
+def test_el_aviso_de_la_portada_usa_el_mensaje_del_rebrand(entrar, docente, seccion_docente):
+    html = entrar(docente).get(url_lista(seccion_docente), **HTMX).content.decode()
+
+    aviso = aviso_portada(html).group(0)
+    assert '<div class="message message--aviso" role="status">' in aviso
+    assert "Tu sección aún no tiene estudiantes" in aviso
+    assert "Agrégalos para poder tomar asistencia" in aviso
 
 
 def test_otra_docente_no_puede_pegar_en_la_seccion(entrar, otra_docente, seccion_docente):
@@ -577,10 +642,15 @@ def test_agregar_tiene_dos_campos_obligatorios_de_120(entrar, docente, seccion_d
         assert "required" in control
         assert 'maxlength="120"' in control
         assert "value=" not in control
-        assert re.search(rf'<label[^>]*for="agregar-{nombre}"[^>]*>{etiqueta}</label>', html)
-    assert "Los nombres se guardan en mayúsculas." in html
+        assert re.search(rf'<label[^>]*for="id_{nombre}"[^>]*>{etiqueta}</label>', html)
+        assert 'autocapitalize="characters"' in control
+        assert 'spellcheck="false"' in control
+        descrito = re.search(r'aria-describedby="([^"]*)"', control).group(1).split()
+        assert "ayuda-nombres" in descrito
+    assert '<p class="small" id="ayuda-nombres">Los nombres se guardan en mayúsculas.</p>' in html
     assert re.search(
-        r'<button[^>]*type="submit"[^>]*form="form-estudiante"[^>]*>\s*Guardar y agregar otro',
+        r'<button[^>]*class="btn btn--primary"[^>]*type="submit"[^>]*form="form-estudiante"[^>]*>'
+        r"Guardar y agregar otro</button>",
         html,
     )
     assert f'href="{url_lista(seccion_docente)}"' in html.split("Guardar y agregar otro")[1]
@@ -636,7 +706,7 @@ def test_tras_agregar_los_campos_vuelven_vacios_con_el_aviso_una_vez(
     html = respuesta.content.decode()
 
     assert respuesta.redirect_chain == [(url_agregar(seccion_docente), 303)]
-    assert re.search(r'<div class="mensaje mensaje--exito"[^>]*role="status"', html)
+    assert re.search(r'<div class="message message--exito"[^>]*role="status"', html)
     assert "Estudiante agregado" in html
     assert "1 estudiante<" in html
     assert "value=" not in entrada(html, "apellidos")
@@ -667,9 +737,9 @@ def test_un_campo_vacio_muestra_su_error_y_no_guarda(entrar, docente, seccion_do
     assert seccion_docente.estudiantes.count() == 0
     nombres = entrada(html, "nombres")
     assert 'aria-invalid="true"' in nombres
-    assert "agregar-nombres-error" in nombres
+    assert "id_nombres_error" in nombres
     assert re.search(
-        r'<p class="campo__error" id="agregar-nombres-error">.*?<span>Escribe los nombres</span>',
+        r'<p class="field-error" id="id_nombres_error">.*?<span>Escribe los nombres</span>',
         html,
         re.S,
     )
@@ -699,7 +769,7 @@ def test_el_homonimo_al_agregar_conserva_lo_escrito_y_sugiere_el_segundo_nombre(
     assert respuesta.status_code == 200
     assert seccion_docente.estudiantes.count() == 1
     error = re.search(
-        r'<div class="mensaje mensaje--error" role="alert">.*?</div></div>', html, re.S
+        r'<div class="message message--error" role="alert">.*?</div></div>', html, re.S
     )
     assert error, "falta el mensaje del homónimo"
     assert "Este estudiante ya está en la lista" in error.group(0)
@@ -721,17 +791,18 @@ def test_editar_muestra_los_valores_y_la_salida_para_quitar(
     assert 'value="ANA LUCIA"' in entrada(html, "nombres")
     for nombre in ("apellidos", "nombres"):
         assert 'maxlength="120"' in entrada(html, nombre)
+        assert 'autocapitalize="characters"' in entrada(html, nombre)
         assert "required" in entrada(html, nombre)
     assert html.count("Se guarda en mayúsculas. Máximo 120 caracteres.") == 2
     quitar = url_quitar(seccion_docente, ana_lucia)
     assert re.search(
-        rf'<a[^>]*class="accion-peligro"[^>]*href="{quitar}"[^>]*hx-get="{quitar}"[^>]*>'
-        r"Quitar estudiante</a>",
+        rf'<a[^>]*class="btn btn--text btn--peligro"[^>]*href="{quitar}"'
+        rf'[^>]*hx-get="{quitar}"[^>]*>Quitar estudiante</a>',
         html,
     )
     assert "Solo puedes quitarlo si no tiene asistencia ni notas." in html
     assert re.search(
-        r'<button[^>]*type="submit"[^>]*form="form-estudiante"[^>]*>\s*Guardar cambios', html
+        r'<button[^>]*type="submit"[^>]*form="form-estudiante"[^>]*>Guardar cambios</button>', html
     )
     formulario = formulario_estudiante(html)
     assert len(formulario) == 1
@@ -756,7 +827,7 @@ def test_guardar_cambios_vuelve_a_la_lista_con_el_nombre_corregido(
     assert respuesta.status_code == 303
     assert respuesta["Location"] == url_lista(seccion_docente)
     html = cliente.get(url_lista(seccion_docente)).content.decode()
-    assert '<span class="estudiante__nombre">QUISPE MAMANI, ANA LUCÍA</span>' in html
+    assert '<span class="estudiante-nombre">QUISPE MAMANI, ANA LUCÍA</span>' in html
 
 
 def test_la_correccion_que_crea_un_homonimo_no_se_guarda(
@@ -864,10 +935,11 @@ def formulario_de(html, accion):
 
 
 def solo_volver_a_la_lista(html, seccion):
-    pie = re.search(r'<footer class="modal-pie"[^>]*>(.*?)</footer>', html, re.S).group(1)
+    pie = re.search(r'<footer[^>]*id="modal-pie"[^>]*>(.*?)</footer>', html, re.S).group(1)
     assert re.findall(r"<(?:a|button)\b[^>]*>", pie) == [
-        re.search(r'<a[^>]*class="volver-lista"[^>]*>', pie).group(0)
+        re.search(r'<a[^>]*class="btn btn--secondary"[^>]*>', pie).group(0)
     ]
+    assert "Volver a la lista" in pie
     assert f'href="{url_lista(seccion)}"' in pie
 
 
@@ -880,9 +952,13 @@ def test_quitar_pide_confirmacion_con_el_nombre(
     html = entrar(docente).get(url, **cabeceras).content.decode()
 
     assert re.search(r'class="vista-titulo"[^>]*>Quitar estudiante<', html)
-    assert '<p class="confirmacion-nombre">¿Quitar a QUISPE MAMANI, ANA LUCIA?</p>' in html
+    assert '<p class="confirmacion">¿Quitar a QUISPE MAMANI, ANA LUCIA?</p>' in html
     assert "Solo se puede si no tiene asistencia ni notas" in html
-    assert re.search(r'<button[^>]*form="form-quitar"[^>]*>\s*Quitar estudiante', html)
+    assert re.search(
+        r'<button[^>]*class="btn btn--primary"[^>]*type="submit"[^>]*form="form-quitar"[^>]*>'
+        r"Quitar estudiante</button>",
+        html,
+    )
     formulario = formulario_de(html, url)
     assert len(formulario) == 1
     assert 'id="form-quitar"' in formulario[0]
@@ -923,7 +999,7 @@ def test_quitar_con_registros_muestra_el_bloqueo_y_no_quita(
     assert respuesta.status_code == 200
     assert Estudiante.objects.filter(pk=ana_lucia.pk).exists()
     alerta = re.search(
-        r'<div class="mensaje mensaje--error" role="alert">.*?</div></div>', html, re.S
+        r'<div class="message message--error" role="alert">.*?</div></div>', html, re.S
     )
     assert alerta, "falta el bloqueo"
     assert "No se puede quitar: el estudiante ya tiene registros" in alerta.group(0)
@@ -940,12 +1016,16 @@ def test_vaciar_pide_confirmacion_con_la_cantidad(
 
     assert re.search(r'class="vista-titulo"[^>]*>Vaciar lista<', html)
     aviso = re.search(
-        r'<div class="mensaje mensaje--aviso" role="status">.*?</div></div>', html, re.S
+        r'<div class="message message--aviso" role="status">.*?</div></div>', html, re.S
     )
     assert aviso, "falta la confirmación"
     assert "Se quitarán los 3 estudiantes." in aviso.group(0)
     assert "Solo se puede si ninguno tiene asistencia ni notas" in aviso.group(0)
-    assert re.search(r'<button[^>]*form="form-vaciar"[^>]*>\s*Vaciar lista', html)
+    assert re.search(
+        r'<button[^>]*class="btn btn--primary"[^>]*type="submit"[^>]*form="form-vaciar"[^>]*>'
+        r"Vaciar lista</button>",
+        html,
+    )
     formulario = formulario_de(html, url_vaciar(seccion_docente))
     assert len(formulario) == 1
     assert 'name="csrfmiddlewaretoken"' in formulario[0]
@@ -988,7 +1068,7 @@ def test_vaciar_con_registros_muestra_el_bloqueo_y_no_quita_ninguno(
     assert respuesta.status_code == 200
     assert seccion_docente.estudiantes.count() == 3
     alerta = re.search(
-        r'<div class="mensaje mensaje--error" role="alert">.*?</div></div>', html, re.S
+        r'<div class="message message--error" role="alert">.*?</div></div>', html, re.S
     )
     assert alerta, "falta el bloqueo"
     assert "No se puede vaciar: algunos estudiantes ya tienen registros" in alerta.group(0)

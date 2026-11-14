@@ -1,0 +1,23 @@
+{% comment %}
+La tarjeta café «Tu jornada» (rebrand-us-030, D1, D2 y D4): una sola en el DOM. En PC va en el lateral, fija al bajar; hasta
+699 px es el resumen compacto fijo bajo la barra (conteo, estado del guardado y barra de avance), sin totales ni botón.
+El conteo visible tiene una variante por ancho, con aria-hidden; el lector oye la copia sr-only y el enlace «N sin
+marcar». Con todos marcados, el JS oculta el avance y muestra los totales del día y «✓ Asistencia de hoy completa».
+{% endcomment %}
+<section class="tarjeta-jornada" aria-labelledby="tarjeta-titulo">
+  <div class="tarjeta-jornada__cabecera">
+    <h2 id="tarjeta-titulo"><span class="titulo-abierta">Tu jornada</span><span class="titulo-completa">Jornada completa</span></h2>
+    {% include "iconos/calendar-check.svg" %}
+  </div>
+  <div class="tarjeta-jornada__fila">
+    <p class="conteo" data-avance{% if lista.completa %} hidden{% endif %}><span class="conteo__pc" aria-hidden="true"><strong data-marcados>{{ lista.marcados }}</strong>/{{ lista.total }} marcados</span><span class="conteo__movil" aria-hidden="true"><span data-marcados>{{ lista.marcados }}</span>/{{ lista.total }} ·</span> <a class="sin-marcar sin-marcar--movil" href="#{{ lista.primera_sin_marcar }}" data-sin-marcar>{{ lista.sin_marcar }} sin marcar</a><span class="sr-only"><span data-marcados>{{ lista.marcados }}</span> de {{ lista.total }} marcados</span></p>
+    <p class="resumen-completo" data-resumen-completo{% if not lista.completa %} hidden{% endif %}>{{ lista.resumen }}</p>
+    {% include "asistencia/_guardado.html" %}
+  </div>
+  <progress max="{{ lista.total }}" value="{{ lista.marcados }}" aria-label="Estudiantes marcados" data-progreso></progress>
+  <p class="sin-marcar--pc"><a class="sin-marcar" href="#{{ lista.primera_sin_marcar }}" data-sin-marcar{% if lista.completa %} hidden{% endif %}>{{ lista.sin_marcar }} sin marcar</a>{% include "iconos/arrow-right.svg" with clase="sin-marcar__flecha" %}</p>
+  <p class="cierre-jornada" data-cierre{% if not lista.completa %} hidden{% endif %}>{% include "iconos/check.svg" %}Asistencia de hoy completa</p>
+  <dl class="totales">{% for estado, palabra, total in lista.totales_en_orden %}<div class="total--{{ estado|lower }}"><dt>{{ palabra }}</dt><dd data-total="{{ estado }}">{{ total }}</dd></div>{% endfor %}</dl>
+  <p class="small nombres-pendientes" data-nombres-pendientes hidden></p>
+  {% include "asistencia/_marcar_todos.html" with variante="tarjeta" %}
+</section>

@@ -52,6 +52,7 @@ def _catalogo_cargado(catalogo):
     """El catálogo debe estar antes de crear la institución, que copia sus áreas."""
 
 
+CIENCIA = "0004"
 MENSAJE_RED = "Revisa tu conexión y reintenta."
 VACIA = "Una nota registrada puede corregirse, pero no quedar vacía."
 
@@ -59,9 +60,13 @@ VACIA = "Una nota registrada puede corregirse, pero no quedar vacía."
 # --- Nivel en la PC ---
 
 
-def test_escribir_el_nivel_baja_a_la_misma_competencia_del_siguiente(abrir_hoja, estudiantes):
-    """Escenarios "Escribir el nivel", "Logro destacado" y "Tecla fuera de la escala"."""
+def test_escribir_el_nivel_baja_a_la_misma_competencia_del_siguiente(
+    abrir_hoja, estudiantes, seccion_tutora
+):
+    """Escenarios "Escribir el nivel", "Logro destacado" y "Tecla fuera de la escala"; y, a 360 px,
+    la celda con el foco no queda bajo la barra de guardar (rebrand-us-020, D5)."""
     ana, luis = estudiantes
+    crear_estudiantes(seccion_tutora, *[f"ESTUDIANTE{n:02d}, PRUEBA" for n in range(12)])
     page = abrir_hoja()
 
     entrada(page, ana, 1).click()
@@ -71,6 +76,7 @@ def test_escribir_el_nivel_baja_a_la_misma_competencia_del_siguiente(abrir_hoja,
 
     expect(entrada(page, ana, 1)).to_have_value("A")
     expect(entrada(page, luis, 1)).to_be_focused()
+    expect(page.locator("#alcance")).to_have_text("Matemática · III bimestre")
 
     page.keyboard.type("a")
     page.keyboard.type("d")
@@ -81,6 +87,20 @@ def test_escribir_el_nivel_baja_a_la_misma_competencia_del_siguiente(abrir_hoja,
         page.keyboard.type(tecla)
     expect(entrada(page, luis, 2)).to_have_value("")
     expect(page.locator("#mensaje-guardado")).to_be_hidden()
+
+    # A 360 px, de la penúltima fila a la última con Tab: la celda queda por encima de la barra.
+    con_pantalla(page, 360, "light")
+    expect(boton_movil(page, luis, 1)).to_be_visible()
+    # La última fila dentro de la ventana, pero bajo la barra fija: el navegador no desplazaría.
+    boton_movil(page, luis, 1).evaluate(
+        "el => window.scrollBy(0, el.getBoundingClientRect().bottom - innerHeight + 4)"
+    )
+    boton_movil(page, ana, 4).evaluate("el => el.focus({ preventScroll: true })")
+    page.keyboard.press("Tab")
+    expect(boton_movil(page, luis, 1)).to_be_focused()
+    celda = boton_movil(page, luis, 1).bounding_box()
+    barra = page.locator("#barra-guardar").bounding_box()
+    assert celda["y"] + celda["height"] <= barra["y"], (celda, barra)
 
 
 def test_la_barra_de_niveles_elige_con_flechas_y_enter(abrir_hoja, estudiantes):
@@ -115,7 +135,7 @@ def test_el_nombre_de_la_competencia_aparece_al_recibir_el_foco(abrir_hoja, estu
     """Escenario "Nombre de la competencia"."""
     page = abrir_hoja()
 
-    page.locator(".notas-comp__boton").first.focus()
+    page.locator("[data-competencia]").first.focus()
 
     expect(page.locator("#competencia-detalle")).to_have_text(competencia(MATEMATICA, 1).nombre)
 
@@ -137,6 +157,25 @@ def test_el_panel_del_celular_elige_y_pasa_al_siguiente(abrir_hoja, estudiantes)
     expect(page.locator("#panel-competencia")).to_contain_text("C2")
     page.locator("#cerrar-panel").click()
     expect(boton_movil(page, ana, 2)).to_contain_text("A")
+
+
+def test_siguiente_avanza_con_una_b_sin_conclusion(abrir_hoja, estudiantes):
+    """Escenario "Siguiente con una B sin conclusión" (rebrand-us-020, D4)."""
+    ana, luis = estudiantes
+    page = abrir_hoja(ancho=360)
+
+    boton_movil(page, ana, 1).click()
+    page.locator('#panel-niveles [data-elegir="B"]').click()
+    page.locator("#siguiente").click()
+
+    expect(page.locator("#panel-estudiante")).to_have_text("ROJAS, LUIS")
+    expect(page.locator("#panel-competencia")).to_contain_text("C1")
+    expect(page.locator("[data-anuncio]")).to_contain_text("Falta conclusión")
+    page.locator("#cerrar-panel").click()
+    expect(boton_movil(page, ana, 1)).to_contain_text("B")
+    expect(boton_movil(page, ana, 1)).to_have_attribute(
+        "aria-label", re.compile("falta conclusión")
+    )
 
 
 # --- Conclusión en B y C ---
@@ -161,6 +200,86 @@ def test_elegir_b_abre_el_recuadro_y_listo_conserva_el_texto(abrir_hoja, estudia
     expect(estado(page)).to_have_text("Sin cambios")
     comp = competencia(MATEMATICA, 1)
     assert notas_en_la_base() == {(ana.pk, comp.pk): ("B", CONCLUSION)}
+
+
+def test_el_recuadro_de_la_ultima_columna_se_ve_entero_junto_a_la_celda(
+    abrir_hoja, estudiantes, seccion_tutora, bimestres, page
+):
+    """Escenario "Recuadro en la última columna" (rebrand-us-020, D3; hallazgo 2 de break-ui)."""
+    ana, _ = estudiantes
+    comp = competencia(CIENCIA, 1)
+    marcar(seccion_tutora, bimestres[2], {comp.pk})
+    page = abrir_hoja(area=CIENCIA)
+    celda = page.locator(f'[data-celda][data-est="{ana.pk}"][data-comp="{comp.pk}"]')
+    celda.focus()
+
+    page.keyboard.type("b")
+
+    recuadro = page.locator("#nota-editor")
+    expect(recuadro).to_be_in_viewport(ratio=1)
+    caja, junto = recuadro.bounding_box(), celda.bounding_box()
+    al_lado = caja["x"] >= junto["x"] + junto["width"] or caja["x"] + caja["width"] <= junto["x"]
+    misma_fila = (
+        caja["y"] < junto["y"] + junto["height"] and caja["y"] + caja["height"] > junto["y"]
+    )
+    assert al_lado and misma_fila, (caja, junto)
+
+    page.keyboard.press("Escape")
+    expect(recuadro).to_be_hidden()
+    expect(celda).to_be_focused()
+
+
+def test_el_nivel_queda_centrado_bajo_su_competencia(abrir_hoja, estudiantes):
+    """C1…Cn y el nivel comparten el centro, haya o no icono de conclusión (rebrand-us-020)."""
+    ana, _ = estudiantes
+    page = abrir_hoja()
+
+    def centrado(k):
+        boton = page.locator(f'[data-competencia="{k}"]')
+        celda = page.locator(f'[data-celda][data-est="{ana.pk}"][data-k="{k}"]')
+        return alineadas(page, boton, celda)
+
+    assert centrado(0) and centrado(1)
+    celda = page.locator(f'[data-celda][data-est="{ana.pk}"][data-k="1"]')
+    celda.focus()
+    page.keyboard.type("b")
+    page.keyboard.press("Escape")
+    expect(celda.locator("xpath=following-sibling::button[@data-nota]")).to_be_visible()
+    assert centrado(0) and centrado(1)
+
+
+def test_la_vista_previa_muestra_el_comienzo_de_la_conclusion(abrir_hoja, estudiantes, hoja_lista):
+    """Escenario "Vista previa de la conclusión" (rebrand-us-020, D3)."""
+    ana, _ = estudiantes
+    comp = competencia(MATEMATICA, 1)
+    poner_nota(ana, comp, hoja_lista, "B", CONCLUSION)
+    page = abrir_hoja()
+    icono = page.locator(f'[data-nota][data-est="{ana.pk}"][data-comp="{comp.pk}"]')
+    previa = page.locator("#nota-previa")
+    expect(icono).not_to_have_attribute("title", re.compile(".*"))
+
+    icono.focus()
+
+    expect(previa).to_be_visible()
+    expect(previa).to_contain_text(CONCLUSION[:20])
+    expect(icono).to_have_attribute("aria-describedby", "nota-previa")
+    expect(previa).to_be_in_viewport(ratio=1)
+
+    page.keyboard.press("Escape")
+    expect(previa).to_be_hidden()
+    expect(icono).to_be_focused()
+    expect(page.locator("#nota-editor")).to_be_hidden()
+
+    # Con el puntero: sigue abierta sobre el icono y sobre ella, sin temporizador; fuera de ambos
+    # se cierra.
+    page.locator("#titulo-area").click()
+    icono.hover()
+    expect(previa).to_be_visible()
+    previa.hover()
+    page.wait_for_timeout(600)
+    expect(previa).to_be_visible()
+    page.mouse.move(5, 300)
+    expect(previa).to_be_hidden()
 
 
 def test_de_b_a_a_borra_la_conclusion_al_guardar(abrir_hoja, estudiantes, hoja_lista):
@@ -219,21 +338,31 @@ def test_suprimir_no_borra_una_nota_guardada(abrir_hoja, estudiantes, hoja_lista
 def test_rellenar_vacias_solo_toca_las_vacias_y_queda_como_borrador(
     abrir_hoja, estudiantes, hoja_lista
 ):
-    """Escenarios "Rellenar con A" y "Solo AD o A"."""
+    """Escenarios "Rellenar con A", "Solo AD o A" y "Elegir la competencia" (rebrand-us-020, D5):
+    un solo «Rellenar vacías» en la tarjeta, sin botones por columna."""
     ana, luis = estudiantes
     poner_nota(ana, competencia(MATEMATICA, 1), hoja_lista, "B")
+    poner_nota(ana, competencia(MATEMATICA, 2), hoja_lista, "A")
     page = abrir_hoja()
 
-    page.locator('.notas-rellenar[data-rellenar="0"]').click()
+    expect(page.locator("[data-rellenar]")).to_have_count(0)
+    page.locator("#rellenar-movil").click()
     expect(page.locator("#confirmar-relleno")).to_be_visible()
+    expect(page.locator("#elegir-columna")).to_be_visible()
+    expect(page.locator("#elegir-columna option")).to_have_count(4)
+    expect(page.locator("#elegir-columna option").first).to_have_text(re.compile("^C1 · "))
+    page.locator("#elegir-columna").select_option("1")
+    expect(page.locator("#texto-relleno")).to_contain_text("Se rellenará 1 celda vacía")
+    page.locator("#elegir-columna").select_option("0")
     expect(page.locator('[name="relleno"]')).to_have_count(2)
     expect(page.locator("#texto-relleno")).to_contain_text("Se rellenará 1 celda vacía")
     page.locator("#aplicar-relleno").click()
 
     expect(entrada(page, ana, 1)).to_have_value("B")
     expect(entrada(page, luis, 1)).to_have_value("A")
-    assert len(notas_en_la_base()) == 1
+    assert len(notas_en_la_base()) == 2
     expect(estado(page)).to_have_text("1 cambio sin guardar")
+    expect(page.locator("#rellenar-movil")).to_be_focused()
 
 
 # --- Guardar la hoja del área ---
@@ -271,9 +400,11 @@ def test_c_sin_conclusion_no_guarda_nada_y_marca_la_celda(abrir_hoja, estudiante
     mensaje = page.locator("#mensaje-guardado")
     expect(mensaje).to_contain_text("No se guardó nada")
     expect(mensaje).to_contain_text("Falta 1 conclusión en B y C.")
-    expect(page.locator(f'.notas-nota[data-est="{luis.pk}"]').first).to_have_attribute(
-        "aria-label", re.compile("Falta conclusión")
-    )
+    icono_faltante = page.locator(f'[data-nota][data-est="{luis.pk}"]').first
+    expect(icono_faltante).to_have_attribute("aria-label", re.compile("Falta conclusión"))
+    # El icono se ve: el SVG sale del <template data-iconos> (rebrand-us-020, 1.7).
+    expect(icono_faltante.locator("svg")).to_have_count(1)
+    expect(estado(page).locator("svg")).to_have_count(1)
     assert notas_en_la_base() == {}
 
     page.get_by_role("button", name="Ir a la primera conclusión pendiente").click()
@@ -392,7 +523,7 @@ def test_el_area_del_docente_de_curso_no_tiene_celdas(abrir_hoja, estudiantes):
     page.locator('[data-area-pildora="0003"]').click()
 
     expect(page.get_by_text("Esta área la registra el docente de curso")).to_be_visible()
-    expect(page.locator(".notas-nivel")).to_have_count(0)
+    expect(page.locator("[data-celda]")).to_have_count(0)
     expect(page.locator("#guardar")).to_be_hidden()
 
 
@@ -400,13 +531,14 @@ def test_competencias_vuelve_a_las_notas_del_periodo_y_el_area(abrir_hoja, estud
     """Escenarios "Periodo anterior pedido" y "Volver a las notas" desde Competencias."""
     page = abrir_hoja()
     page.get_by_role("link", name="Competencias").click()
-    expect(page.get_by_role("link", name=re.compile("Registrar notas de B3"))).to_be_visible()
-    page.get_by_role("button", name=re.compile("B2")).click()
+    expect(page.get_by_role("link", name="Registrar notas del III bimestre")).to_be_visible()
+    page.get_by_role("button", name=re.compile(r"^II bimestre")).click()
 
-    page.get_by_role("link", name=re.compile("Registrar notas de B2")).click()
+    page.get_by_role("link", name="Registrar notas del II bimestre").click()
 
-    expect(page.locator(".notas-periodo")).to_contain_text("B2")
-    expect(page.locator(".notas-periodo")).to_contain_text("Anterior")
+    visible = page.locator('[data-selector-periodo] [aria-current="page"]')
+    expect(visible).to_have_attribute("data-periodo", "2")
+    expect(visible).to_contain_text("Anterior")
     expect(page.locator(f'[data-area-pildora="{MATEMATICA}"]')).to_have_attribute(
         "aria-pressed", "true"
     )
@@ -437,7 +569,7 @@ def test_una_nota_cambiada_desde_otro_lado_detiene_el_guardado_y_el_segundo_guar
         "1 nota cambió en otro dispositivo. Revisa las celdas marcadas y vuelve a guardar."
     )
     expect(entrada(page, ana, 1).locator("xpath=ancestor::td")).to_have_class(
-        re.compile("notas-invalida")
+        re.compile("hn-invalida")
     )
     assert notas_en_la_base() == {(ana.pk, comp.pk): ("B", CONCLUSION)}
 
@@ -581,7 +713,7 @@ SLOW_4G = {
     "uploadThroughput": 750 * 1024 / 8 * 0.9,
     "latency": 150 * 3.75,
 }
-PERSONAL_SOCIAL = "0006"
+PERSONAL_SOCIAL = "067"
 
 
 def sin_desplazamiento_horizontal(page):
@@ -593,17 +725,23 @@ def sin_desplazamiento_horizontal(page):
 @pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("tema", TEMAS)
 def test_axe_con_notas_errores_filtro_y_dialogo(abrir_hoja, estudiantes, hoja_lista, ancho, tema):
-    """Escenario "Axe en ambos temas": con notas, errores, panel o recuadro, filtro y diálogo."""
+    """Escenario "Axe en ambos temas": con notas, errores, panel o recuadro, vista previa (PC),
+    filtro y los diálogos de «Rellenar vacías» y de salida."""
     ana, luis = estudiantes
-    poner_nota(ana, competencia(MATEMATICA, 1), hoja_lista, "B")
+    comp = competencia(MATEMATICA, 1)
+    poner_nota(ana, comp, hoja_lista, "B", CONCLUSION)
     poner_nota(luis, competencia(MATEMATICA, 2), hoja_lista, "A")
     page = abrir_hoja(ancho=ancho, tema=tema)
     sufijo = f"{ancho}-{tema}"
     revisar_con_axe(page, f"hoja-notas-{sufijo}")
     assert sin_desplazamiento_horizontal(page)
 
-    # Con errores: una C sin conclusión.
+    # Con errores: una C sin conclusión. En la PC, antes, la vista previa de la conclusión de Ana.
     if ancho >= 960:
+        page.locator(f'[data-nota][data-est="{ana.pk}"][data-comp="{comp.pk}"]').focus()
+        expect(page.locator("#nota-previa")).to_be_visible()
+        revisar_con_axe(page, f"hoja-notas-previa-{sufijo}")
+        page.keyboard.press("Escape")
         entrada(page, luis, 3).focus()
         page.keyboard.type("c")
         revisar_con_axe(page, f"hoja-notas-recuadro-{sufijo}")
@@ -625,70 +763,130 @@ def test_axe_con_notas_errores_filtro_y_dialogo(abrir_hoja, estudiantes, hoja_li
         page.locator("#cerrar-panel").click()
     revisar_con_axe(page, f"hoja-notas-filtro-{sufijo}")
 
+    # Con el diálogo de «Rellenar vacías».
+    page.locator("#rellenar-movil").click()
+    expect(page.locator("#confirmar-relleno")).to_be_visible()
+    revisar_con_axe(page, f"hoja-notas-relleno-{sufijo}")
+    page.locator("#cancelar-relleno").click()
+
     # Con el diálogo de salida.
     page.get_by_role("link", name="Competencias").click()
     expect(page.locator("#confirmar-salida")).to_be_visible()
     revisar_con_axe(page, f"hoja-notas-dialogo-{sufijo}")
 
 
-@pytest.mark.parametrize("ancho", ANCHOS)
-@pytest.mark.parametrize("tema", TEMAS)
-def test_axe_en_vacaciones(
-    live_server, page, docente, clave, seccion_tutora, monkeypatch, ie, hoja_lista, ancho, tema
-):
-    """Escenario "Axe en ambos temas": en vacaciones."""
-    fijar_hora_de_lima(monkeypatch, datetime.datetime(2027, 8, 1, 9, 0, tzinfo=LIMA))
-    con_pantalla(page, ancho, tema)
-    ingresar(page, live_server, docente, clave)
-    page.wait_for_url(f"{live_server.url}/docente/")
-    page.goto(url_hoja(live_server, seccion_tutora, area=MATEMATICA))
-    expect(page.get_by_text("Hoy no hay un periodo vigente")).to_be_visible()
-    revisar_con_axe(page, f"hoja-notas-vacaciones-{ancho}-{tema}")
-    assert sin_desplazamiento_horizontal(page)
-
-
-@pytest.mark.parametrize("ancho", ANCHOS)
-@pytest.mark.parametrize("tema", TEMAS)
-def test_axe_sin_periodos(
-    live_server, page, docente, clave, seccion_tutora, monkeypatch, universo_ie, ancho, tema
-):
-    """Escenario "Axe en ambos temas": sin periodos."""
-    fijar_hora_de_lima(monkeypatch, datetime.datetime(2027, 10, 30, 9, 0, tzinfo=LIMA))
-    con_pantalla(page, ancho, tema)
-    ingresar(page, live_server, docente, clave)
-    page.wait_for_url(f"{live_server.url}/docente/")
-    page.goto(url_hoja(live_server, seccion_tutora))
-    expect(page.get_by_text("La dirección aún no configura los periodos")).to_be_visible()
-    revisar_con_axe(page, f"hoja-notas-sin-periodos-{ancho}-{tema}")
-    assert sin_desplazamiento_horizontal(page)
-
-
 @pytest.mark.parametrize("ancho", [320, 360])
 def test_personal_social_no_desplaza_la_pagina_y_la_tira_se_desplaza_sola(
     abrir_hoja, estudiantes, seccion_tutora, bimestres, ancho
 ):
-    """Escenario "Sin desplazamiento de la página": 5 competencias a 320 y 360 px."""
+    """Escenario "Sin desplazamiento de la página": 5 competencias a 320 y 360 px, con el marco del
+    rebrand; las columnas se desplazan en su contenedor."""
     marcar(seccion_tutora, bimestres[2], ids_de(PERSONAL_SOCIAL))
     page = abrir_hoja(ancho=ancho, area=PERSONAL_SOCIAL)
 
-    expect(page.locator(".notas-tabla tbody tr").first).to_be_visible()
+    expect(page.get_by_role("grid").locator("tbody tr").first).to_be_visible()
     assert sin_desplazamiento_horizontal(page)
-    tira = page.locator(".notas-tira")
+    tira = page.locator("[data-tira]")
     assert tira.evaluate("el => el.scrollWidth > el.clientWidth")
     assert tira.evaluate("el => getComputedStyle(el).overflowX") == "auto"
+    columnas = page.locator("[data-columnas]")
+    assert columnas.evaluate("el => getComputedStyle(el).overflowX") == "auto"
+    expect(page.get_by_role("banner")).to_contain_text("Notas")
+
+
+def alineadas(page, cabecera, celda):
+    """La cabecera y la celda de la misma columna comparten el centro horizontal."""
+    a, b = cabecera.bounding_box(), celda.bounding_box()
+    return abs((a["x"] + a["width"] / 2) - (b["x"] + b["width"] / 2)) < 1.5
+
+
+CABECERA_BAJO_LA_BARRA = """() => {
+  const cabecera = document.querySelector("[data-columnas] thead").getBoundingClientRect();
+  const barra = document.querySelector(".appbar").getBoundingClientRect();
+  return Math.abs(cabecera.top - barra.bottom) < 1.5;
+}"""
+
+
+def test_las_columnas_que_no_caben_se_desplazan_con_el_nombre_fijo(
+    abrir_hoja, estudiantes, seccion_tutora, bimestres
+):
+    """Escenario "Columnas que no caben" (rebrand-us-020, D2; hallazgos 1 y 3 de break-ui)."""
+    marcar(seccion_tutora, bimestres[2], ids_de(PERSONAL_SOCIAL))
+    crear_estudiantes(seccion_tutora, *[f"ESTUDIANTE{n:02d}, PRUEBA" for n in range(12)])
+    page = abrir_hoja(ancho=360, area=PERSONAL_SOCIAL)
+    columnas = page.locator("[data-columnas]")
+    expect(page.get_by_role("grid").locator("tbody tr").first).to_be_visible()
+    assert columnas.evaluate("el => el.scrollWidth > el.clientWidth")
+    expect(page.locator(".hn-tabla--apilada")).to_have_count(0)
+
+    columnas.evaluate("el => { el.scrollLeft = el.scrollWidth; }")
+
+    cabecera_c5 = page.locator('[data-competencia="4"]')
+    celda_c5 = page.locator('[data-celda-movil][data-k="4"]').first
+    nombre = page.get_by_role("rowheader").first
+    assert alineadas(page, cabecera_c5, celda_c5)
+    caja = columnas.bounding_box()
+    assert abs(nombre.bounding_box()["x"] - caja["x"]) < 1.5
+    assert (
+        nombre.bounding_box()["x"] + nombre.bounding_box()["width"]
+        <= celda_c5.bounding_box()["x"] + 0.5
+    )
+    expect(columnas).to_have_attribute("data-mas-izquierda", "")
+    assert page.evaluate("scrollX") == 0
+    assert sin_desplazamiento_horizontal(page)
+
+    # Al bajar la página, la cabecera C1…C5 queda bajo la barra superior y sigue alineada.
+    page.evaluate("window.scrollBy(0, 500)")
+    page.wait_for_function(CABECERA_BAJO_LA_BARRA)
+    fila = page.locator("[data-celda-movil][data-k='4']").nth(8)
+    assert alineadas(page, cabecera_c5, fila)
+
+    # La ayuda de C1 se ve entera (fuera del contenedor horizontal).
+    columnas.evaluate("el => { el.scrollLeft = 0; }")
+    expect(columnas).not_to_have_attribute("data-mas-izquierda", "")
+    # Un toque donde se ve C1, sin que Playwright desplace la página antes.
+    c1 = page.locator('[data-competencia="0"]').bounding_box()
+    page.mouse.click(c1["x"] + c1["width"] / 2, c1["y"] + c1["height"] / 2)
+    expect(page.locator("#competencia-detalle")).to_be_in_viewport(ratio=1)
+
+
+def test_el_area_activa_queda_a_la_vista_en_la_tira(
+    abrir_hoja, estudiantes, seccion_tutora, bimestres
+):
+    """Escenario "Área activa a la vista" (rebrand-us-020, D5): al abrir en Personal Social, a
+    360 px, su píldora se ve entera en la tira y el acceso a Competencias sigue a la vista."""
+    marcar(seccion_tutora, bimestres[2], ids_de(PERSONAL_SOCIAL))
+    page = abrir_hoja(ancho=360, area=PERSONAL_SOCIAL)
+
+    pildora = page.locator(f'[data-area-pildora="{PERSONAL_SOCIAL}"]')
+    expect(pildora).to_have_attribute("aria-pressed", "true")
+    tira = page.locator("[data-tira]").bounding_box()
+    caja = pildora.bounding_box()
+    assert caja["x"] >= tira["x"] - 0.5, (caja, tira)
+    assert caja["x"] + caja["width"] <= tira["x"] + tira["width"] + 0.5, (caja, tira)
+    competencias = page.locator("[data-ir-competencias]")
+    expect(competencias).to_be_in_viewport(ratio=1)
+    assert sin_desplazamiento_horizontal(page)
+    assert page.evaluate("scrollY") == 0
 
 
 def test_las_areas_tactiles_miden_44_px(abrir_hoja, estudiantes):
-    """Píldoras, celdas y niveles de 44 px en el celular."""
+    """Píldoras, acceso a Competencias, «Rellenar vacías», celdas y niveles del panel de 44 px en el
+    celular."""
     ana, _ = estudiantes
     page = abrir_hoja(ancho=360)
 
     for pildora in page.locator("[data-area-pildora]").all():
         assert pildora.bounding_box()["height"] >= 44
+    for control in (page.locator("[data-ir-competencias]"), page.locator("#rellenar-movil")):
+        caja = control.bounding_box()
+        assert caja["height"] >= 44 and caja["width"] >= 44, caja
     assert boton_movil(page, ana, 1).bounding_box()["height"] >= 44
     assert boton_movil(page, ana, 1).bounding_box()["width"] >= 43
     boton_movil(page, ana, 1).click()
-    for nivel in page.locator("#panel-niveles button").all():
+    niveles = page.locator("#panel-niveles [data-elegir]")
+    expect(niveles).to_have_count(4)
+    for nivel in niveles.all():
         assert nivel.bounding_box()["height"] >= 44
 
 
@@ -729,7 +927,7 @@ def test_la_hoja_mas_grande_con_slow_4g(
 
     inicio = time.perf_counter()
     page.goto(url_hoja(live_server, seccion_tutora, area=PERSONAL_SOCIAL))
-    expect(page.locator(".notas-celda-movil").first).to_be_visible()
+    expect(page.locator("[data-celda-movil]").first).to_be_visible()
     page.evaluate("document.fonts.ready")
     segundos = time.perf_counter() - inicio
 

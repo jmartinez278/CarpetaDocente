@@ -1,1 +1,1 @@
-{% if formulario.non_field_errors %}<div class="mensaje mensaje--error" role="alert">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>{{ formulario.non_field_errors.0 }}</p><p>Si son personas distintas, escribe el segundo nombre completo.</p></div></div>{% endif %}
+{% if formulario.non_field_errors %}{% include "rb/mensaje.html" with tipo="error" titulo=formulario.non_field_errors.0 texto="Si son personas distintas, escribe el segundo nombre completo." alerta=True %}{% endif %}

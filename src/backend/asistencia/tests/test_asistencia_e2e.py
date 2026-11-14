@@ -1,7 +1,7 @@
 """Asistencia de hoy en el navegador (spec asistencia-jornada; design de US-030, D3, D4 y D7).
 
 El toque cicla el estado y lo guarda solo, una petición por fila sin abortar (gana el último toque),
-la franja dice "Guardando…" y "✓ Guardado", el avance y los totales cambian con cada toque y la
+la tarjeta dice "Guardando…" y "✓ Guardado", el avance y los totales cambian con cada toque y la
 nota se guarda al salir del campo. Cada guardado se cuenta en la base. Necesita el CSS compilado y
 Chromium: ``uv run pytest -m e2e --browser chromium``.
 """
@@ -71,7 +71,7 @@ def tocar(page, estudiante, veces=1):
 
 
 def guardado(page):
-    """El estado del guardado que se ve: la franja en el celular, el panel en PC."""
+    """El estado del guardado de la tarjeta «Tu jornada» (una sola, en los dos anchos)."""
     return page.locator("[data-guardado]:visible")
 
 
@@ -106,9 +106,12 @@ def test_el_avance_y_los_totales_cambian_con_cada_toque(abrir_asistencia, veinti
     tocar(page, veinticinco[0])
     tocar(page, veinticinco[1], 2)
 
-    panel = page.locator(".panel-jornada")
-    expect(panel.locator("[data-marcados]")).to_have_text("2")
-    expect(panel.locator("[data-sin-marcar]")).to_have_text("23 sin marcar")
+    # Margen sobre el encabezado como el boceto: 32 px en PC (24 px en el celular).
+    assert page.evaluate("getComputedStyle(document.querySelector('main')).paddingTop") == "32px"
+    panel = page.locator(".tarjeta-jornada")
+    expect(panel.locator(".conteo__pc [data-marcados]")).to_have_text("2")
+    expect(panel.locator(".sr-only [data-marcados]")).to_have_text("2")
+    expect(panel.locator("[data-sin-marcar]:visible")).to_have_text("23 sin marcar")
     expect(panel.locator('[data-total="ASISTIO"]')).to_have_text("1")
     expect(panel.locator('[data-total="FALTO"]')).to_have_text("1")
     expect(panel.locator("[data-progreso]")).to_have_attribute("value", "2")
@@ -137,7 +140,7 @@ def test_volver_a_abrir_muestra_lo_guardado(
         expect(page.locator(f"#fila-{estudiante.pk} [data-etiqueta]")).to_have_text("Faltó")
     for estudiante in veinticinco[10:]:
         expect(page.locator(f"#fila-{estudiante.pk} [data-etiqueta]")).to_have_text("Sin marcar")
-    expect(page.locator("[data-marcados]:visible")).to_have_text("10")
+    expect(page.locator(".sr-only [data-marcados]")).to_have_text("10")
 
 
 def test_toques_rapidos_mientras_se_guarda(abrir_asistencia, veinticinco):
@@ -267,9 +270,64 @@ def test_n_sin_marcar_lleva_a_la_primera_fila_sin_marcar(abrir_asistencia, veint
     boton = circulo(page, veinticinco[18])
     expect(boton).to_be_focused()
     expect(boton).to_be_in_viewport()
-    # Ni la barra ni la franja fija lo tapan.
-    franja = page.locator(".controles").bounding_box()
-    assert boton.bounding_box()["y"] >= franja["y"] + franja["height"]
+    # Ni la barra ni el resumen fijo lo tapan.
+    bajo_el_resumen(page, boton)
+
+
+def bajo_el_resumen(page, elemento):
+    """El elemento empieza debajo del resumen fijo (la tarjeta), que sigue en la vista."""
+    resumen = page.locator(".tarjeta-jornada")
+    expect(resumen).to_be_in_viewport()
+    caja = resumen.bounding_box()
+    barra = page.locator(".appbar").bounding_box()
+    assert caja["y"] >= barra["y"] + barra["height"] - 1, "el resumen va bajo la barra"
+    assert elemento.bounding_box()["y"] >= caja["y"] + caja["height"]
+
+
+def test_el_resumen_fijo_no_tapa_las_filas_ni_el_foco(abrir_asistencia, veinticinco):
+    """rebrand-us-030, D1: a 360 px el resumen queda fijo bajo la barra al bajar por la lista."""
+    page = abrir_asistencia()
+    assert page.evaluate("getComputedStyle(document.querySelector('main')).paddingTop") == "24px"
+
+    page.mouse.wheel(0, 1500)
+    expect(page.locator(".tarjeta-jornada")).to_be_in_viewport()
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    circulo(page, veinticinco[24]).focus()
+
+    # Con Tab hacia atrás, desde el último círculo hasta uno de la mitad de la lista.
+    for _ in range(12):
+        page.keyboard.press("Shift+Tab")
+    medio = circulo(page, veinticinco[12])
+    expect(medio).to_be_focused()
+    bajo_el_resumen(page, medio)
+
+
+def test_ninguna_parada_del_foco_queda_bajo_el_resumen(abrir_asistencia, veinticinco):
+    """A2 de rebrand-us-030: a 360 px, cada parada del foco hacia atrás y hacia adelante,
+    incluida la nota de justificación, queda debajo del resumen fijo."""
+    page = abrir_asistencia()
+    tocar(page, veinticinco[5], 4)
+    esperar_guardado(page)
+    nota = page.locator(f"#nota-{veinticinco[5].pk}")
+    expect(nota).to_be_visible()
+
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    circulo(page, veinticinco[24]).focus()
+    for estudiante in reversed(veinticinco[1:24]):
+        if estudiante == veinticinco[5]:
+            page.keyboard.press("Shift+Tab")
+            expect(nota).to_be_focused()
+            bajo_el_resumen(page, nota)
+        page.keyboard.press("Shift+Tab")
+        expect(circulo(page, estudiante)).to_be_focused()
+        bajo_el_resumen(page, circulo(page, estudiante))
+
+    # Hacia adelante, desde arriba de la lista con la página desplazada hasta abajo.
+    circulo(page, veinticinco[1]).focus()
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    page.keyboard.press("Shift+Tab")
+    page.keyboard.press("Tab")
+    bajo_el_resumen(page, circulo(page, veinticinco[1]))
 
 
 @pytest.fixture
@@ -621,7 +679,7 @@ def test_sin_conexion_solo_al_tercer_fallo_y_una_vez(abrir_asistencia, veinticin
     page.context.set_offline(False)
     expect(aviso).to_have_count(0)
     esperar_guardado(page)
-    assert page.evaluate("window.avisosSinConexion") == 2, "una vez cada aviso (franja y panel)"
+    assert page.evaluate("window.avisosSinConexion") == 1, "un solo aviso, una vez"
     assert Asistencia.objects.count() == 3
 
 
@@ -774,7 +832,7 @@ def test_sesion_vencida_durante_los_toques(
     page.unroute("**/estudiantes/*/")
 
     expect(page).to_have_url(re.compile(r"/ingresar/\?next=/docente/"))
-    expect(page.locator(".mensaje--aviso")).to_contain_text("Tu sesión se cerró por inactividad.")
+    expect(page.locator(".message--aviso")).to_contain_text("Tu sesión se cerró por inactividad.")
     assert estados_en_la_base() == {veinticinco[0].pk: "ASISTIO"}
 
     campo_usuario(page).fill(docente.username)
@@ -812,7 +870,7 @@ def test_el_cierre_aparece_tras_el_ultimo_guardado(abrir_asistencia, veinticinco
     page.unroute("**/estudiantes/*/")
     expect(cierre(page)).to_have_text("Asistencia de hoy completa")
     expect(anuncio(page)).to_have_text("Asistencia de hoy completa")
-    expect(page.locator(".vista-asistencia")).to_have_class(re.compile("jornada-completa"))
+    expect(page.locator(".asistencia-hoy")).to_have_class(re.compile("jornada-completa"))
 
 
 def test_sin_cierre_con_la_ultima_marca_sin_guardar(abrir_asistencia, veinticinco):
@@ -839,7 +897,7 @@ def test_sin_cierre_durante_la_cuenta_ni_tras_deshacer(abrir_asistencia, veintic
     boton_deshacer(page).click()
 
     expect(cierre(page)).to_have_count(0)
-    expect(page.locator(".vista-asistencia")).not_to_have_class(re.compile("jornada-completa"))
+    expect(page.locator(".asistencia-hoy")).not_to_have_class(re.compile("jornada-completa"))
     expect(anuncio(page)).not_to_have_text("Asistencia de hoy completa")
 
 

@@ -197,7 +197,7 @@ def abrir_hoja(live_server, page, docente, clave, seccion_tutora, monkeypatch, h
         ingresar(page, live_server, docente, clave)
         page.wait_for_url(f"{live_server.url}/docente/")
         page.goto(url_hoja(live_server, seccion_tutora, **{"area": MATEMATICA, **parametros}))
-        expect(page.locator(".notas-tabla")).to_be_visible()
+        expect(page.get_by_role("grid")).to_be_visible()
         return page
 
     return abrir

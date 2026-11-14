@@ -1,0 +1,7 @@
+{% comment %}Selector de periodo de la hoja (delta «Periodo de la hoja»; rebrand-us-020, D1): un enlace por periodo que se edita, a su hoja en el área que abre (notas.js lo cambia al tocar otra área), con el romano y su estado; las fechas van solo en el nombre accesible (sr-only). El visible lleva aria-current="page". El futuro es un <span aria-disabled> sin enlace.{% endcomment %}
+<nav class="hn-periodos" data-selector-periodo aria-label="{{ palabra_periodo|capfirst }}s de {{ seccion.anio_escolar.anio }}">
+  <ul>
+    {% for p in periodos %}<li>{% if p.editable %}<a class="hn-periodo" data-periodo="{{ p.numero }}" href="{{ url_hoja }}?periodo={{ p.numero }}&amp;area={{ area_inicial|urlencode }}"{% if p.numero == periodo.numero %} aria-current="page"{% endif %}>{% else %}<span class="hn-periodo" data-periodo="{{ p.numero }}" aria-disabled="true">{% endif %}<strong>{{ p.romano }}</strong><span class="sr-only"> {{ palabra_periodo }},</span> <span class="hn-periodo__estado">{% if p.estado == "VIGENTE" %}Vigente{% elif p.estado == "ANTERIOR" %}Anterior{% else %}Futuro{% endif %}</span><span class="sr-only">, del {{ p.fecha_inicio|date:"j \d\e F" }} al {{ p.fecha_fin|date:"j \d\e F" }}</span>{% if p.editable %}</a>{% else %}</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</nav>

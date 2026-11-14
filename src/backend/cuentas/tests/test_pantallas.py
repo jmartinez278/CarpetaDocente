@@ -114,15 +114,80 @@ def test_sin_escudo_ni_menu_ni_enlaces(pagina):
     assert "<img" not in pagina
     assert "<nav" not in pagina
     assert 'class="barra' not in pagina
+    # Marco del rebrand sin barra ni ☰ (rebrand-us-001, D1).
+    assert 'class="appbar' not in pagina
+    assert "Menú de navegación" not in pagina
     assert "<a " not in pagina, "no hay enlaces: ni de recuperación ni a funciones que no existen"
 
 
+# --- Marco del rebrand (rebrand-us-001, D1 y D5) ---
+
+
+def test_carga_solo_la_hoja_del_rebrand_y_precarga_besley_e_instrument_sans(pagina):
+    assert "dist/rebrand.css" in pagina
+    assert "dist/app.css" not in pagina
+    for fuente in (
+        "instrument-sans-latin-400-normal",
+        "instrument-sans-latin-500-normal",
+        "besley-latin-600-normal",
+    ):
+        assert re.search(
+            rf'<link rel="preload" href="[^"]*{fuente}\.woff2" as="font" type="font/woff2"'
+            r" crossorigin>",
+            pagina,
+        ), f"no se precarga {fuente}"
+
+
+def test_la_base_del_rebrand_no_precarga_besley_sin_el_bloque_precargas():
+    """Otra pantalla del rebrand que no llena «precargas» no descarga Besley (D5)."""
+    from django.template.loader import render_to_string
+
+    assert "besley" not in render_to_string("base_rebrand.html").lower()
+
+
+def test_el_espacio_del_escudo_va_vacio_y_oculto_antes_del_nombre(pagina):
+    escudo = re.search(r'<div class="login-escudo" aria-hidden="true"></div>', pagina)
+
+    assert escudo, "el espacio del escudo se reserva vacío y oculto al lector"
+    assert escudo.start() < pagina.index("<h1")
+
+
+def test_el_formulario_va_en_la_ficha_con_sus_ganchos(pagina):
+    formulario = etiqueta(pagina, "data-formulario-ingreso")
+
+    assert formulario.startswith("<form")
+    assert pagina.index('class="login-ficha"') < pagina.index("<form")
+    for atributo in ('method="post"', "novalidate", 'aria-label="Iniciar sesión"'):
+        assert atributo in formulario
+    for campo in ("username", "password"):
+        assert re.search(rf'<div class="field field--ingreso">\s*<label for="id_{campo}">', pagina)
+
+
+def test_ingresar_es_el_boton_principal_con_su_gancho(pagina):
+    boton = etiqueta(pagina, "data-boton-ingresar")
+
+    assert boton.startswith("<button")
+    assert "btn--primary" in boton
+    assert 'type="submit"' in boton
+    assert re.search(r"data-boton-ingresar[^>]*>Ingresar</button>", pagina)
+
+
+def test_el_pie_lleva_solo_la_marca(pagina):
+    pie = re.search(r"<footer\b[^>]*>(.*?)</footer>", pagina, re.DOTALL)
+
+    assert pie, "no hay pie"
+    assert "footer--marca" in pie.group(0)
+    assert re.sub(r"<[^>]+>", "", pie.group(1)).strip() == "CarpetaDocente · 2026"
+
+
 def test_usuario_y_contrasena_tienen_etiqueta_y_autocompletado(pagina):
-    assert '<label class="campo__etiqueta" for="id_username">Usuario</label>' in pagina
-    assert '<label class="campo__etiqueta" for="id_password">Contraseña</label>' in pagina
+    assert '<label for="id_username">Usuario</label>' in pagina
+    assert '<label for="id_password">Contraseña</label>' in pagina
     usuario = etiqueta(pagina, 'name="username"')
     assert 'id="id_username"' in usuario
     assert 'autocomplete="username"' in usuario
+    assert 'autocapitalize="none"' in usuario
+    assert 'spellcheck="false"' in usuario
     clave = etiqueta(pagina, 'name="password"')
     assert 'id="id_password"' in clave
     assert 'type="password"' in clave
@@ -140,18 +205,39 @@ def test_el_formulario_envia_por_post_con_token_y_next(client):
 # --- Mensaje de error ---
 
 
-def test_el_error_va_sobre_la_tarjeta_con_role_alert_y_dos_lineas(pagina_rechazada):
-    alerta = re.search(r'<div[^>]*role="alert".*?</div>\s*</div>', pagina_rechazada, re.DOTALL)
-    assert alerta, "no hay un mensaje con role=alert"
-    lineas = re.findall(r"<p>(.*?)</p>", alerta.group(0), re.DOTALL)
+def error_general(html):
+    encontrado = re.search(
+        r'<div class="message message--error"[^>]*>.*?</div></div>', html, re.DOTALL
+    )
+    return encontrado.group(0) if encontrado else None
 
-    assert lineas == [LINEA_1, LINEA_2]
-    assert alerta.start() < pagina_rechazada.index("<form")
-    assert "<svg" in alerta.group(0)
+
+def test_el_error_va_sobre_la_ficha_con_sus_dos_lineas_y_recibe_el_foco(pagina_rechazada):
+    """El anuncio sale del foco, sin role="alert": se lee una sola vez (rebrand-us-001, D2)."""
+    html = pagina_rechazada
+    error = error_general(html)
+    assert error, "no hay mensaje de error general"
+    apertura = etiqueta(error, "message--error")
+
+    assert re.findall(r"<p\b[^>]*>(.*?)</p>", error, re.DOTALL) == [LINEA_1, LINEA_2]
+    assert 'class="message-titulo"' in error
+    assert "<svg" in error
+    assert 'tabindex="-1"' in apertura
+    assert re.search(r"\bautofocus\b", apertura)
+    assert 'role="alert"' not in html
+    assert html.index(error) < html.index('class="login-ficha"')
+
+
+def test_solo_el_error_lleva_autofocus(pagina_rechazada):
+    assert len(re.findall(r"\bautofocus\b", pagina_rechazada)) == 1
+    for campo in ("username", "password"):
+        assert "autofocus" not in etiqueta(pagina_rechazada, f'name="{campo}"')
 
 
 def test_sin_rechazo_no_hay_mensaje(pagina):
     assert 'role="alert"' not in pagina
+    assert error_general(pagina) is None
+    assert "autofocus" not in pagina
 
 
 def test_el_error_conserva_el_usuario_y_no_la_contrasena(pagina_rechazada):
@@ -170,11 +256,13 @@ def test_campos_vacios_marcan_cada_campo_y_lo_enlazan_a_su_mensaje(pagina_con_ca
         ayuda = "id_username_ayuda " if campo == "username" else ""
         assert f'aria-describedby="{ayuda}id_{campo}_error"' in control
         assert re.search(
-            rf'<p class="campo__error" id="id_{campo}_error">.*?<span>{mensaje}</span>',
+            rf'<p class="field-error" id="id_{campo}_error">.*?<span>{mensaje}</span>',
             pagina_con_campos_vacios,
             re.DOTALL,
         )
     assert 'role="alert"' not in pagina_con_campos_vacios
+    assert error_general(pagina_con_campos_vacios) is None
+    assert "autofocus" not in pagina_con_campos_vacios
 
 
 def test_sin_errores_los_campos_no_se_marcan_invalidos(pagina):
@@ -194,6 +282,12 @@ def test_el_boton_mostrar_contrasena_nace_oculto_y_sin_presionar(pagina):
     assert 'aria-label="Mostrar contraseña"' in boton
     assert 'aria-controls="id_password"' in boton
     assert 'type="button"' in boton
+    # El ojo va dentro del campo, junto a la contraseña (rebrand-us-001, D3).
+    assert re.search(
+        r'<div class="input-grupo"><input\b[^>]*id="id_password"[^>]*>\s*'
+        r"<button\b[^>]*data-mostrar-clave",
+        pagina,
+    )
 
 
 # --- Anuncio del envío (C8-01) ---
@@ -232,6 +326,13 @@ SUBTITULOS = [
     "Registro y control de notas",
     "Control de asistencia",
 ]
+ORDEN = ["asistencia", "sesiones", "notas"]
+TITULOS = ["Asistencia", "Sesiones", "Notas"]
+FRASES = [
+    "Marca la asistencia de cada día.",
+    "Envía tu sesión a la dirección y compártela con tus colegas.",
+    "Registra tus notas por competencia para el SIAGIE.",
+]
 VACIO_DIRECCION = "Los consolidados de notas y asistencia estarán aquí en una próxima versión."
 
 
@@ -253,8 +354,20 @@ def tarjetas(html):
     return encontradas
 
 
+def tarjeta(html, clave):
+    return next(t for t in tarjetas(html) if f'id="c-{clave}"' in t)
+
+
+def texto(html):
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html)).strip()
+
+
 def saludos(html):
-    return re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL)
+    """El texto de cada ``<h1>``, sin etiquetas: el saludo y el nombre van en el mismo ``<h1>``."""
+    return [
+        re.sub(r"\s+,", ",", texto(h1))
+        for h1 in re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL)
+    ]
 
 
 def barra(html):
@@ -264,22 +377,21 @@ def barra(html):
 
 
 @pytest.mark.parametrize("pantalla", ["portada", "inicio_direccion"])
-def test_barra_con_el_nombre_de_la_ie_y_solo_el_menu_de_la_cuenta(pantalla, request):
+def test_la_barra_solo_lleva_el_menu_de_la_cuenta(pantalla, request):
     html = request.getfixturevalue(pantalla)
     cabecera = barra(html)
 
     assert "I.E. Virgen del Carmen" in cabecera
     # US-002: el menú de la cuenta es lo único interactivo; no hay navegación ni enlaces.
-    for control in ("<nav", "<a "):
+    for control in ("<nav", "<a ", "data-menu-navegacion"):
         assert control not in cabecera
     assert cabecera.count("<details") == 1
     assert html.index(cabecera) < html.index("<main")
 
 
-@pytest.mark.parametrize("pantalla", ["portada", "inicio_direccion"])
-def test_la_barra_lleva_la_linea_tenue(pantalla, request):
+def test_la_barra_de_la_direccion_lleva_la_linea_tenue(inicio_direccion):
     """DESIGN.md 0.4, Barra superior: la línea de la base al 55 % con el fondo (design D12)."""
-    cabecera = re.search(r"<header\b[^>]*>", barra(request.getfixturevalue(pantalla))).group(0)
+    cabecera = re.search(r"<header\b[^>]*>", barra(inicio_direccion)).group(0)
 
     assert "barra-superior" in cabecera
     assert "border-linea" not in cabecera
@@ -293,6 +405,62 @@ def test_pie_al_final_y_titulo_de_la_pagina(pantalla, request):
     assert pie and "CarpetaDocente · 2026" in pie.group(0)
     assert pie.start() > html.index("</main>")
     assert "<title>Inicio · CarpetaDocente</title>" in html
+
+
+# --- Portada en el marco del rebrand (rebrand-portada, D1) ---
+
+
+def test_la_portada_carga_solo_la_hoja_del_rebrand(portada):
+    assert "dist/rebrand.css" in portada
+    assert "dist/app.css" not in portada
+
+
+def test_la_portada_carga_sus_scripts_sin_alpine(portada):
+    """D5: el aviso de «Próximamente» ya no necesita Alpine."""
+    scripts = re.findall(r'<script src="([^"]+)"', portada)
+
+    assert "alpine" not in portada.lower()
+    assert scripts[:3] == [
+        "/static/js/portada.js",
+        "/static/dist/vendor/htmx.min.js",
+        "/static/js/estudiantes.js",
+    ]
+    # El resto es del marco: el menú de la cuenta (notas-borrador.js y menu.js), bfcache y marco.
+    assert sorted(scripts[3:]) == sorted(
+        [
+            "/static/js/notas-borrador.js",
+            "/static/js/menu.js",
+            "/static/js/bfcache.js",
+            "/static/js/marco.js",
+        ]
+    )
+    assert all("defer" in s for s in re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE))
+
+
+def test_la_portada_tiene_un_solo_main(portada):
+    assert portada.count("<main") == 1
+    assert '<main id="contenido"' in portada
+
+
+def test_la_barra_de_la_portada_no_es_fija_ni_lleva_el_menu_de_navegacion(portada):
+    assert '<header class="appbar appbar--portada">' in portada
+    assert "data-menu-navegacion" not in portada
+    assert 'id="navegacion"' not in portada
+
+
+def test_la_portada_no_lleva_el_carrusel(portada):
+    """Requisito retirado «Carrusel de dimensiones en el celular»."""
+    for resto in ("chip", "punto", "data-carrusel", "x-data", "carrusel__", "@click", ":class"):
+        assert resto not in portada, resto
+
+
+def test_las_tarjetas_van_en_la_navegacion_tus_accesos(portada):
+    nav = re.search(
+        r'<nav class="accesos" aria-label="Tus accesos">(.*?)</nav>', portada, re.DOTALL
+    )
+
+    assert nav, "no hay una navegación «Tus accesos»"
+    assert len(re.findall(r"<article\b", nav.group(1))) == 3
 
 
 # --- Portada del docente ---
@@ -333,92 +501,71 @@ def test_la_portada_no_inventa_grado_ni_tratamiento(portada):
     assert "grado" not in portada
 
 
-def test_tres_tarjetas_en_orden_con_subtitulo_e_insignia(portada):
-    for tarjeta, titulo, subtitulo in zip(
-        tarjetas(portada), ["Sesiones", "Notas", "Asistencia"], SUBTITULOS, strict=True
-    ):
-        assert re.search(rf"<h2\b[^>]*>.*?>{titulo}</button></h2>", tarjeta, re.DOTALL)
-        assert f'<p class="dimension__subtitulo">{subtitulo}</p>' in tarjeta
-        assert re.search(r'<p class="insignia" id="[^"]+">Próximamente</p>', tarjeta)
-        assert "dimension--proxima" in tarjeta
+def test_tres_tarjetas_en_orden_con_su_frase_y_sin_subtitulo_formal(portada):
+    """Escenarios «Portada al entrar» y «Orden de lectura» (rebrand-portada, D3)."""
+    for t, clave, titulo, frase in zip(tarjetas(portada), ORDEN, TITULOS, FRASES, strict=True):
+        assert f'id="c-{clave}"' in t
+        assert f'aria-labelledby="dim-{clave}"' in t
+        assert re.search(
+            rf'<h2\b[^>]*id="dim-{clave}"[^>]*>.*?>{titulo}</button></h2>', t, re.DOTALL
+        )
+        assert f">{frase}</p>" in t
+        assert re.search(r'<div class="miniatura[^"]*" aria-hidden="true">', t)
+    for subtitulo in SUBTITULOS:
+        assert subtitulo not in portada
 
 
 def test_las_tarjetas_proximamente_son_botones_sin_enlace(portada):
-    for tarjeta in tarjetas(portada):
-        assert "href" not in tarjeta
-        assert "<a " not in tarjeta
-        boton = etiqueta(tarjeta, 'class="dimension__boton"')
+    for t, clave in zip(tarjetas(portada), ORDEN, strict=True):
+        assert "href" not in t
+        assert "<a " not in t
+        assert "dimension--proxima" in t
+        boton = etiqueta(t, "data-proxima")
+        assert boton.startswith("<button")
         assert 'type="button"' in boton
         assert 'aria-disabled="true"' in boton
-        insignia = re.search(r'<p class="insignia" id="([^"]+)"', tarjeta).group(1)
-        assert f'aria-describedby="{insignia}"' in boton
+        assert f'aria-describedby="ins-{clave}"' in boton
+        assert re.search(
+            rf'<p class="insignia insignia--callada" id="ins-{clave}">Próximamente</p>', t
+        )
 
 
 def test_cada_tarjeta_proximamente_tiene_su_region_aria_live_vacia(portada):
-    for tarjeta in tarjetas(portada):
-        assert re.search(r'<p class="dimension__aviso" aria-live="polite"[^>]*></p>', tarjeta)
+    for t in tarjetas(portada):
+        assert re.search(r'<p class="dimension-aviso" aria-live="polite"></p>', t)
 
 
-def test_la_miniatura_es_esquematica_y_oculta_al_lector(portada):
-    for tarjeta, clave in zip(tarjetas(portada), ["sesiones", "notas", "asistencia"], strict=True):
-        ficha = etiqueta(tarjeta, f'class="ficha ficha--{clave}"')
-        assert 'aria-hidden="true"' in ficha
+# --- Miniaturas (rebrand-portada, D4) ---
 
 
-def test_chips_accesos_y_carrusel_tus_accesos(portada):
-    nav = re.search(r'<nav class="chips" aria-label="Accesos">.*?</nav>', portada, re.DOTALL)
-    assert nav, "no hay una fila de chips llamada Accesos"
-    chips = re.findall(r'<a class="chip" href="#([^"]+)"[^>]*>(.*?)</a>', nav.group(0), re.DOTALL)
-
-    assert [destino for destino, _ in chips] == ["c-sesiones", "c-notas", "c-asistencia"]
-    for _, texto in chips:
-        assert '<span class="sr-only">: ver tarjeta</span>' in texto
-    carrusel = etiqueta(portada, 'aria-label="Tus accesos"')
-    assert 'role="region"' in carrusel
-    assert 'tabindex="0"' in carrusel
-    assert [re.search(r'id="([^"]+)"', t).group(1) for t in tarjetas(portada)] == [
-        "c-sesiones",
-        "c-notas",
-        "c-asistencia",
-    ]
+def miniatura(t):
+    encontrada = re.search(r'<div class="miniatura[^"]*" aria-hidden="true">.*</div>', t, re.DOTALL)
+    assert encontrada, "la tarjeta no tiene miniatura"
+    return encontrada.group(0)
 
 
-def test_los_puntos_son_tres_y_decorativos(portada):
-    puntos = re.search(r'<div class="puntos" aria-hidden="true">.*?</div>', portada, re.DOTALL)
-
-    assert puntos
-    assert puntos.group(0).count('class="punto"') == 3
-
-
-def test_sin_ninguna_disponible_la_tarjeta_inicial_es_sesiones(portada):
-    iniciales = [t for t in tarjetas(portada) if "carrusel__item--inicial" in t]
-
-    assert len(iniciales) == 1
-    assert 'id="c-sesiones"' in iniciales[0]
+def test_cada_miniatura_es_esquematica_y_oculta_al_lector(portada):
+    for t, clave in zip(tarjetas(portada), ORDEN, strict=True):
+        dibujo = miniatura(t)
+        assert f"miniatura--{clave}" in dibujo
+        # Sin nombres, fechas ni cifras que se lean como registros del docente.
+        assert not re.search(r"\d", texto(dibujo))
+        assert "Matemática" not in dibujo
 
 
-def test_la_portada_carga_portada_js_antes_de_alpine(portada):
-    scripts = re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE)
+def test_las_miniaturas_dicen_solo_su_esquema(portada):
+    asistencia, sesiones, notas = (texto(miniatura(t)) for t in tarjetas(portada))
 
-    # menu.js es el del menú de la cuenta y bfcache.js el del respaldo de "atrás" (US-002);
-    # ninguno depende de Alpine. Desde US-006, HTMX y estudiantes.js (el diálogo de la lista).
-    # Desde US-020, notas-borrador.js antes de menu.js (borra los borradores al cerrar sesión).
-    assert len(scripts) == 7
-    assert "js/portada.js" in scripts[0]
-    assert "dist/vendor/alpine.min.js" in scripts[1]
-    assert "dist/vendor/htmx.min.js" in scripts[2]
-    assert "js/estudiantes.js" in scripts[3]
-    assert "js/notas-borrador.js" in scripts[4]
-    assert "js/menu.js" in scripts[5]
-    assert "js/bfcache.js" in scripts[6]
-    assert all("defer" in script for script in scripts)
+    assert asistencia == "Asistió Tarde Faltó Justificado"
+    assert sesiones == ""
+    assert notas == "AD A B C"
 
 
 SIN_SECCION = "Tu sección aparecerá cuando el administrador la asigne."
 
 
 def linea_de_secciones(html):
-    """El ``<p>`` de ``.seccion-entrada``, entre el saludo y los accesos (US-005, D6)."""
+    """El ``<p>`` de ``.seccion-entrada``, bajo el saludo y fuera del ``<h1>`` (US-005, D6)."""
     encontrada = re.search(
         r'</h1>\s*<div class="seccion-entrada">\s*<p\b[^>]*>(.*?)</p>', html, re.DOTALL
     )
@@ -464,11 +611,10 @@ def test_la_portada_con_la_unica_seccion_en_un_anio_cerrado(portada_con):
     assert linea_de_secciones(html) == f"{HOY} · {SIN_SECCION}"
 
 
-def test_la_linea_de_secciones_no_cambia_las_tarjetas_ni_los_chips(portada_con):
+def test_la_linea_de_secciones_no_cambia_las_tarjetas(portada_con):
     html = portada_con((2, "A"))
 
     assert len(tarjetas(html)) == 3
-    assert len(re.findall(r'<a class="chip"', html)) == 3
 
 
 # --- Entrada a la lista de estudiantes (US-006, D6; spec "Portada del docente") ---
@@ -513,6 +659,7 @@ def test_con_una_seccion_la_portada_tiene_el_dialogo_vacio(portada_con):
     dialogo = re.search(r"<dialog\b[^>]*>(.*?)</dialog>", html, re.DOTALL)
     assert dialogo and dialogo.group(1).strip() == ""
     etiqueta_dialogo = etiqueta(html, 'id="estudiantes"')
+    assert etiqueta_dialogo.startswith('<dialog class="dialog dialog--lista"')
     assert 'aria-labelledby="modal-titulo"' in etiqueta_dialogo
     assert 'aria-describedby="modal-cantidad"' in etiqueta_dialogo
     assert 'hx-target="this"' in etiqueta_dialogo
@@ -545,39 +692,41 @@ def test_sin_seccion_o_con_varias_no_hay_enlace_ni_aviso_ni_dialogo(portada_con,
 
     assert "Ver estudiantes" not in html
     assert AVISO_SIN_ESTUDIANTES not in html
-    assert "<dialog" not in html
+    assert '<dialog class="dialog dialog--lista"' not in html
     assert "data-abrir-estudiantes" not in html
 
 
 def test_una_dimension_disponible_enlaza_a_su_pantalla(client, docente, monkeypatch):
     """Escenario "Dimensión activada por su historia", con una ruta que existe en vez de la suya.
 
-    Sin sección, Asistencia queda en "Próximamente": la única disponible es Sesiones.
+    Sin sección, Asistencia y Notas quedan en "Próximamente": la única disponible es Sesiones.
     """
-    sesiones, notas, asistencia = dimensiones.DIMENSIONES
-    activa = replace(sesiones, disponible=True, url_name="docente:portada")
-    monkeypatch.setattr(dimensiones, "DIMENSIONES", (activa, notas, asistencia))
+    activas = tuple(
+        replace(d, disponible=True, url_name="docente:portada") if d.clave == "sesiones" else d
+        for d in dimensiones.DIMENSIONES
+    )
+    monkeypatch.setattr(dimensiones, "DIMENSIONES", activas)
     client.force_login(docente)
 
     html = client.get(PORTADA).content.decode()
-    tarjeta = tarjetas(html)[0]
+    sesiones = tarjeta(html, "sesiones")
 
-    enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
+    enlace = etiqueta(sesiones, 'class="dimension-enlace"')
     assert 'href="/docente/"' in enlace
     assert 'aria-describedby="acc-sesiones"' in enlace
-    assert '<p class="dimension__accion" id="acc-sesiones">Ver sesiones' in tarjeta
-    assert "Próximamente" not in tarjeta
-    assert "dimension--proxima" not in tarjeta
-    assert "aria-live" not in tarjeta
-    assert "carrusel__item--inicial" in tarjeta
-    assert len(re.findall(r'<a class="dimension__enlace"', html)) == 1
+    assert re.search(r'<p class="dimension-accion" id="acc-sesiones">Ver sesiones\s*<svg', sesiones)
+    assert "Próximamente" not in sesiones
+    assert "dimension--proxima" not in sesiones
+    assert "aria-live" not in sesiones
+    assert "data-proxima" not in sesiones
+    assert len(re.findall(r'<a class="dimension-enlace"', html)) == 1
 
 
 # --- Tarjeta Asistencia y "Hoy: pendiente" (US-030; spec pantallas-de-inicio, D10) ---
 
 
 def tarjeta_asistencia(html):
-    return tarjetas(html)[2]
+    return tarjeta(html, "asistencia")
 
 
 def url_asistencia(seccion):
@@ -613,13 +762,16 @@ def con_estudiantes(portada_con):
 def test_con_una_seccion_asistencia_lleva_a_la_asistencia_de_hoy(portada_con):
     """Escenario "Asistencia con una sección"."""
     html = portada_con((2, "A"))
-    tarjeta = tarjeta_asistencia(html)
+    t = tarjeta_asistencia(html)
 
-    enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
+    enlace = etiqueta(t, 'class="dimension-enlace"')
     assert f'href="{url_asistencia(Seccion.objects.get())}"' in enlace
-    assert '<p class="dimension__accion" id="acc-asistencia">Registrar asistencia' in tarjeta
-    assert "Próximamente" not in tarjeta
-    sesiones = tarjetas(html)[0]
+    assert 'aria-describedby="acc-asistencia"' in enlace
+    assert re.search(
+        r'<p class="dimension-accion" id="acc-asistencia">Registrar asistencia\s*<svg', t
+    )
+    assert "Próximamente" not in t
+    sesiones = tarjeta(html, "sesiones")
     assert "Próximamente" in sesiones
     assert "<a " not in sesiones
 
@@ -627,47 +779,51 @@ def test_con_una_seccion_asistencia_lleva_a_la_asistencia_de_hoy(portada_con):
 @pytest.mark.parametrize("secciones", [[], [(2, "A"), (3, "B")]], ids=["sin-seccion", "dos"])
 def test_sin_seccion_unica_asistencia_es_proximamente(portada_con, secciones):
     """Escenario "Asistencia sin sección única"."""
-    tarjeta = tarjeta_asistencia(portada_con(*secciones))
+    t = tarjeta_asistencia(portada_con(*secciones))
 
-    assert re.search(r'<p class="insignia" id="ins-asistencia">Próximamente</p>', tarjeta)
-    assert "<a " not in tarjeta
-    assert "href" not in tarjeta
-    assert "Hoy: pendiente" not in tarjeta
+    assert re.search(
+        r'<p class="insignia insignia--callada" id="ins-asistencia">Próximamente</p>', t
+    )
+    assert "<a " not in t
+    assert "href" not in t
+    assert "Hoy: pendiente" not in t
+    # La tarjeta principal conserva su lugar y su superficie (D4).
+    assert "dimension--asistencia" in t
 
 
 # --- Tarjeta Notas (US-020; spec pantallas-de-inicio, D15) ---
 
 
 def tarjeta_notas(html):
-    return tarjetas(html)[1]
+    return tarjeta(html, "notas")
 
 
 def test_con_una_seccion_notas_lleva_a_la_hoja_de_notas(portada_con):
     """Escenario "Notas con una sección": la hoja resuelve el periodo (o lleva a Competencias)."""
     html = portada_con((2, "A"))
-    tarjeta = tarjeta_notas(html)
+    t = tarjeta_notas(html)
 
-    enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
+    enlace = etiqueta(t, 'class="dimension-enlace"')
     assert f'href="/docente/secciones/{Seccion.objects.get().pk}/notas/"' in enlace
-    assert '<p class="dimension__accion" id="acc-notas">Registrar notas' in tarjeta
-    assert "Próximamente" not in tarjeta
-    assert "carrusel__item--inicial" in tarjeta, "Notas es la primera disponible"
+    assert 'aria-describedby="acc-notas"' in enlace
+    assert re.search(r'<p class="dimension-accion" id="acc-notas">Registrar notas\s*<svg', t)
+    assert "Próximamente" not in t
     assert "/competencias/" not in html, "la portada no enlaza directo a las competencias"
 
 
 @pytest.mark.parametrize("secciones", [[], [(2, "A"), (3, "B")]], ids=["sin-seccion", "dos"])
 def test_sin_seccion_unica_notas_es_proximamente(portada_con, secciones):
     """Escenario "Notas sin sección única"."""
-    tarjeta = tarjeta_notas(portada_con(*secciones))
+    t = tarjeta_notas(portada_con(*secciones))
 
-    assert re.search(r'<p class="insignia" id="ins-notas">Próximamente</p>', tarjeta)
-    assert "<a " not in tarjeta
-    assert "href" not in tarjeta
+    assert re.search(r'<p class="insignia insignia--callada" id="ins-notas">Próximamente</p>', t)
+    assert "<a " not in t
+    assert "href" not in t
 
 
-def pildora(tarjeta):
+def pildora(t):
     encontrada = re.search(
-        r'<p class="pildora-pendiente" id="pend-asistencia">(.*?)</p>', tarjeta, re.DOTALL
+        r'<p class="pildora-pendiente" id="pend-asistencia">(.*?)</p>', t, re.DOTALL
     )
     return encontrada.group(1) if encontrada else None
 
@@ -675,23 +831,23 @@ def pildora(tarjeta):
 @pytest.mark.parametrize("marcados", [0, 1], ids=["ninguno", "a-medias"])
 def test_la_asistencia_de_hoy_pendiente_lleva_la_pildora(con_estudiantes, marcados):
     """Escenario "Asistencia de hoy pendiente": sin enlace propio y descrita en el de la tarjeta."""
-    tarjeta = tarjeta_asistencia(con_estudiantes(cantidad=2, marcados=marcados))
+    t = tarjeta_asistencia(con_estudiantes(cantidad=2, marcados=marcados))
 
-    contenido = pildora(tarjeta)
+    contenido = pildora(t)
     assert contenido is not None, "no está la píldora"
     assert re.fullmatch(r"<svg\b[^>]*>.*</svg>Hoy: pendiente", contenido.strip(), re.DOTALL)
-    enlace = etiqueta(tarjeta, 'class="dimension__enlace"')
+    enlace = etiqueta(t, 'class="dimension-enlace"')
     assert 'aria-describedby="acc-asistencia pend-asistencia"' in enlace
-    assert tarjeta.count("<a ") == 1
-    assert tarjeta.index("Hoy: pendiente") > tarjeta.index("</a>"), "fuera del enlace"
+    assert t.count("<a ") == 1
+    assert t.index("Hoy: pendiente") > t.index("</a>"), "fuera del enlace"
 
 
 def test_con_la_jornada_completa_no_hay_pildora(con_estudiantes):
     """Escenario "Asistencia de hoy completa": un retirado no cuenta."""
-    tarjeta = tarjeta_asistencia(con_estudiantes(cantidad=2, marcados=2, retirados=1))
+    t = tarjeta_asistencia(con_estudiantes(cantidad=2, marcados=2, retirados=1))
 
-    assert pildora(tarjeta) is None
-    assert 'aria-describedby="acc-asistencia"' in etiqueta(tarjeta, 'class="dimension__enlace"')
+    assert pildora(t) is None
+    assert 'aria-describedby="acc-asistencia"' in etiqueta(t, 'class="dimension-enlace"')
 
 
 def test_el_sabado_no_hay_pildora(con_estudiantes, hora_de_lima):
@@ -806,7 +962,9 @@ AVISO_2 = "Pasaron 60 minutos sin uso. Ingresa de nuevo para continuar."
 
 
 def aviso(html):
-    encontrado = re.search(r"<div\b[^>]*mensaje--aviso[^>]*>.*?</div>\s*</div>", html, re.DOTALL)
+    encontrado = re.search(
+        r'<div class="message message--aviso"[^>]*>.*?</div></div>', html, re.DOTALL
+    )
     return encontrado.group(0) if encontrado else None
 
 
@@ -819,16 +977,21 @@ def pagina_por_inactividad(client, docente):
     return client.get("/docente/", follow=True).content.decode()
 
 
-def test_el_aviso_va_sobre_el_formulario_con_icono_y_dos_lineas(pagina_por_inactividad):
+def test_el_aviso_va_sobre_la_ficha_con_el_reloj_y_dos_lineas(pagina_por_inactividad):
     html = pagina_por_inactividad
 
     caja = aviso(html)
     assert caja, "no hay aviso de inactividad"
-    assert re.findall(r"<p>(.*?)</p>", caja, re.DOTALL) == [AVISO_1, AVISO_2]
-    assert "<svg" in caja
-    assert 'role="status"' in etiqueta(caja, "mensaje--aviso")
-    assert 'role="alert"' not in caja
-    assert html.index("mensaje--aviso") < html.index("<form")
+    assert re.findall(r"<p\b[^>]*>(.*?)</p>", caja, re.DOTALL) == [AVISO_1, AVISO_2]
+    # El reloj de Lucide (clock), no el círculo del error.
+    assert '<path d="M12 6v6l4 2"/>' in caja
+    assert re.search(
+        r'<div class="login-mensaje" role="status">\s*<div class="message message--aviso"', html
+    )
+    assert 'role="alert"' not in html
+    assert "autofocus" not in html, "el aviso no toma el foco (cierre-sesion no cambia)"
+    assert html.count("message--aviso") == 1
+    assert html.index(caja) < html.index('class="login-ficha"')
 
 
 def test_el_aviso_no_se_repite_al_recargar(client, pagina_por_inactividad):
