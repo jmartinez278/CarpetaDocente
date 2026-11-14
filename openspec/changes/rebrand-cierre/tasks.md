@@ -35,8 +35,8 @@ Comandos: `uv run pytest src/backend/cuentas src/backend/repositorio scripts` y,
 
 ### Parte D: A2 y verificacion.md
 
-- [ ] 2.1 `-m e2e` completo una vez (último cambio del rebrand) y `verificar.py --completo` (80 % o más). Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en el delta de `pantallas-de-inicio` y en las partes B y C), corregir los Critical e Important con la prueba primero. Verificar: `verificar.py --antes-del-commit` en verde
-- [ ] 2.2 `verificacion.md` corta: DoD 1 a 9, escenarios del delta sin prueba con su motivo y los Minor. Verificar: commit
+- [x] 2.1 `-m e2e` completo una vez (último cambio del rebrand) y `verificar.py --completo` (80 % o más). Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en el delta de `pantallas-de-inicio` y en las partes B y C), corregir los Critical e Important con la prueba primero. Verificar: `verificar.py --antes-del-commit` en verde
+- [x] 2.2 `verificacion.md` corta: DoD 1 a 9, escenarios del delta sin prueba con su motivo y los Minor. Verificar: commit
 
 ## e2e a retirar
 
