@@ -125,8 +125,8 @@ def test_sin_escudo_ni_menu_ni_enlaces(pagina):
 
 
 def test_carga_solo_la_hoja_del_rebrand_y_precarga_besley_e_instrument_sans(pagina):
-    assert "dist/rebrand.css" in pagina
-    assert "dist/app.css" not in pagina
+    assert "dist/app.css" in pagina
+    assert "dist/rebrand.css" not in pagina
     for fuente in (
         "instrument-sans-latin-400-normal",
         "instrument-sans-latin-500-normal",
@@ -143,7 +143,7 @@ def test_la_base_del_rebrand_no_precarga_besley_sin_el_bloque_precargas():
     """Otra pantalla del rebrand que no llena «precargas» no descarga Besley (D5)."""
     from django.template.loader import render_to_string
 
-    assert "besley" not in render_to_string("base_rebrand.html").lower()
+    assert "besley" not in render_to_string("base.html").lower()
 
 
 def test_el_espacio_del_escudo_va_vacio_y_oculto_antes_del_nombre(pagina):
@@ -395,7 +395,7 @@ def test_la_direccion_usa_el_marco_del_rebrand_en_la_variante_de_portada(inicio_
     cabecera = re.search(r"<header\b[^>]*>", barra(inicio_direccion)).group(0)
 
     assert re.findall(r'<link rel="stylesheet" href="([^"]+)"', inicio_direccion) == [
-        "/static/dist/rebrand.css"
+        "/static/dist/app.css"
     ]
     assert "appbar--portada" in cabecera
     assert "data-menu-navegacion" not in inicio_direccion
@@ -416,8 +416,8 @@ def test_pie_al_final_y_titulo_de_la_pagina(pantalla, request):
 
 
 def test_la_portada_carga_solo_la_hoja_del_rebrand(portada):
-    assert "dist/rebrand.css" in portada
-    assert "dist/app.css" not in portada
+    assert "dist/app.css" in portada
+    assert "dist/rebrand.css" not in portada
 
 
 def test_la_portada_carga_sus_scripts_sin_alpine(portada):
@@ -1049,9 +1049,18 @@ def test_no_quedan_los_componentes_del_marco_viejo():
     assert not (PLANTILLAS / "componentes").exists()
 
 
-def test_ninguna_plantilla_extiende_el_marco_viejo():
-    viejas = re.compile(r"""\{%\s*extends\s+["'](?:base|marco)\.html["']""")
+def test_los_marcos_del_rebrand_llevan_los_nombres_finales():
+    """rebrand-cierre D3: ``base.html`` y ``marco.html`` son los del rebrand; nadie nombra
+    ``*_rebrand.html``."""
+    viejas = re.compile(r"""\{%\s*extends\s+["'](?:base|marco)_rebrand\.html["']""")
 
+    assert not (PLANTILLAS / "base_rebrand.html").exists()
+    assert not (PLANTILLAS / "marco_rebrand.html").exists()
+    assert (
+        (PLANTILLAS / "marco.html")
+        .read_text(encoding="utf-8")
+        .startswith('{% extends "base.html" %}')
+    )
     extienden = [
         str(ruta.relative_to(PLANTILLAS))
         for ruta in PLANTILLAS.rglob("*.html")

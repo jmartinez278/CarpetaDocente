@@ -85,8 +85,8 @@ def menu_navegacion(html):
 def test_la_pantalla_carga_solo_la_hoja_del_rebrand(cliente):
     html = pagina(cliente)
 
-    assert "dist/rebrand.css" in html
-    assert "dist/app.css" not in html
+    assert "dist/app.css" in html
+    assert "dist/rebrand.css" not in html
 
 
 def test_la_barra_dice_sesiones_y_el_menu_la_deja_en_proximamente(cliente):

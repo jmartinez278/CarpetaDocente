@@ -435,8 +435,8 @@ def test_la_pantalla_va_en_el_marco_del_rebrand(cliente, seccion_docente, lista)
 
     hojas = re.findall(r'<link rel="stylesheet" href="([^"]+)"', html)
     assert len(hojas) == 1
-    assert hojas[0].endswith("dist/rebrand.css")
-    assert "dist/app.css" not in html
+    assert hojas[0].endswith("dist/app.css")
+    assert "dist/rebrand.css" not in html
     assert "js/asistencia.js" in html
     assert '<span class="bar-title">Asistencia</span>' in html
     actuales = re.findall(r'<a [^>]*aria-current="page"[^>]*>(.*?)</a>', html, re.DOTALL)

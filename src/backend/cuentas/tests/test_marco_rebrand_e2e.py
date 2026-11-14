@@ -296,9 +296,9 @@ HOJAS = (
     ("ruta", "hoja"),
     # Desde rebrand-portada, la portada también carga solo la hoja del rebrand.
     [
-        (SIN_PERMISO, "/static/dist/rebrand.css"),
-        ("/docente/", "/static/dist/rebrand.css"),
-        ("/direccion/", "/static/dist/rebrand.css"),
+        (SIN_PERMISO, "/static/dist/app.css"),
+        ("/docente/", "/static/dist/app.css"),
+        ("/direccion/", "/static/dist/app.css"),
     ],
 )
 def test_cada_pagina_carga_una_sola_hoja(live_server, page, docente, direccion, clave, ruta, hoja):

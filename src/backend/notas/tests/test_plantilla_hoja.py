@@ -95,8 +95,8 @@ def test_la_hoja_va_en_el_marco_del_rebrand(cliente, seccion_tutora, matematica)
     html = pagina(cliente, seccion_tutora)
 
     hojas = re.findall(r'<link rel="stylesheet" href="([^"]+)"', html)
-    assert len(hojas) == 1 and hojas[0].endswith("dist/rebrand.css")
-    assert "dist/app.css" not in html
+    assert len(hojas) == 1 and hojas[0].endswith("dist/app.css")
+    assert "dist/rebrand.css" not in html
     scripts = re.findall(r'<script src="([^"]+)"', principal(html))
     assert scripts == ["/static/js/notas.js"]
     assert 'data-dimension="notas"' in principal(html)

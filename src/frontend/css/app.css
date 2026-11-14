@@ -1,6 +1,5 @@
-/* Segunda entrada de Tailwind CSS v4, la del rebrand (rebrand-base, D1).
-   Se compila a src/backend/static/dist/rebrand.css. Una página carga esta hoja o app.css, nunca
-   las dos (D9). */
+/* Entrada de Tailwind CSS v4 (rebrand-base, D1; nombre final en rebrand-cierre, D3).
+   Se compila a src/backend/static/dist/app.css, la única hoja de las páginas. */
 @import "tailwindcss" source(none);
 @import "./rebrand/tokens.css";
 @import "./rebrand/base.css";
@@ -17,8 +16,8 @@
 
 /* Solo las plantillas del marco nuevo y las pantallas ya migradas (rutas relativas a este
    archivo). Cada pantalla del rebrand suma aquí su línea. */
-@source "../../backend/templates/base_rebrand.html";
-@source "../../backend/templates/marco_rebrand.html";
+@source "../../backend/templates/base.html";
+@source "../../backend/templates/marco.html";
 @source "../../backend/templates/rb";
 @source "../../backend/templates/cuentas/sin_permiso.html";
 @source "../../backend/templates/cuentas/ingresar.html";

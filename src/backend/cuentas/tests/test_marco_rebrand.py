@@ -71,8 +71,8 @@ def destinos(html):
 def test_carga_solo_la_hoja_del_rebrand_y_precarga_instrument_sans(html_de, docente):
     html = html_de(docente)
 
-    assert "dist/rebrand.css" in html
-    assert "dist/app.css" not in html
+    assert "dist/app.css" in html
+    assert "dist/rebrand.css" not in html
     assert "besley" not in html.lower()
     for peso in (400, 500):
         assert re.search(
@@ -126,7 +126,7 @@ def test_con_clase_barra_la_barra_la_lleva(rf, docente):
     request = rf.get("/docente/")
     request.user = docente
     html = Template(
-        '{% extends "marco_rebrand.html" %}{% block clase_barra %} appbar--portada{% endblock %}'
+        '{% extends "marco.html" %}{% block clase_barra %} appbar--portada{% endblock %}'
     ).render(RequestContext(request, {"user": docente}))
 
     assert '<header class="appbar appbar--portada">' in html

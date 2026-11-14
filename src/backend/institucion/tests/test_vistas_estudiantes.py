@@ -195,8 +195,8 @@ def test_la_pagina_completa_va_en_el_marco_del_rebrand(entrar, docente, seccion_
 
     html = entrar(docente).get(url).content.decode()
 
-    assert "dist/rebrand.css" in html
-    assert "dist/app.css" not in html
+    assert "dist/app.css" in html
+    assert "dist/rebrand.css" not in html
     assert re.search(r'<span class="bar-title">Estudiantes</span>', html)
     assert html.count("<main") == 1, "un solo <main>: el del marco"
     principal = re.search(r"<main\b.*?</main>", html, re.S).group(0)

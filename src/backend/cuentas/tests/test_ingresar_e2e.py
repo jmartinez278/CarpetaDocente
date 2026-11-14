@@ -23,7 +23,7 @@ pytestmark = pytest.mark.e2e
 
 
 def test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada(live_server, page, docente, clave):
-    with page.expect_response("**/static/dist/rebrand.css") as respuesta:
+    with page.expect_response("**/static/dist/app.css") as respuesta:
         page.goto(f"{live_server.url}/")
 
     assert respuesta.value.status == 200

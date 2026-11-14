@@ -1,6 +1,6 @@
 """Hoja del rebrand compilada: tokens, fuentes y capas (rebrand-base, D1 y D3).
 
-Lee ``static/dist/rebrand.css`` y ``app.css`` tal como salen de ``npm run build`` en
+Lee ``static/dist/app.css`` tal como sale de ``npm run build`` en
 ``src/frontend/``; por eso va con la marca e2e: ``uv run pytest -m e2e --browser chromium``.
 Los valores esperados salen del Quick Start de ``DESIGN.md``.
 """
@@ -112,7 +112,7 @@ def _compacta(css):
 
 @pytest.fixture(scope="module")
 def rebrand():
-    return _compacta((DIST / "rebrand.css").read_text(encoding="utf-8"))
+    return _compacta((DIST / "app.css").read_text(encoding="utf-8"))
 
 
 @pytest.fixture(scope="module")
@@ -311,10 +311,10 @@ CIFRAS = """
 
 
 def _anchos(page, live_server, variante):
-    """Ancho de «0000» y «1111» en Instrument Sans 400 con ``rebrand.css`` cargada."""
-    page.goto(f"{live_server.url}/static/dist/rebrand.css")
+    """Ancho de «0000» y «1111» en Instrument Sans 400 con ``app.css`` cargada."""
+    page.goto(f"{live_server.url}/static/dist/app.css")
     page.set_content(
-        '<link rel="stylesheet" href="/static/dist/rebrand.css">' + CIFRAS.format(variante=variante)
+        '<link rel="stylesheet" href="/static/dist/app.css">' + CIFRAS.format(variante=variante)
     )
     # Si el WOFF2 no llega, load() rechaza; check() lo dice abajo con un mensaje claro.
     page.evaluate("document.fonts.load(\"400 32px 'Instrument Sans'\").catch(() => [])")

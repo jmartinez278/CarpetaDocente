@@ -15,7 +15,7 @@ const paqueteCli = require.resolve("@tailwindcss/cli/package.json");
 const cli = join(dirname(paqueteCli), JSON.parse(readFileSync(paqueteCli, "utf8")).bin.tailwindcss);
 
 const hojas = [
-  ["rebrand.css", "./css/rebrand.css", "../backend/static/dist/rebrand.css"],
+  ["app.css", "./css/app.css", "../backend/static/dist/app.css"],
 ];
 const extra = process.argv.slice(2);
 

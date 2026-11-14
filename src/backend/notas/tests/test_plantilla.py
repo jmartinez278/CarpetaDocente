@@ -415,8 +415,8 @@ def test_la_pantalla_va_en_el_marco_del_rebrand(cliente, seccion_tutora, ie):
     html = pagina(cliente, seccion_tutora)
 
     hojas = re.findall(r'<link rel="stylesheet" href="([^"]+)"', html)
-    assert len(hojas) == 1 and hojas[0].endswith("dist/rebrand.css")
-    assert "dist/app.css" not in html
+    assert len(hojas) == 1 and hojas[0].endswith("dist/app.css")
+    assert "dist/rebrand.css" not in html
     assert "js/competencias.js" in html
     assert 'data-dimension="notas"' in principal(html)
     assert '<span class="bar-title">Notas</span>' in html
