@@ -982,6 +982,7 @@
     $("elegir-columna").value = String(k);
     actualizarRelleno();
     $("confirmar-relleno").showModal();
+    $("cancelar-relleno").focus();
   }
 
   function actualizarRelleno() {
@@ -1195,6 +1196,7 @@
     $("areas-pendientes").innerHTML = lista.map((p) => `<li>${escapar(p.nombre)} <span class="muted">· ${escapar(p.periodo)}</span></li>`).join("");
     $("aviso-borradores").textContent = cierraSesion ? AVISO_SE_BORRAN : AVISO_QUEDAN;
     $("confirmar-salida").showModal();
+    $("seguir-editando").focus();
   }
 
   // --- Eventos ---

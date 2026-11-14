@@ -386,7 +386,8 @@ def test_el_dialogo_de_salida(cliente, seccion_tutora, ie):
     assert re.search(r"<ul[^>]* data-pendientes[^>]*></ul>", dialogo)
     assert "Si sales, estos cambios se pierden." in dialogo
     seguir = re.search(r'<button[^>]*id="seguir-editando"[^>]*>', dialogo).group(0)
-    assert "autofocus" in seguir and "btn--primary" in seguir
+    assert "autofocus" not in seguir
+    assert "btn--primary" in seguir
     assert dialogo.index('id="seguir-editando"') < dialogo.index('id="salir-sin-guardar"')
     assert "Salir sin guardar</button>" in dialogo
 

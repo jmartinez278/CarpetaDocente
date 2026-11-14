@@ -551,6 +551,7 @@
     );
     salidaPendiente = { continuar, foco: document.activeElement };
     if (!dialogo.open) dialogo.showModal();
+    $("#seguir-editando").focus();
   }
 
   $("#seguir-editando").addEventListener("click", () => dialogo.close("seguir"));

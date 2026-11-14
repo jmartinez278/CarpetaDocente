@@ -35,7 +35,7 @@ aviso.
   <div class="hn-trabajo" data-trabajo>
     <nav class="hn-tira" aria-label="Áreas del {{ palabra_periodo }}">
       <div class="hn-tira__lista" data-tira>
-        {% for hoja in hojas %}<button type="button" class="hn-pildora{% if hoja.a_cargo %} hn-pildora--curso{% endif %}" data-area-pildora="{{ hoja.area.codigo_siagie }}" aria-pressed="{% if hoja.area.codigo_siagie == area_inicial %}true{% else %}false{% endif %}"{% if hoja.a_cargo %} aria-description="A cargo del docente de curso"{% endif %}>{{ hoja.area.nombre }}</button>{% endfor %}
+        {% for hoja in hojas %}<button type="button" class="hn-pildora{% if hoja.a_cargo %} hn-pildora--curso{% endif %}" data-area-pildora="{{ hoja.area.codigo_siagie }}" aria-pressed="{% if hoja.area.codigo_siagie == area_inicial %}true{% else %}false{% endif %}">{{ hoja.area.nombre }}{% if hoja.a_cargo %}<span class="sr-only">, a cargo del docente de curso</span>{% endif %}</button>{% endfor %}
       </div>
       <span class="hn-tira__separador" aria-hidden="true"></span>
       <a class="hn-ir-competencias" data-ir-competencias href="{{ url_competencias }}">{% include "iconos/list-checks.svg" %}<span class="hn-ir-competencias__texto">Competencias</span></a>
@@ -77,7 +77,7 @@ aviso.
 
   <div id="lista-niveles" class="hn-lista" role="listbox" aria-label="Nivel de logro" hidden></div>
   <dialog id="panel-editor" class="hn-panel" aria-labelledby="panel-estudiante" aria-describedby="panel-competencia">
-    <div class="hn-panel__cabecera"><div><p id="panel-posicion" class="small"></p><h2 id="panel-estudiante"></h2></div><button id="cerrar-panel" class="btn icon-button" type="button" aria-label="Cerrar edición">{% include "iconos/x.svg" %}</button></div>
+    <div class="hn-panel__cabecera"><div><p id="panel-posicion" class="small"></p><h2 id="panel-estudiante">Estudiante</h2></div><button id="cerrar-panel" class="btn icon-button" type="button" aria-label="Cerrar edición">{% include "iconos/x.svg" %}</button></div>
     <p id="panel-competencia" class="hn-panel__competencia"></p>
     <fieldset class="hn-panel__niveles"><legend>Nivel de logro</legend><div id="panel-niveles"></div></fieldset>
     <div id="panel-conclusion" class="hn-panel__conclusion" hidden><div class="hn-conclusion-etiqueta"><label for="conclusion-movil">Conclusión descriptiva <span>(obligatoria)</span></label><span id="contador-movil" class="small">0/500</span></div><textarea id="conclusion-movil" class="input" rows="3" maxlength="500" aria-describedby="ayuda-conclusion"></textarea><p id="ayuda-conclusion" class="small">Escribe de 10 a 500 caracteres.</p></div>

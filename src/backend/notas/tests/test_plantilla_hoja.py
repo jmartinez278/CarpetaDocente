@@ -220,11 +220,11 @@ def test_las_areas_a_cargo_van_atenuadas(cliente, seccion_tutora, matematica):
             EDUCACION_FISICA in boton.split("data-area-pildora=")[1][:8]
         ):
             assert "hn-pildora--curso" in boton
-            assert 'aria-description="A cargo del docente de curso"' in boton
+            assert ", a cargo del docente de curso</span>" in boton
             vistas += 1
         elif f'data-area-pildora="{MATEMATICA}"' in boton:
             assert "hn-pildora--curso" not in boton
-            assert "aria-description" not in boton
+            assert "a cargo del docente de curso" not in boton
     assert vistas == 2
 
 
@@ -380,7 +380,7 @@ def test_el_dialogo_de_relleno_es_el_del_rebrand(cliente, seccion_tutora, matema
     assert 'aria-describedby="texto-relleno"' in relleno
     assert re.search(r'<h2 id="titulo-relleno"[^>]*>Rellenar vacías</h2>', relleno)
     assert relleno.index('id="aplicar-relleno"') < relleno.index('id="cancelar-relleno"')
-    assert re.search(r'<button[^>]*id="cancelar-relleno"[^>]*autofocus', relleno)
+    assert "autofocus" not in relleno
     assert relleno.count('type="radio"') == 2
     assert 'value="AD"' in relleno and 'value="A" checked' in relleno
 
@@ -390,7 +390,7 @@ def test_el_dialogo_de_salida(cliente, seccion_tutora, matematica):
 
     assert 'class="dialog dialog--chico"' in salida
     assert "¿Salir sin guardar?" in salida
-    assert re.search(r"<button[^>]*autofocus[^>]*>Seguir editando</button>", salida)
+    assert "autofocus" not in salida
     assert salida.index("Seguir editando") < salida.index("Salir sin guardar</button>")
     assert 'aria-labelledby="titulo-salida"' in salida
     assert 'aria-describedby="texto-salida"' in salida
