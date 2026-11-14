@@ -389,12 +389,16 @@ def test_la_barra_solo_lleva_el_menu_de_la_cuenta(pantalla, request):
     assert html.index(cabecera) < html.index("<main")
 
 
-def test_la_barra_de_la_direccion_lleva_la_linea_tenue(inicio_direccion):
-    """DESIGN.md 0.4, Barra superior: la línea de la base al 55 % con el fondo (design D12)."""
+def test_la_direccion_usa_el_marco_del_rebrand_en_la_variante_de_portada(inicio_direccion):
+    """rebrand-cierre D1: una sola hoja, barra sin fijar, sin ☰ ni título, como la portada."""
     cabecera = re.search(r"<header\b[^>]*>", barra(inicio_direccion)).group(0)
 
-    assert "barra-superior" in cabecera
-    assert "border-linea" not in cabecera
+    assert re.findall(r'<link rel="stylesheet" href="([^"]+)"', inicio_direccion) == [
+        "/static/dist/rebrand.css"
+    ]
+    assert "appbar--portada" in cabecera
+    assert "data-menu-navegacion" not in inicio_direccion
+    assert re.search(r'<span class="bar-title">\s*</span>', inicio_direccion)
 
 
 @pytest.mark.parametrize("pantalla", ["portada", "inicio_direccion"])
@@ -872,24 +876,31 @@ def test_la_jornada_de_otro_dia_no_completa_la_de_hoy(con_estudiantes):
 
 def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
     assert saludos(inicio_direccion) == ["Hola, Rosa Huamán"]
-    assert re.search(r'<p class="[^"]*">Dirección</p>', inicio_direccion)
+    assert re.search(r'<span class="saludo">Hola,</span>', inicio_direccion)
+    assert re.search(r'<span class="docente">Rosa Huamán</span>', inicio_direccion)
+    assert re.search(r"<p>Dirección</p>", inicio_direccion)
     seccion = re.search(r"<section\b.*?</section>", inicio_direccion, re.DOTALL)
     assert seccion, "no hay sección de consolidados"
     assert re.search(r"<h2\b[^>]*>Consolidados</h2>", seccion.group(0))
+    assert re.search(r'<div class="empty">', seccion.group(0))
     assert VACIO_DIRECCION in seccion.group(0)
-    assert "<svg" in seccion.group(0)
+    assert re.search(r'<svg\b[^>]*aria-hidden="true"', seccion.group(0))
 
 
-def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_scripts(inicio_direccion):
+def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_portada_js(inicio_direccion):
     assert "<table" not in inicio_direccion
     assert "<article" not in inicio_direccion
-    # Solo el menú de la cuenta (con el borrado de borradores al cerrar sesión, US-020 D10) y el
-    # respaldo de "atrás" (D5): sin Alpine ni portada.js.
-    assert re.findall(r'<script src="([^"]+)"', inicio_direccion) == [
-        "/static/js/notas-borrador.js",
-        "/static/js/menu.js",
-        "/static/js/bfcache.js",
-    ]
+    # Solo los scripts del marco: la cuenta (notas-borrador.js y menu.js), bfcache y marco.
+    scripts = re.findall(r'<script src="([^"]+)"', inicio_direccion)
+    assert sorted(scripts) == sorted(
+        [
+            "/static/js/notas-borrador.js",
+            "/static/js/menu.js",
+            "/static/js/bfcache.js",
+            "/static/js/marco.js",
+        ]
+    )
+    assert "htmx" not in inicio_direccion.lower()
 
 
 # --- Menú de la cuenta (spec cierre-sesion, "Menú de la cuenta"; design.md de US-002, D5) ---

@@ -25,6 +25,7 @@
 @source "../../backend/templates/repositorio";
 @source "../../backend/templates/institucion/estudiantes";
 @source "../../backend/templates/cuentas/portada_docente.html";
+@source "../../backend/templates/direccion/inicio.html";
 @source "../../backend/templates/asistencia";
 @source "../../backend/templates/notas/competencias.html";
 @source "../../backend/templates/notas/_area.html";

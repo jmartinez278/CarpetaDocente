@@ -22,10 +22,10 @@ def con_seccion(docente, institucion):
     return Seccion.objects.create(anio_escolar=anio, grado=2, nombre="A", docente=docente)
 
 
-def entrar(page, live_server, docente, clave, ruta=SIN_PERMISO):
+def entrar(page, live_server, docente, clave, ruta=SIN_PERMISO, inicio="/docente/"):
     ingresar(page, live_server, docente, clave)
-    page.wait_for_url("**/docente/")
-    if ruta != "/docente/":
+    page.wait_for_url(f"**{inicio}")
+    if ruta != inicio:
         page.goto(f"{live_server.url}{ruta}")
     page.wait_for_load_state("load")
     page.evaluate("document.fonts.ready")
@@ -295,10 +295,18 @@ HOJAS = (
 @pytest.mark.parametrize(
     ("ruta", "hoja"),
     # Desde rebrand-portada, la portada también carga solo la hoja del rebrand.
-    [(SIN_PERMISO, "/static/dist/rebrand.css"), ("/docente/", "/static/dist/rebrand.css")],
+    [
+        (SIN_PERMISO, "/static/dist/rebrand.css"),
+        ("/docente/", "/static/dist/rebrand.css"),
+        ("/direccion/", "/static/dist/rebrand.css"),
+    ],
 )
-def test_cada_pagina_carga_una_sola_hoja(live_server, page, docente, clave, ruta, hoja):
-    entrar(page, live_server, docente, clave, ruta)
+def test_cada_pagina_carga_una_sola_hoja(live_server, page, docente, direccion, clave, ruta, hoja):
+    # Desde rebrand-cierre, la dirección también carga solo la hoja del rebrand.
+    if ruta == "/direccion/":
+        entrar(page, live_server, direccion, clave, ruta, inicio=ruta)
+    else:
+        entrar(page, live_server, docente, clave, ruta)
 
     assert page.evaluate(HOJAS) == [hoja]
 

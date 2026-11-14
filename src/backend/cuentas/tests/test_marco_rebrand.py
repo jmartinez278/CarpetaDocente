@@ -214,12 +214,17 @@ def test_la_cuenta_sin_nombre_muestra_el_usuario(html_de, docente):
     assert re.search(r"data-cuenta-nombre[^>]*>ana\.quispe<", cuenta(html_de(docente)))
 
 
-def test_el_menu_viejo_tambien_lleva_los_ganchos(html_de, direccion):
-    """El inicio de la dirección sigue en ``marco.html`` hasta el paso 7 del PLAN."""
+def test_la_cuenta_de_la_direccion_va_en_el_marco_del_rebrand(html_de, direccion):
+    """Decisión 4: la dirección ya no usa el marco viejo; su cuenta no lleva línea de sección."""
     menu = cuenta(html_de(direccion, "/direccion/"))
 
     assert "data-cuenta-panel" in menu
     assert re.search(r"data-cuenta-nombre[^>]*>Rosa Huamán<", menu)
+    assert re.search(rf'<form [^>]*data-salir data-usuario="{direccion.pk}"', menu)
+    textos = ["Tu cuenta", "Rosa Huamán", IE, "Cerrar sesión"]
+    assert [menu.index(t) for t in textos] == sorted(menu.index(t) for t in textos)
+    assert "grado, sección" not in menu
+    assert "Tu sección aparecerá" not in menu
 
 
 # --- Pie (escenario «Pie») ---
