@@ -272,6 +272,20 @@ def test_el_pie_tiene_el_avance_y_los_botones_en_su_orden(cliente):
     assert 'form="formulario-sesion"' in elemento(acciones, r'button[^>]*type="submit"')
 
 
+def test_el_pie_tiene_un_solo_boton_enviar_principal_con_sus_ganchos(cliente):
+    """Caracterización del pie al pasar a ``rb/boton.html`` (rebrand-cierre, decisión 6)."""
+    subir = bloque(pagina(cliente), "dialog", "subir")
+    acciones = re.search(r'<div class="dialog-pie">(.*?)</dialog>', subir, re.DOTALL).group(1)
+
+    botones = re.findall(r"<button\b[^>]*>[^<]*Enviar a la dirección", acciones)
+    assert len(botones) == 1
+    boton = botones[0]
+    assert re.search(r'class="btn btn--primary"', boton)
+    assert 'type="submit"' in boton
+    assert 'form="formulario-sesion"' in boton
+    assert "data-enviar" in boton
+
+
 def test_el_error_general_tiene_su_primer_parrafo_vacio(cliente):
     """sesiones.js escribe el error general en el primer <p> de [data-error-general]."""
     subir = bloque(pagina(cliente), "dialog", "subir")

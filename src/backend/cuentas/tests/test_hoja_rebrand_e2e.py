@@ -159,10 +159,6 @@ def test_variables_de_celular_solo_hasta_699_px(rebrand, quick_start):
     _iguales(esperadas, _declaraciones(_bloque_por_patron(media, r":root\{")))
 
 
-def test_app_css_no_trae_los_tokens_del_rebrand():
-    assert "--g-main" not in (DIST / "app.css").read_text(encoding="utf-8")
-
-
 # --- Fuentes ---------------------------------------------------------------------------------
 
 

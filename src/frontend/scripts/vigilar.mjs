@@ -1,7 +1,6 @@
-// Vigila las dos entradas de Tailwind a la vez (rebrand-base, D2): un `tailwindcss --watch=always`
-// por hoja. En Windows `cmd` no corre dos `--watch` con `&`, y así no hace falta otra dependencia.
-// Los argumentos extra (por ejemplo `--poll=1000` en el contenedor) pasan a los dos.
-// Si un vigilante termina, o llega Ctrl+C, se cierra el otro.
+// Vigila la entrada de Tailwind (rebrand-base, D2; desde rebrand-cierre, D2, queda una sola): un
+// `tailwindcss --watch=always` por hoja de la lista. Los argumentos extra (por ejemplo `--poll=1000`
+// en el contenedor) pasan a cada vigilante. Si uno termina, o llega Ctrl+C, se cierran los demás.
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -16,7 +15,6 @@ const paqueteCli = require.resolve("@tailwindcss/cli/package.json");
 const cli = join(dirname(paqueteCli), JSON.parse(readFileSync(paqueteCli, "utf8")).bin.tailwindcss);
 
 const hojas = [
-  ["app.css", "./css/app.css", "../backend/static/dist/app.css"],
   ["rebrand.css", "./css/rebrand.css", "../backend/static/dist/rebrand.css"],
 ];
 const extra = process.argv.slice(2);
@@ -61,7 +59,7 @@ for (const [nombre, entrada, salida] of hojas) {
   hijo.on("exit", (codigo, senal) => {
     vigilantes.delete(nombre);
     if (!cerrando) {
-      console.error(`[${nombre}] terminó (${senal ?? codigo}); se cierra el otro vigilante`);
+      console.error(`[${nombre}] terminó (${senal ?? codigo}); se cierran los demás vigilantes`);
       cerrarTodo(codigo || 1);
     }
   });

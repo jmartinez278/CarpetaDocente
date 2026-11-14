@@ -8,6 +8,7 @@ axe en los grupos 6 y 8.
 import re
 from dataclasses import replace
 from datetime import date, datetime
+from pathlib import Path
 
 import pytest
 from django.utils import timezone
@@ -1037,3 +1038,23 @@ def test_el_panel_carga_el_respaldo_de_atras_sin_el_menu(client, administrador):
 
     assert '<script src="/static/js/bfcache.js" defer>' in html
     assert "js/menu.js" not in html
+
+
+# --- Retiro del marco viejo (rebrand-cierre, parte B) -------------------------------------
+
+PLANTILLAS = Path(__file__).resolve().parents[2] / "templates"
+
+
+def test_no_quedan_los_componentes_del_marco_viejo():
+    assert not (PLANTILLAS / "componentes").exists()
+
+
+def test_ninguna_plantilla_extiende_el_marco_viejo():
+    viejas = re.compile(r"""\{%\s*extends\s+["'](?:base|marco)\.html["']""")
+
+    extienden = [
+        str(ruta.relative_to(PLANTILLAS))
+        for ruta in PLANTILLAS.rglob("*.html")
+        if viejas.search(ruta.read_text(encoding="utf-8"))
+    ]
+    assert extienden == []

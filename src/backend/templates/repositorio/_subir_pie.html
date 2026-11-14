@@ -7,6 +7,6 @@ arriba en el celular; en la PC, el CSS lo pone a la derecha.
   <progress max="100" value="0" aria-label="Avance de la subida" data-barra></progress>
 </div>
 <div class="dialog-acciones">
-  <button class="btn btn--primary" type="submit" form="formulario-sesion" data-enviar>Enviar a la dirección</button>
+  {% include "rb/boton.html" with texto="Enviar a la dirección" variante="principal" tipo="submit" formulario="formulario-sesion" datos="enviar" %}
   {% include "rb/boton.html" with texto="Cancelar" variante="secundario" datos="cancelar" %}
 </div>

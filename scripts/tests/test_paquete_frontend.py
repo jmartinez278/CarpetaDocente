@@ -1,6 +1,6 @@
-"""Pruebas del paquete de src/frontend: dos hojas de Tailwind y su vigilancia.
+"""Pruebas del paquete de src/frontend: una hoja de Tailwind y su vigilancia.
 
-rebrand-base, D2 y D3.
+rebrand-base, D2 y D3; rebrand-cierre, D2 (se retira la hoja vieja).
 """
 
 import json
@@ -23,14 +23,11 @@ def _tailwind(comando):
     return [parte.split() for parte in comando.split("&&") if "tailwindcss" in parte]
 
 
-def test_build_compila_las_dos_hojas_minificadas(scripts):
+def test_build_compila_una_sola_hoja_minificada(scripts):
     llamadas = _tailwind(scripts["build"])
 
-    pares = sorted((ll[ll.index("-i") + 1], ll[ll.index("-o") + 1]) for ll in llamadas)
-    assert pares == [
-        ("./css/app.css", "../backend/static/dist/app.css"),
-        ("./css/rebrand.css", "../backend/static/dist/rebrand.css"),
-    ]
+    pares = [(ll[ll.index("-i") + 1], ll[ll.index("-o") + 1]) for ll in llamadas]
+    assert pares == [("./css/rebrand.css", "../backend/static/dist/rebrand.css")]
     assert all("--minify" in ll for ll in llamadas)
     assert scripts["build"].startswith("npm run copiar-vendor && ")
 
@@ -42,13 +39,18 @@ def test_dev_y_dev_contenedor_usan_vigilar_mjs(scripts):
     )
 
 
-def test_vigilar_mjs_nombra_las_dos_entradas_y_sus_salidas():
+def test_vigilar_mjs_nombra_una_sola_entrada_y_su_salida():
     texto = (FRONTEND / "scripts" / "vigilar.mjs").read_text(encoding="utf-8")
 
-    for nombre in ("app.css", "rebrand.css"):
-        assert f"./css/{nombre}" in texto
-        assert f"../backend/static/dist/{nombre}" in texto
+    assert re.findall(r'"\./css/[\w-]+\.css"', texto) == ['"./css/rebrand.css"']
+    assert re.findall(r'"\.\./backend/static/dist/[\w-]+\.css"', texto) == [
+        '"../backend/static/dist/rebrand.css"'
+    ]
     assert "--watch=always" in texto
+
+
+def test_no_queda_la_entrada_vieja_de_tailwind():
+    assert not (FRONTEND / "css" / "app.css").exists()
 
 
 def test_copiar_vendor_copia_instrument_sans_y_su_licencia_sin_pisar_la_de_besley():
