@@ -405,6 +405,7 @@ def test_el_panel_del_celular_el_recuadro_y_la_lista(cliente, seccion_tutora, ma
     assert 'id="nota-editor"' in html and 'id="conclusion-pc"' in html
     assert 'role="listbox"' in html and 'id="lista-niveles"' in html
     assert re.search(r'<div id="competencia-detalle"[^>]*role="tooltip"', html)
+    assert re.search(r'<div id="nota-previa"[^>]*role="tooltip"[^>]*hidden', html)
 
 
 def test_las_regiones_del_lector_de_pantalla_y_el_noscript(cliente, seccion_tutora, matematica):

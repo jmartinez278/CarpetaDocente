@@ -307,6 +307,49 @@
     text-align: left;
   }
 
+  /* --- Columnas que no caben (D2): se desplazan en [data-columnas] con el nombre fijo; la sombra del borde dice que hay más.
+     Solo con data-desplaza (lo pone notas.js) el contenedor desplaza: así, cuando cabe, la cabecera sigue siendo sticky en la
+     página; cuando no, notas.js la baja con translateY. --- */
+  .hn-superficie {
+    position: relative;
+  }
+
+  .hn-columnas[data-desplaza] {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-left: var(--hn-nombre);
+  }
+
+  .hn-columnas[data-desplaza] thead {
+    position: relative;
+    z-index: 6;
+  }
+
+  .hn-columnas[data-desplaza] thead th {
+    top: auto;
+  }
+
+  .hn-superficie:has(> [data-mas-izquierda])::before,
+  .hn-superficie:has(> [data-mas-derecha])::after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 7;
+    width: var(--s-3);
+    content: "";
+    pointer-events: none;
+  }
+
+  .hn-superficie:has(> [data-mas-izquierda])::before {
+    left: var(--hn-nombre);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 16%, transparent), transparent);
+  }
+
+  .hn-superficie:has(> [data-mas-derecha])::after {
+    right: 0;
+    background: linear-gradient(270deg, color-mix(in srgb, var(--ink) 16%, transparent), transparent);
+  }
+
   /* --- Tabla (la pinta notas.js): nombre cerca del 40 %, las competencias reparten el resto --- */
   .hn-tabla {
     width: 100%;
@@ -360,22 +403,6 @@
     cursor: help;
   }
 
-  /* Hasta 1.14 (D5) cada columna conserva su «Rellenar vacías»: discreto, debajo de Cn. */
-  .hn-rellenar {
-    display: block;
-    width: 100%;
-    min-height: var(--touch-min);
-    padding: 0 var(--s-1);
-    background: none;
-    border: 0;
-    color: var(--action);
-    font-size: var(--text-support);
-    font-weight: 500;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    cursor: pointer;
-  }
-
   .hn-tabla tbody th,
   .hn-tabla tbody td {
     border-bottom: 1px solid var(--grid-line);
@@ -389,6 +416,19 @@
     .hn-tabla tbody tr:hover > * {
       background: var(--row-hover);
     }
+  }
+
+  /* La columna del nombre queda fija al desplazar las columnas (D2). */
+  .hn-th-est,
+  .hn-nombre {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--card);
+  }
+
+  .hn-tabla thead th.hn-th-est {
+    z-index: 6;
   }
 
   .hn-nombre {
@@ -452,12 +492,22 @@
     text-align: center;
   }
 
+  /* El nivel va en la columna central, haya o no icono de conclusión a su derecha:
+     así queda centrado bajo su C1…Cn. */
   .hn-celda {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(var(--touch-min), 1fr) auto minmax(var(--touch-min), 1fr);
     align-items: center;
-    justify-content: center;
     min-height: 56px;
-    padding-left: var(--touch-min);
+  }
+
+  .hn-celda > .hn-nivel {
+    grid-column: 2;
+  }
+
+  .hn-celda > .hn-nota {
+    grid-column: 3;
+    justify-self: start;
   }
 
   .hn-tabla td[data-cambio]::after {
@@ -748,6 +798,20 @@
     line-height: 1.4;
   }
 
+  /* Vista previa de la conclusión (D3): su comienzo, en tres líneas como mucho. */
+  .hn-previa {
+    display: -webkit-box;
+    width: 280px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .hn-previa[hidden] {
+    display: none;
+  }
+
   .hn-editor {
     position: fixed;
     z-index: 25;
@@ -968,13 +1032,12 @@
   /* --- PC: la celda de teclado y el icono de conclusión; en el celular, el botón que abre el panel --- */
   @media (max-width: 959px) {
     .hn-nivel,
-    .hn-nota,
-    .hn-rellenar {
+    .hn-nota {
       display: none;
     }
 
     .hn-celda {
-      padding: 0;
+      display: flex;
     }
 
     .hn-celda-movil {
@@ -1010,6 +1073,15 @@
 
     .hn-solo-celular {
       display: block;
+    }
+
+    /* El nombre no baja de --hn-nombre: si las competencias no caben al lado, se desplazan (D2). */
+    .hn-superficie {
+      --hn-nombre: 8rem;
+    }
+
+    .hn-tabla {
+      min-width: calc(var(--hn-nombre) + var(--columnas, 1) * 48px);
     }
 
     .hn-tabla col:first-child {
@@ -1113,41 +1185,6 @@
 
     .hn-guardar {
       width: 100%;
-    }
-  }
-
-  /* Cinco competencias o más bajo 360 px: el nombre en su línea y las celdas debajo (se retira en 1.11, D2). */
-  @media (max-width: 359px) {
-    .hn-tabla--apilada,
-    .hn-tabla--apilada tbody {
-      display: block;
-    }
-
-    .hn-tabla--apilada thead,
-    .hn-tabla--apilada colgroup {
-      display: none;
-    }
-
-    .hn-tabla--apilada tbody tr {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      border-bottom: 1px solid var(--grid-line);
-    }
-
-    .hn-tabla--apilada tbody tr > th {
-      grid-column: 1 / -1;
-      border-bottom: 0;
-    }
-
-    .hn-tabla--apilada tbody tr.hn-corte {
-      display: block;
-    }
-
-    .hn-tabla--apilada .hn-celda-movil::before {
-      color: var(--muted);
-      content: attr(data-etiqueta);
-      font-size: var(--text-support);
-      font-weight: 400;
     }
   }
 

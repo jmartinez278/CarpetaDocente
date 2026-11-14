@@ -431,7 +431,7 @@
     const falta = invalida(c);
     const lectura = area().lista[r].lectura;
     const texto = falta ? "Falta conclusión" : lectura ? "Leer conclusión" : "Ver conclusión anotada";
-    return `<button type="button" class="hn-nota${falta ? " hn-pendiente" : ""}" data-nota="${r}:${k}" data-est="${escapar(area().lista[r].id)}" data-comp="${escapar(columnas()[k].id)}" aria-label="${texto} de ${escapar(area().lista[r].nombre)}, ${escapar(etiquetaDe(k))}${lectura ? ", solo lectura" : ""}" title="${texto}">${icono(falta ? "aviso" : "nota")}</button>`;
+    return `<button type="button" class="hn-nota${falta ? " hn-pendiente" : ""}" data-nota="${r}:${k}" data-est="${escapar(area().lista[r].id)}" data-comp="${escapar(columnas()[k].id)}" aria-label="${texto} de ${escapar(area().lista[r].nombre)}, ${escapar(etiquetaDe(k))}${lectura ? ", solo lectura" : ""}">${icono(falta ? "aviso" : "nota")}</button>`;
   }
 
   function botonMovil(r, k, c, etiqueta) {
@@ -477,13 +477,54 @@
   function dibujarTabla() {
     const a = area();
     const n = a.columnas.length;
+    ocultarPrevia();
     const filas = a.lista.map((_, r) => (filtro && !filtro.filas.has(r) ? "" : dibujarFila(r))).join("");
-    $("superficie-hoja").innerHTML = `<table class="hn-tabla${n >= 5 ? " hn-tabla--apilada" : ""}" role="grid" aria-label="Niveles y conclusiones de ${escapar(a.nombre)}, ${escapar(periodo.nombre)}"><colgroup><col>${a.columnas.map(() => "<col>").join("")}</colgroup><thead><tr role="row"><th scope="col" class="hn-th-est" role="columnheader">Apellidos y nombres</th>${a.columnas
+    $("superficie-hoja").innerHTML = `<div class="hn-columnas" data-columnas><table class="hn-tabla" role="grid" aria-label="Niveles y conclusiones de ${escapar(a.nombre)}, ${escapar(periodo.nombre)}"><colgroup><col>${a.columnas.map(() => "<col>").join("")}</colgroup><thead><tr role="row"><th scope="col" class="hn-th-est" role="columnheader">Apellidos y nombres</th>${a.columnas
       .map(
         (c, k) =>
-          `<th scope="col" class="hn-comp" role="columnheader"><button class="hn-comp__boton" type="button" data-competencia="${k}" aria-label="${escapar(c.etiqueta)}: ${escapar(c.nombre)}">${escapar(c.etiqueta)}</button><button type="button" class="hn-rellenar" data-rellenar="${k}" aria-label="Rellenar vacías de ${escapar(c.etiqueta)}">Rellenar vacías</button></th>`,
+          `<th scope="col" class="hn-comp" role="columnheader"><button class="hn-comp__boton" type="button" data-competencia="${k}" aria-label="${escapar(c.etiqueta)}: ${escapar(c.nombre)}">${escapar(c.etiqueta)}</button></th>`,
       )
-      .join("")}</tr></thead><tbody>${filas}</tbody></table>`;
+      .join("")}</tr></thead><tbody>${filas}</tbody></table></div>`;
+    document.querySelector(".hn-tabla").style.setProperty("--columnas", String(n));
+    medirColumnas();
+  }
+
+  // --- Columnas que no caben (D2) ---
+  // Si la tabla no cabe a lo ancho, [data-columnas] se desplaza en horizontal (data-desplaza) y, como pasa a ser el contenedor
+  // de sticky, el <thead> sigue a la página con translateY. La señal del borde dice si hay más columnas a cada lado.
+
+  function medirColumnas() {
+    const contenedor = document.querySelector("[data-columnas]");
+    if (!contenedor) return;
+    contenedor.toggleAttribute("data-desplaza", contenedor.firstElementChild.offsetWidth > contenedor.clientWidth + 1);
+    bordesColumnas();
+    seguirCabecera();
+  }
+
+  function bordesColumnas() {
+    const contenedor = document.querySelector("[data-columnas]");
+    if (!contenedor) return;
+    const desplaza = contenedor.hasAttribute("data-desplaza");
+    contenedor.toggleAttribute("data-mas-izquierda", desplaza && contenedor.scrollLeft > 1);
+    contenedor.toggleAttribute("data-mas-derecha", desplaza && contenedor.scrollLeft < contenedor.scrollWidth - contenedor.clientWidth - 1);
+  }
+
+  let cuadroCabecera = 0;
+  function seguirCabecera() {
+    cancelAnimationFrame(cuadroCabecera);
+    cuadroCabecera = requestAnimationFrame(() => {
+      const contenedor = document.querySelector("[data-columnas]");
+      const cabecera = contenedor?.querySelector("thead");
+      if (!cabecera) return;
+      if (!contenedor.hasAttribute("data-desplaza")) {
+        cabecera.style.transform = "";
+        return;
+      }
+      const tope = document.querySelector(".appbar")?.getBoundingClientRect().bottom ?? 0;
+      const tabla = cabecera.parentElement.getBoundingClientRect();
+      const bajar = Math.max(0, Math.min(tope - tabla.top, tabla.height - cabecera.offsetHeight));
+      cabecera.style.transform = bajar ? `translateY(${bajar}px)` : "";
+    });
   }
 
   function dibujarPildoras() {
@@ -497,8 +538,8 @@
         boton.insertAdjacentHTML("beforeend", '<span class="hn-punto" data-punto aria-hidden="true"></span><span class="sr-only" data-punto-sr> · Cambios sin guardar</span>');
       }
     }
-    const enlace = document.querySelector("[data-ir-competencias]");
-    if (enlace) {
+    // Competencias y el selector de periodo (D1) abren en el área visible.
+    for (const enlace of document.querySelectorAll("[data-ir-competencias], a[data-periodo]")) {
       const url = new URL(enlace.href, window.location.href);
       url.searchParams.set("area", codigo);
       enlace.href = url.pathname + url.search;
@@ -520,6 +561,7 @@
   }
 
   function dibujarHoja() {
+    ocultarPrevia();
     ocultarLista();
     cerrarNota(false);
     ocultarCompetencia();
@@ -596,6 +638,7 @@
     $("alcance").textContent = `${a.nombre} · ${periodo.nombre}`;
     $("guardar").textContent = guardando ? "Guardando…" : errorRed ? "Reintentar" : "Guardar";
     $("guardar").setAttribute("aria-disabled", String(guardando || (!n && !errorRed)));
+    $("rellenar-movil").disabled = guardando;
     dibujarBorrador();
   }
 
@@ -617,6 +660,7 @@
     input.closest("td").toggleAttribute("data-cambio", a.cur.has(idCelda(r, k)));
     input.parentElement.querySelector(".hn-nota")?.remove();
     input.insertAdjacentHTML("afterend", indicadorNota(r, k, c));
+    if (anclaPrevia && !anclaPrevia.isConnected) ocultarPrevia();
     input.parentElement.querySelector(".hn-celda-movil").outerHTML = botonMovil(r, k, c, etiqueta);
     const fila = input.closest("tr");
     const marca = fila.querySelector(".hn-completa-marca");
@@ -666,6 +710,20 @@
     el.style.top = `${Math.max(16, Math.min(y, innerHeight - h - 16))}px`;
   }
 
+  // El recuadro de la conclusión va al lado de la celda (D3): a la derecha de la celda y su icono si cabe; si no, a la
+  // izquierda; alineado con la fila y entero dentro de la ventana, bajo la barra superior.
+  function posicionarAlLado(el, ancla) {
+    const caja = ancla.getBoundingClientRect();
+    const nota = ancla.parentElement.querySelector("[data-nota]")?.getBoundingClientRect();
+    const w = el.offsetWidth || 350;
+    const h = el.offsetHeight || 240;
+    let x = Math.max(caja.right, nota?.right ?? 0) + 8;
+    if (x + w > innerWidth - 16) x = caja.left - w - 8;
+    el.style.left = `${Math.max(16, Math.min(x, innerWidth - w - 16))}px`;
+    const arriba = (document.querySelector(".appbar")?.getBoundingClientRect().bottom ?? 0) + 8;
+    el.style.top = `${Math.max(arriba, Math.min(caja.top, innerHeight - h - 16))}px`;
+  }
+
   function abrirLista(input) {
     if (input.readOnly || guardando) return;
     cerrarNota(false);
@@ -713,6 +771,7 @@
 
   function abrirNota(r, k) {
     if (guardando) return;
+    ocultarPrevia();
     if (movil.matches) {
       abrirPanel(r, k, true);
       return;
@@ -734,7 +793,7 @@
     $("nota-editor").hidden = false;
     const ancla = document.querySelector(`.hn-nivel[data-r="${r}"][data-k="${k}"]`);
     ancla?.scrollIntoView({ block: "nearest", inline: "nearest" });
-    if (ancla) posicionar($("nota-editor"), ancla, 350);
+    if (ancla) posicionarAlLado($("nota-editor"), ancla);
     if (lectura) $("cerrar-nota").focus({ preventScroll: true });
     else $("conclusion-pc").focus({ preventScroll: true });
   }
@@ -773,6 +832,38 @@
     anclaCompetencia?.removeAttribute("aria-describedby");
     anclaCompetencia = null;
     $("competencia-detalle").hidden = true;
+  }
+
+  // --- Vista previa de la conclusión (D3, solo PC) ---
+  // Se abre con el puntero o el foco en el icono cuando hay texto; sigue mientras el puntero o el foco estén en el icono o en
+  // ella, sin temporizador; Escape la cierra sin mover el foco.
+  let anclaPrevia = null;
+
+  function mostrarPrevia(boton) {
+    if (movil.matches || !$("nota-editor").hidden) return;
+    const [r, k] = boton.dataset.nota.split(":").map(Number);
+    const texto = celda(r, k).conclusion.trim();
+    if (!texto) return;
+    if (anclaPrevia && anclaPrevia !== boton) ocultarPrevia();
+    anclaPrevia = boton;
+    $("nota-previa").textContent = texto;
+    boton.setAttribute("aria-describedby", "nota-previa");
+    $("nota-previa").hidden = false;
+    posicionar($("nota-previa"), boton, 280);
+  }
+
+  function ocultarPrevia() {
+    anclaPrevia?.removeAttribute("aria-describedby");
+    anclaPrevia = null;
+    $("nota-previa").hidden = true;
+  }
+
+  // La deja abierta si el puntero o el foco siguen en el icono o en ella.
+  function soltarPrevia(siguiente) {
+    if (!anclaPrevia) return;
+    if (siguiente && (anclaPrevia.contains(siguiente) || $("nota-previa").contains(siguiente))) return;
+    if (anclaPrevia.matches(":hover") || $("nota-previa").matches(":hover") || document.activeElement === anclaPrevia) return;
+    ocultarPrevia();
   }
 
   // --- Panel del celular ---
@@ -879,13 +970,14 @@
     return Array.from({ length: a.activos }, (_, r) => r).filter((r) => !celda(r, k).nivel);
   }
 
+  // Un solo «Rellenar vacías» en la tarjeta del área, en todos los anchos, con la elección de la competencia (D5).
   function abrirRelleno(k) {
     if (guardando || !hojaMarcable()) return;
     cerrarNota(false);
     ocultarLista();
     columnaRelleno = k;
     restaurarFoco = document.activeElement;
-    $("columna-relleno").hidden = !movil.matches;
+    $("columna-relleno").hidden = false;
     $("elegir-columna").innerHTML = columnas().map((c, i) => `<option value="${i}">${escapar(c.etiqueta)} · ${escapar(c.nombre)}</option>`).join("");
     $("elegir-columna").value = String(k);
     actualizarRelleno();
@@ -989,7 +1081,7 @@
     document.querySelectorAll(".hn-nivel").forEach((el) => {
       el.readOnly = true;
     });
-    document.querySelectorAll(".hn-celda-movil,.hn-nota,.hn-rellenar,[data-area-pildora],#borrador button").forEach((el) => {
+    document.querySelectorAll(".hn-celda-movil,.hn-nota,#rellenar-movil,[data-area-pildora],#borrador button").forEach((el) => {
       el.disabled = true;
     });
     const respuesta = await pedir(a.url_guardar, { celdas: celdasDelEnvio(a) });
@@ -1142,24 +1234,30 @@
       const [r, k] = t.dataset.nota.split(":").map(Number);
       abrirNota(r, k);
     }
-    if (t.hasAttribute("data-rellenar")) abrirRelleno(Number(t.dataset.rellenar));
     if (t.hasAttribute("data-competencia")) mostrarCompetencia(t);
   });
   $("superficie-hoja").addEventListener("mouseover", (evento) => {
     const t = evento.target.closest("[data-competencia]");
     if (t) mostrarCompetencia(t);
+    const nota = evento.target.closest("[data-nota]");
+    if (nota && nota !== anclaPrevia) mostrarPrevia(nota);
   });
   $("superficie-hoja").addEventListener("focusin", (evento) => {
     const t = evento.target.closest("[data-competencia]");
     if (t) mostrarCompetencia(t);
+    const nota = evento.target.closest("[data-nota]");
+    if (nota) mostrarPrevia(nota);
   });
   $("superficie-hoja").addEventListener("mouseout", (evento) => {
     if (evento.target.closest("[data-competencia]") && !evento.relatedTarget?.closest("[data-competencia],#competencia-detalle")) ocultarCompetencia();
+    if (evento.target.closest("[data-nota]")) soltarPrevia(evento.relatedTarget);
   });
   $("superficie-hoja").addEventListener("focusout", (evento) => {
     if (evento.target.closest("[data-competencia]")) ocultarCompetencia();
+    if (evento.target.closest("[data-nota]") && evento.target === anclaPrevia && !anclaPrevia.matches(":hover")) ocultarPrevia();
   });
   $("competencia-detalle").addEventListener("mouseleave", () => ocultarCompetencia());
+  $("nota-previa").addEventListener("mouseleave", (evento) => soltarPrevia(evento.relatedTarget));
   $("rellenar-movil").addEventListener("click", () => abrirRelleno(0));
   $("elegir-columna").addEventListener("change", (evento) => {
     columnaRelleno = Number(evento.target.value);
@@ -1205,7 +1303,7 @@
       }
       const destino = evento.shiftKey ? anteriorFaltante(r, k) : siguienteFaltante(r, k);
       if (destino) focoCelda(destino.r, destino.k);
-      else if (evento.shiftKey) document.querySelector(`.hn-rellenar[data-rellenar="${n - 1}"]`)?.focus();
+      else if (evento.shiftKey) document.querySelector(`[data-competencia="${n - 1}"]`)?.focus();
       else $("guardar").focus();
       return;
     }
@@ -1218,7 +1316,7 @@
     if (evento.key === "Tab" && evento.shiftKey && r === visibles[0] && k === 0) {
       evento.preventDefault();
       ocultarLista();
-      document.querySelector(`.hn-rellenar[data-rellenar="${n - 1}"]`)?.focus();
+      document.querySelector(`[data-competencia="${n - 1}"]`)?.focus();
       return;
     }
     if (evento.altKey && evento.key === "ArrowDown") {
@@ -1314,6 +1412,11 @@
   });
   document.addEventListener("keydown", (evento) => {
     if (evento.key !== "Escape") return;
+    if (!$("nota-previa").hidden) {
+      evento.preventDefault();
+      ocultarPrevia();
+      return;
+    }
     if (!$("nota-editor").hidden) {
       evento.preventDefault();
       cerrarNota();
@@ -1370,11 +1473,8 @@
       cerrarPanel();
       return;
     }
-    if (invalida(celda(r, k))) {
-      $("conclusion-movil").focus();
-      anunciar("Falta una conclusión de 10 a 500 caracteres antes de continuar.", true);
-      return;
-    }
+    // Una B o C sin conclusión no detiene el avance (D4): la celda queda señalada y el guardado la sigue rechazando.
+    if (invalida(celda(r, k))) anunciar(`Falta conclusión: ${a.lista[r].nombre}, ${etiquetaDe(k)}.`);
     if (filtro) {
       const siguiente = siguienteFaltante(r, k);
       if (!siguiente) {
@@ -1402,7 +1502,7 @@
   );
   $("cancelar-relleno").addEventListener("click", () => $("confirmar-relleno").close());
   $("confirmar-relleno").addEventListener("close", () => {
-    const destino = restaurarFoco?.isConnected ? restaurarFoco : movil.matches ? $("rellenar-movil") : document.querySelector(`.hn-rellenar[data-rellenar="${columnaRelleno}"]`);
+    const destino = restaurarFoco?.isConnected ? restaurarFoco : $("rellenar-movil");
     destino?.focus({ preventScroll: true });
   });
   $("aplicar-relleno").addEventListener("click", () => {
@@ -1418,7 +1518,7 @@
     actualizarEstado();
     const n = vacias.length;
     anunciar(`${n === 1 ? "1 celda rellenada" : `${n} celdas rellenadas`} con ${nivel}. ${n === 1 ? "Queda" : "Quedan"} sin guardar.`);
-    document.querySelector(`.hn-rellenar[data-rellenar="${columnaRelleno}"]`)?.focus({ preventScroll: true });
+    $("rellenar-movil").focus({ preventScroll: true });
   });
 
   $("guardar").addEventListener("click", () => {
@@ -1481,6 +1581,12 @@
       }
       const destino = new URL(enlace.href, window.location.href);
       if (destino.origin === window.location.origin && destino.pathname === window.location.pathname && destino.hash) return;
+      // Cambiar de periodo no pregunta (D1): los cambios de cada periodo ya están en el dispositivo. Sin almacenamiento solo
+      // viven en memoria y el enlace pregunta como cualquier salida.
+      if (enlace.matches("[data-periodo]") && almacenamiento && !guardando) {
+        permisoSalida = true;
+        return;
+      }
       if (!pendientes().length && !guardando) return;
       evento.preventDefault();
       pedirSalida(() => window.location.assign(destino.href));
@@ -1546,6 +1652,7 @@
     if (document.querySelector(".hn-tabla")) dibujarTabla();
   });
   window.addEventListener("resize", () => {
+    ocultarPrevia();
     cerrarNota(false);
     ocultarLista();
     ocultarCompetencia();
@@ -1553,7 +1660,10 @@
   document.addEventListener(
     "scroll",
     (evento) => {
+      if (evento.target instanceof Element && evento.target.matches("[data-columnas]")) bordesColumnas();
+      else seguirCabecera();
       ocultarCompetencia();
+      ocultarPrevia();
       if (!$("lista-niveles").hidden) ocultarLista();
       if (notaActiva && !$("nota-editor").contains(evento.target)) {
         const { r, k } = notaActiva;
@@ -1565,11 +1675,19 @@
         const caja = ancla.getBoundingClientRect();
         const superficie = $("superficie-hoja").getBoundingClientRect();
         const cabecera = document.querySelector(".hn-tabla thead")?.offsetHeight || 0;
-        if (caja.bottom < Math.max(0, superficie.top + cabecera) || caja.top > Math.min(innerHeight, superficie.bottom)) {
+        // Con las columnas desplazables, la celda también sale de la vista por los lados o bajo el nombre fijo (D3).
+        const columnas = document.querySelector("[data-columnas]")?.getBoundingClientRect() ?? superficie;
+        const nombre = document.querySelector(".hn-th-est")?.offsetWidth || 0;
+        const fuera =
+          caja.bottom < Math.max(0, superficie.top + cabecera) ||
+          caja.top > Math.min(innerHeight, superficie.bottom) ||
+          caja.right < columnas.left + nombre ||
+          caja.left > columnas.right;
+        if (fuera) {
           cerrarNota();
           anunciar("Conclusión conservada en la hoja.");
         } else {
-          posicionar($("nota-editor"), ancla, 350);
+          posicionarAlLado($("nota-editor"), ancla);
         }
       }
     },
@@ -1582,9 +1700,12 @@
     const medirBarra = () => document.documentElement.style.setProperty("--alto-barra", `${$("barra-guardar").offsetHeight}px`);
     new ResizeObserver(medirBarra).observe($("barra-guardar"));
     medirBarra();
+    new ResizeObserver(medirColumnas).observe($("superficie-hoja"));
   }
 
   recuperarBorradores();
   dibujarHoja();
   dibujarPildoras();
+  // Al abrir, la píldora del área activa queda en el tramo visible de la tira, como al tocarla (D5).
+  document.querySelector(`[data-area-pildora="${CSS.escape(codigo)}"]`)?.scrollIntoView({ block: "nearest", inline: "center", behavior: "instant" });
 })();
