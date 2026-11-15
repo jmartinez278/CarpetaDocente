@@ -1,0 +1,751 @@
+/* Portada del docente (DESIGN.md 1.1, Layout «Portada», patrones 1 y 3; boceto insumos/rebrand/index.html con
+   assets/portada.css, v3.css y portada-color.css) (rebrand-portada, D1, D4, D5 y D7).
+   Desde 900 px, rejilla de 12 columnas: Asistencia, la tarjeta café, 7 columnas y dos filas; Sesiones y Notas, 5
+   columnas, una sobre otra. Hasta 899 px, una columna en el orden del DOM; Sesiones y Notas, con la miniatura junto
+   al texto. Las miniaturas usan la paleta de papel (--preview-*), fija en los dos temas. */
+
+@layer components {
+  /* --- Bienvenida --- */
+
+  .page:has(> .bienvenida) {
+    padding-top: 28px;
+    padding-bottom: 56px;
+  }
+
+  .bienvenida {
+    margin-bottom: 36px;
+  }
+
+  .bienvenida h1 {
+    max-width: 960px;
+    font-size: var(--text-home);
+    line-height: var(--leading-home);
+    letter-spacing: var(--tracking-page);
+    text-wrap: balance;
+  }
+
+  .bienvenida .saludo {
+    display: block;
+    margin-bottom: var(--s-2);
+    color: var(--muted);
+    font-size: var(--text-greeting);
+    letter-spacing: var(--tracking-subsection);
+  }
+
+  .seccion-entrada {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    margin-top: 20px;
+    color: var(--muted);
+  }
+
+  .seccion-entrada p {
+    min-width: 0;
+  }
+
+  .entrada-estudiantes {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: var(--touch-min);
+    color: var(--action);
+    font-weight: var(--display-weight);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .entrada-estudiantes .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .aviso-portada:not(:empty) {
+    margin-bottom: var(--s-5);
+  }
+
+  /* --- Accesos y tarjetas --- */
+
+  .accesos {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--s-5);
+    align-items: stretch;
+  }
+
+  .dimension {
+    position: relative;
+    grid-column: 8 / span 5;
+    min-width: 0;
+    min-height: 210px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 108px;
+    gap: 20px;
+    padding: var(--s-5);
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+
+  .dimension-copia {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dimension-cabecera {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .dimension .dimension-icono {
+    width: 24px;
+    height: 24px;
+    color: var(--action);
+  }
+
+  .dimension-titulo {
+    min-width: 0;
+    font-size: 26px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  /* El enlace del título se estira sobre la tarjeta: toda ella responde al toque (D4). */
+  .dimension-enlace,
+  .dimension-boton {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
+    text-decoration: none;
+  }
+
+  .dimension-enlace {
+    color: var(--action);
+  }
+
+  .dimension-boton {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    text-align: start;
+  }
+
+  .dimension-enlace::after,
+  .dimension-boton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: var(--r-lg);
+  }
+
+  .dimension-enlace:focus-visible,
+  .dimension-boton:focus-visible {
+    outline: none;
+  }
+
+  .dimension:has(:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 4px;
+  }
+
+  .dimension-frase {
+    max-width: 30ch;
+    margin-top: var(--s-3);
+    overflow-wrap: anywhere;
+  }
+
+  .insignia {
+    align-self: flex-start;
+    margin-top: var(--s-2);
+    padding: 2px var(--s-2);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    font-size: var(--text-label);
+    line-height: 20px;
+  }
+
+  /* «Próximamente»: sin color de acción. */
+  .insignia--callada {
+    color: var(--muted);
+  }
+
+  .dimension-accion {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 40px;
+    margin-top: auto;
+    padding-top: var(--s-4);
+    color: var(--action);
+    font-size: 15px;
+    font-weight: var(--display-weight);
+  }
+
+  .dimension-accion .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* «Hoy: pendiente» (US-030): sin animación de entrada (D7). */
+  .pildora-pendiente {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    margin-top: var(--s-4);
+    padding: var(--s-1) var(--s-2);
+    background: var(--gold);
+    color: var(--preview-ink);
+    border-radius: 6px;
+    font-size: var(--text-label);
+    font-weight: var(--display-weight);
+    line-height: 20px;
+  }
+
+  .pildora-pendiente .icono {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Aviso de «Próximamente»: renglón reservado; aparecer o irse no mueve la miniatura (D5). */
+  .dimension-aviso {
+    min-height: calc(var(--text-label) * 1.5);
+    margin-top: var(--s-2);
+    color: var(--muted);
+    font-size: var(--text-label);
+    line-height: 1.5;
+  }
+
+  /* --- Asistencia: la tarjeta café (patrón 1) --- */
+
+  .dimension--asistencia {
+    grid-column: 1 / span 7;
+    grid-row: 1 / span 2;
+    min-height: 444px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 28px;
+    background: var(--cocoa);
+    color: var(--cocoa-ink);
+    border-color: var(--cocoa-line);
+  }
+
+  /* Como en el boceto, el botón va debajo del gráfico: el bloque de texto se abre (display: contents) para
+     que la miniatura quede entre la frase y la acción, sin cambiar el orden del documento. */
+  .dimension--asistencia .dimension-copia {
+    display: contents;
+  }
+
+  .dimension--asistencia .miniatura {
+    order: 1;
+  }
+
+  .dimension--asistencia .dimension-accion {
+    order: 2;
+  }
+
+  .dimension--asistencia .dimension-icono {
+    width: 30px;
+    height: 30px;
+    color: var(--cocoa-ink);
+  }
+
+  .dimension--asistencia .dimension-titulo {
+    font-size: 32px;
+    letter-spacing: -0.03em;
+  }
+
+  .dimension--asistencia .dimension-enlace {
+    color: var(--cocoa-ink);
+  }
+
+  .dimension--asistencia .dimension-frase {
+    max-width: none;
+    margin-top: var(--s-2);
+    color: var(--cocoa-muted);
+  }
+
+  .dimension--asistencia .insignia {
+    border-color: var(--cocoa-muted);
+    color: var(--cocoa-muted);
+  }
+
+  .dimension--asistencia .dimension-aviso {
+    color: var(--cocoa-muted);
+  }
+
+  .dimension--asistencia .dimension-accion {
+    align-self: flex-start;
+    gap: var(--s-4);
+    min-height: var(--touch-min);
+    margin-top: var(--s-5);
+    padding: 10px var(--s-4);
+    background: var(--cocoa-ink);
+    color: var(--cocoa);
+    border-radius: var(--r-btn);
+  }
+
+  .dimension--asistencia:has(:focus-visible) {
+    outline-color: var(--focus-ring);
+  }
+
+  /* --- Miniaturas: papel fijo en los dos temas, decorativas --- */
+
+  .miniatura {
+    position: relative;
+    align-self: center;
+    height: 132px;
+    padding: var(--s-3);
+    overflow: hidden;
+    background: var(--preview-paper);
+    color: var(--preview-ink);
+    border: 1px solid var(--preview-line);
+    border-radius: var(--r-sm);
+  }
+
+  .tinta {
+    display: block;
+    width: 100%;
+    height: 4px;
+    background: var(--preview-line);
+    border-radius: 2px;
+  }
+
+  .tinta--larga {
+    width: 84%;
+  }
+
+  .tinta--media {
+    width: 66%;
+  }
+
+  .tinta--corta {
+    width: 42%;
+  }
+
+  /* Asistencia: la clave de estados y tres filas. */
+  .miniatura--asistencia {
+    align-self: flex-start;
+    width: calc(100% - 6px);
+    height: 184px;
+    margin-top: var(--s-5);
+    margin-right: 6px;
+    padding: var(--s-4) 20px;
+    border-color: var(--preview-card);
+    box-shadow: var(--shadow-preview);
+  }
+
+  .hoja-asistencia-clave {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--s-1);
+    margin-bottom: 10px;
+    padding-left: calc(25% + var(--s-4));
+    color: var(--preview-action);
+    font-size: 12px;
+    font-weight: var(--display-weight);
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .hoja-asistencia-clave span:last-child {
+    font-size: 11px;
+  }
+
+  .hoja-asistencia-fila {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    height: 38px;
+    border-top: 1px solid var(--preview-line);
+  }
+
+  .hoja-asistencia-fila > .tinta {
+    flex: none;
+    width: 25%;
+    height: 5px;
+  }
+
+  .hoja-asistencia-fila > div {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+  }
+
+  .marca {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--justificado-line);
+    border-radius: var(--r-round);
+  }
+
+  .marca--asistio {
+    background: var(--asistio);
+    border-color: var(--asistio);
+  }
+
+  .marca--falto {
+    background: var(--falto);
+    border-color: var(--falto);
+  }
+
+  /* Sesiones: hoja con líneas y el lápiz. */
+  .miniatura--sesiones {
+    margin-right: var(--s-1);
+    padding-right: var(--s-5);
+    box-shadow: var(--shadow-preview);
+  }
+
+  .miniatura--sesiones::after {
+    content: "";
+    position: absolute;
+    top: 26px;
+    right: 9px;
+    bottom: 14px;
+    width: 8px;
+    background: var(--gold);
+    border-top: 7px solid var(--preview-sand);
+    border-bottom: 8px solid var(--preview-action);
+    clip-path: polygon(0 0, 100% 0, 100% 86%, 50% 100%, 0 86%);
+  }
+
+  .hoja-sesion-arriba {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .hoja-sesion-arriba .icono {
+    width: 16px;
+    height: 16px;
+    color: var(--preview-action);
+  }
+
+  .hoja-sesion-titulo {
+    display: grid;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+
+  .hoja-sesion-titulo .tinta:first-child {
+    width: 82%;
+    height: 6px;
+    background: var(--preview-action);
+  }
+
+  .hoja-sesion-cuerpo {
+    display: grid;
+    gap: 6px;
+    padding-top: var(--s-2);
+    border-top: 1px solid var(--preview-line);
+  }
+
+  /* Notas: la escala AD, A, B y C. */
+  .miniatura--notas {
+    height: 116px;
+    padding: 10px;
+    background: var(--preview-sand);
+    border-color: var(--preview-sand);
+  }
+
+  .escala {
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .escala span {
+    display: grid;
+    place-items: center;
+    background: var(--preview-card);
+    color: var(--preview-action);
+    border: 1px solid var(--preview-line);
+    border-radius: var(--r-sm);
+    font-size: 17px;
+    font-weight: var(--display-weight);
+    line-height: 1;
+  }
+
+  /* --- Anchos --- */
+
+  @media (min-width: 900px) and (max-width: 1130px) {
+    .dimension {
+      grid-template-columns: minmax(0, 1fr) 88px;
+      gap: var(--s-4);
+      padding: 20px;
+    }
+
+    .dimension--asistencia {
+      padding: var(--s-5);
+    }
+
+    .dimension-titulo {
+      font-size: 24px;
+    }
+
+    .dimension--asistencia .dimension-titulo {
+      font-size: 30px;
+    }
+
+    .dimension-cabecera {
+      gap: var(--s-2);
+    }
+  }
+
+  @media (max-width: 899px) {
+    .page:has(> .bienvenida) {
+      padding-top: 20px;
+      padding-bottom: 40px;
+    }
+
+    .bienvenida {
+      margin-bottom: 28px;
+    }
+
+    .seccion-entrada {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--s-2);
+    }
+
+    .accesos {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-4);
+    }
+
+    .dimension {
+      grid-column: auto;
+      grid-row: auto;
+      grid-template-columns: minmax(0, 1fr) 124px;
+      min-height: 190px;
+    }
+
+    .dimension--asistencia {
+      min-height: 0;
+      padding: var(--s-5);
+    }
+
+    .miniatura--asistencia {
+      max-width: 520px;
+      margin-top: 20px;
+    }
+  }
+
+  /* Hasta 699 px, Sesiones y Notas compactas: la miniatura junto al texto. */
+  @media (max-width: 699px) {
+    .page:has(> .bienvenida) {
+      padding-top: var(--s-3);
+    }
+
+    .bienvenida {
+      margin-bottom: var(--s-5);
+    }
+
+    .bienvenida h1 {
+      text-wrap: wrap;
+    }
+
+    .seccion-entrada {
+      margin-top: var(--s-4);
+    }
+
+    .seccion-entrada p {
+      font-size: var(--text-label);
+      line-height: 1.6;
+    }
+
+    .entrada-estudiantes {
+      font-size: var(--text-label);
+    }
+
+    .dimension {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--s-3);
+      min-height: 0;
+      padding: 20px var(--s-4);
+    }
+
+    .dimension .miniatura:not(.miniatura--asistencia) {
+      width: 76px;
+    }
+
+    .dimension:not(.dimension--asistencia) .dimension-icono {
+      display: none;
+    }
+
+    /* En la columna angosta el aviso ocupa dos renglones: se reservan los dos (D5). */
+    .dimension:not(.dimension--asistencia) .dimension-aviso {
+      min-height: calc(var(--text-label) * 1.5 * 2);
+    }
+
+    .dimension-titulo {
+      font-size: 23px;
+    }
+
+    .dimension-accion {
+      gap: 6px;
+      padding-top: var(--s-3);
+      font-size: var(--text-label);
+    }
+
+    .dimension-accion .icono {
+      width: 18px;
+      height: 18px;
+    }
+
+    .miniatura {
+      height: 112px;
+      padding: 10px var(--s-2);
+    }
+
+    .miniatura--sesiones {
+      padding-right: 20px;
+    }
+
+    .miniatura--sesiones::after {
+      top: 24px;
+      right: 7px;
+      bottom: 12px;
+      width: 6px;
+    }
+
+    .hoja-sesion-arriba {
+      gap: var(--s-1);
+      margin-bottom: var(--s-2);
+    }
+
+    .hoja-sesion-arriba .icono {
+      width: 14px;
+      height: 14px;
+    }
+
+    .hoja-sesion-titulo {
+      gap: var(--s-1);
+      margin-bottom: var(--s-2);
+    }
+
+    .hoja-sesion-titulo .tinta:first-child {
+      height: 5px;
+    }
+
+    .hoja-sesion-cuerpo {
+      gap: 5px;
+      padding-top: 6px;
+    }
+
+    .hoja-sesion-cuerpo .tinta {
+      height: 3px;
+    }
+
+    .miniatura--notas {
+      height: 98px;
+      padding: 7px;
+    }
+
+    .escala {
+      gap: var(--s-1);
+    }
+
+    .escala span {
+      font-size: 14px;
+    }
+
+    .dimension--asistencia {
+      padding: 20px;
+    }
+
+    .dimension--asistencia .dimension-titulo {
+      font-size: 28px;
+    }
+
+    .dimension--asistencia .dimension-icono {
+      width: 26px;
+      height: 26px;
+    }
+
+    .pildora-pendiente {
+      margin-top: var(--s-3);
+    }
+
+    .dimension--asistencia .dimension-accion {
+      gap: var(--s-3);
+      margin-top: 20px;
+      padding: 10px 14px;
+      font-size: 15px;
+    }
+
+    .miniatura--asistencia {
+      height: 146px;
+      margin-top: 20px;
+      padding: var(--s-3);
+    }
+
+    .hoja-asistencia-clave {
+      margin-bottom: var(--s-2);
+      padding-left: calc(25% + var(--s-3));
+      font-size: 10px;
+      line-height: 16px;
+    }
+
+    .hoja-asistencia-clave span:last-child {
+      font-size: 9px;
+    }
+
+    .hoja-asistencia-fila {
+      gap: var(--s-3);
+      height: 30px;
+    }
+
+    .marca {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  /* --- Movimiento (DESIGN.md 1.1; D7) --- */
+
+  /* El aviso de «Próximamente» entra con un fundido de opacidad. */
+  .dimension-aviso {
+    transition: opacity var(--m-in) var(--m-ease);
+  }
+
+  .dimension-aviso:empty {
+    opacity: 0;
+    transition-duration: var(--m-out);
+  }
+
+  /* Hover solo con puntero fino: el borde toma el color de acción; la miniatura no se mueve. */
+  @media (hover: hover) and (pointer: fine) {
+    .dimension {
+      transition: border-color var(--m-out) var(--m-ease);
+    }
+
+    .dimension:has(.dimension-enlace):hover {
+      border-color: var(--action);
+      transition-duration: var(--m-in);
+    }
+
+    .dimension--asistencia:has(.dimension-enlace):hover {
+      border-color: var(--cocoa-ink);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dimension,
+    .dimension-aviso {
+      transition: none;
+    }
+  }
+}

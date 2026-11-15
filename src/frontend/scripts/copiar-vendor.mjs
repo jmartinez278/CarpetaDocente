@@ -1,4 +1,4 @@
-// Copia HTMX y Alpine.js a src/backend/static/dist/vendor/ y Besley a dist/fuentes/,
+// Copia HTMX y Alpine.js a src/backend/static/dist/vendor/ y Besley e Instrument Sans a dist/fuentes/,
 // para servirlos como estáticos propios (sin CDN externo; design.md, D9).
 import { copyFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -16,6 +16,18 @@ const archivos = [
     "besley-latin-600-normal.woff2",
   ],
   ["node_modules/@fontsource/besley/LICENSE", "fuentes", "LICENSE"],
+  // Instrument Sans 400 y 500 latinas, del marco del rebrand (rebrand-base, D3).
+  [
+    "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2",
+    "fuentes",
+    "instrument-sans-latin-400-normal.woff2",
+  ],
+  [
+    "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff2",
+    "fuentes",
+    "instrument-sans-latin-500-normal.woff2",
+  ],
+  ["node_modules/@fontsource/instrument-sans/LICENSE", "fuentes", "LICENSE-instrument-sans"],
 ];
 
 for (const [origen, carpeta, nombre] of archivos) {

@@ -21,12 +21,12 @@ def url_hoja(live_server, seccion, **parametros):
 def entrada(page, estudiante, orden):
     """La celda de teclado de la competencia ``orden`` (1…n) de Matemática."""
     comp = competencia(MATEMATICA, orden)
-    return page.locator(f'.notas-nivel[data-est="{estudiante.pk}"][data-comp="{comp.pk}"]')
+    return page.locator(f'[data-celda][data-est="{estudiante.pk}"][data-comp="{comp.pk}"]')
 
 
 def boton_movil(page, estudiante, orden):
     comp = competencia(MATEMATICA, orden)
-    return page.locator(f'.notas-celda-movil[data-est="{estudiante.pk}"][data-comp="{comp.pk}"]')
+    return page.locator(f'[data-celda-movil][data-est="{estudiante.pk}"][data-comp="{comp.pk}"]')
 
 
 def estado(page):

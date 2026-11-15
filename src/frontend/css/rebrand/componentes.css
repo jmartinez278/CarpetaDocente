@@ -1,0 +1,563 @@
+/* Componentes del rebrand: variantes del botón, campo, mensaje, diálogo, estado vacío, progreso,
+   archivo y casilla, del prototipo
+   (insumos/rebrand/assets/app.css y pantallas-nuevas/assets/app.css) (rebrand-base, D8;
+   rebrand-us-010, D3 y D4). La base de .btn (44 px, foco, movimiento) está en marco.css. */
+
+@layer components {
+  /* Botón: principal, secundario y de texto. */
+  .btn--primary {
+    background: var(--action);
+    border-color: var(--action);
+    color: var(--action-ink);
+  }
+
+  .btn--secondary {
+    background: transparent;
+    border-color: var(--line-strong);
+  }
+
+  .btn--text {
+    padding-inline: var(--s-1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn--secondary:hover {
+      border-color: var(--action);
+    }
+  }
+
+  /* Campo: etiqueta arriba, control de 48 px, ayuda y error debajo. */
+  .field {
+    display: grid;
+    gap: var(--s-2);
+    min-width: 0;
+  }
+
+  .field label {
+    font-weight: var(--display-weight);
+  }
+
+  .input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 10px var(--s-3);
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .input[aria-invalid="true"] {
+    border: 2px solid var(--error);
+  }
+
+  /* Ingreso (rebrand-us-001, D3): campo de 52 px sobre --g-alt y el ojo de la contraseña dentro del campo. */
+  .field--ingreso .input {
+    min-height: 52px;
+    background: var(--g-alt);
+  }
+
+  .input-grupo {
+    position: relative;
+  }
+
+  .input-grupo .input {
+    padding-inline-end: 52px;
+  }
+
+  .input-ojo {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-block: auto;
+    padding: 0;
+    background: transparent;
+    color: var(--muted);
+    border: 0;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+  }
+
+  .input-ojo[hidden] {
+    display: none;
+  }
+
+  .input-ojo .icono {
+    width: 20px;
+    height: 20px;
+  }
+
+  .input-ojo[aria-pressed="false"] .ojo-ocultar,
+  .input-ojo[aria-pressed="true"] .ojo-ver {
+    display: none;
+  }
+
+  .field-error {
+    display: flex;
+    gap: var(--s-2);
+    align-items: flex-start;
+    color: var(--error-ink);
+    font-size: var(--text-label);
+  }
+
+  /* Un error con datos de la docente (sin espacios) se parte y no ensancha el campo (auditoría de
+     Emil del ingreso, B-01). */
+  .field-error span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .field-error .icono {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+  }
+
+  /* Mensaje: aviso, error y éxito, con ícono de 18 px. */
+  .message {
+    display: flex;
+    gap: var(--s-3);
+    align-items: flex-start;
+    padding: var(--s-4);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--g-alt);
+    color: var(--ink);
+  }
+
+  .message .icono {
+    width: 18px;
+    height: 18px;
+    margin-top: var(--s-1);
+  }
+
+  .message--aviso {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+  }
+
+  .message--error {
+    background: var(--error-bg);
+    color: var(--error-ink);
+    border-color: var(--error);
+  }
+
+  /* El error del ingreso recibe el foco al cargar (rebrand-us-001, D2): el anillo es la única señal. */
+  .message[tabindex]:focus {
+    outline: 2px solid var(--action);
+    outline-offset: 2px;
+  }
+
+  .message-texto {
+    min-width: 0;
+  }
+
+  .message-titulo {
+    font-weight: var(--display-weight);
+  }
+
+  .message-texto > * + * {
+    margin-top: var(--s-2);
+  }
+
+  /* Diálogo (rb/dialogo.html): cabecera y pie fijos, cuerpo que se desplaza. Hoja abajo en el celular
+     y ventana centrada desde 700 px; el chico va centrado siempre. Cerrado, el UA lo oculta con
+     display:none; el movimiento es solo CSS (transiciones con allow-discrete y @starting-style). */
+  .dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    /* En .dialog y no en [open]: durante la salida display sigue en flex y la columna no se rompe (Emil A-04). */
+    flex-direction: column;
+    width: min(480px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    height: fit-content;
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-dialog);
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      transform var(--m-out) var(--m-ease),
+      opacity var(--m-out) var(--m-ease),
+      display var(--m-out) allow-discrete,
+      overlay var(--m-out) allow-discrete;
+  }
+
+  .dialog[open] {
+    display: flex;
+    opacity: 1;
+    transform: none;
+  }
+
+  .dialog--chico {
+    width: min(440px, calc(100vw - 32px));
+  }
+
+  /* Lista de estudiantes (rebrand-us-006, D3): ventana de alto fijo para que el cambio de vista no la mueva; en el
+     celular, casi toda la pantalla, centrada (sin la salida de hoja). */
+  .dialog--lista {
+    width: min(760px, calc(100vw - 48px));
+    max-width: calc(100vw - 48px);
+    height: min(720px, calc(100dvh - 48px));
+  }
+
+  @media (max-width: 699px) {
+    .dialog--lista {
+      width: calc(100vw - 16px);
+      max-width: calc(100vw - 16px);
+      height: calc(100dvh - 16px);
+      max-height: calc(100dvh - 16px);
+    }
+  }
+
+  .dialog::backdrop {
+    background: rgb(48 39 31 / 0.4);
+    opacity: 0;
+    transition:
+      opacity var(--m-out) var(--m-ease),
+      display var(--m-out) allow-discrete,
+      overlay var(--m-out) allow-discrete;
+  }
+
+  .dialog[open]::backdrop {
+    opacity: 1;
+  }
+
+  html[data-theme=dark] .dialog::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme=light]) .dialog::backdrop {
+      background: rgb(0 0 0 / 0.55);
+    }
+  }
+
+  @starting-style {
+    .dialog[open] {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  .dialog-cabecera {
+    flex: none;
+    padding: var(--s-5) var(--s-5) var(--s-3);
+  }
+
+  .dialog-cabecera h2 {
+    font-size: 24px;
+    overflow-wrap: anywhere;
+  }
+
+  .dialog-cabecera .small {
+    margin-top: var(--s-2);
+  }
+
+  .dialog-cuerpo {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: var(--s-2) var(--s-5) var(--s-4);
+  }
+
+  .dialog-pie {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--s-3);
+    padding: var(--s-4) var(--s-5);
+    border-top: 1px solid var(--line);
+  }
+
+  /* Acciones del pie: en el DOM, la principal primero (arriba en el celular); desde 700 px, a la
+     derecha. */
+  .dialog-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+
+  @media (min-width: 700px) {
+    .dialog-acciones {
+      flex-direction: row-reverse;
+    }
+
+    .dialog-acciones .btn {
+      flex: 1;
+    }
+  }
+
+  @media (max-width: 699px) {
+    .dialog--hoja {
+      inset: auto 0 0;
+      width: 100%;
+      max-width: 100%;
+      max-height: calc(100dvh - 24px);
+      margin: 0;
+      border-radius: var(--r-lg) var(--r-lg) 0 0;
+      opacity: 1;
+      transform: translateY(100%);
+    }
+
+    .dialog--hoja .dialog-cabecera h2 {
+      font-size: 22px;
+    }
+
+    .dialog--hoja .dialog-pie {
+      padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+    }
+
+    @starting-style {
+      .dialog--hoja[open] {
+        opacity: 1;
+        transform: translateY(100%);
+      }
+    }
+  }
+
+  /* Pantalla muy baja (horizontal, o con el teclado virtual): cabecera y pie más compactos y las acciones en
+     fila, para que el cuerpo conserve altura útil; los controles siguen en 44 px (Emil B-02). */
+  @media (max-height: 480px) {
+    .dialog-cabecera {
+      padding: var(--s-3) var(--s-4) var(--s-2);
+    }
+
+    .dialog-cabecera .small {
+      margin-top: var(--s-1);
+    }
+
+    .dialog-cuerpo {
+      padding: var(--s-2) var(--s-4) var(--s-3);
+    }
+
+    .dialog-pie,
+    .dialog--hoja .dialog-pie {
+      gap: var(--s-2);
+      padding-top: var(--s-2);
+      padding-inline: var(--s-4);
+      padding-bottom: calc(var(--s-2) + env(safe-area-inset-bottom));
+    }
+
+    .dialog-acciones {
+      flex-direction: row-reverse;
+      gap: var(--s-2);
+    }
+
+    .dialog-acciones .btn {
+      flex: 1;
+    }
+  }
+
+  /* Regla 1 (DESIGN.md, Movimiento): abierto o cerrado con el teclado, sin transición.
+     marco.js pone data-teclado en <html> con cualquier tecla y lo quita con el puntero. */
+  html[data-teclado] .dialog,
+  html[data-teclado] .dialog::backdrop {
+    transition: none;
+  }
+
+  /* Movimiento reducido: sin desplazamiento; solo opacidad, hasta 200 ms. */
+  @media (prefers-reduced-motion: reduce) {
+    .dialog,
+    .dialog--hoja {
+      opacity: 0;
+      transform: none;
+      transition:
+        opacity var(--m-out) var(--m-ease),
+        display var(--m-out) allow-discrete,
+        overlay var(--m-out) allow-discrete;
+    }
+
+    .dialog[open],
+    .dialog--hoja[open] {
+      opacity: 1;
+    }
+
+    @starting-style {
+      .dialog[open],
+      .dialog--hoja[open] {
+        opacity: 0;
+        transform: none;
+      }
+    }
+  }
+
+  /* Estado vacío (rb/estado_vacio.html): ícono decorativo, texto y una acción opcional. */
+  .empty {
+    display: grid;
+    justify-items: center;
+    gap: var(--s-3);
+    padding: var(--s-6) var(--s-4);
+    border: 1px dashed var(--line);
+    border-radius: var(--r-lg);
+    font-size: var(--text-body);
+    text-align: center;
+  }
+
+  .empty-icono {
+    width: 32px;
+    height: 32px;
+    color: var(--muted);
+  }
+
+  .empty p {
+    max-width: 40ch;
+    overflow-wrap: anywhere;
+  }
+
+  /* Campos que no pinta rb/campo.html: select y textarea con .input, pares de dos columnas desde
+     700 px (rebrand-us-010, D5). */
+  select.input {
+    padding-right: var(--s-6);
+  }
+
+  textarea.input {
+    min-height: 112px;
+    resize: vertical;
+  }
+
+  .field-pair {
+    display: grid;
+    gap: var(--s-4) var(--s-3);
+  }
+
+  @media (min-width: 700px) {
+    .field-pair {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .field-pair-ayuda {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Archivo: el control nativo, invisible, encima de «Elegir» / «Cambiar» (44 px). sesiones.js pone
+     .rechazado si el archivo no pasa la revisión. */
+  .file-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-width: 0;
+    padding: var(--s-3);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+  }
+
+  .file-control > .icono {
+    color: var(--muted);
+  }
+
+  .file-control-texto {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .file-control-elegir {
+    position: relative;
+    flex: none;
+  }
+
+  .file-control-input {
+    position: absolute;
+    top: 50%;
+    right: var(--s-3);
+    width: 88px;
+    height: var(--touch-min);
+    opacity: 0;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
+  .file-control:has(.file-control-input:focus-visible) {
+    outline: 2px solid var(--action);
+    outline-offset: 2px;
+  }
+
+  .file-control.rechazado {
+    border: 2px solid var(--error);
+  }
+
+  .file-control.rechazado > .icono {
+    color: var(--error);
+  }
+
+  .file-control:has(.file-control-input:disabled) {
+    background: var(--g-alt);
+  }
+
+  .file-control:has(.file-control-input:disabled) .file-control-elegir {
+    color: var(--muted);
+    cursor: progress;
+  }
+
+  /* Casilla: 20 px dentro de una fila de 44 px. */
+  .check-label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--s-3);
+    min-height: var(--touch-min);
+    font-weight: var(--display-weight);
+    cursor: pointer;
+  }
+
+  .check-label input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin-top: 3px;
+    accent-color: var(--action);
+  }
+
+  /* Progreso: texto y barra en --gold sobre --line; el relleno cambia de una vez, sin animar. */
+  .progress {
+    display: grid;
+    gap: var(--s-2);
+  }
+
+  .progress progress {
+    display: block;
+    width: 100%;
+    height: 6px;
+    appearance: none;
+    border: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--line);
+  }
+
+  .progress progress::-webkit-progress-bar {
+    background: var(--line);
+  }
+
+  .progress progress::-webkit-progress-value {
+    background: var(--gold);
+    border-radius: 4px;
+  }
+
+  .progress progress::-moz-progress-bar {
+    background: var(--gold);
+    border-radius: 4px;
+  }
+}

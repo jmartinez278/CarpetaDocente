@@ -1,425 +1,469 @@
-# CarpetaDocente — Design System
+---
+name: CarpetaDocente
+description: Norma de diseño del rebrand cerrado, versión 1.1
+---
 
-> Un aula cálida y ordenada: el café del uniforme, con sus franjas arena, y el dorado del escudo enmarcan la pantalla; el trabajo diario ocurre sobre papel casi blanco, tranquilo y legible.
+# DESIGN.md · CarpetaDocente · 1.1
 
-**Theme:** claro y oscuro. El tema sigue la preferencia del sistema (`prefers-color-scheme`); no hay selector en la interfaz (el selector será un RF aparte, después del Sprint 1).
-**Estado:** propuesta 0.4 · 29-10-2026 · insumo para Impeccable (ruta B) y para el prototipo (evidencia local, fuera del repositorio). Los colores salen de fotos y afiches de la I.E. (aproximados) y pasaron filtros WCAG 2.x, APCA y simulación de daltonismo. Este archivo es la referencia visual del proyecto (CLAUDE.md, sección Interfaz); la ratifica la aprobación, por otra integrante, del PR que lo incorpora (cierra C7).
-**Cambios 0.2:** tarjetas café con franjas del uniforme y miniatura que desborda; botón principal en píldora; fuente de títulos por definir con `/impeccable typeset`; tuteo; títulos cortos con subtítulo formal; una sola librería de íconos; movimiento solo funcional; asistencia de 5 columnas en computadora; criterio de "listo para docentes".
-**Cambios 0.3** (revisión del prototipo de US-001, tramo 4, variante G4e):
-- Fuente de títulos Besley 600, definitiva (alojada, subconjunto latino, 17 KB; en 0.3.1 llega por npm, ver Títulos). Íconos Lucide 1.52.0 (trazo 1,75 px). Radios sin cambios.
-- Tema oscuro por preferencia del sistema: cada token de color tiene valor claro y oscuro. Regla de roles: en claro, café sobre arena; en oscuro, arena sobre café.
-- `--color-fondo` cambia de crema afiche `#fcf4e1` a neutro cálido `#f3eee3`. El crema afiche sale del sistema y se retira su segundo rol ("texto sobre café"): en claro ya no hay superficies café con texto.
-- `--color-primario` deja de ser fondo de barra y de tarjetas: queda como color de acción y acento (botón principal, enlaces, foco, títulos del marco, franjas de la tarjeta disponible). En oscuro vale arena.
-- `--color-dorado` deja de usarse como franja bajo la barra (la barra café se descarta) y como fondo de la insignia "Próximamente" (ahora callada, en `--color-dorado-texto`); queda para detalles.
-- Tokens nuevos: `--color-dimension` (tarjeta disponible), `--color-linea` (líneas finas decorativas), `--color-sobre-primario` (texto e íconos sobre el color de acción y sobre los estados) y `--color-sobre-claro` (texto sobre dorado y tintes en ambos temas).
-- `--text-display` pasa de 32/44 px a 27/40 px (celular/PC): el nombre de la I.E. y el saludo caben en una línea a 360 px.
-- No hay tokens retirados. `--color-dorado` queda sin uso en las pantallas de US-001 (reservado para detalles).
-- Componentes nuevos o rehechos: tarjeta de dimensión G4e, carrusel de dimensiones (única excepción al desplazamiento horizontal), barra con el nombre de la I.E., inicio de sesión centrado y pie.
-- Revisión del prototipo (tramo 5): miniatura esquemática, sin datos que parezcan de la docente; botón "Mostrar contraseña"; mensaje de error con qué hacer (texto de US-001); barra sin menú hasta US-002; insignia "Próximamente" callada; la tarjeta "Próximamente" responde al toque con "Disponible pronto".
-- Revisión del prototipo, ronda 2 (tramo 5): la insignia "Próximamente" va siempre en su propia línea, arriba a la derecha, y nunca tapa el título; el chip seleccionado va sin relleno y los chips no agregan entradas al historial; toda la tarjeta disponible responde, también lo que sobresale de la miniatura, y dice qué hace ("Registrar asistencia", al pie de la cabecera); el anillo de foco rodea solo la tarjeta; miniatura de asistencia sin día y casi sin marcar; tintes apagados en "Próximamente"; estado vacío fijo de la dirección en el Sprint 1; "Ingresando…" más visible, con los campos de solo lectura; renglón propio para el aviso de "Próximamente", que pasa a "Llegará en una próxima versión."; mensaje de error en dos pesos; la tarjeta que asoma en el carrusel no responde.
-**Cambios 0.3.1** (22-10-2026, aplicación de US-001, antes de construir las plantillas):
-- Besley llega por npm desde `@fontsource/besley`, como HTMX y Alpine, en lugar del subconjunto propio del prototipo (design de US-001, D9).
-- Botón principal mientras envía: `aria-disabled` y campos de solo lectura, no `disabled` (design de US-001, D6).
-- El inicio de sesión carga el JavaScript propio de "Mostrar contraseña" y del estado de envío.
-- Tratamiento ("Prof.") y grado en los ejemplos: se muestran cuando el sistema guarde esos datos (design de US-001, D8; US-005).
-- Disponibilidad de las tarjetas: al cerrar US-001, las tres en "Próximamente"; con US-030, solo Asistencia.
-- Las referencias a rutas locales del prototipo pasan a "evidencia local".
-**Cambios 0.4** (29-10-2026, dirección visual 0.3 de `prototipos-cd`, US-030; decisión: AB-3 con la barra de línea tenue y cabeceras con franjas cortas; ningún cambio toca los colores de estado de asistencia, las filas de la lista ni el ciclo de toques):
-- la barra superior conserva su línea inferior de 1px, pero más tenue: `--color-linea` al 55 % con `--color-fondo`, en claro y en oscuro, para que el nombre de la I.E. flote sobre la banda de la barra; se descartó una línea dorada de 2px (`--color-dorado` al 50 %), porque se veía amarillo limón en claro y oliva en oscuro; las medidas de lo fijo bajo la barra no cambian; el descarte «Barra café con franja dorada» sigue vigente; la cabecera de cada pantalla de trabajo lleva el ícono de su dimensión (el de su tarjeta, 24px en `--color-primario`) junto al título y, debajo, las franjas del uniforme cortas (48px; 3px y 2px, separadas 6px) en el tinte de su dimensión (`--color-tinte-sesiones`, `--color-tinte-notas`, `--color-tinte-asistencia`, iguales en claro y en oscuro); sin banda ni fondo; el título baja: 24px de aire bajo la barra en celular y 32px en PC; la portada, la lista de estudiantes, la cuenta y el ingreso no llevan franjas (en el ingreso irá la insignia del colegio); regla: las franjas son líneas, nunca fondo ni detrás de texto, una pareja por pantalla en la primera vista (salvo las tarjetas de la portada y el cierre de jornada); los acentos de dimensión dejan de usarse solo dentro de la miniatura; saludo de la portada según la hora («Buenos días», «Buenas tardes», «Buenas noches») sobre `--color-fondo`, con la fecha delante de la sección («Miércoles 28 de octubre · 2.º grado, sección A») y `text-wrap: balance` cuando no cabe en una línea; asistencia de hoy pendiente: «Hoy: pendiente» con `clock` en `--color-aviso`, en una píldora de `--color-superficie` (14px/600, `--radius-pill`) dentro de la tarjeta Asistencia; en celular, arriba a la derecha, en el lugar de la insignia; en PC, centrada en el hueco entre el subtítulo y la acción, con `--d-sangria`; sin enlace propio (la tarjeta entera es el enlace), descrita por `aria-describedby`; con la jornada completa no está, y las tarjetas quedan iguales (dato real que provee US-030); el Mensaje de éxito de la lista de estudiantes puede llevar un enlace de 44px al paso siguiente («Tomar la asistencia de hoy»); cierre de jornada: con la lista completa y guardada (sin marcas pendientes ni un «Marcar todos» por deshacer; sin conexión no hay cierre), el resumen muestra «Asistencia de hoy completa» en `--font-display` 600 de 20px y `--color-primario`, con `check` en `--color-exito` (más grande que el texto del panel, de 14px en celular y 16px en PC), y las franjas del uniforme reemplazan la línea inferior de la franja fija (en PC, la barra de progreso al 100 %), sin botones ni pasos nuevos; Movimiento admite **dos** momentos de autor, uno por pantalla: en la portada, «Hoy: pendiente» aparece una vez con una subida corta (`opacity` y `transform: translateY` de 6px, 420ms, `cubic-bezier(0.16, 1, 0.3, 1)`, 300ms de espera; con «reducir movimiento», ya está en su lugar); en la asistencia, las franjas del cierre se trazan una vez, de izquierda a derecha (`transform: scaleX`, 480 ms, `cubic-bezier(0.16, 1, 0.3, 1)`), y con «reducir movimiento» aparecen sin trazarse; «Asistencia en PC» pasa a: lista de hoy a la izquierda y panel de la jornada a la derecha, sin fondo (fecha, selector de semana, avance, totales, «Marcar todos», leyenda y guardado), en lugar de las 5 columnas de días (decisión 9 de US-030, variante 10a); «Marcar todos como Asistió» es Botón secundario (acción en lote) y dice cuántos marca: «Marcar los 7 restantes como Asistió» («el restante» si queda uno), sin la ayuda de debajo; «restantes» porque «faltar» es el estado Faltó, y en celular la lista empieza en el primer pliegue: el aviso sin conexión es un Mensaje de error compacto (ícono `circle-alert`, «Sin conexión» 16px/600 en `--color-error` y «qué hacer» 14px en `--color-texto`, padding 12px 14px) y no repite el nombre de la marca sin guardar (ya está en su fila y en «1 sin guardar»); en la franja fija, «N sin guardar» cuenta solo las marcas que fallaron, y una marca en curso dice «Guardando…» en `--color-texto-suave`; en oscuro, los círculos de la leyenda llevan ícono y letra en `--color-texto` y la leyenda de la lista va plegada, en una línea de 44px con los cuatro estados en orden, y abierta muestra sus nombres; «Nunca texto en mayúsculas sostenidas» gana una excepción: el nombre completo del estudiante y las marcas «RETIRADO» y «TRASLADADO» (decisión 7).
-- Pendiente: en claro, las franjas salvia de la cabecera son tenues sobre el papel; revisarlas cuando existan Sesiones y Notas (ver `decision-final/capturas/cabeceras-*-claro.png`); probar la línea tenue de la barra y las franjas de la cabecera con sol en el celular.
+**Cerrado el 7 de noviembre de 2026 · versión 1.1.** Esta es la referencia normativa del diseño elegido para construir las pantallas en Django. «Debe» expresa un requisito. El cierre no significa que el prototipo o el producto ya cumplan toda la norma.
 
-CarpetaDocente (nombre provisional) es una aplicación web para docentes de primaria de la I.E. Virgen del Carmen (Huayucachi, Junín, Perú). Se usa sobre todo desde el celular, con datos móviles (referencia: 4G lento), dentro del aula o en el patio con sol; la dirección la usa en computadora. Debe sentirse institucional, cálida y confiable: ni plantilla genérica de SaaS ni sistema estatal antiguo.
+Notas toma como referencia visual `notas.html`: una columna NL por competencia, conclusión desde su icono y edición junto a la celda; en PC, hoja de ancho completo, nombre cerca del 40 % y competencias iguales en el resto. Inicio de sesión toma `ingreso.html`: Besley 600 solo para el nombre de la I.E.; el resto usa Instrument Sans. Estas decisiones del 7 de noviembre quedan integradas en esta versión.
 
-**Regla de color "identidad en el marco, comodidad en el contenido":** café, arena y dorado viven en el marco (inicio de sesión, portada, tarjetas de dimensión, encabezados). Las zonas de trabajo (listas, formularios, asistencia, notas) van sobre superficies neutras casi blancas (en oscuro, casi negras y cálidas). Proporción 60 % neutro cálido · 30 % café y arena · 10 % acento. El 10 % de acento lo lleva el café; el dorado (`#e9b70b`) queda para detalles y no se usa en US-001.
-
-**Regla de roles entre temas:** en claro, café sobre arena (título, ícono y franjas café sobre la tarjeta arena; botón café). En oscuro, arena sobre café (franjas y títulos arena sobre la tarjeta café; botón arena). En oscuro el café no se usa como texto ni como botón.
-
-**Referencia de tono:** la página de base de conocimiento de Slite (lienzo cálido, mucho aire, el producto como ilustración, fichas que desbordan su contenedor). Solo para portada e inicio de sesión: las pantallas de trabajo son más calladas. Para el inicio de sesión, la composición del de claude.ai: centrado sobre fondo de color, formulario en tarjeta con borde fino y un solo acento.
+Los antecedentes del proceso (LEEME, inventario visual, informes de Impeccable y de Emil, y el prototipo con sus CSS) están fuera del repositorio, en la carpeta de trabajo del equipo. No son norma: ante discrepancias, aplica este DESIGN.md. Los archivos *.html que nombran este documento y la sección «Pantallas» son las pantallas de ese prototipo.
 
 ## Usuarios y principios
 
-| Grupo | Necesita | Decisión de diseño |
-|---|---|---|
-| Escépticos | Que se vea oficial y serio | Sobrio, bordes finos, sin animaciones llamativas, nombre de la I.E. visible |
-| Desinteresados | No aprender nada | Una sola acción principal por pantalla; tareas en 1–2 toques |
-| Docentes promedio | Patrones conocidos | Formularios y listas como en apps de banca o mensajería; nada de gestos ocultos |
-| Recién llegados | Saber qué hacer | Estados vacíos que explican el siguiente paso |
-| Jóvenes | Rapidez y aspecto moderno | Pantallas livianas, píldoras, esquinas redondeadas, tema oscuro del sistema |
-| Dirección | Visión de conjunto | En computadora: más densidad y tablas; el mismo marco |
+Diseña para docentes de primaria, especialmente tutoras de aula, y dirección de una I.E. pública de Huayucachi, Huancayo. Prioriza el celular con 4G y conserva un trabajo eficiente en PC. Las tareas son registrar asistencia, trabajar notas por competencia y preparar o enviar sesiones a dirección.
+
+- **Haz reconocible la tarea.** Mantén Asistencia como lista, Notas como hoja y Competencias como selección. La consistencia debe ayudar a trabajar sin borrar estas diferencias.
+- **Haz visible el alcance.** Muestra fecha, área y bimestre donde determinan qué se edita o guarda. Una marca visible o un borrador recuperado no bastan para afirmar que algo quedó guardado.
+- **Protege la continuidad.** Conserva los datos al fallar una validación, mantén el foco al cambiar de contexto y facilita corregir el problema desde su mensaje.
+- **Usa la identidad con medida.** Conserva papel cálido, grafito, café y miniaturas esquemáticas. Reserva el acento para orientar; la legibilidad y los controles táctiles tienen prioridad sobre la densidad.
+- **Representa solo hechos conocidos.** El prototipo contiene datos ficticios y almacenamiento local. No los conviertas en datos, servicios ni garantías de producción.
 
 ## Voz y textos
 
-- **Tuteo** en toda la interfaz: "Ingresa tu contraseña", "Tu sección aparecerá…".
-- Frases cortas, verbo primero en botones ("Ingresar", "Marcar todos como Asistió").
-- Errores: qué pasó y qué hacer, sin culpar. Sin signos de exclamación en mensajes del sistema.
-- Nunca inventar funciones, servicios ni datos institucionales (ej.: no "¿Olvidaste tu clave?" con enlace propio, porque la clave la restablece el administrador; no textos sobre servidores o soporte que no existen).
+Escribe en español de Perú y usa tuteo: «Tu selección», «Revisa la conclusión», «Guarda los cambios». Emplea frases breves, verbos directos y nombres del trabajo docente. Mantén el mismo término para una misma acción; no alternes «guardar», «enviar» y «compartir» como si fueran equivalentes.
+
+Los errores deben decir **qué pasó y qué hacer**, sin culpar y sin signos de exclamación. Usa el rechazo oficial «No se guardó nada», con la explicación y acción definidos en C-04. Conserva el borrador y ofrece «Ir a la primera conclusión pendiente» en ese rechazo. No prometas reintentos, sincronización, ayuda institucional o servicios que el producto no tenga.
+
+No inventes funciones, servicios ni datos de la institución. Los nombres, fechas y cantidades de las plantillas de este documento son variables, nunca hechos del centro educativo. No conviertas «Compartida» o un contador de vistas en prueba de envío a dirección.
+
+### Las seis reglas de contenido
+
+1. **Niveles: solo AD · A · B · C.** No despliegues definiciones como «Logro destacado» o «Logro esperado». Mantén las siglas reconocibles en la hoja, los selectores y el panel.
+2. **Asistió en verde y Faltó en rojo.** Conserva esta distinción por su reconocimiento inmediato. Tarde usa dorado y Justificado arena. Nunca comuniques el estado solo con color: usa ✓, ×, reloj o J, respectivamente, y el nombre completo para el lector de pantalla.
+3. **Respeta el ciclo de RN-011:** Sin marcar → Asistió → Faltó → Tarde → Justificado → Asistió. Una marca ya guardada nunca vuelve a Sin marcar. Usa «Marcar los N restantes como Asistió» y, si queda uno, «Marcar el restante como Asistió». El lote debe ofrecer **Deshacer durante 5 s**: aplica el cambio provisional y **no lo guarda hasta que termina la cuenta**, salvo al ocultarse o cerrarse la página, cuando se guarda de inmediato. Deshacer cancela únicamente ese lote pendiente y restaura sus estados previos. Así no revierte marcas guardadas ni contradice RN-011.
+4. **Exige conclusión en B y C, de 10 a 500 caracteres.** Si falta o no cumple el rango, no guardes nada del área; señala la celda y explica cómo corregirla.
+5. **Una nota guardada no vuelve a vacía.** Permite cambiar el nivel, pero no borrar una nota ya guardada. «Rellenar vacías» solo actúa sobre vacías y ofrece AD o A.
+6. **Usa botones con verbo y objeto o alcance inequívoco.** Conserva «Guardar», «Rellenar vacías» y «Marcar los N restantes como Asistió», con el singular de la regla 3. «Guardar» puede ser breve si la zona muestra de forma persistente el área o bimestre que abarca.
 
 ## Tokens — Colors
 
-Cada token tiene un valor por tema; el HTML solo usa clases de los tokens, nunca hex. Contrastes contra el fondo indicado (WCAG 2.x).
+Usa un único valor por token y tema, definido en Quick Start. Los alias apuntan a ese valor; ningún componente debe redefinir un token global para cambiarle de significado. La portada y el trabajo interior deben consumir el mismo contrato, aunque hoy carguen CSS distintos.
 
-### Marco y superficies
+| Tokens | Claro | Oscuro | Qué hacer y por qué |
+| --- | --- | --- | --- |
+| `--g-main` | `#F3EEE3` | `#202020` | Fondo de página; conserva el grafito aprobado en oscuro. |
+| `--g-alt` | `#FAF6EF` | `#202020` | Fondo alterno; en oscuro no introduzcas otro grafito. |
+| `--card` | `#FEFCF9` | `#342D27` | Hoja y tarjetas de trabajo. |
+| `--sand` | `#E3D4AD` | `#E3D4AD` | Arena fija de esquemas y Justificado; no sustituye la superficie oscura. |
+| `--folder` | `#E3D4AD` | `#4C4033` | Cabeceras y agrupaciones seleccionadas. |
+| `--ink` | `#30271F` | `#F4EDE4` | Texto principal sobre las superficies del tema. |
+| `--muted` | `#6E5746` | `#D1C2AD` | Texto secundario legible; no lo atenúes más mediante opacidad. |
+| `--action` / `--action-ink` | `#76543E` / `#FEFCF9` | `#E0BF9C` / `#202020` | Acción sólida y su texto. El texto oscuro del botón se unifica en `#202020`. |
+| `--line` / `--line-strong` | `#C2B290` / `#9F916A` | `#65584A` / `#9D8A73` | División de superficies / borde de controles. |
+| `--gold` / `--gold-ink` | `#E9B70B` / `#976700` | `#E9B70B` / `#E9B70B` | Progreso y marca de cambios / indicador sobre el fondo del tema. No uses el dorado como texto sobre papel claro. |
+| `--cocoa` / `--cocoa-line` | `#76543E` / `#76543E` | `#574A3E` / `#9D8A73` | Única zona café y su borde. |
+| `--cocoa-ink` / `--cocoa-muted` | `#FEFCF9` / `#EADFCB` | `#F4EDE4` / `#E3D6C4` | Texto principal / secundario sobre café, común a todas las pantallas. |
+| `--asistio` / `--asistio-ink` | `#2E7D4F` / `#FFFFFF` | `#5CB87F` / `#0E2016` | Estado Asistió y su símbolo. |
+| `--falto` / `--falto-ink` | `#B3261E` / `#FFFFFF` | `#EE8379` / `#2A0B08` | Estado Faltó y su símbolo. |
 
-| Token | Rol | Claro | Oscuro |
-|---|---|---|---|
-| `--color-fondo` | Fondo del marco: inicio de sesión, portada, barra, encabezados; campos de solo lectura | `#f3eee3` neutro cálido | `#27221c` |
-| `--color-fondo-trabajo` | Fondo de pantallas de trabajo | `#faf6ef` crema de trabajo | `#27221c` |
-| `--color-superficie` | Tarjetas, formularios, filas, campos, fichas de miniatura, "Próximamente" | `#fefcf9` papel | `#322d26` |
-| `--color-dimension` | Fondo de la tarjeta de dimensión disponible y del botón principal mientras envía | `#e3d4ad` arena | `#4c3024` café |
-| `--color-linea` | Bordes finos decorativos: barra, formulario de acceso, fichas, separadores; barras de la miniatura esquemática | `#c2b290` | `#544e46` |
+Los puntos normales de asistencia deben seguir `--asistio` y `--falto`. Sobre café, usa los roles separados `--asistio-punto-cocoa` (`#8FD6A6`) y `--falto-punto-cocoa` (`#F7A39A`), iguales en ambos temas; así no se cambia el significado del token del estado.
 
-### Texto y acción
+Para Tarde, usa fondo `--gold`, texto fijo `#30271F` y borde fijo `#976700`; para Justificado, fondo `--sand`, texto fijo `#76543E` y borde fijo `#9F916A`. Quick Start los nombra como tokens `--tarde-*` y `--justificado-*`: el contraste del símbolo no debe invertirse por herencia del tema.
 
-| Token | Rol | Claro | Oscuro |
-|---|---|---|---|
-| `--color-texto` | Texto principal | `#2c150c` tinta escudo · 14,9:1 sobre fondo, 16,8:1 sobre papel | `#f3ead9` · 13,2:1 sobre fondo, 11,4:1 sobre superficie, 10,0:1 sobre tarjeta |
-| `--color-texto-suave` | Etiquetas, ayudas, metadatos, subtítulos | `#7b422d` · 6,8:1 sobre fondo, 5,4:1 sobre arena | `#cbbba1` · 8,4:1 sobre fondo, 7,3:1 sobre superficie, 6,4:1 sobre tarjeta |
-| `--color-primario` | Acción y acento: botón principal, enlaces, foco, títulos del marco, franjas de la tarjeta disponible | `#5b2610` café uniforme · 10,5:1 sobre fondo, 8,3:1 sobre arena | `#e3d4ad` arena · 10,7:1 sobre fondo, 8,1:1 sobre tarjeta |
-| `--color-sobre-primario` | Texto e íconos sobre `--color-primario` y sobre los círculos de estado | `#fefcf9` · 11,9:1 sobre café | `#27221c` · 10,7:1 sobre arena |
-| `--color-sobre-claro` | Texto sobre dorado y sobre tintes, en ambos temas | `#2c150c` · 9,2:1 sobre dorado | `#27221c` · 8,4:1 sobre dorado, ≥ 11,6:1 sobre tintes |
-| `--color-arena` | Franjas del uniforme sobre papel y detalles. Nunca borde de campo | `#e3d4ad` | `#e3d4ad` |
-| `--color-borde` | Bordes de campos y del círculo vacío; barra de título de la miniatura esquemática | `#9f916a` · 3,05:1 sobre papel | `#8c7f6c` · 3,5:1 sobre superficie |
-| `--color-dorado` | Detalles. Nunca texto sobre claro | `#e9b70b` | `#e9b70b` |
-| `--color-dorado-texto` | Dorado cuando debe leerse como texto: texto y borde de la insignia "Próximamente" | `#976700` · 4,8:1 sobre papel (4,3:1 sobre fondo: no usar ahí) | `#e9b70b` · 7,3:1 sobre superficie |
+### Hoja, selección y validación
 
-### Mensajes y estados
+| Token | Claro | Oscuro | Uso obligatorio |
+| --- | --- | --- | --- |
+| `--grid-line` | `#E4D9C6` | `#4B4138` | Líneas internas de la matriz. |
+| `--grid-head` | `#F3ECDF` | `#3D352E` | Cabeceras de la hoja. |
+| `--grid-hatch` | `#ECE3D3` | `#433A32` | Trama de zonas no editables, con explicación textual. |
+| `--row-hover` | `#FAF5EC` | `#3A312A` | Orientación de fila con puntero. |
+| `--sel-bg` | `#EFE4D1` | `#463B31` | Selección de celda, junto con contorno. |
+| `--warn-bg` / `--warn-ink` | `#FBEFC9` / `#6B4A00` | `#4A3C17` / `#F2D27A` | Advertencia o borrador recuperado, siempre con texto. |
+| `--error` | `#B3261E` | `#FFB4AB` | Contorno y señal de error. |
+| `--error-bg` / `--error-ink` | `#FBE8E6` / `#8C1D18` | `#4D2723` / `#FFDAD5` | Mensaje y celda inválida. |
+| `--changed` | `#76543E` | `#E0BF9C` | Triángulo de cambios, acompañado del estado de guardado. |
 
-| Token | Rol | Claro | Oscuro |
-|---|---|---|---|
-| `--color-error` | Mensajes de error. Siempre con ícono y texto | `#c10007` · 6,3:1 sobre papel | `#ea7a6d` · 4,9:1 sobre superficie |
-| `--color-exito` | Confirmaciones. Siempre con ícono y texto | `#016630` | `#68ba7e` · 5,8:1 sobre superficie |
-| `--color-aviso` | Pendientes, advertencias. Siempre con ícono y texto | `#976700` | `#e9b70b` · 7,3:1 sobre superficie |
-
-El error oscuro es más claro que el círculo "Faltó" (`#e66f61`): ese tono da 4,4:1 sobre la superficie y no alcanza para texto.
-
-### Estados de asistencia
-
-| Estado | Ícono dentro del círculo | Claro (ícono `#fefcf9` encima) | Oscuro (ícono `#27221c` encima) |
-|---|---|---|---|
-| Sin marcar | ninguno | borde `--color-borde`, relleno `--color-superficie` | igual, con los valores oscuros |
-| Asistió `--color-asistio` | check | `#016630` · 7,0:1 | `#68ba7e` · 6,7:1 |
-| Faltó `--color-falto` | x | `#c10007` · 6,3:1 | `#e66f61` · 5,1:1 |
-| Tarde `--color-tarde` | reloj | `#3275b4` · 4,7:1 | `#67aaec` · 6,4:1 |
-| Justificado `--color-justificado` | letra J | `#7b6f66` · 4,8:1 | `#afa298` · 6,3:1 |
-
-### Acentos de las tres dimensiones
-
-Se usan **dentro de la miniatura** de cada tarjeta (fondos de fichas, insignias, detalles), nunca como color de la tarjeta; también tiñen las franjas cortas de la cabecera de cada pantalla de trabajo (ver Cabecera de pantalla de trabajo). Siempre acompañados de ícono y título. Mismo valor en ambos temas; el texto encima es `--color-sobre-claro`.
-
-En la tarjeta "Próximamente" van **apagados**, mezclados con `--color-superficie` (`color-mix(in srgb, <tinte> 40 %, superficie)` en claro, con texto `--color-sobre-claro`; al 20 % en oscuro, con texto `--color-texto`), para que lo no disponible no sea lo más vivo de la pantalla. Texto encima: ≥ 15,0:1 en claro y 6,5:1 en oscuro.
-
-| Dimensión | Acento | Token | Texto encima (claro / oscuro) |
-|---|---|---|---|
-| Sesiones | `#fdd4c6` terracota claro | `--color-tinte-sesiones` | 12,6:1 / 11,6:1 |
-| Notas | `#fbe3a3` dorado suave | `--color-tinte-notas` | 13,6:1 / 12,5:1 |
-| Asistencia | `#d0eacf` salvia claro | `--color-tinte-asistencia` | 13,4:1 / 12,3:1 |
+Las miniaturas conservan una **paleta de papel fija en ambos temas**: `--preview-paper` `#FAF6EF`, `--preview-card` `#FEFCF9`, `--preview-ink` `#30271F`, `--preview-muted` `#6E5746`, `--preview-line` `#C2B290`, `--preview-action` `#76543E` y `--preview-sand` `#E3D4AD`. Usa estos roles para los esquemas y su sombra desplazada. El verde y rojo de las marcas esquemáticas sí siguen los tokens de asistencia del tema. Elimina `--coffee-light` y `--coffee-dark` como fuentes paralelas: el acento real usa `--cocoa`; la tinta sobre papel usa `--preview-action`.
 
 ## Tokens — Typography
 
-### Títulos — `--font-display`
-- **Besley, peso 600, definitiva** (Owen Earl, SIL OFL 1.1), elegida con `/impeccable typeset`. Llega por npm desde `@fontsource/besley`, como HTMX y Alpine: el build copia `besley-latin-600-normal.woff2` (≈19 KB en la 5.3.0) y su licencia a los estáticos, alojados por nosotros, sin CDN, y la versión queda fijada en `package-lock.json`. Rango `latin` de Fontsource (U+0000–00FF, U+2000–206F y otros): cubre tildes, ñ, ü, ¿, ¡, °, comillas, rayas y puntos suspensivos. `font-display: swap`. El prototipo usó un subconjunto propio de ≈17 KB.
-- Requisitos que cumple: una sola familia, un solo peso, cálida e institucional (clarendon de letrero escolar), no infantil, no Inter.
-- Solo para títulos de 20px o más (portada, inicio de sesión, barra, encabezados de pantalla).
+**Decisión cerrada: Instrument Sans, normal 400 y 500, una sola familia.** Usa 400 para lectura y 500 para títulos, acciones y niveles. No introduzcas una familia de display, monoespaciada ni otra sans. `--font-display` debe ser alias de `--font-text`; Arial y sans-serif son únicamente respaldo ante un fallo de carga. No simules negritas o cursivas. **Única excepción (enmienda del 7 de noviembre):** el nombre de la I.E. en el inicio de sesión usa Besley 600 (`'Besley', Georgia, serif`), 40 px / 1,12 en PC y 30 px en celular, con tracking −0,01em y color `--action`. No uses Besley en ninguna otra pantalla, título ni componente.
 
-### Texto — `--font-sans`
-- **Stack:** `system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif`
-- 0 KB de descarga. Pesos 400 y 600. Line height 1.5.
+| Rol y token | PC | Celular, hasta 699 px | Aplicación |
+| --- | --- | --- | --- |
+| Portada, `--text-home` | 42 px / 1,16 | 30 px / 1,18 | Título de bienvenida, 500; no trasladarlo a pantallas de trabajo. |
+| Página de trabajo, `--text-page` | 36 px / 1,17 | 28 px / 1,2 | Título principal, 500. |
+| Detalle de sesión, `--text-session` | 32 px / 1,2 | 26 px / 1,2 | Título de documento, 500; limita su medida a 24ch. |
+| Sección, `--text-section` | 24 px / 1,3 | 20 px / 1,3 | Agrupación dentro de la página, 500. |
+| Subsección, `--text-subsection` | 18 px / 1,4 | Igual | Subtítulos, 500. |
+| Barra, `--text-toolbar` | 20 px / 1,3 | 18 px / 1,3 | Título compacto de orientación, 500. |
+| Saludo de apoyo, `--text-greeting` | 24 px / 1,4 | 20 px / 1,4 | Línea anterior al nombre en portada, 400. |
+| Principal, `--text-body` | 16 px / 1,5 | Igual | Nombres, contenido, campos, notas y texto completo del editor, 400; nivel de nota, 500. |
+| Etiqueta importante, `--text-label` | 14 px / 1,5 | Igual | Cabeceras, acciones compactas, nombre de competencia, estado de asistencia y guardado. Es el mínimo, no un motivo para reducir texto de 16 px. |
+| Apoyo, `--text-support` | 13 px / 1,5 | Igual | Solo datos auxiliares: número de fila, fecha o contador secundario. Nunca instrucciones, errores, estados decisivos ni botones. |
 
-### Type Scale
+La vista previa de conclusión usa 14 px / 1,4 y hasta tres líneas junto al icono. El editor usa 16 px / 1,5. Conserva 26 px / 1 para los cuatro niveles del panel táctil (`--text-level`) y 36 px / 1,2 para el número principal del resumen (`--text-count`). El texto largo de la sesión mantiene 16 px / 1,8. No reduzcas tamaños para evitar desplazamiento.
 
-| Role | Family | Weight | Size | Line Height | Token |
-|------|--------|--------|------|-------------|-------|
-| caption | sans | 400 | 14px | 20px | `--text-caption` |
-| body | sans | 400 | 16px | 24px | `--text-body` |
-| subheading | sans | 600 | 18px | 26px | `--text-subheading` |
-| heading | display | 600 | 24px | 30px | `--text-heading` |
-| display | display | 600 | 27px móvil / 40px PC | 1.15 | `--text-display` |
+Los nombres de estudiantes se almacenan y representan en **MAYÚSCULAS**, con tildes y nombres completos. Permite varias líneas y filas de altura adaptable para apellidos compuestos y dos nombres; no dependas de elipsis, hover o una fuente menor para identificarlos. En consulta de trasladados, conserva el nombre completo y presenta los campos como solo lectura, sin instrucciones de edición o borrador.
 
-El display es para el nombre de la I.E. en el inicio de sesión y para el saludo de la portada: a 27px, "I.E. Virgen del Carmen" y el saludo caben en una línea a 360px. El saludo cambia con la hora ("Buenos días", "Buenas tardes", "Buenas noches") y, mientras el sistema no guarde el tratamiento, lleva solo el nombre ("Buenos días, Ana Quispe"; design de US-001, D8). Un saludo más largo baja a dos líneas (`text-wrap: balance`). Mínimo absoluto 14px. Nunca texto en mayúsculas sostenidas, salvo el nombre completo del estudiante y las marcas "RETIRADO" y "TRASLADADO" (decisión 7 de US-030).
+Usa tracking normal en lectura y etiquetas; reserva −0,035em para portada y título de página, −0,025em para sección y barra, y −0,015em para subsección y saludo. Activa `font-variant-numeric: tabular-nums` en números de fila, niveles y conteos. Conserva tildes, mayúsculas de nombres y signos propios del español.
+
+En producción sirve **dos WOFF2 locales, 400 y 500, con subconjunto latino que incluya español**: áéíóú, ü, ñ/Ñ, ¿¡, º, ·, cifras y puntuación. Conserva la licencia OFL, `font-display: swap`, las funciones de cifras tabulares y caché de archivos estáticos. Los TTF actuales son un antecedente del prototipo: preparar WOFF2 sigue pendiente. La recomendación de Source Sans 3 del informe queda descartada por esta decisión. Para el inicio de sesión sirve además `besley-600-latin.woff2` (OFL, copiada de US-001), con `font-display: optional` y precarga solo en esa pantalla.
 
 ## Tokens — Spacing & Shapes
 
-**Base unit:** 8px · **Tap target mínimo:** 44px · **Altura de botones y campos:** 48px
+Usa la escala `--s-1…--s-8`: **4, 8, 12, 16, 24, 32, 48 y 64 px**. Aplica 8 px entre icono y etiqueta, 12–16 px dentro de controles y grupos pequeños, 24 px entre zonas de trabajo y 32–48 px entre bloques de página. No introduzcas un espaciado literal equivalente a un token existente.
 
-| Name | Value | Token |
-|------|-------|-------|
-| 4 | 4px | `--spacing-4` |
-| 8 | 8px | `--spacing-8` |
-| 16 | 16px | `--spacing-16` |
-| 24 | 24px | `--spacing-24` |
-| 32 | 32px | `--spacing-32` |
-| 48 | 48px | `--spacing-48` |
-| 64 | 64px | `--spacing-64` |
+El margen lateral `--gut` es **32 px**, y **20 px hasta 699 px**. La altura común de barra `--bar-height` es **72/64 px**. Las cifras 20 px de margen y 44 px de toque son medidas funcionales explícitas, no nuevos pasos de la escala.
 
-### Border Radius
+| Token | Valor final | Cuándo usarlo |
+| --- | --- | --- |
+| `--r-sm`, `--r-btn` | 8 px | Botones, campos, editor y miniaturas; `--r-btn` es alias. |
+| `--r-md` | 12 px | Cuenta, avisos, listas de opciones, cápsula de Competencias y tarjetas de listado. Reemplaza la cápsula de 14 px. |
+| `--r-lg` | 20 px | Tarjeta café, bloques de Competencias y diálogos. |
+| `--r-sheet` | 20 px; 16 px hasta 699 px | Hojas `.paper` y `.hoja`; esta adaptación debe ser un token, no una excepción dispersa. |
+| `--r-pill` | 999 px | Píldoras de navegación y conteos. |
+| `--r-round` | 50% | Cuenta y estados circulares. |
+| `--touch-min` | 44 px en ambos ejes | Toda área interactiva, en PC y celular. |
 
-| Elemento | Valor | Token |
-|---|---|---|
-| Botón principal y secundario, chips | píldora (999px) | `--radius-pill` |
-| Campos | 10px | `--radius-campo` |
-| Tarjetas, fichas y filas agrupadas | 12px | `--radius-tarjeta` |
-| Tarjetas de dimensión y formulario de acceso | 20px | `--radius-dimension` |
-| Círculo de asistencia | 50 % | — |
-
-### Elevación
-
-| Uso | Claro | Oscuro | Token |
-|---|---|---|---|
-| Por defecto | Sin sombra; borde 1px `--color-linea` o separadores | igual | — |
-| Ficha de miniatura que desborda | `0 6px 20px rgba(44,21,12,0.12)` | `0 6px 20px rgba(0,0,0,0.4)` | `--shadow-ficha` |
-
-Una sola sombra en todo el sistema, reservada para las fichas que desbordan de una tarjeta disponible.
+Usa borde de 1 px para superficies y campos; 2 px para el círculo de asistencia. El foco general tiene 2 px de contorno y 4 px de separación, en `--focus-ring`. La celda conserva contorno interior de 2 px y de 3 px con foco visible, para que el recorte de la hoja no lo oculte. No confundas el diámetro del icono o checkbox con el tamaño del área que recibe el toque.
 
 ## Components
 
-### Barra superior
-Mismo fondo que la página (`--color-fondo`) con una línea fina de 1px en el borde inferior, `--color-linea` al 55 % mezclado con `--color-fondo` (más tenue, en claro y en oscuro); alto 56px; fija arriba. A la izquierda "I.E. Virgen del Carmen" en `--font-display` 600, `--color-primario`, 20px en celular y 22px en PC. Sin menú en US-001: un menú sin función es un control muerto. Entra con US-002 (cerrar sesión), a la derecha, de 44 × 44px; a 360px quedan 51px de aire entre el nombre y el menú. El nombre del sistema no va en la barra: va en el pie.
+**Botones.** Usa 44 × 44 px como mínimo, padding habitual 10 × 16 px, separación de 8 px y radio de 8 px. El principal usa `--action`/`--action-ink`; el secundario, borde `--line-strong`; la acción de texto conserva área táctil completa. Dentro de café, invierte explícitamente con `--cocoa-ink` de fondo y `--cocoa` de texto, sin redefinir los tokens globales.
 
-### Inicio de sesión
-- Una columna centrada en horizontal sobre `--color-fondo`, sin las tarjetas de dimensión. Ancho máximo 440px en celular y 560px en PC (el nombre a 40px mide 482px); el formulario, máximo 440px.
-- Jerarquía, de arriba abajo: espacio reservado para el escudo (56px en celular, 80px en PC; vacío e invisible, solo el aire, hasta tener la autorización de la I.E.); "I.E. Virgen del Carmen" en display, `--color-primario`; "Huayucachi" debajo (18px celular, 20px PC, `--color-texto`); "Sesiones · Notas · Asistencia" en 14px `--color-texto-suave`. "CarpetaDocente" no va arriba.
-- Formulario en tarjeta `--color-superficie`, borde 1px `--color-linea`, radio 20px, padding 24px (32px en PC): Usuario, Contraseña (con el botón "Mostrar contraseña"), botón "Ingresar" a ancho completo y la ayuda "Si olvidaste tu contraseña, pide al administrador que la restablezca."
-- Error: el mensaje va sobre la tarjeta del formulario, no dentro, en dos líneas: qué pasó ("Usuario o contraseña incorrectos, o cuenta inactiva") y qué hacer ("Revisa tus datos. Si el problema sigue, pide ayuda al administrador."). Es el mismo mensaje para la cuenta bloqueada (US-001).
-- Enviando: el botón dice "Ingresando…" con el fondo de envío (ver Botón principal) y los dos campos quedan de solo lectura, sobre `--color-fondo`.
-- Sin Alpine: el inicio de sesión solo carga el JavaScript propio del botón "Mostrar contraseña" y del estado de envío.
-- **Celular:** el contenido empieza en el tercio superior de la pantalla, no centrado en vertical; el botón "Ingresar" queda dentro de la primera pantalla (360 × 800).
-- **PC:** columna centrada en horizontal y en vertical.
-- Pie al final de la página.
+**Campos y mensajes.** Los campos usan `--card`, `--ink`, borde fuerte, mínimo 48 px de alto y texto de 16 px. Textarea permite varias líneas y crecimiento o desplazamiento interno. Asocia etiqueta, instrucción y error al control. No uses placeholder como única etiqueta ni opacidad como única explicación de un bloqueo.
 
-### Pie
-"CarpetaDocente · 2026" en 14px `--color-texto-suave`, centrado, al final del inicio de sesión y de la portada. Sin ©. En la PC entra en la primera pantalla.
+**Hoja de Notas.** Presenta una columna NL por competencia. Junto a B o C muestra el icono de conclusión escrita o faltante. La faltante usa símbolo de error y color, con nombre accesible. AD y A se presentan sin ese icono. Usa 16 px para nombres y niveles, 14 px para cabeceras y vista previa. En PC la hoja ocupa todo el ancho: el nombre, cerca del 40 %, y las competencias se reparten el resto por igual. No centres el bloque ni dejes huecos a los lados. El nombre completo en MAYÚSCULAS debe ocupar una línea o dos como máximo en PC. En celular reserva 44 px a cada NL y asigna el resto al nombre. Mantén las filas adaptables y resáltalas con puntero y foco para conservar la orientación.
 
-### Botón principal (píldora)
-Fondo `--color-primario` (café en claro, arena en oscuro), texto `--color-sobre-primario` 16px/600, alto 48px, radio 999px. Ancho completo en el celular y en el formulario de acceso; ancho de contenido en el resto de la PC. Un solo botón principal por pantalla. Presionado: un tono más intenso y escala 0,98. Foco: anillo de 2px `--color-primario` con 2px de separación. Mientras envía (`aria-disabled`, no `disabled`, porque un botón deshabilitado no envía el formulario): fondo `--color-dimension` (arena en claro, café en oscuro) y texto `--color-texto`, para que el cambio no dependa solo del texto.
+**Bimestre y áreas.** Muestra I–IV dentro de Notas y conserva el bimestre vigente al entrar. Mantén las áreas en orden SIAGIE y el área activa dentro del tramo visible. El acceso a Competencias debe quedar disponible fuera del tramo desplazable (C-03). Distingue selección con forma, texto y estado accesible; el punto dorado acompaña el mensaje de cambios pendientes.
 
-### Botón secundario
-Píldora transparente, borde 1px `--color-primario`, texto `--color-primario` 16px/600, alto 48px.
+Fijar Competencias no cambia su presentación: conserva el icono de checklist a la izquierda, el separador vertical y el espaciado original del botón. Solo las áreas se desplazan en el carrusel.
 
-### Campo de texto
-Etiqueta encima (14px/600 `--color-texto`), campo de 48px, fondo `--color-superficie`, borde 1px `--color-borde`, radio 10px, texto 16px. Error: borde `--color-error` y mensaje debajo con ícono. Nunca etiquetas flotantes.
+**Selección de Competencias.** Haz clicable la etiqueta completa del checkbox, con mínimo 44 × 44 px; el dibujo puede medir 22 px. Explica por qué no se puede desmarcar una competencia con notas o por qué queda forzada al cierre anual. Al cambiar de bimestre conserva o devuelve el foco al botón elegido, sin enviarlo a BODY (C-02).
 
-### Campo de contraseña
-Como el campo de texto, con el botón "Mostrar contraseña" dentro, a la derecha: 44 × 44px, ícono Lucide `eye` (contraseña oculta) o `eye-off` (visible), 20px, `--color-texto-suave`. Etiqueta accesible fija "Mostrar contraseña" y estado en `aria-pressed`. JavaScript propio mínimo, sin Alpine; sin JavaScript el botón no aparece (atributo `hidden`) y el campo funciona como siempre. Al enviar el formulario, la contraseña vuelve a ocultarse. Foco: anillo de 2px `--color-primario` dentro del botón.
+**Menú, panel y diálogo.** El menú ☰ abre la navegación Inicio, Sesiones, Asistencia y Notas; marca la ubicación actual. Usa apertura por teclado y toque, Escape para cerrar y retorno de foco al disparador. El panel de notas del celular presenta AD/A/B/C en controles de al menos 64 px de alto, conclusión y «Siguiente ↓». No ocultes campos o acciones detrás del teclado virtual. Los filtros de Repositorio deben tener una agrupación semántica que admita nombre accesible; corrige `#active-filters` según C-01.
 
-### Mensaje (error, éxito, aviso)
-Caja con fondo `--color-superficie`, borde completo de 1px en el color del estado, radio 12px e ícono a la izquierda en el color del estado. Texto en dos pesos: la primera línea (qué pasó) en 600 y en el color del estado; la segunda (qué hacer), en 400 y `--color-texto`. Nunca solo color.
+**Inicio de sesión.** Pantalla centrada, sin barra superior. Sigue este orden: espacio reservado del escudo (56 px en PC, 48 px en celular; vacío y sin contorno visible hasta que haya autorización de uso; conserva el espacio), nombre de la I.E. en Besley, filete corto de 40 px en `--line-strong`, lugar a 18 px y «Sesiones · Notas · Asistencia» a 14 px en `--muted`. Debajo va la ficha `--card` de hasta 440 px con radio `--r-lg`, que contiene Usuario, Contraseña, Ingresar a todo el ancho y la ayuda «Si olvidaste tu contraseña, pide al administrador que la restablezca.». No hay enlace de recuperación. Los campos miden 52 px, con fondo `--g-alt` y etiqueta visible. «Mostrar contraseña» es un botón de ojo de 44 × 44 px dentro del campo, con ese nombre accesible y `aria-pressed`. El error genérico va encima de la ficha con `role="alert"` y recibe el foco; no indica cuál campo falló, conserva el usuario y vacía la contraseña. Usa los textos oficiales de US-001. «Ingresando…» lleva indicador de giro y fondo `--folder` con `--ink`, no opacidad. Los campos quedan en solo lectura con borde punteado y el formulario anuncia `aria-busy`. El botón de tema va junto al pie «CarpetaDocente · 2026». Referencia: `ingreso.html`.
 
-### Tarjeta de dimensión G4e (firma visual del sistema)
-- **Disponible:** fondo `--color-dimension` (arena en claro, café `#4c3024` en oscuro), sin borde, radio 20px, padding 24px (32px en PC). Título corto en `--font-display` 24px ("Asistencia"), ícono de línea 24px y franjas, todo en `--color-primario` (café en claro, arena en oscuro); subtítulo formal 14px `--color-texto-suave` ("Control de asistencia"). Al pie de la cabecera, un renglón dice qué hace la tarjeta: verbo 14px/600 en `--color-primario` y la flecha `arrow-right` de Lucide, 20px. Verbos: "Registrar asistencia", "Registrar notas" y "Ver sesiones" (Sesiones es un repositorio, RF-010 a RF-018). El verbo describe el enlace (`aria-describedby`).
-- **Cabecera:** ícono y título en una fila; debajo, el subtítulo y el renglón de acción, alineados con el título. En "Próximamente", la insignia va siempre en su propia línea, sobre el título y arriba a la derecha, a cualquier ancho y en todas las tarjetas (en el HTML va después del título). El renglón de acción va al pie de la cabecera: en PC, cuando la cabecera es más alta que su contenido, el aire de más queda entre el subtítulo y el verbo, no entre el verbo y la ficha.
-- **Franjas del uniforme:** dos líneas horizontales de 3px y 2px con 6px de separación, de borde a borde, en el tercio inferior. Sobrias, rectas, sin brillo.
-- **Miniatura que desborda:** una ficha `--color-superficie` (radio 12px, `--shadow-ficha`) con una vista previa **esquemática** y estática de la dimensión, construida en HTML/CSS: barras en lugar de nombres y títulos, sin ningún dato que pueda leerse como un registro de la docente. Arranca dentro de la tarjeta, cruza las franjas y sobresale 28–32px por el borde inferior. En oscuro lleva borde 1px `--color-linea`.
-  - Barras: 10px de alto, radio píldora, `--color-linea`, de largos distintos (40–70 % del ancho) para que se lean como renglones; la barra de título, 12px y `--color-borde`.
-  - Asistencia: rótulo "Asistencia" en acento salvia (sin día) y cinco filas de barra con círculos de estado sin alumno: dos de ejemplo (✓ ✕) y tres sin marcar (borde de 2px `--color-borde`, relleno `--color-superficie`). No debe leerse como la asistencia de hoy ya tomada.
-  - Notas: rótulo "Matemática" y cinco filas de barra con insignias sin estudiante (AD · A · B · A · C) en acento dorado suave.
-  - Sesiones: dos sesiones de barra de título y barra de detalle, con los archivos "Word" y "PDF" en acento terracota.
-  - Datos reales de la docente: solo cuando exista la historia que los provea; se evalúa en esa historia.
-- **Toda la tarjeta disponible es pulsable:** un solo enlace que ocupa la tarjeta entera y también lo que sobresale de la miniatura. Foco: anillo de 2px `--color-primario` con 2px de separación solo alrededor de la tarjeta; lo que sobresale de la miniatura queda encima del anillo, como encima del borde.
-- **"Próximamente":** fondo `--color-superficie` (papel en claro, `#322d26` en oscuro), borde de 1px (`--color-borde` en claro, `--color-linea` en oscuro), insignia "Próximamente" callada en su propia línea, arriba a la derecha, y menos énfasis: título en `--color-texto`, ícono y subtítulo en `--color-texto-suave`, franjas en `--color-arena` (claro) o `--color-linea` (oscuro), miniatura sin sombra, con borde 1px `--color-linea` y tintes apagados (ver Acentos). Nunca se oculta.
-  - Insignia callada: fondo transparente, borde 1px y texto 14px/600 en `--color-dorado-texto` (`#976700` en claro, 4,8:1 sobre papel; `#e9b70b` en oscuro, 7,3:1), radio píldora.
-  - No navega, pero responde: toda la tarjeta es un botón con `aria-disabled="true"` (se estira como el enlace de la disponible, también sobre lo que sobresale, y lo describe la insignia). Al tocarlo aparece "Llegará en una próxima versión." en el renglón al pie de la cabecera (el del verbo en la disponible), 14px `--color-texto-suave`, durante 3 s, en una región `aria-live="polite"` que ya está en la página y ya ocupa el alto de dos líneas: no mueve la miniatura, y el texto se apoya abajo, a 24px de ella (32px en PC). Sin JavaScript no hace nada.
-- **Al cerrar US-001:** las tres en "Próximamente". **Con US-030 (Sprint 1):** solo Asistencia disponible; Sesiones y Notas en "Próximamente". **Estado final:** las tres disponibles.
-- **Celular:** carrusel de dimensiones (abajo). **PC:** las tres tarjetas en fila, centradas, ocupando el ancho útil (máx. 1120px), bajo el saludo; las tres fichas empiezan a la misma altura aunque solo las "Próximamente" lleven la línea de la insignia (las tarjetas comparten las filas de la grilla con `subgrid`).
+### Patrones
 
-### Carrusel de dimensiones (celular)
-**Única excepción** a la regla de no desplazamiento horizontal (RNF-005, documento 07): solo en la portada del docente, en el celular.
-- Fila de tres chips (Sesiones, Notas, Asistencia) bajo el saludo, de 44px de alto como mínimo; tocar un chip lleva a su tarjeta. El chip de la tarjeta visible va sin el relleno de acción, para no parecerse al botón principal: fondo `--color-superficie`, borde de 2px y texto en `--color-primario`.
-- Con JavaScript, el chip desplaza el carrusel sin cambiar la dirección de la página: no agrega entradas al historial y "Atrás" sale de la portada. Sin JavaScript, el chip es un enlace a la tarjeta.
-- Para el lector de pantalla, la fila de chips se llama "Accesos" y el carrusel "Tus accesos" (no "dimensiones", que es vocabulario de la tesis).
-- Tarjetas casi a ancho completo, con ajuste por tarjeta (`scroll-snap`); la siguiente asoma 24px para que se note que hay más. La tarjeta que asoma no responde al toque ni anuncia nada (con JavaScript); el teclado y el lector de pantalla llegan a todas.
-- Puntos de paginación visibles debajo; el de la tarjeta visible, alargado y en `--color-primario`.
-- Solo CSS donde el navegador lo permite (líneas de tiempo de desplazamiento). Donde no, el chip y el punto activos se marcan con Alpine.js, sin ocultar los puntos.
-- Abre en la primera tarjeta disponible, en el orden de las tarjetas, o en la primera si no hay ninguna: al cerrar US-001, en Sesiones; con US-030, en Asistencia; en el estado final, en Sesiones.
-- Desde 960px no hay carrusel: las tres tarjetas en fila.
+1. **Tarjeta café una sola vez por pantalla.** Usa ese único acento para Asistencia en portada, resumen del día en Asistencia, barra de guardado en Notas y «Tu selección» en Competencias. En la variante compacta de Competencias, la barra inferior sustituye al panel: no presentes ambos acentos a la vez. No añadas tarjetas café a Repositorio o Sesión para llenar una cuota; conserva su estructura de lectura y resultados. Nunca repitas el acento en dos zonas visibles de una pantalla.
+2. **Un botón principal por zona.** Define la zona por su tarea —edición, guardado o diálogo—, no por cada fila. Las acciones auxiliares usan borde o texto. No dupliques Guardar en versiones simultáneamente visibles del mismo alcance.
+3. **Miniaturas esquemáticas sin fotos.** Representa listas, hojas o niveles con líneas, formas y las siglas necesarias. No agregues fotos ni ilustraciones. No coloques información imprescindible en texto microscópico de miniatura: su nombre y metadatos deben estar fuera del dibujo.
+4. **Barra de trabajo común.** En interiores coloca ☰, título, tema y cuenta, en ese orden funcional. La portada lleva solo tema y cuenta en su barra. Aplica la misma altura 72/64 px y las mismas áreas táctiles. El tema conserva sol/luna y nombre accesible de la acción.
+5. **A-01: toda área de toque mide al menos 44 × 44 px.** Incluye códigos de competencia, Rellenar, Guardar/Descartar del borrador, filtros, días, cierres y enlaces de acción. Amplía la caja real sin solaparla con otro control; no basta agrandar el icono ni dibujar un pseudoelemento que tape una acción vecina.
+6. **C-04: estado de guardado común.** Todo mensaje debe indicar **qué se hizo, qué abarca y si falta guardar**. Usa un lugar estable próximo a la acción o al resumen, con texto visible y anuncio accesible moderado. El icono o punto es complementario. Distingue edición, borrador local, guardado en curso, guardado confirmado y fallo; solo confirma después de que la operación tenga éxito.
+7. **T-02. Icono, vista previa y editor de conclusión.** En PC, el icono junto a B/C abre una vista previa de dos a tres líneas con puntero y foco. Cumple WCAG 1.4.13 permitiendo recorrerla con el puntero, cerrarla con Escape y mantenerla visible mientras el puntero o el foco permanezcan en el disparador o su contenido. No uses temporizador. Clic o Enter sobre el icono y Alt+Enter en la celda abren el recuadro junto a ella. Elegir B o C abre directamente ese recuadro. Titúlalo «Conclusión anotada» y muestra estudiante · Cn, textarea multilínea de hasta 500 caracteres, «De 10 a 500 caracteres.», contador y «Listo». La lectura completa y la edición deben estar disponibles con teclado y toque. Al cerrar, devuelve el foco a la celda de origen. Retira «Leer y editar» de la cabecera en PC porque el icono cubre ese acceso. En celular conserva el panel inferior y el acceso a una conclusión existente al cambiar de nivel. Conserva ese texto en el borrador hasta aplicar las reglas de guardado.
 
-### Fila de asistencia (celular)
-Una fila por estudiante sobre `--color-superficie`: nombre completo en mayúsculas (decisión 7 de US-030), 16px, a la izquierda y círculo de estado a la derecha (36px visibles, área táctil 44px). Tocar el círculo cicla: Sin marcar → Asistió → Faltó → Tarde → Justificado → Asistió (una vez guardado ya no vuelve a "Sin marcar"). Sin menús ni ventanas emergentes. Cada toque se guarda solo; si queda sin conexión, la fila lo indica y reintenta.
+#### Contrato del estado de guardado (C-04)
 
-### Cabecera de pantalla de trabajo
-Ícono de su dimensión (el de su tarjeta, 24px, `--color-primario`) junto al título y, debajo, las franjas cortas del uniforme (48px; 3px y 2px, separadas 6px) en el tinte de la dimensión (`--color-tinte-sesiones`, `--color-tinte-notas` o `--color-tinte-asistencia`, iguales en claro y en oscuro). Sin banda ni fondo; 24px de aire bajo la barra en celular y 32px en PC. La portada, la lista de estudiantes, la cuenta y el ingreso no llevan franjas.
+Los textos de la interfaz los fijan las specs del producto; DESIGN.md fija **forma, lugar y jerarquía**. El contexto visible (fecha, área o bimestre) completa el alcance sin alargar los textos oficiales. No redactes variantes libres para sustituirlos.
 
-### Selector de día (celular)
-Fila de 5 chips (Lun a Vie) de ancho fijo sobre la lista. Estados del chip: registrado (check), hoy (punto `--color-primario` relleno), sin clase (guion `--color-texto-suave`), futuro (atenuado). Por defecto, hoy. En el celular siempre se ve un solo día a la vez.
+| Contexto | Conducta y alcance | Textos oficiales |
+| --- | --- | --- |
+| Asistencia individual | Guardado automático de la marca del estudiante y fecha activos. Estado estable en el resumen y estado pendiente junto al estudiante; no exige pulsar Guardar. | «Guardando…», «✓ Guardado»; fallo de marca: «Asistió · sin guardar. Reintentando…»; conteo: «N sin guardar». |
+| Asistencia sin conexión | Aviso persistente próximo al resumen, conserva las marcas pendientes. | «Sin conexión» / «Tus marcas se guardarán cuando vuelva la señal. No cierres esta pantalla.» |
+| Lote de Asistencia | Solo quienes estaban Sin marcar en la fecha visible. Lote provisional durante la cuenta, con las excepciones de ocultación y cierre descritas debajo. | «N marcados como Asistió · Deshacer (5)». |
+| Asistencia completa | Cierre junto al resumen, únicamente con todas las marcas confirmadas y sin lote ni guardados pendientes. | «✓ Asistencia de hoy completa». |
+| Notas | Guardado manual **por área y bimestre**, en la barra al pie de la hoja. El borrador local no confirma guardado. | «Sin cambios · Faltan N notas», «N cambios sin guardar · Sin notas faltantes», «✓ <área> completa». |
+| Notas: rechazo | Validación atómica por área; mensaje junto a la hoja, conserva los cambios y permite llegar al primer error. | «No se guardó nada» + «Faltan N conclusiones en B y C. Escríbelas con 10 a 500 caracteres y vuelve a guardar <área>. Tus cambios siguen en la hoja.» Con una sola: «Falta 1 conclusión en B y C. Escríbela con 10 a 500 caracteres y vuelve a guardar <área>. Tus cambios siguen en la hoja.» Botón: «Ir a la primera conclusión pendiente». |
+| Competencias | Guardado manual **por bimestre**, todas sus áreas. Estado en «Tu selección» o su sustituto móvil, junto al alcance y a Guardar. Conserva los textos actuales del prototipo. | «Sin guardar · confirma la selección», «Cambios sin guardar», «Guardando…», «Guardado», «Guardado a las <hora>»; confirmación «Competencias del <bimestre> guardadas.»; fallo «No se pudo guardar. Tus cambios siguen aquí. Reintenta.» |
 
-### Asistencia en PC
-Lista de hoy a la izquierda y panel de la jornada a la derecha, sin fondo: fecha, selector de semana, avance, totales, "Marcar todos", leyenda y guardado (decisión 9 de US-030, variante 10a). Los mismos círculos que en el celular. Ya no se muestra la semana completa en columnas. Nunca desplazamiento horizontal.
+Mantén el estado visible en un lugar estable; anuncia con una región `polite` al comenzar el guardado y al confirmar o fallar, sin duplicar el anuncio en dos regiones ni anunciar cada pulsación. Mientras otra área de Notas tenga cambios, conserva su indicador y no anuncies que todo está guardado.
 
-### Resumen de jornada
-Fijo arriba de la lista: "18 de 25 marcados" mientras falten; al completar "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1". Indicador "Guardado" con check a la derecha.
-
-### Nota de justificación
-Al marcar Justificado, aparece debajo de la fila un campo opcional de una línea (máximo 100 caracteres), ejemplo: "Ej.: constancia entregada a la docente".
-
-### Estado vacío
-Ícono de línea y una frase que explica qué falta y qué pasará: "Tu sección aparecerá cuando el administrador la asigne."
+En el lote, la cuenta de 5 s se **pausa con el puntero encima o con el foco de teclado** dentro del aviso, y continúa con el tiempo restante al salir ambos. Tocar un estudiante del lote lo saca de él: su nueva marca se guarda aparte y Deshacer ya no la afecta. Si la página se oculta o se cierra durante la cuenta, el lote se guarda de inmediato. No mezcles lotes pendientes. El lector anuncia una sola vez «N marcados como Asistió. Puedes deshacer durante 5 segundos»; no lee la cuenta regresiva. Deshacer restaura solo los integrantes todavía provisionales. El plazo no cambia con movimiento reducido.
 
 ## Iconografía
 
-**Lucide 1.52.0** (licencia ISC), elegida en `/impeccable shape`. Trazo de 1,75 px en todo el sistema, 24px por defecto, `stroke="currentColor"`. Incrustada como SVG: solo se incluyen los íconos usados; sin fuentes de íconos ni paquetes. El aviso de la licencia ISC acompaña los íconos en el repositorio. Los archivos Word y PDF usan el mismo ícono de archivo (`file-text`) con la etiqueta de texto "Word" o "PDF" al lado. Nunca un ícono dentro de un cuadrado redondeado de color sobre un título.
+Usa SVG inline de una misma familia visual: viewBox 24 × 24, trazo de 1,6, `currentColor`, sin relleno y extremos/uniones redondos. El tamaño general es **22 px**; conserva 24–30 px solo en los accesos de portada y 18 px junto a mensajes. El área interactiva sigue siendo de 44 × 44 px como mínimo.
+
+Usa tres líneas para ☰ y sol/luna para tema. Los iconos decorativos llevan `aria-hidden`; los controles sin texto visible deben tener nombre accesible que describa la acción. Conserva ✓, ×, reloj y J para asistencia con sus nombres completos. No uses emojis como sustituto de los SVG ni añadas otra biblioteca de iconos para un control aislado.
 
 ## Movimiento
 
-Solo funcional: pulso breve del círculo de asistencia al cambiar de estado (≤150ms), respuesta del botón al toque, aparición de mensajes (≤200ms), desplazamiento suave del carrusel al tocar un chip. Dos momentos de autor, uno por pantalla: en la portada, "Hoy: pendiente" aparece una vez; en la asistencia, las franjas del cierre se trazan una vez (ver Cambios 0.4). Animar solo `transform` y `opacity`. Con "reducir movimiento" activado, sin animación (el chip y el punto activos del carrusel siguen la posición: no son movimiento). Nada decorativo ni en bucle.
+Usa movimiento únicamente para responder a una acción y orientar el cambio de estado. Aplica entrada de color de **140 ms**, salida de **200 ms**, pulsación de **90 ms**, panel de **200 ms** y desplazamiento de menú de **240 ms**, con `cubic-bezier(.2,.8,.2,1)`. Los indicadores de navegación usan `cubic-bezier(.65,0,.35,1)`.
+
+Con puntero fino, permite a botones subir 1 px al hover y bajar 1 px con escala 0,985 al pulsar. No muevas filas o celdas de una hoja al pasar el puntero. Cambia borde o texto para explicar un bloqueo; elimina el rebote de Competencias en favor del mensaje y el foco estables. No actives bucles automáticos de miniaturas, animaciones de fotos o contadores que retrasen leer el dato: los tokens heredados `--m-image`, `--m-cycle` y `--m-lift` no pertenecen al contrato 1.1.
+
+Con movimiento reducido: sin desplazamiento, escala ni rebote; se permiten fundidos de opacidad y color de hasta 200 ms.
+
+Reglas de interacción (enmienda del 8-11-2026, auditoría de Emil Kowalski, `INFORME-EMIL.md`):
+
+1. No animes lo que se hace con el teclado (foco, navegación con flechas): el cambio es inmediato.
+2. Una animación interrumpida continúa desde el estado visible, sin saltos (p. ej., cerrar el menú ☰ a medio abrir).
+3. El efecto de pulsación (subida de 1 px, escala 0,985) solo con puntero fino y activación por puntero.
+4. No animes `width` ni `height`; solo `transform` y `opacity`, además de color y borde con los tiempos de esta sección.
 
 ## Do's and Don'ts
 
-### Do
-- Usar `--color-primario` (café en claro, arena en oscuro) como único color de acción
-- Poner la identidad en el marco y el contenido sobre `--color-superficie` / `--color-fondo-trabajo`
-- Acompañar todo estado con ícono y texto
-- Diseñar a 360px primero; en PC, centrar con ancho máximo de 1120px
-- Verificar cada pantalla en tema claro y en tema oscuro
-- Usar datos ficticios en español del Perú ("Prof. Ana Quispe", "3.° grado, sección A"); el tratamiento y el grado se muestran cuando el sistema guarde esos datos (design de US-001, D8; US-005)
-
-### Don't
-- **Nunca desplazamiento horizontal**, en ninguna página ni componente, salvo el carrusel de dimensiones de la portada en el celular. Las tablas de dos dimensiones se transforman: se elige una dimensión y la otra se muestra como lista
-- No escribir colores hex en el HTML: solo clases de los tokens
-- En oscuro, no usar el café como texto ni como botón
-- No usar el dorado `--color-dorado` como texto sobre fondos claros (1,7:1)
-- No usar el arena `--color-arena` como borde de campos (1,4:1)
-- No usar fotografías, ilustraciones, degradados, brillos ni animaciones decorativas
-- No incluir logo ni escudo de la institución (pendiente de autorización); usar el nombre en texto
-- No usar azul, violeta o rojo como color de marca; el azul de Tarde existe solo para ese estado
-- No usar negro puro ni grises fríos, tampoco en oscuro
-- No usar gestos ocultos (mantener presionado, deslizar) para acciones necesarias: el carrusel siempre tiene chips tocables
-- No poner tarjeta dentro de tarjeta dentro de marco
-- No repetir el nombre del sistema en la barra y en el cuerpo de la misma pantalla
-- No inventar textos, funciones ni datos institucionales
-
-## Descartes y pendientes
-
-| Elemento | Estado | Nota |
-|---|---|---|
-| Isotipo provisional | Descartado | El nombre de la I.E. va en texto |
-| Ilustración SVG de objetos (carpeta, libreta, lista) en el inicio de sesión | Descartada | — |
-| Barra café con franja dorada | Descartada | La barra usa el fondo de la página y una línea fina |
-| Eslogan grande en el inicio de sesión | Descartado | — |
-| Bloque de créditos oscuro al pie | Descartado | Lo reemplaza el pie "CarpetaDocente · 2026" |
-| Escudo de la I.E. | Pendiente de autorización de la I.E. | Su espacio ya está reservado, vacío, sobre el nombre en el inicio de sesión |
-| Boceto de líneas del edificio de la I.E. | Pendiente de autorización de la I.E. | Hasta entonces no se dibuja |
-| Selector de tema claro/oscuro | Pendiente: RF aparte, después del Sprint 1 | Mientras tanto, el tema sigue la preferencia del sistema |
-| Menú de la barra superior | Pendiente: entra con US-002 | En US-001 no hay menú |
-| Tarjeta sin miniatura o con la miniatura que asoma recortada por el borde inferior | Descartadas (tramo 5): queda la miniatura que desborda | Con ella, `impeccable detect` marca `nested-cards` en la portada; se acepta con una excepción del detector solo para la portada (configuración local del detector). Capturas de la comparación: evidencia local |
-| Miniatura con datos reales de la docente | Pendiente: se evalúa en la historia que los provea | Hasta entonces, esquemática |
-| Aviso de privacidad (Ley 29733) | Pendiente de evaluar en `docs/` | Sin enlace hasta que exista el documento |
-| Alternativa documentada | Respaldo | Fondo arena −2 `#ece2c8` con la tarjeta disponible en café suave `#6d402c` (G4c), por si G4e no funciona en la prueba con docentes |
+| Haz | Evita | Motivo |
+| --- | --- | --- |
+| Usa el rol de título de cada superficie y una sola familia 400/500, salvo el nombre de la I.E. en el inicio de sesión (Besley 600). | Cambiar de fuente para silenciar el detector o crear tamaños por página sin rol. | La jerarquía ya queda cerrada. |
+| Mantén texto principal de 16 px y etiquetas importantes de al menos 14 px. | Reducir nombres, errores, acciones o estados a 13 px para que quepan. | La densidad debe resolverse con layout y desplazamiento. |
+| Muestra acción, alcance y estado real de guardado. | Dar por guardado un borrador local o un lote dentro de su cuenta. | El docente necesita saber qué queda pendiente. |
+| Conserva café como un solo acento y miniaturas de papel esquemáticas. | Duplicar el panel café o introducir fotos. | La atención debe permanecer en el trabajo. |
+| Abre un editor completo y accesible para conclusiones. | Depender de hover, tooltip o elipsis para leer el texto completo. | La lectura y edición deben funcionar con toque y teclado. |
+| Usa icono, texto y color para estado y bloqueo. | Comunicar únicamente con color, opacidad o movimiento. | Debe comprenderse en ambos temas y con ayudas técnicas. |
+| Usa datos reales del producto y ejemplos identificados como ficticios. | Inventar datos institucionales, sincronización, soporte o garantías de envío. | El diseño no crea capacidades de producto. |
 
 ## Surfaces
 
-| Level | Name | Claro | Oscuro | Purpose |
-|-------|------|-------|---------|---------|
-| 0 | Marco | `#f3eee3` | `#27221c` | Inicio de sesión, portada, barra, encabezados |
-| 0 | Trabajo | `#faf6ef` | `#27221c` | Fondo de pantallas de trabajo |
-| 1 | Superficie | `#fefcf9` | `#322d26` | Tarjetas, filas, formularios, fichas de miniatura, "Próximamente" |
-| 1 | Dimensión | `#e3d4ad` | `#4c3024` | Tarjeta de dimensión disponible |
+Usa `--g-main` como suelo de página, `--card` como superficie de trabajo y `--folder` para agrupación. Separa con borde antes que con sombra. En oscuro conserva el papel claro únicamente dentro de miniaturas; hojas, campos y diálogos usan las superficies oscuras.
+
+La única tarjeta café usa `--cocoa-ink` y `--cocoa-muted` en todos sus textos, incluidos contadores y pie. No mantengas las redefiniciones locales de `--muted` o literales arena de `.cocoa .small`. Los enlaces y botones sobre café deben usar roles explícitos del acento.
+
+Reserva sombras para elementos superpuestos: cuenta `0 12px 32px rgb(48 39 31 / .10)`, editor `0 16px 40px rgb(48 39 31 / .18)`, diálogo `0 24px 80px rgb(48 39 31 / .16)` y aviso `0 8px 24px rgb(48 39 31 / .12)`. El editor oscuro usa `0 16px 40px rgb(0 0 0 / .45)`. Las miniaturas usan sombra sólida `4px 4px 0 var(--preview-sand)`. No apliques estas sombras a todas las tarjetas. El panel inferior conserva radio de 20 px solo arriba; el menú lateral, solo en el borde derecho.
 
 ## Layout
 
-Celular primero (360px), margen lateral 16px, una sola columna, barra superior fija. Un título por pantalla y una acción principal. En PC: contenido centrado con ancho máximo de 1120px; la portada usa el saludo y tres tarjetas en fila; la asistencia muestra la lista de hoy y el panel de la jornada. En el celular, la portada muestra las dimensiones en el carrusel.
+Centra el contenido en **1120 px** como máximo y la hoja de Notas en **1280 px**, descontando dos márgenes `--gut`. Barra y pie deben alinear sus bordes con el contenido de la pantalla. Hasta 699 px cambia las variables de celular dentro de su media query; no las declares globalmente al final de la cascada.
 
-## Pantallas del prototipo
+- **Asistencia y Sesión:** contenido flexible más lateral de 304 px, separación 24 px; entre 700 y 960 px, lateral de 256 px y separación 20 px. Hasta 699 px, una columna. En Asistencia, el resumen precede a la lista y permanece accesible bajo la barra sin tapar filas ni foco.
+- **Repositorio:** filtros de 208 px y resultados flexibles, separación 32 px; entre 700 y 960 px, 184 px y 24 px. Hasta 699 px, filtros en panel y búsqueda accesible. No permitas desplazamiento horizontal global.
+- **Competencias:** lista más resumen de 320 px, separación 24 px; hasta 1100 px, resumen de 280 px. Hasta 899 px presenta un área a la vez y reemplaza el lateral por navegación compacta y guardado inferior. Este cambio estructural no reduce tipografía ni márgenes de celular antes de 699 px.
+- **Notas.** Usa un único desplazamiento vertical de página. La hoja crece con sus filas y la cabecera C1…Cn queda sticky con `top: var(--bar-height)`. La barra café de Guardar permanece fija al pie y tiene compensación de espacio calculada con su altura real y `safe-area-inset-bottom`, para dejar visible la última fila. Usa `overflow: clip` para el redondeo de la hoja y conserva sus ancestros sin contenedores de scroll vertical. En PC la hoja ocupa todo el ancho: el nombre, cerca del 40 %, y las competencias se reparten el resto por igual. No centres el bloque ni dejes huecos a los lados. En celular usa NL de 44 px y el resto para el nombre. Cuando falte ancho, permite desplazamiento horizontal de competencias con nombre fijo y cabecera sincronizada, manteniendo la altura natural de la hoja. El detalle móvil se abre en el panel inferior.
+- **Portada:** conserva la composición de 12 columnas: Asistencia ocupa 7 y dos filas; Sesiones y Notas, 5 cada una. Hasta 899 px apila los accesos. Hasta 699 px compacta las tarjetas secundarias con miniatura junto al texto. La barra comparte 72/64 px con el interior, aunque no sea sticky.
 
-Prototipo de US-001 (variante G4e), en tema claro y oscuro:
+Mantén filas de Asistencia de al menos 76 px en PC y 80 px en celular. Conserva nombres legibles sin desplazar el botón de estado fuera de la pantalla. El scroll de una hoja densa está permitido; reducir texto o blancos táctiles para eliminarlo no lo está.
 
-1. Inicio de sesión — celular y PC. Espacio del escudo, "I.E. Virgen del Carmen", "Huayucachi", "Sesiones · Notas · Asistencia", formulario y pie. Estados: normal con foco, contraseña visible, error ("Usuario o contraseña incorrectos, o cuenta inactiva" / "Revisa tus datos. Si el problema sigue, pide ayuda al administrador.", con el usuario conservado), enviando y campos vacíos.
-2. Portada del docente — celular (carrusel) y PC (tres en fila). El saludo según la hora ("Buenos días, Ana Quispe"), la fecha con la sección y las tres tarjetas, con solo Asistencia disponible (estado con US-030, con "Llegará en una próxima versión." al tocar una "Próximamente") y en el estado final (las tres disponibles). Al cerrar US-001, las tres en "Próximamente" y el saludo sin tratamiento.
-3. Inicio de la dirección — PC. Mismo marco y, en el Sprint 1, un estado vacío fijo: "Los consolidados de notas y asistencia estarán aquí en una próxima versión." El panel de consolidados es US-040.
-4. Asistencia de hoy — celular (un día con selector) y PC (lista de hoy y panel de la jornada). 3.° grado, sección A, 25 estudiantes ficticios. Se prototipa con su historia.
+## Pantallas
 
-## Listo para la prueba con docentes
+| Pantalla | Qué debe conservar y resolver el pulido |
+| --- | --- |
+| `index.html` · Inicio | Tres accesos, saludo y contexto de aula; miniaturas esquemáticas; un solo acento en Asistencia; barra solo tema/cuenta. |
+| `asistencia.html` · Asistencia | RN-011, fecha visible, lista con estados reconocibles, pendientes y resumen; guardado automático con excepción provisional del lote y Deshacer de 5 s. En celular, el lote va debajo del resumen y antes de la lista. En celular, el resumen muestra siempre «N/M · K sin marcar» junto al estado de guardado: N es el número de marcados, M el total y K los pendientes, también cuando K es cero. |
+| `notas.html` · Notas | Bimestre dentro de la pantalla, área visible en tira SIAGIE, botón estable de Competencias y hoja por área. Una columna NL por competencia, icono de conclusión junto a B/C, vista previa y editor completo. Desplazamiento vertical de página, cabecera sticky y Guardar fijo. Borrador diferenciado de guardado manual. Trasladados al final en solo lectura y vacío con acceso a Competencias cuando falten selecciones. |
+| `competencias.html` · Competencias | Selección por bimestre, transversales y orden SIAGIE; Inglés y Educación Física atenuadas sin marcar ni contar, conforme al contexto existente. Bloqueos explicados; un Guardar para todo el bimestre; foco estable al cambiarlo. |
+| `repositorio.html` · Repositorio | Pestañas, búsqueda, filtros activos semánticos, resultados y miniaturas; filtros laterales en PC y panel en celular. |
+| `ingreso.html` · Inicio de sesión | Identidad de la I.E. con Besley, ficha centrada sin barra, error genérico sobre la ficha y estado «Ingresando…» de solo lectura, sin recuperación de contraseña. |
+| `sesion.html` · Sesión | Lectura completa de archivo, propósito y texto; metadatos próximos al título; distinguir edición, compartir y envío a dirección. Mostrar confirmación de envío solo si el estado real lo acredita. |
 
-Todo se verifica **en tema claro y en tema oscuro**:
+Estas siete pantallas delimitan el sistema documentado. No deduzcas una bandeja de dirección, estados remotos ni otras funciones por una referencia visual del prototipo.
 
-- `npx impeccable detect` sin hallazgos principales
-- Evaluación con las 10 heurísticas de Nielsen sin problemas de gravedad 3 o 4
-- Contraste AA verificado en todas las combinaciones usadas: texto ≥ 4,5:1 (≥ 3:1 en títulos grandes) y bordes de campos, íconos de estado y foco ≥ 3:1
-- Revisión de carga cognitiva del flujo de asistencia
-- Sin desplazamiento horizontal a 360px, salvo el carrusel de dimensiones
-- Áreas táctiles de 44px como mínimo, chips del carrusel incluidos
-- Carrusel probado en Chrome de Android, Safari de iPhone y Firefox
+## Decisiones cerradas
+
+| Decisión normativa | Estado frente al producto |
+| --- | --- |
+| Selector de bimestre dentro de Notas. | **requiere cambio de spec en el repo** |
+| Una columna NL por competencia, icono de conclusión escrita o faltante junto a B/C, vista previa y recuadro completo junto a la celda. Panel inferior en celular. | **Coincide con la spec actual del repo. No requiere cambio de spec**, por decisión del usuario del 7 de noviembre de 2026. |
+| Deshacer de 5 s del lote de Asistencia; guarda al vencer la cuenta o de inmediato al ocultar/cerrar la página. | **requiere cambio de spec en el repo** |
+| Botón de tema en la barra; en el producto entra como requisito aparte **T-04**. | **requiere cambio de spec en el repo** |
+| Menú ☰ como acceso a la navegación interior. | **requiere cambio de spec en el repo** |
+
+Instrument Sans 400/500 (con la única excepción de Besley en el nombre de la I.E. del inicio de sesión), paleta, roles de títulos, escala de formas y los patrones A-01, C-04 y T-02 quedan cerrados por esta versión. No reabras estas decisiones durante el pulido. Actualizar specs y construir en Django son tareas posteriores; no se han ejecutado como parte de este cierre.
 
 ## Quick Start
 
-### Tailwind v4
-
-`@theme` define el tema claro y crea las clases. Tailwind no admite `@theme` dentro de una media query, así que el tema oscuro redefine las mismas variables en `:root`; las clases no cambian.
+Este bloque contiene los **tokens finales compartidos**. Sin elección explícita, el tema sigue `prefers-color-scheme`, también cuando cambia el sistema. `html[data-theme=dark]` conserva la elección oscura y `data-theme=light` excluye el oscuro del sistema. El botón de tema es el requisito aparte **T-04**. No es una transcripción de la cascada actual. Copia un solo contrato compartido por portada e interiores; mantén la única variación de cada token en su tema o media query. Los aliases conservan su significado en todos los componentes. Los valores de celular están exclusivamente dentro de `@media (max-width:699px)`.
 
 ```css
-@theme {
-  --color-fondo: #f3eee3;
-  --color-fondo-trabajo: #faf6ef;
-  --color-superficie: #fefcf9;
-  --color-dimension: #e3d4ad;
-  --color-linea: #c2b290;
-  --color-texto: #2c150c;
-  --color-texto-suave: #7b422d;
-  --color-primario: #5b2610;
-  --color-sobre-primario: #fefcf9;
-  --color-sobre-claro: #2c150c;
-  --color-arena: #e3d4ad;
-  --color-borde: #9f916a;
-  --color-dorado: #e9b70b;
-  --color-dorado-texto: #976700;
-  --color-error: #c10007;
-  --color-exito: #016630;
-  --color-aviso: #976700;
-  --color-asistio: #016630;
-  --color-falto: #c10007;
-  --color-tarde: #3275b4;
-  --color-justificado: #7b6f66;
-  --color-tinte-sesiones: #fdd4c6;
-  --color-tinte-notas: #fbe3a3;
-  --color-tinte-asistencia: #d0eacf;
+:root {
+  color-scheme: light;
+  --g-main: #F3EEE3;
+  --g-alt: #FAF6EF;
+  --bg: var(--g-main);
+  --card: #FEFCF9;
+  --sand: #E3D4AD;
+  --folder: #E3D4AD;
+  --ink: #30271F;
+  --muted: #6E5746;
+  --action: #76543E;
+  --action-ink: #FEFCF9;
+  --line: #C2B290;
+  --line-strong: #9F916A;
+  --gold: #E9B70B;
+  --gold-ink: #976700;
+  --cocoa: #76543E;
+  --cocoa-line: #76543E;
+  --cocoa-ink: #FEFCF9;
+  --cocoa-muted: #EADFCB;
+  --focus-ring: var(--action);
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
-  --font-display: "Besley", Georgia, serif;
+  --asistio: #2E7D4F;
+  --asistio-ink: #FFFFFF;
+  --falto: #B3261E;
+  --falto-ink: #FFFFFF;
+  --asistio-punto: var(--asistio);
+  --falto-punto: var(--falto);
+  --asistio-punto-cocoa: #8FD6A6;
+  --falto-punto-cocoa: #F7A39A;
+  --tarde-bg: var(--gold);
+  --tarde-ink: #30271F;
+  --tarde-line: #976700;
+  --justificado-bg: var(--sand);
+  --justificado-ink: #76543E;
+  --justificado-line: #9F916A;
 
-  --text-caption: 14px;
+  --grid-line: #E4D9C6;
+  --grid-head: #F3ECDF;
+  --grid-hatch: #ECE3D3;
+  --row-hover: #FAF5EC;
+  --sel-bg: #EFE4D1;
+  --warn-bg: #FBEFC9;
+  --warn-ink: #6B4A00;
+  --error: #B3261E;
+  --error-bg: #FBE8E6;
+  --error-ink: #8C1D18;
+  --changed: #76543E;
+
+  /* Papel de miniaturas: fijo en claro y oscuro. */
+  --preview-paper: #FAF6EF;
+  --preview-card: #FEFCF9;
+  --preview-ink: #30271F;
+  --preview-muted: #6E5746;
+  --preview-line: #C2B290;
+  --preview-action: #76543E;
+  --preview-sand: #E3D4AD;
+
+  --font-text: 'Instrument Sans', Arial, sans-serif;
+  --font-display: var(--font-text);
+  --weight-body: 400;
+  --display-weight: 500;
+  --text-home: 42px;
+  --text-page: 36px;
+  --text-session: 32px;
+  --text-section: 24px;
+  --text-subsection: 18px;
+  --text-toolbar: 20px;
+  --text-greeting: 24px;
   --text-body: 16px;
-  --text-subheading: 18px;
-  --text-heading: 24px;
-  --text-display: 27px;
+  --text-label: 14px;
+  --text-support: 13px;
+  --text-level: 26px;
+  --text-count: 36px;
+  --leading-home: 1.16;
+  --leading-page: 1.17;
+  --leading-session: 1.2;
+  --leading-section: 1.3;
+  --leading-subsection: 1.4;
+  --leading-toolbar: 1.3;
+  --leading-greeting: 1.4;
+  --leading-text: 1.5;
+  --leading-preview: 1.4;
+  --leading-session-text: 1.8;
+  --leading-level: 1;
+  --leading-count: 1.2;
+  --tracking-page: -.035em;
+  --tracking-section: -.025em;
+  --tracking-subsection: -.015em;
 
-  --radius-pill: 999px;
-  --radius-campo: 10px;
-  --radius-tarjeta: 12px;
-  --radius-dimension: 20px;
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --r-sm: 8px;
+  --r-btn: var(--r-sm);
+  --r-md: 12px;
+  --r-lg: 20px;
+  --r-sheet: var(--r-lg);
+  --r-pill: 999px;
+  --r-round: 50%;
+  --touch-min: 44px;
+  --gut: 32px;
+  --bar-height: 72px;
+  --content-max: 1120px;
+  --sheet-max: 1280px;
 
-  --shadow-ficha: 0 6px 20px rgba(44, 21, 12, 0.12);
+  --shadow-account: 0 12px 32px rgb(48 39 31 / .10);
+  --shadow-editor: 0 16px 40px rgb(48 39 31 / .18);
+  --shadow-dialog: 0 24px 80px rgb(48 39 31 / .16);
+  --shadow-toast: 0 8px 24px rgb(48 39 31 / .12);
+  --shadow-preview: 4px 4px 0 var(--preview-sand);
+  --m-in: 140ms;
+  --m-out: 200ms;
+  --m-press: 90ms;
+  --m-panel: 200ms;
+  --m-slide: 240ms;
+  --m-ease: cubic-bezier(.2,.8,.2,1);
+  --m-ease-io: cubic-bezier(.65,0,.35,1);
+}
+
+html[data-theme=dark] {
+  color-scheme: dark;
+  --g-main: #202020;
+  --g-alt: #202020;
+  --card: #342D27;
+  --folder: #4C4033;
+  --ink: #F4EDE4;
+  --muted: #D1C2AD;
+  --action: #E0BF9C;
+  --action-ink: #202020;
+  --line: #65584A;
+  --line-strong: #9D8A73;
+  --gold-ink: #E9B70B;
+  --cocoa: #574A3E;
+  --cocoa-line: #9D8A73;
+  --cocoa-ink: #F4EDE4;
+  --cocoa-muted: #E3D6C4;
+  --asistio: #5CB87F;
+  --asistio-ink: #0E2016;
+  --falto: #EE8379;
+  --falto-ink: #2A0B08;
+  --grid-line: #4B4138;
+  --grid-head: #3D352E;
+  --grid-hatch: #433A32;
+  --row-hover: #3A312A;
+  --sel-bg: #463B31;
+  --warn-bg: #4A3C17;
+  --warn-ink: #F2D27A;
+  --error: #FFB4AB;
+  --error-bg: #4D2723;
+  --error-ink: #FFDAD5;
+  --changed: #E0BF9C;
+  --shadow-editor: 0 16px 40px rgb(0 0 0 / .45);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --color-fondo: #27221c;
-    --color-fondo-trabajo: #27221c;
-    --color-superficie: #322d26;
-    --color-dimension: #4c3024;
-    --color-linea: #544e46;
-    --color-texto: #f3ead9;
-    --color-texto-suave: #cbbba1;
-    --color-primario: #e3d4ad;
-    --color-sobre-primario: #27221c;
-    --color-sobre-claro: #27221c;
-    --color-borde: #8c7f6c;
-    --color-dorado-texto: #e9b70b;
-    --color-error: #ea7a6d;
-    --color-exito: #68ba7e;
-    --color-aviso: #e9b70b;
-    --color-asistio: #68ba7e;
-    --color-falto: #e66f61;
-    --color-tarde: #67aaec;
-    --color-justificado: #afa298;
-
-    --shadow-ficha: 0 6px 20px rgba(0, 0, 0, 0.4);
+  :root:not([data-theme=light]) {
+  color-scheme: dark;
+  --g-main: #202020;
+  --g-alt: #202020;
+  --card: #342D27;
+  --folder: #4C4033;
+  --ink: #F4EDE4;
+  --muted: #D1C2AD;
+  --action: #E0BF9C;
+  --action-ink: #202020;
+  --line: #65584A;
+  --line-strong: #9D8A73;
+  --gold-ink: #E9B70B;
+  --cocoa: #574A3E;
+  --cocoa-line: #9D8A73;
+  --cocoa-ink: #F4EDE4;
+  --cocoa-muted: #E3D6C4;
+  --asistio: #5CB87F;
+  --asistio-ink: #0E2016;
+  --falto: #EE8379;
+  --falto-ink: #2A0B08;
+  --grid-line: #4B4138;
+  --grid-head: #3D352E;
+  --grid-hatch: #433A32;
+  --row-hover: #3A312A;
+  --sel-bg: #463B31;
+  --warn-bg: #4A3C17;
+  --warn-ink: #F2D27A;
+  --error: #FFB4AB;
+  --error-bg: #4D2723;
+  --error-ink: #FFDAD5;
+  --changed: #E0BF9C;
+  --shadow-editor: 0 16px 40px rgb(0 0 0 / .45);
   }
 }
 
-@media (min-width: 960px) {
+@media (max-width:699px) {
   :root {
-    --text-display: 40px;
+    --gut: 20px;
+    --bar-height: 64px;
+    --r-sheet: 16px;
+    --text-home: 30px;
+    --text-page: 28px;
+    --text-session: 26px;
+    --text-section: 20px;
+    --text-toolbar: 18px;
+    --text-greeting: 20px;
+    --leading-home: 1.18;
+    --leading-page: 1.2;
   }
 }
 ```
 
-Sin cambio en oscuro: `--color-arena`, `--color-dorado` y los tres tintes.
+Al aplicar los tokens, usa `font-synthesis: none`, herencia de fuente en controles y los roles de texto anteriores. Conecta `--touch-min` a **min-width y min-height**, y `--r-sheet` a las hojas. Añade la regla de movimiento reducido al implementar las transiciones; el bloque de tokens no implementa los componentes ni las reglas de guardado.

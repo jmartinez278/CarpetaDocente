@@ -1,5 +1,7 @@
-{% comment %}Sección sin estudiantes activos (spec "Sección sin estudiantes"): el aviso lleva a la lista de la sección.{% endcomment %}
-<div class="controles"><div class="franja-jornada">{% include "asistencia/_selector.html" %}</div></div>
-<div class="zona-lista">
-  <div class="mensaje mensaje--aviso" role="status">{% include "iconos/circle-alert.svg" %}<div class="mensaje__texto"><p>Tu sección aún no tiene estudiantes</p><p>Agrégalos para poder tomar asistencia.</p><a class="enlace-estudiantes" href="{% url 'estudiantes:lista' seccion.pk %}">Ver estudiantes</a></div></div>
+{% comment %}Sección sin estudiantes activos (spec «Sección sin estudiantes»; rebrand-us-030, D5): el estado vacío lleva a la
+lista de la sección.{% endcomment %}
+{% url 'estudiantes:lista' seccion.pk as url_lista %}
+<div class="hoja hoja--vacia">
+  {% include "asistencia/_selector.html" %}
+  {% include "rb/estado_vacio.html" with icono="inbox" titulo="Tu sección aún no tiene estudiantes" texto="Agrégalos para poder tomar asistencia." accion="Ver estudiantes" href=url_lista %}
 </div>

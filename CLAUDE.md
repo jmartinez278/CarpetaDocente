@@ -23,7 +23,7 @@ Django (LTS) + PostgreSQL (Docker Compose en local) + plantillas de Django con H
 
 - `src/backend/`: proyecto Django (`config/` y una app por módulo del documento 12), plantillas en `templates/`, estáticos en `static/`.
 - `src/frontend/`: fuentes de Tailwind; `npm run build` compila el CSS y copia HTMX y Alpine a `src/backend/static/dist/`.
-- `scripts/`: `verificar.py` (antes de un commit o PR), `hooks.py` y `reglas.py` (hooks de `.githooks/`), `subir_version.py`.
+- `scripts/`: `verificar.py` (`--antes-del-commit` antes de cada commit; `--completo` en el cierre de historia), `hooks.py` y `reglas.py` (hooks de `.githooks/`), `subir_version.py`.
 - `openspec/`: un cambio por historia o enabler en `changes/` (propuesta, design, specs, tasks y `verificacion.md`); al fusionar se archiva y sus specs pasan a `specs/`.
 - Comandos (detalle en el README):
   - `docker compose up -d db`
@@ -45,7 +45,7 @@ Django (LTS) + PostgreSQL (Docker Compose en local) + plantillas de Django con H
 - Todo PR va **hacia `main`** (SonarQube Cloud solo analiza `main` y los PR hacia ella). Lo aprueba **otra integrante**, no quien lo abre (DoD 3).
 - Commits con el correo noreply de GitHub del autor y **sin** `Co-Authored-By` ni líneas que atribuyan el commit a una IA.
 - Sin force push ni rebase de ramas publicadas. Commit y push solo con aprobación explícita; antes, mostrar qué archivos entran y el mensaje.
-- Antes de proponer un commit: lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit`; se muestra su veredicto.
+- Antes de proponer un commit: lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit` (solo las pruebas de las apps del índice); se muestra su veredicto. La suite completa con cobertura (`--completo`) va en el cierre de historia. Si hay pruebas que correr, los dos modos necesitan la base levantada.
 - Nunca subir `.env`, `insumos/`, datos reales de estudiantes ni archivos de terceros. Solo `.env.example` sin valores.
 
 ## Datos

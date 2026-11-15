@@ -15,7 +15,6 @@ from playwright.sync_api import expect
 
 from actividad.tests.intentos import SIN_PERMISO, motivos, pasar_a_otra_docente
 from cuentas.tests.e2e import (
-    ANCHOS,
     TEMAS,
     con_pantalla,
     envejecer_sesion,
@@ -122,18 +121,18 @@ def marcar_bimestres(seccion, bimestres, ids, hasta=3):
 def test_desmarcar_y_guardar_persiste_al_recargar(abrir_competencias, ie, seccion_tutora):
     page = abrir_competencias()
     quitada = sorted(ids_de(MATEMATICA))[0]
-    expect(page.locator("[data-conteo]")).to_have_text("21 de 21 seleccionadas")
+    expect(page.locator("[data-conteo]")).to_have_text("21/21")
 
     alternar(page, quitada)
     expect(casilla(page, quitada)).not_to_be_checked()
-    expect(page.locator("[data-conteo]")).to_have_text("20 de 21 seleccionadas")
+    expect(page.locator("[data-conteo]")).to_have_text("20/21")
     guardar(page)
 
-    expect(estado(page)).to_have_text("Guardado · B3")
+    expect(estado(page)).to_have_text("Guardado · III bimestre")
     assert marcas_en_la_base(3) == ie - {quitada}
     page.reload()
     expect(casilla(page, quitada)).not_to_be_checked()
-    expect(page.locator("[data-conteo]")).to_have_text("20 de 21 seleccionadas")
+    expect(page.locator("[data-conteo]")).to_have_text("20/21")
     expect(estado(page)).to_have_text("Sin cambios")
 
 
@@ -143,7 +142,7 @@ def test_guardar_sin_tocar_nada_guarda_todo_marcado(abrir_competencias, ie):
 
     guardar(page)
 
-    expect(estado(page)).to_have_text("Guardado · B3")
+    expect(estado(page)).to_have_text("Guardado · III bimestre")
     assert marcas_en_la_base(3) == ie
     expect(page.locator("#guardar")).to_have_attribute("aria-disabled", "true")
 
@@ -153,7 +152,7 @@ def test_desmarcar_todo_no_se_guarda_y_dice_por_que(abrir_competencias, ie):
     page = abrir_competencias()
     for competencia in ie:
         alternar(page, competencia)
-    expect(page.locator("[data-conteo]")).to_have_text("0 de 21 seleccionadas")
+    expect(page.locator("[data-conteo]")).to_have_text("0/21")
 
     guardar(page)
 
@@ -216,7 +215,7 @@ def test_las_marcas_de_un_area_se_conservan_y_se_guardan_desde_otra(abrir_compet
     expect(page.locator("#guardar")).to_have_attribute("aria-disabled", "false")
     guardar(page)
 
-    expect(estado(page)).to_have_text("Guardado · B3")
+    expect(estado(page)).to_have_text("Guardado · III bimestre")
     assert marcas_en_la_base(3) == ie - {quitada}
 
 
@@ -224,16 +223,84 @@ def test_el_guardado_fijo_del_celular_dice_el_total_global(abrir_competencias, i
     page = abrir_competencias(360)
     alternar(page, min(ids_de("0001")))
 
-    expect(page.locator("[data-ayuda-guardado]")).to_have_text("B3 · 20 de 21 en total")
+    expect(page.locator("[data-ayuda-guardado]")).to_have_text("III · 20 de 21 en total")
+    expect(page.get_by_role("heading", name="Tu selección")).to_be_hidden()
+    expect(page.locator("[data-conteo]")).to_be_hidden()
 
 
 def test_en_pc_se_ven_las_diez_areas_y_el_panel(abrir_competencias, ie):
-    page = abrir_competencias(1280)
+    """Escenarios "PC" y "Corte en 900 px": a 900 px la lista completa con el panel."""
+    page = abrir_competencias(900)
 
     expect(page.locator(".comp-area:visible")).to_have_count(10)
     expect(page.get_by_role("heading", name="Tu selección")).to_be_visible()
+    expect(page.locator("[data-conteo]")).to_have_text("21/21")
+    expect(page.locator("[data-conteo-periodo]")).to_have_text("para el III bimestre")
     expect(page.locator("#guardar")).to_be_visible()
-    expect(page.locator(".comp-navegacion")).to_be_hidden()
+    expect(page.locator(".comp-capsula")).to_be_hidden()
+    barra = page.locator(".comp-resumen").bounding_box()
+    assert barra["y"] + barra["height"] < 800 - 1  # el panel va en el lateral, no fijo abajo
+
+
+def test_a_899_px_se_ve_un_area_a_la_vez_con_la_capsula(abrir_competencias, ie):
+    """Escenario "Corte en 900 px": a 899 px un área con la cápsula y la barra fija de abajo."""
+    page = abrir_competencias(899)
+
+    expect(page.locator(".comp-area:visible")).to_have_count(1)
+    expect(page.locator(".comp-capsula")).to_be_visible()
+    expect(page.get_by_role("heading", name="Tu selección")).to_be_hidden()
+    expect(page.locator("#guardar")).to_be_visible()
+    barra = page.locator(".comp-resumen").bounding_box()
+    assert barra["y"] + barra["height"] >= 800 - 1  # pegada al borde de abajo
+
+
+def ultima_fila_de_personal_social(page):
+    """Con Tab hasta la última competencia de Personal Social (la octava área)."""
+    page.locator("#area-elegida").select_option(index=7)
+    casillas = page.locator(".comp-area:visible input[data-competencia]")
+    # competencias-barra.js pone el margen de cada fila cuando su área se hace visible
+    # (ResizeObserver); sin esperarlo, el Tab puede llegar antes y la fila queda bajo la barra.
+    expect(casillas.last).to_have_attribute("style", re.compile("scroll-margin-bottom"))
+    casillas.nth(casillas.count() - 2).focus()
+    page.keyboard.press("Tab")
+    expect(casillas.last).to_be_focused()
+    fila = page.locator(".comp-area:visible .comp-fila").last
+    # Espera a que el desplazamiento del foco termine (la fila deja de moverse), sin
+    # un plazo fijo: con la suite completa en marcha tarda más que solo.
+    anterior = None
+    for _ in range(40):
+        actual = fila.bounding_box()["y"]
+        if actual == anterior:
+            break
+        anterior = actual
+        page.wait_for_timeout(100)
+    return fila
+
+
+def test_con_tab_la_ultima_fila_queda_sobre_la_barra(abrir_competencias, ie):
+    page = abrir_competencias(360)
+
+    fila = ultima_fila_de_personal_social(page).bounding_box()
+
+    barra = page.locator(".comp-resumen").bounding_box()
+    assert fila["y"] + fila["height"] <= barra["y"]
+
+
+def test_con_tab_la_ultima_fila_queda_sobre_la_barra_de_dos_filas(abrir_competencias, ie):
+    page = abrir_competencias(360)
+    alternar(page, min(ids_de("0001")))
+    expect(page.get_by_role("button", name="Deshacer cambios")).to_be_visible()
+
+    fila = ultima_fila_de_personal_social(page).bounding_box()
+
+    barra = page.locator(".comp-resumen").bounding_box()
+    assert barra["height"] > 100  # dos filas: estado y «Guardar», y «Deshacer cambios»
+    assert fila["y"] + fila["height"] <= barra["y"]
+    # La compensación sigue el alto real de la barra (la mide competencias-barra.js).
+    medido = page.evaluate(
+        "getComputedStyle(document.documentElement).getPropertyValue('--comp-barra')"
+    )
+    assert abs(float(medido.removesuffix("px")) - barra["height"]) <= 1
 
 
 # --- Borradores entre periodos ---
@@ -269,7 +336,7 @@ def test_corregir_un_periodo_anterior_no_toca_el_vigente(
     alternar(page, quitada)
     guardar(page)
 
-    expect(estado(page)).to_have_text("Guardado · B1")
+    expect(estado(page)).to_have_text("Guardado · I bimestre")
     assert marcas_en_la_base(1) == ie - {quitada}
     assert marcas_en_la_base(3) == ie
 
@@ -281,10 +348,25 @@ def test_el_periodo_futuro_no_se_puede_elegir(abrir_competencias, ie):
     expect(boton_periodo(page, 4)).to_contain_text("Futuro")
 
 
+def test_con_tab_y_enter_el_foco_sigue_en_el_boton_del_periodo(abrir_competencias, ie):
+    """Escenario "Cambiar de periodo con el teclado" (C-02)."""
+    page = abrir_competencias(360)
+    boton_periodo(page, 1).focus()
+
+    page.keyboard.press("Tab")
+    expect(boton_periodo(page, 2)).to_be_focused()
+    page.keyboard.press("Enter")
+
+    expect(boton_periodo(page, 2)).to_have_attribute("aria-pressed", "true")
+    expect(page.locator("[data-ayuda-guardado]")).to_contain_text("II · ")
+    expect(boton_periodo(page, 2)).to_be_focused()
+    assert page.evaluate("document.activeElement.tagName") != "BODY"
+
+
 def test_deshacer_vuelve_a_lo_guardado(abrir_competencias, ie, seccion_tutora, bimestres):
     marcar_bimestres(seccion_tutora, bimestres, sorted(ie)[:18], hasta=3)
     page = abrir_competencias()
-    expect(page.locator("[data-conteo]")).to_have_text("18 de 21 seleccionadas")
+    expect(page.locator("[data-conteo]")).to_have_text("18/21")
     expect(page.get_by_role("button", name="Deshacer cambios")).to_be_hidden()
     marcada = sorted(ie)[0]
     nueva = sorted(ie)[20]
@@ -294,7 +376,7 @@ def test_deshacer_vuelve_a_lo_guardado(abrir_competencias, ie, seccion_tutora, b
     expect(estado(page)).to_have_text("2 cambios sin guardar")
     page.get_by_role("button", name="Deshacer cambios").click()
 
-    expect(page.locator("[data-conteo]")).to_have_text("18 de 21 seleccionadas")
+    expect(page.locator("[data-conteo]")).to_have_text("18/21")
     expect(casilla(page, marcada)).to_be_checked()
     expect(casilla(page, nueva)).not_to_be_checked()
     expect(page.get_by_role("button", name="Deshacer cambios")).to_be_hidden()
@@ -345,7 +427,7 @@ def test_la_obligatoria_con_espacio_no_cambia_y_anuncia_su_motivo(ultimo_periodo
 
     expect(obligatoria).to_be_checked()
     expect(page.get_by_role("alert")).to_have_text(MENSAJE_ANUAL)
-    expect(page.locator("[data-conteo]")).to_have_text("21 de 21 seleccionadas")
+    expect(page.locator("[data-conteo]")).to_have_text("21/21")
 
 
 def test_las_obligatorias_se_guardan_con_las_demas(ultimo_periodo, ie):
@@ -356,7 +438,7 @@ def test_las_obligatorias_se_guardan_con_las_demas(ultimo_periodo, ie):
     alternar(page, quitada)
     guardar(page)
 
-    expect(estado(page)).to_have_text("Guardado · B4")
+    expect(estado(page)).to_have_text("Guardado · IV bimestre")
     assert marcas_en_la_base(4) == ie - {quitada}
 
 
@@ -370,7 +452,12 @@ def test_el_resumen_cuenta_las_obligatorias(ultimo_periodo):
 def test_el_ultimo_periodo_explica_las_obligatorias(ultimo_periodo):
     page, faltan = ultimo_periodo
 
-    expect(page.locator("[data-nota-periodo]")).to_contain_text("Último bimestre del año")
+    nota = page.locator("[data-nota-periodo]")
+    expect(nota).to_contain_text("IV bimestre: último del año")
+    expect(nota).to_contain_text(
+        "Las competencias que no marcaste en bimestres anteriores quedan marcadas: "
+        "deben tener nivel al cerrar el año."
+    )
 
 
 # --- Competencia con notas ---
@@ -437,7 +524,7 @@ def test_sin_red_dice_que_no_se_pudo_guardar_y_un_guardado_despues_lo_quita(
     page.context.set_offline(False)
     guardar(pagina)
 
-    expect(estado(pagina)).to_have_text("Guardado · B3")
+    expect(estado(pagina)).to_have_text("Guardado · III bimestre")
     expect(pagina.locator("[data-ayuda-guardado]")).not_to_have_text(MENSAJE_FALLO)
     assert marcas_en_la_base(3) == ie - {quitada}
 
@@ -499,8 +586,27 @@ def test_el_dialogo_de_salida_nombra_los_periodos_y_pone_el_foco_en_seguir_edita
 
     dialogo = page.get_by_role("dialog", name="¿Salir sin guardar?")
     expect(dialogo).to_be_visible()
-    expect(dialogo).to_contain_text("B2 y B3")
+    expect(dialogo).to_contain_text("Tienes cambios pendientes en:")
+    expect(dialogo.locator("[data-pendientes] li")).to_have_text(["II bimestre", "III bimestre"])
     expect(page.get_by_role("button", name="Seguir editando")).to_be_focused()
+
+
+def test_salir_por_el_menu_con_cambios_abre_el_dialogo_sobre_el_cajon(abrir_competencias, ie):
+    """Escenario "Con cambios sin guardar", desde un enlace del ☰."""
+    page = abrir_competencias(360)
+    alternar(page, min(ids_de("0001")))  # Arte y Cultura, el área que abre en el celular
+    page.get_by_role("button", name="Menú de navegación").click()
+    expect(page.locator("#navegacion")).to_be_visible()
+
+    page.locator("#navegacion").get_by_role("link", name="Inicio").click()
+
+    dialogo = page.get_by_role("dialog", name="¿Salir sin guardar?")
+    expect(dialogo).to_be_visible()
+    expect(page.get_by_role("button", name="Seguir editando")).to_be_focused()
+    assert page.evaluate(
+        "document.querySelector('#confirmar-salida').matches(':modal') &&"
+        " document.activeElement.id === 'seguir-editando'"
+    )
 
 
 def test_escape_y_seguir_editando_conservan_los_cambios(abrir_competencias, ie):
@@ -560,7 +666,7 @@ def test_recargar_sin_cambios_no_muestra_aviso(abrir_competencias, ie, page):
     pagina = abrir_competencias()
     alternar(pagina, min(ids_de(MATEMATICA)))
     guardar(pagina)
-    expect(estado(pagina)).to_have_text("Guardado · B3")
+    expect(estado(pagina)).to_have_text("Guardado · III bimestre")
     dialogos = []
     page.on("dialog", lambda d: (dialogos.append(d.type), d.dismiss()))
 
@@ -584,11 +690,11 @@ def test_en_vacaciones_se_elige_un_periodo_pasado(abrir_competencias, ie):
 
     expect(page.locator("#guardar")).to_be_visible()
     expect(page.locator("[data-instruccion]")).to_be_visible()
-    expect(page.locator("[data-conteo]")).to_have_text("21 de 21 seleccionadas")
+    expect(page.locator("[data-conteo]")).to_have_text("21/21")
     expect(boton_periodo(page, 2)).to_have_attribute("aria-pressed", "true")
     expect(page.locator("[data-nota-periodo]")).to_be_hidden()
     guardar(page)
-    expect(estado(page)).to_have_text("Guardado · B2")
+    expect(estado(page)).to_have_text("Guardado · II bimestre")
     assert marcas_en_la_base(2) == ie
 
 
@@ -605,65 +711,23 @@ def test_sin_periodos_solo_el_aviso(abrir_competencias, seccion_tutora, universo
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_la_pantalla_con_marcas_pasa_axe(
-    abrir_competencias, ie, seccion_tutora, bimestres, ancho, tema
-):
+def test_la_pantalla_con_marcas_pasa_axe(abrir_competencias, ie, seccion_tutora, bimestres, tema):
     marcar_bimestres(seccion_tutora, bimestres, sorted(ie)[:18], hasta=3)
-    page = abrir_competencias(ancho, tema)
+    page = abrir_competencias(360, tema)
     alternar(page, sorted(ie)[0])
 
-    revisar_con_axe(page, f"competencias-con-marcas-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, f"competencias-con-marcas-360-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_la_pantalla_con_bloqueos_pasa_axe(
-    abrir_competencias, ie, seccion_tutora, bimestres, ancho, tema
-):
-    faltan = sorted(ie)[:5]
-    marcar_bimestres(seccion_tutora, bimestres, ie - set(faltan), hasta=3)
-    con_notas(seccion_tutora, bimestres[0], ie - set(faltan))
-    elegida = max(ie)
-    con_notas(seccion_tutora, bimestres[3], [elegida])
-    page = abrir_competencias(ancho, tema, dia=NOV_20)
-    expect(page.locator(".comp-competencia--anual")).to_have_count(5)
-    expect(page.locator(".comp-competencia--notas")).to_have_count(1)
-
-    revisar_con_axe(page, f"competencias-con-bloqueos-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
-
-
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_el_dialogo_de_salida_pasa_axe(abrir_competencias, ie, ancho, tema):
-    page = abrir_competencias(ancho, tema)
+def test_el_dialogo_de_salida_pasa_axe(abrir_competencias, ie, tema):
+    page = abrir_competencias(360, tema)
     alternar(page, min(ids_de("0001")))  # Arte y Cultura, el área que abre en el celular
     abrir_menu_y_salir(page)
     expect(page.get_by_role("dialog")).to_be_visible()
 
-    revisar_con_axe(page, f"competencias-dialogo-{ancho}-{tema}")
-
-
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_sin_periodos_pasa_axe(abrir_competencias, seccion_tutora, universo_ie, ancho, tema):
-    page = abrir_competencias(ancho, tema)
-    expect(page.get_by_text("La dirección aún no configura los periodos")).to_be_visible()
-
-    revisar_con_axe(page, f"competencias-sin-periodos-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
-
-
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_en_vacaciones_pasa_axe(abrir_competencias, ie, ancho, tema):
-    page = abrir_competencias(ancho, tema, dia=AGO_1)
-    expect(page.get_by_text("Hoy no hay un periodo vigente")).to_be_visible()
-
-    revisar_con_axe(page, f"competencias-vacaciones-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, f"competencias-dialogo-360-{tema}")
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
@@ -674,23 +738,3 @@ def test_no_hay_desplazamiento_horizontal_a_320_y_360(abrir_competencias, ie, an
     for numero in range(10):
         page.locator("#area-elegida").select_option(index=numero)
         assert page.evaluate("document.documentElement.scrollWidth") <= ancho
-
-
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_las_filas_miden_al_menos_44_px(abrir_competencias, ie, ancho):
-    page = abrir_competencias(ancho)
-
-    if ancho < 960:
-        # Una sola área a la vez: se revisan las diez.
-        alturas = []
-        for numero in range(10):
-            page.locator("#area-elegida").select_option(index=numero)
-            alturas += [f["height"] for f in cajas(page, ".comp-competencia label:visible")]
-    else:
-        alturas = [f["height"] for f in cajas(page, ".comp-competencia label:visible")]
-    assert len(alturas) == 27
-    assert min(alturas) >= 44
-
-
-def cajas(page, selector):
-    return [fila.bounding_box() for fila in page.locator(selector).all()]

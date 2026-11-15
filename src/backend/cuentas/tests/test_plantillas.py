@@ -63,6 +63,12 @@ def test_los_iconos_de_d9_estan_y_llevan_el_aviso_isc():
         # Selector de la semana y leyenda de la asistencia (US-030, D10).
         "chevron-left",
         "chevron-right",
+        # ☰ del marco del rebrand y su destino Inicio (rebrand-base, D4 y D6).
+        "menu",
+        "house",
+        # «Tu selección» y «Deshacer cambios» de Competencias (rebrand-us-029, D4).
+        "list-checks",
+        "undo-2",
     }
     assert "ISC License" in (CARPETA_ICONOS / "LICENSE-lucide.txt").read_text(encoding="utf-8")
 
@@ -72,7 +78,7 @@ def test_icono_con_trazo_hereda_color_y_oculto_al_lector(icono):
     svg = icono.read_text(encoding="utf-8")
 
     assert 'stroke="currentColor"' in svg
-    assert 'stroke-width="1.75"' in svg
+    assert 'stroke-width="1.6"' in svg
     assert 'aria-hidden="true"' in svg
     assert 'focusable="false"' in svg
 

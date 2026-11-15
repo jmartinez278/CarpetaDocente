@@ -1,6 +1,6 @@
 ---
 name: revisor
-description: Revisa el diff de una parte "(alto riesgo)" de tasks.md antes de su commit. Solo lee; no edita ni corre pruebas. Usar al cerrar una parte de alto riesgo de /opsx:apply.
+description: Revisa el diff de una parte "(alto riesgo)" de tasks.md que toca modelos o migraciones, permisos y roles, o datos personales (RN-015), antes de su commit. Solo lee; no edita ni corre pruebas. Las demás partes de alto riesgo no lo usan (las cubre la A2 del cierre).
 tools: Read, Grep, Glob, Bash(git diff *), Bash(git log *), Bash(git show *), Bash(git status *)
 model: inherit
 ---

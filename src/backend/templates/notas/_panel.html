@@ -1,16 +1,21 @@
-{% comment %}Resumen y guardado (D9). En PC es el panel "Tu selección" a la derecha; en el celular solo queda el guardado, fijo abajo. El servidor dibuja el total del periodo que abre; competencias.js lo mantiene y pinta el estado del guardado.{% endcomment %}
-<aside class="comp-panel" aria-label="Resumen y guardado">
-  <div class="comp-resumen">
-    <h2>Tu selección</h2>
-    <p><strong data-conteo>{{ marcadas_iniciales|length }} de {{ total }} seleccionadas</strong><span data-conteo-periodo>{% if periodo_inicial %}competencias para {{ periodo_inicial.nombre }}{% endif %}</span></p>
-    <p class="comp-ayuda">Las áreas del docente de curso no se incluyen.</p>
-    <dl class="comp-bloqueos" data-resumen-bloqueos>{% if con_notas_iniciales %}<div><dt>Con notas registradas</dt><dd>{{ con_notas_iniciales|length }}</dd></div>{% endif %}{% if obligatorias_iniciales %}<div><dt>Por cierre de año</dt><dd>{{ obligatorias_iniciales|length }}</dd></div>{% endif %}</dl>
-  </div>
-  <div class="comp-guardado" data-guardado>
-    <div class="comp-guardado__estado"><span data-icono-estado>{% include "iconos/clock.svg" %}</span><p data-texto-guardado>Sin guardar</p></div>
-    <p class="comp-ayuda comp-guardado__ayuda" data-ayuda-guardado></p>
-    <button id="guardar" class="boton-principal comp-guardar" type="button" aria-disabled="true" aria-describedby="alcance-guardado">Guardar</button>
-    <span id="alcance-guardado" class="sr-only">Guarda la selección de todas las áreas del {{ palabra_periodo }}.</span>
-    <button id="deshacer" class="comp-deshacer" type="button" hidden>Deshacer cambios</button>
-  </div>
+{% comment %}Resumen y guardado (rebrand-us-029, D4). Una sola tarjeta café «Tu selección»: en PC es el lateral; hasta 899 px es la barra fija de abajo (estado, el total del celular y «Guardar»; «Deshacer cambios» en una segunda fila). El servidor dibuja el total del periodo que abre; competencias.js lo mantiene y pinta el estado del guardado. «Registrar notas del …» va fuera de la tarjeta.{% endcomment %}
+<aside class="comp-side" aria-label="Resumen y guardado">
+  <section class="comp-resumen" aria-labelledby="titulo-seleccion">
+    <div class="comp-resumen__cabecera"><h2 id="titulo-seleccion">Tu selección</h2>{% include "iconos/list-checks.svg" %}</div>
+    <div class="comp-resumen__detalle">
+      <p class="comp-conteo" aria-hidden="true"><strong data-conteo>{{ marcadas_iniciales|length }}/{{ total }}</strong> <span data-conteo-periodo>{% if periodo_inicial %}para el {{ periodo_inicial.nombre_romano }}{% endif %}</span></p>
+      <p class="sr-only" data-conteo-lector>{{ marcadas_iniciales|length }} de {{ total }}{% if periodo_inicial %} para el {{ periodo_inicial.nombre_romano }}{% endif %}</p>
+      <progress data-progreso max="{{ total }}" value="{{ marcadas_iniciales|length }}" aria-hidden="true"></progress>
+      <p class="small comp-excluye">Las áreas del docente de curso no se incluyen.</p>
+      <dl class="comp-bloqueos" data-resumen-bloqueos>{% if con_notas_iniciales %}<div><dt>Con notas registradas</dt><dd>{{ con_notas_iniciales|length }}</dd></div>{% endif %}{% if obligatorias_iniciales %}<div><dt>Por cierre de año</dt><dd>{{ obligatorias_iniciales|length }}</dd></div>{% endif %}</dl>
+    </div>
+    <div class="comp-guardado" data-guardado>
+      <div class="comp-guardado__estado"><span data-icono-estado>{% include "iconos/clock.svg" %}</span><p data-texto-guardado>Sin guardar</p></div>
+      <p class="small comp-guardado__ayuda" data-ayuda-guardado></p>
+      <button id="guardar" class="btn btn--primary comp-guardar" type="button" aria-disabled="true" aria-describedby="alcance-guardado">Guardar</button>
+      <span id="alcance-guardado" class="sr-only">Guarda la selección de todas las áreas del {{ palabra_periodo }}.</span>
+      <button id="deshacer" class="btn btn--text comp-deshacer" type="button" hidden>{% include "iconos/undo-2.svg" %}Deshacer cambios</button>
+    </div>
+  </section>
+  <a class="btn btn--secondary comp-registrar" data-registrar-notas href="{{ url_notas }}{% if periodo_inicial %}?periodo={{ periodo_inicial.numero }}&amp;area={{ area_inicial }}{% endif %}"{% if not periodo_inicial %} hidden{% endif %}><span>Registrar notas del <span data-nombre-periodo>{{ periodo_inicial.nombre_romano }}</span></span>{% include "iconos/arrow-right.svg" %}</a>
 </aside>

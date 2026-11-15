@@ -1,14 +1,16 @@
-{% comment %}Leyenda del ciclo (decisión 11): abierta en el panel de PC; plegada en un <details> de 44 px en el celular.{% endcomment %}
+{% comment %}Leyenda del ciclo (rebrand-us-030, D3): los cinco estados con Sin marcar. Abierta en el lateral de PC (sus círculos son
+los moldes de asistencia.js); plegada en un <details> sobre la hoja en el celular.{% endcomment %}
 {% if plegable %}<details class="leyenda leyenda--plegable">
-  <summary><span class="leyenda__titulo">Cada toque cambia el estado</span><span class="leyenda__ciclo" aria-hidden="true">{% include "asistencia/_circulo.html" with circulo="estado--asistio" %}{% include "asistencia/_circulo.html" with circulo="estado--falto" %}{% include "asistencia/_circulo.html" with circulo="estado--tarde" %}{% include "asistencia/_circulo.html" with circulo="estado--justificado" %}</span>{% include "iconos/chevron-right.svg" with clase="leyenda__flecha" %}</summary>
-{% else %}<div class="leyenda">
-  <p class="leyenda__titulo">Cada toque cambia el estado</p>
+  <summary>Un toque cambia el estado{% include "iconos/chevron-right.svg" with clase="leyenda__flecha" %}</summary>
+{% else %}<div class="leyenda leyenda--lateral">
+  <h3>Cada toque cambia el estado</h3>
 {% endif %}
   <ol>
+    <li>{% include "asistencia/_circulo.html" with circulo="estado--sin-marcar" %}<span>Sin marcar</span></li>
     <li>{% include "asistencia/_circulo.html" with circulo="estado--asistio" %}<span>Asistió</span></li>
     <li>{% include "asistencia/_circulo.html" with circulo="estado--falto" %}<span>Faltó</span></li>
     <li>{% include "asistencia/_circulo.html" with circulo="estado--tarde" %}<span>Tarde</span></li>
     <li>{% include "asistencia/_circulo.html" with circulo="estado--justificado" %}<span>Justificado</span></li>
   </ol>
-  <p class="ayuda">Después de Justificado, vuelve a Asistió.</p>
+  <p class="small">Después de Justificado, sigue Asistió. Una marca guardada ya no queda Sin marcar.</p>
 {% if plegable %}</details>{% else %}</div>{% endif %}

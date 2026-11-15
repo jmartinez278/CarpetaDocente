@@ -1,9 +1,6 @@
-{% comment %}Selector de periodos (spec "Periodos que se marcan"): un botón por periodo con su nombre corto, su estado y, para el lector de pantalla, sus fechas. El futuro va deshabilitado; competencias.js agrega "Sin guardar" al estado del que tiene un borrador.{% endcomment %}
-<section class="comp-periodos" aria-labelledby="titulo-periodos">
-  <div class="comp-periodos__etiqueta"><h2 id="titulo-periodos">{{ palabra_periodo|capfirst }}</h2><p class="comp-ayuda" data-fecha-periodo>{% for p in periodos %}{% if p == periodo_inicial %}{{ p.fecha_inicio|date:"j b" }}. – {{ p.fecha_fin|date:"j b" }}.{% endif %}{% endfor %}{% if not periodo_inicial %}{{ seccion.anio_escolar.anio }}{% endif %}</p></div>
-  <div class="comp-periodos__botones" role="group" aria-label="{{ palabra_periodo|capfirst }}s de {{ seccion.anio_escolar.anio }}">
-    {% for p in periodos %}<button type="button" class="comp-periodo" data-periodo="{{ p.numero }}" aria-pressed="{% if p == periodo_inicial %}true{% else %}false{% endif %}"{% if not p.editable %} disabled{% endif %}><strong>{{ p.nombre }}</strong> <span data-estado-periodo>{% if p.estado == "VIGENTE" %}Vigente{% elif p.estado == "ANTERIOR" %}Anterior{% else %}Futuro{% endif %}</span><span class="sr-only">, {{ p.fecha_inicio|date:"j b" }}. – {{ p.fecha_fin|date:"j b" }}.</span></button>
-    {% endfor %}
-  </div>
-  {% if not aviso %}<p class="comp-ayuda comp-periodos__ayuda">Puedes volver a los {{ palabra_periodo }}s anteriores.</p>{% endif %}
-</section>
+{% comment %}Selector de periodos (spec "Periodos que se marcan"; rebrand-us-029, D2): un botón por periodo con su romano y su estado; las fechas van solo en el nombre accesible (sr-only), sin aria-label, para que el "Sin guardar" que escribe competencias.js en data-estado-periodo cuente. El futuro va deshabilitado. data-fecha-periodo se conserva oculto: el JS le sigue escribiendo.{% endcomment %}
+<div class="period-picker" role="group" aria-label="{{ palabra_periodo|capfirst }}s de {{ seccion.anio_escolar.anio }}">
+  {% for p in periodos %}<button type="button" class="comp-periodo" data-periodo="{{ p.numero }}" aria-pressed="{% if p == periodo_inicial %}true{% else %}false{% endif %}"{% if not p.editable %} disabled{% endif %}><strong>{{ p.romano }}</strong><span class="sr-only"> {{ palabra_periodo }},</span> <span data-estado-periodo>{% if p.estado == "VIGENTE" %}Vigente{% elif p.estado == "ANTERIOR" %}Anterior{% else %}Futuro{% endif %}</span><span class="sr-only">, del {{ p.fecha_inicio|date:"j \d\e F" }} al {{ p.fecha_fin|date:"j \d\e F" }}</span></button>
+  {% endfor %}
+  <span data-fecha-periodo hidden>{% for p in periodos %}{% if p == periodo_inicial %}{{ p.fecha_inicio|date:"j b" }}. – {{ p.fecha_fin|date:"j b" }}.{% endif %}{% endfor %}</span>
+</div>

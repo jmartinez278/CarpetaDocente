@@ -1,0 +1,853 @@
+/* Asistencia de hoy (rebrand-us-030, D1 a D5), del boceto (insumos/rebrand/asistencia.html): encabezado, la hoja con
+   el selector y las filas, el lateral de 304 px (256 px entre 700 y 960) con una sola tarjeta café y la leyenda, y,
+   hasta 699 px, una columna con la tarjeta como resumen compacto fijo bajo la barra. Los nombres de clase que pinta
+   asistencia.js (estado estado--*, guardado guardado--*, jornada-completa, cierre-animado) se conservan (D3). */
+
+@layer components {
+  .asistencia-hoy {
+    /* Las filas quedan debajo de la barra (y, en el celular, del resumen fijo) al llegar con «N sin marcar» o el
+       foco: barra + separación + alto máximo del resumen (dos renglones, cuando el cierre baja de línea). */
+    --asistencia-margen-fila: calc(var(--bar-height) + var(--s-5));
+  }
+
+  /* --- Encabezado: el <main> del marco con el margen superior del boceto (32 px; 24 px hasta 699 px) --- */
+  .page:has(> .asistencia-hoy) {
+    padding-top: var(--s-6);
+  }
+
+  .asistencia-cabecera {
+    align-items: flex-end;
+  }
+
+  .asistencia-cabecera .small {
+    margin: 0 0 var(--s-2);
+  }
+
+  .asistencia-cabecera .heading-meta {
+    margin: 0;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* --- Rejilla: la hoja a la izquierda y el lateral a la derecha, fijo al bajar --- */
+  .asistencia-rejilla {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 304px;
+    gap: var(--s-5);
+    align-items: start;
+  }
+
+  .asistencia-lateral {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: calc(var(--bar-height) + var(--s-5));
+    min-width: 0;
+  }
+
+  .hoja-asistencia {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  /* --- Tarjeta café «Tu jornada»: un solo acento --- */
+  .tarjeta-jornada {
+    padding: var(--s-5);
+    background: var(--cocoa);
+    border: 1px solid var(--cocoa-line);
+    border-radius: var(--r-lg);
+    color: var(--cocoa-ink);
+  }
+
+  .tarjeta-jornada :focus-visible {
+    outline-color: var(--cocoa-ink);
+  }
+
+  .tarjeta-jornada__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    margin-bottom: var(--s-4);
+  }
+
+  .tarjeta-jornada__cabecera h2 {
+    font-size: 18px;
+    letter-spacing: -0.015em;
+  }
+
+  .titulo-completa,
+  .jornada-completa .titulo-abierta {
+    display: none;
+  }
+
+  .jornada-completa .titulo-completa {
+    display: inline;
+  }
+
+  .tarjeta-jornada__fila {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+
+  .conteo__pc {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    color: var(--cocoa-muted);
+    font-size: 16px;
+  }
+
+  .conteo__pc strong {
+    color: var(--cocoa-ink);
+    font-size: var(--text-count);
+    line-height: 1.2;
+    letter-spacing: var(--tracking-page);
+  }
+
+  .conteo__movil,
+  .sin-marcar--movil {
+    display: none;
+  }
+
+  .resumen-completo {
+    font-size: var(--text-label);
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tarjeta-jornada a {
+    color: var(--cocoa-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .guardado-grupo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1) var(--s-3);
+    min-width: 0;
+    font-size: var(--text-label);
+    overflow-wrap: anywhere;
+  }
+
+  .guardado {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .guardado .icono,
+  .cierre-jornada .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  .guardado--error {
+    font-weight: var(--display-weight);
+  }
+
+  .tarjeta-jornada progress {
+    display: block;
+    width: 100%;
+    height: 6px;
+    margin-top: var(--s-4);
+    overflow: hidden;
+    appearance: none;
+    background: color-mix(in srgb, var(--cocoa-ink) 26%, transparent);
+    border: 0;
+    border-radius: 4px;
+  }
+
+  .tarjeta-jornada progress::-webkit-progress-bar {
+    background: color-mix(in srgb, var(--cocoa-ink) 26%, transparent);
+  }
+
+  .tarjeta-jornada progress::-webkit-progress-value {
+    background: var(--gold);
+    border-radius: 4px;
+  }
+
+  .tarjeta-jornada progress::-moz-progress-bar {
+    background: var(--gold);
+    border-radius: 4px;
+  }
+
+  .sin-marcar--pc {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
+    font-size: var(--text-label);
+  }
+
+  .sin-marcar--pc a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
+  }
+
+  .sin-marcar__flecha {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sin-marcar--pc a[hidden] + .sin-marcar__flecha {
+    display: none;
+  }
+
+  .cierre-jornada {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-top: var(--s-4);
+    font-weight: var(--display-weight);
+  }
+
+  .totales {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-4);
+    margin-top: var(--s-5);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--cocoa-line);
+  }
+
+  .totales div {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .totales dt {
+    color: var(--cocoa-muted);
+    font-size: var(--text-label);
+  }
+
+  .totales dd {
+    margin-left: auto;
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Asistió en verde y Faltó en rojo, con los puntos de contraste sobre café. */
+  .total--asistio dt::before,
+  .total--falto dt::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: var(--s-2);
+    background: var(--asistio-punto-cocoa);
+    border-radius: var(--r-round);
+  }
+
+  .total--falto dt::before {
+    background: var(--falto-punto-cocoa);
+  }
+
+  .nombres-pendientes {
+    margin-top: var(--s-4);
+    color: var(--cocoa-muted);
+  }
+
+  /* «Marcar los N restantes»: principal claro sobre café en PC; secundario debajo en el celular. */
+  .marcar-todos--tarjeta {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .tarjeta-jornada .btn--primary {
+    background: var(--cocoa-ink);
+    border-color: var(--cocoa-ink);
+    color: var(--cocoa);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tarjeta-jornada .btn--primary:hover {
+      background: color-mix(in srgb, var(--cocoa-ink) 92%, var(--cocoa));
+      border-color: var(--cocoa-ink);
+      color: var(--cocoa);
+    }
+  }
+
+  .marcar-todos--debajo {
+    display: none;
+  }
+
+  /* «Sin conexión»: en el flujo, justo debajo de la tarjeta (D1). */
+  .aviso-conexion {
+    margin-top: var(--s-3);
+  }
+
+  /* --- Leyenda --- */
+  .leyenda--lateral {
+    padding: 20px var(--s-1);
+  }
+
+  .leyenda--lateral h3 {
+    margin-bottom: var(--s-3);
+    font-size: 16px;
+  }
+
+  .leyenda ol {
+    display: grid;
+    gap: 10px;
+    margin-top: var(--s-4);
+  }
+
+  .leyenda li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .leyenda .estado {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+
+  .leyenda .estado .icono {
+    width: 15px;
+    height: 15px;
+  }
+
+  .leyenda .small {
+    margin-top: var(--s-4);
+  }
+
+  .leyenda--plegable {
+    display: none;
+  }
+
+  .leyenda--plegable summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2);
+    color: var(--muted);
+    font-size: var(--text-label);
+    list-style: none;
+  }
+
+  .leyenda--plegable summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .leyenda__flecha {
+    width: 18px;
+    height: 18px;
+    transform: rotate(90deg);
+  }
+
+  .leyenda--plegable[open] .leyenda__flecha {
+    transform: rotate(-90deg);
+  }
+
+  /* --- Hoja: selector, cabecera y filas --- */
+  .hoja {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+  }
+
+  .hoja--vacia .empty {
+    margin: var(--s-5);
+  }
+
+  .empty-titulo {
+    font-weight: var(--display-weight);
+  }
+
+  .selector-semana {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--s-4);
+    padding: var(--s-3) var(--s-4);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .selector-semana__dias {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-1);
+  }
+
+  .selector-semana .flecha,
+  .selector-semana .dia {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--s-1) var(--s-2);
+    background: transparent;
+    border: 0;
+    border-radius: var(--r-sm);
+    color: var(--muted);
+  }
+
+  .selector-semana .flecha .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  .selector-semana .dia {
+    flex-direction: column;
+    gap: 1px;
+    min-height: 56px;
+    font-size: 13px;
+  }
+
+  .selector-semana .dia strong {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .selector-semana .dia[aria-current] {
+    background: var(--folder);
+    color: var(--action);
+  }
+
+  .selector-semana [aria-disabled="true"] {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .selector-semana__ayuda {
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .hoja-cabecera {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-4) var(--s-5);
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: var(--text-label);
+  }
+
+  .fila-asistencia {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 48px;
+    gap: var(--s-4);
+    align-items: center;
+    min-height: 76px;
+    margin-inline: var(--s-5);
+    padding-block: var(--s-3);
+    border-bottom: 1px solid var(--line);
+    scroll-margin-top: var(--asistencia-margen-fila);
+  }
+
+  .fila-asistencia:last-child {
+    border-bottom: 0;
+  }
+
+  .fila__numero {
+    color: var(--muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fila__texto {
+    min-width: 0;
+  }
+
+  .estudiante__nombre {
+    font-size: 16px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .fila__estado {
+    display: block;
+    margin-top: var(--s-1);
+    color: var(--muted);
+    font-size: var(--text-label);
+    line-height: 1.4;
+  }
+
+  .fila__fallo {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    margin-top: var(--s-1);
+    color: var(--error);
+    font-size: var(--text-label);
+    line-height: 1.4;
+  }
+
+  .fila__fallo .icono {
+    width: 14px;
+    height: 14px;
+  }
+
+  .marcar {
+    display: grid;
+    place-items: center;
+    justify-self: end;
+    width: var(--touch-min);
+    height: var(--touch-min);
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: var(--r-round);
+  }
+
+  /* El círculo de 44 px: forma e ícono además del color; Tarde y Justificado con sus colores fijos. */
+  .estado {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: 2px solid var(--line-strong);
+    border-radius: var(--r-round);
+    color: var(--action);
+    font-size: 18px;
+    font-weight: var(--display-weight);
+    line-height: 1;
+  }
+
+  .estado--asistio {
+    background: var(--asistio);
+    border-color: var(--asistio);
+    color: var(--asistio-ink);
+  }
+
+  .estado--falto {
+    background: var(--falto);
+    border-color: var(--falto);
+    color: var(--falto-ink);
+  }
+
+  .estado--tarde {
+    background: var(--tarde-bg);
+    border-color: var(--tarde-line);
+    color: var(--tarde-ink);
+  }
+
+  .estado--justificado {
+    background: var(--justificado-bg);
+    border-color: var(--justificado-line);
+    color: var(--justificado-ink);
+  }
+
+  .nota-justificacion {
+    grid-column: 2 / -1;
+    padding-block: var(--s-1);
+  }
+
+  .nota-justificacion label {
+    display: block;
+    margin-bottom: var(--s-2);
+    font-size: var(--text-label);
+  }
+
+  .nota__opcional {
+    color: var(--muted);
+  }
+
+  .nota-justificacion .small {
+    margin-top: 6px;
+  }
+
+  /* Fuera del registro de hoy: bloque de lectura bajo la lista, sin círculo. */
+  .fuera-registro {
+    padding: var(--s-4) var(--s-5) var(--s-5);
+    border-top: 1px solid var(--line);
+  }
+
+  .fuera-registro__titulo {
+    font-weight: var(--display-weight);
+  }
+
+  .fuera-registro ul {
+    display: grid;
+    gap: var(--s-3);
+    margin-top: var(--s-3);
+  }
+
+  .fuera-registro li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-1) var(--s-3);
+    color: var(--muted);
+  }
+
+  .fuera-registro .estudiante__nombre {
+    min-width: 0;
+  }
+
+  .marca-fuera {
+    font-size: var(--text-label);
+    letter-spacing: 0.04em;
+  }
+
+  /* --- Barra de «Deshacer» (aviso del boceto): fija abajo, con su propio color de foco --- */
+  .barra-deshacer {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    max-width: calc(100vw - 32px);
+    padding: var(--s-3) var(--s-4);
+    background: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-toast);
+    color: var(--g-main);
+    font-size: var(--text-label);
+    transform: translateX(-50%);
+  }
+
+  .barra-deshacer p {
+    min-width: 0;
+  }
+
+  .barra-deshacer .btn {
+    padding-inline: var(--s-2);
+    color: inherit;
+    white-space: nowrap;
+  }
+
+  .barra-deshacer :focus-visible {
+    outline-color: var(--g-main);
+  }
+
+  /* Cierre sin trazo (D3): solo el fundido de color de 140 ms, y nada con movimiento reducido. */
+  @media (prefers-reduced-motion: no-preference) {
+    .cierre-animado .cierre-jornada,
+    .cierre-animado .resumen-completo,
+    .cierre-animado .titulo-completa {
+      animation: asistencia-cierre var(--m-in) var(--m-ease);
+    }
+  }
+
+  @keyframes asistencia-cierre {
+    from {
+      color: transparent;
+    }
+  }
+
+  /* --- 700 a 960 px: lateral de 256 px --- */
+  @media (min-width: 700px) and (max-width: 960px) {
+    .asistencia-rejilla {
+      grid-template-columns: minmax(0, 1fr) 256px;
+      gap: 20px;
+    }
+
+    .tarjeta-jornada {
+      padding: 20px;
+    }
+
+    .fila-asistencia {
+      gap: var(--s-3);
+      margin-inline: var(--s-4);
+    }
+  }
+
+  /* --- Hasta 699 px: una columna; la tarjeta es el resumen compacto fijo bajo la barra --- */
+  @media (max-width: 699px) {
+    .asistencia-hoy {
+      --asistencia-margen-fila: calc(var(--bar-height) + 136px);
+    }
+
+    .page:has(> .asistencia-hoy) {
+      padding-top: var(--s-5);
+    }
+
+    /* La variable se define aquí: html es ancestro de .asistencia-hoy y no la hereda (A2). */
+    html:has(.asistencia-rejilla) {
+      --asistencia-margen-fila: calc(var(--bar-height) + 136px);
+      scroll-padding-top: var(--asistencia-margen-fila);
+    }
+
+    .asistencia-cabecera {
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: var(--s-4);
+      margin-bottom: 20px;
+    }
+
+    .asistencia-cabecera .small {
+      margin-bottom: 6px;
+    }
+
+    .asistencia-cabecera .heading-meta {
+      flex-basis: 100%;
+      font-size: var(--text-label);
+      text-align: left;
+    }
+
+    .asistencia-rejilla {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-4);
+    }
+
+    .asistencia-lateral {
+      display: contents;
+    }
+
+    .tarjeta-jornada {
+      position: sticky;
+      top: calc(var(--bar-height) + var(--s-2));
+      z-index: 21;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--s-2) var(--s-3);
+      padding: var(--s-4) 20px;
+      box-shadow: 0 0 0 var(--s-2) var(--g-main);
+    }
+
+    .tarjeta-jornada__cabecera,
+    .sin-marcar--pc,
+    .totales,
+    .nombres-pendientes,
+    .marcar-todos--tarjeta,
+    .leyenda--lateral {
+      display: none;
+    }
+
+    .tarjeta-jornada__fila {
+      display: contents;
+    }
+
+    .conteo,
+    .resumen-completo {
+      grid-column: 1;
+      grid-row: 1;
+      align-self: center;
+      font-size: var(--text-label);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .conteo__pc {
+      display: none;
+    }
+
+    .conteo__movil,
+    .sin-marcar--movil {
+      display: inline;
+    }
+
+    .guardado-grupo {
+      grid-column: 2;
+      grid-row: 1;
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    .tarjeta-jornada progress {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      height: 5px;
+      margin-top: 0;
+    }
+
+    .cierre-jornada {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      margin-top: 0;
+      font-size: var(--text-label);
+    }
+
+    .aviso-conexion {
+      margin-top: 0;
+    }
+
+    .marcar-todos--debajo {
+      display: flex;
+      width: 100%;
+    }
+
+    .leyenda--plegable {
+      display: block;
+      margin-bottom: var(--s-3);
+    }
+
+    .leyenda--plegable ol {
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: var(--s-3);
+    }
+
+    /* Siete controles de 44 px (308 px): sin relleno lateral caben desde 360 px. */
+    .selector-semana {
+      padding: var(--s-2) 0;
+    }
+
+    .selector-semana__dias {
+      gap: 0;
+    }
+
+    .selector-semana .dia {
+      min-height: 52px;
+      padding: var(--s-1);
+    }
+
+    .selector-semana__ayuda {
+      flex-basis: 100%;
+      padding: var(--s-1) var(--s-3) 0;
+    }
+
+    .hoja-cabecera {
+      padding: 14px var(--s-4);
+    }
+
+    .fila-asistencia {
+      grid-template-columns: 16px minmax(0, 1fr) 44px;
+      gap: var(--s-3);
+      min-height: 80px;
+      margin-inline: var(--s-4);
+      padding-block: 14px;
+    }
+
+    .fila__numero {
+      font-size: 12px;
+    }
+
+    .estudiante__nombre strong {
+      display: block;
+    }
+
+    .nota-justificacion {
+      grid-column: 1 / -1;
+      padding-block: var(--s-2);
+    }
+
+    .fuera-registro {
+      padding-inline: var(--s-4);
+    }
+
+    .barra-deshacer {
+      bottom: 16px;
+      gap: var(--s-2);
+      padding: var(--s-2) var(--s-3);
+    }
+  }
+
+  /* Bajo 360 px la hoja va a todo el ancho, para que el selector quepa sin achicar sus áreas táctiles. */
+  @media (max-width: 359px) {
+    .hoja {
+      margin-inline: calc(-1 * var(--gut));
+      border-inline: 0;
+      border-radius: 0;
+    }
+  }
+}

@@ -33,7 +33,7 @@
   }
 
   function enfocar() {
-    dialogo.querySelector(".modal-cuerpo")?.scrollTo({ top: 0 });
+    dialogo.querySelector("#modal-cuerpo")?.scrollTo({ top: 0 });
     const destino = dialogo.querySelector("[data-foco]");
     if (!destino) return;
     destino.focus({ preventScroll: true });

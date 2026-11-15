@@ -1,16 +1,18 @@
 {% comment %}
-Parcial base de la lista de estudiantes (US-006, D5): cabecera, cuerpo y pie. Lo usan el diálogo de la portada y la
-página completa; las vistas lo extienden. Los ids y las clases salen del boceto (insumos/US-006-bocetos).
+Parcial base de la lista de estudiantes: cabecera, cuerpo y pie. Lo usan el diálogo de la portada y la página completa;
+las vistas lo extienden. Pinta el interior de rb/dialogo.html (HTMX llena un <dialog> que ya existe; rebrand-us-006, D3):
+en el diálogo el cuerpo es una región enfocable que se desplaza; en la página, no. Los ganchos (#modal-titulo,
+#modal-cantidad, #modal-cuerpo, #modal-pie, data-cerrar, data-foco) son los de estudiantes.js.
 {% endcomment %}
-<header class="modal-cabecera">
-  <div class="modal-contexto">
-    <div>
-      {% if en_dialogo %}<h2 id="modal-titulo" class="modal-titulo"{% block foco_titulo %} data-foco tabindex="-1"{% endblock %}>{{ titulo }}</h2>{% else %}<h1 id="modal-titulo" class="modal-titulo">{{ titulo }}</h1>{% endif %}
-      <p id="modal-cantidad" class="modal-cantidad">{{ cantidad }} estudiante{{ cantidad|pluralize }}</p>
+<header class="dialog-cabecera" id="modal-cabecera">
+  <div class="lista-contexto">
+    <div class="lista-titulo">
+      {% if en_dialogo %}<h2 id="modal-titulo"{% block foco_titulo %} data-foco tabindex="-1"{% endblock %}>{{ titulo }}</h2>{% else %}<h1 id="modal-titulo">{{ titulo }}</h1>{% endif %}
+      <p id="modal-cantidad" class="small">{{ cantidad }} estudiante{{ cantidad|pluralize }}</p>
     </div>
-    {% if en_dialogo %}<button class="cerrar-dialogo" type="button" data-cerrar>{% include "iconos/x.svg" %}Cerrar</button>{% endif %}
+    {% if en_dialogo %}<button class="btn btn--secondary dialog-cerrar" type="button" data-cerrar>{% include "iconos/x.svg" with clase=None %}<span class="dialog-cerrar-texto">Cerrar</span></button>{% endif %}
   </div>
   {% block accion %}{% endblock %}
 </header>
-<div class="modal-cuerpo" id="modal-cuerpo">{% block cuerpo %}{% endblock %}</div>
-<footer class="modal-pie" id="modal-pie">{% block pie %}{% endblock %}</footer>
+<div class="dialog-cuerpo" id="modal-cuerpo"{% if en_dialogo %} tabindex="0" role="region" aria-labelledby="modal-titulo"{% endif %}>{% block cuerpo %}{% endblock %}</div>
+<footer class="dialog-pie" id="modal-pie">{% block pie %}{% endblock %}</footer>

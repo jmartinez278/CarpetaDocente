@@ -82,3 +82,37 @@ def test_con_trimestres_los_nombres_van_de_t1_a_t3(seccion_tutora, institucion, 
     assert [p.nombre for p in periodos] == ["T1", "T2", "T3"]
     assert periodos[2].nombre_largo == "Trimestre 3"
     assert periodos[2].estado == servicios.VIGENTE
+
+
+def test_romano_y_nombre_romano_en_bimestres(seccion_tutora, bimestres):
+    periodos = servicios.periodos_de_la_seccion(seccion_tutora, OCT_30)
+
+    assert [p.romano for p in periodos] == ["I", "II", "III", "IV"]
+    assert [p.nombre_romano for p in periodos] == [
+        "I bimestre",
+        "II bimestre",
+        "III bimestre",
+        "IV bimestre",
+    ]
+    assert [p.nombre for p in periodos] == ["B1", "B2", "B3", "B4"]
+    assert periodos[3].nombre_largo == "Bimestre 4"
+
+
+def test_romano_y_nombre_romano_en_trimestres(seccion_tutora, institucion, anio_abierto):
+    institucion.organizacion_periodos = Institucion.OrganizacionPeriodos.TRIMESTRE
+    institucion.save()
+    for numero, (inicio, fin) in enumerate(
+        [((3, 9), (6, 10)), ((6, 21), (9, 10)), ((9, 20), (12, 18))], start=1
+    ):
+        Periodo.objects.create(
+            anio_escolar=anio_abierto,
+            numero=numero,
+            fecha_inicio=datetime.date(2027, *inicio),
+            fecha_fin=datetime.date(2027, *fin),
+        )
+
+    periodos = servicios.periodos_de_la_seccion(seccion_tutora, OCT_30)
+
+    assert [p.romano for p in periodos] == ["I", "II", "III"]
+    assert periodos[2].nombre_romano == "III trimestre"
+    assert periodos[2].nombre == "T3"

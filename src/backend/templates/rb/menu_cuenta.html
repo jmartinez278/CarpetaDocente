@@ -1,0 +1,20 @@
+{% load static %}{% comment %}
+Menú de la cuenta del rebrand (spec cierre-sesion, «Menú de la cuenta»; rebrand-base, D7): <details>, que abre y cierra sin
+JavaScript. menu.js suma Escape, el toque fuera y, al cerrar sesión, el borrado de los borradores de notas (por eso
+data-usuario). La línea de secciones la da institucion.servicios.secciones_de_la_cuenta.
+{% endcomment %}
+<details class="account" data-menu-cuenta>
+  <summary class="btn icon-button" aria-label="Menú de la cuenta">{% include "iconos/circle-user-round.svg" %}</summary>
+  <div class="account-panel" data-cuenta-panel>
+    <p class="small">Tu cuenta</p>
+    <p data-cuenta-nombre>{{ user.get_full_name|default:user.username }}</p>
+    <p class="small">I.E. Virgen del Carmen</p>
+    {% if secciones %}<p class="small">{{ secciones }}</p>{% endif %}
+    <form class="account-salir" method="post" action="{% url 'salir' %}" data-salir data-usuario="{{ user.pk }}">
+      {% csrf_token %}
+      <button class="btn btn--text" type="submit">{% include "iconos/log-out.svg" %}Cerrar sesión</button>
+    </form>
+  </div>
+</details>
+<script src="{% static 'js/notas-borrador.js' %}" defer></script>
+<script src="{% static 'js/menu.js' %}" defer></script>

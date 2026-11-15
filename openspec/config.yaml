@@ -16,18 +16,31 @@ rules:
     - Corta, con qué cambia, por qué y qué queda fuera de alcance (con la historia a la que va).
     - Indica el RF y la dimensión de la tesis que cubre.
     - Solo decisiones nuevas; no repitas lo que ya dicen openspec/specs, DESIGN.md o decisiones.md.
+    - 'Cambios rebrand-* (solo rehacen la presentación): 10 líneas como máximo, con los encabezados "## Why" y "## What Changes" que pide OpenSpec: qué pantalla, qué boceto y qué queda fuera.'
   specs:
     - Los escenarios Gherkin del criterio de aceptación (docs/02 Planificación/01) pasan casi directo.
+    - 'Cambios rebrand-*: delta solo de los requisitos cuya conducta cambia (MODIFIED) o se retira (REMOVED, con Reason y Migration). Un MODIFIED reemplaza el requisito entero: copia todos sus escenarios actuales, también los que siguen igual, o validate y archive lo rechazan. Los requisitos que no cambian no van en el delta.'
+    - 'Cambios rebrand-* sin conducta que cambie: sin carpeta specs/ y con "skip_specs: true" en .openspec.yaml del cambio (sin eso, validate falla por falta de deltas).'
   design:
     - Decisiones numeradas (D1, D2, ...) con su porqué; los riesgos y las zonas delicadas primero.
     - Si la historia guarda datos que mide la tesis, di qué campo los guarda.
+    - 'Cambios rebrand-*: solo las decisiones que se apartan del boceto o de DESIGN.md, o que tocan conducta (JS, foco, diálogos). Máximo 5. Si no hay ninguna, una línea que lo diga.'
   tasks:
-    - 'Agrupa por riesgo, no por cantidad: cada tramo de alto riesgo es una parte "(alto riesgo)" con su revisión y su commit; todo lo demás va junto en una parte "(normal)", sin revisión, con verificar.py y commit. Unas 15 tareas.'
+    - 'Agrupa por riesgo, no por cantidad: cada tramo de alto riesgo es una parte "(alto riesgo)" con su commit; todo lo demás va junto en una parte "(normal)" con verificar.py y commit. Una parte de alto riesgo lleva "(revisor)" en el título solo si toca modelos o migraciones, permisos y roles, o datos personales (RN-015). Unas 15 tareas.'
     - Cada tarea empieza por la prueba ("Prueba primero, <archivo>") y termina con "Verificar:" y lo que se comprueba.
-    - El "Verificar:" de cada tarea nombra solo pruebas de la app tocada. La regresión de otras historias la cubre verificar.py; las e2e de otras historias, solo en el cierre.
+    - El "Verificar:" de cada tarea nombra solo pruebas de la app tocada. La regresión de otras historias la cubre `verificar.py --completo` en el cierre; las e2e de otras historias, también solo en el cierre.
     - 'Es de alto riesgo si toca: modelos, restricciones o migraciones; permisos y roles; transacciones o concurrencia; datos personales (RN-015); notas; seguridad, despliegue o workflows; o una "Zona de cuidado" de decisiones.md.'
+    - 'Una e2e solo si el escenario necesita un navegador real: conducta de JS (Alpine, intercambios de HTMX, foco, borradores en el dispositivo), desplazamiento horizontal o axe. Lo que el cliente de pruebas de Django puede comprobar (textos, enlaces, permisos, redirecciones, atributos del HTML) va como prueba de vista.'
+    - 'Sin e2e para valores de CSS (animación, color, tamaño, espaciado): eso lo ve Marco en la pantalla y lo cubre la auditoría visual.'
+    - 'Por pantalla: una e2e del flujo principal, las de conducta de JS que pida el spec, una de desplazamiento horizontal a 360 px y axe sobre el estado principal y cada diálogo abierto, en ambos temas. Sin matriz de estados × temas × anchos ni axe por variante de datos.'
+    - 'Un ancho por e2e: 360 px. 1280 px solo si la conducta cambia con el ancho, no la apariencia.'
+    - 'Más de 6 e2e nuevas en una historia: se justifica en design.md.'
+    - 'Al tocar una pantalla, las e2e existentes que no cumplen estas reglas se listan en tasks.md como "e2e a retirar" para que Marco las apruebe; no se borran por cuenta propia.'
+    - 'Durante las tareas se corre solo el archivo e2e tocado. `-m e2e` completo, una vez, en el cierre.'
     - Un commit por parte, nunca por tarea; la casilla va en ese commit.
     - 'Al final, la parte de cierre: A2 y verificacion.md.'
+    - 'En los cambios de rebrand, las tareas no incluyen auditoría visual por pantalla: va una sola, al terminar todas las pantallas del rebrand.'
+    - 'Cambios rebrand-*: una sola parte "(normal)", salvo que toquen algo de alto riesgo; eso va en su propia parte "(alto riesgo)".'
     - Al final, "Workflow follow-up" con la deuda.
     - 'No repitas en tasks.md las reglas de config.yaml, CLAUDE.md ni CLAUDE.local.md: solo las tareas.'
 
@@ -36,11 +49,11 @@ operations:
     guidance:
       - Pruebas primero; ante una falla inesperada, depuración sistemática.
       - Antes de usar una API de Django, HTMX, Tailwind o Playwright que el repo aún no usa, consulta su documentación actual (Context7). Si ya se usa en el repo, sigue ese código.
-      - Revisión (agente revisor, .claude/agents/revisor.md) solo al cerrar una parte "(alto riesgo)". Critical e Important se corrigen; Minor, máximo 3, una línea cada uno, a verificacion.md, "## Minor para la descripción del PR".
-      - Durante las tareas se corren solo las pruebas de la app tocada; la suite completa la corre verificar.py.
-      - Antes de proponer un commit, lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit`. Commit solo con aprobación.
-      - verificacion.md se escribe una vez, en el cierre - tabla escenario → prueba y DoD 1 a 9. Sin evidencia por commit ni commits solo de docs.
-      - A2 (Codex) una vez al final, sin re-revisión del arreglo. Lo que no se puede provocar desde la interfaz va a la deuda.
+      - Revisión (agente revisor, .claude/agents/revisor.md) solo al cerrar una parte "(alto riesgo)" que toca modelos o migraciones, permisos y roles, o datos personales (RN-015). Las demás partes de alto riesgo conservan su commit propio y Opus, sin revisor: las cubre la A2 del cierre. Critical e Important se corrigen; Minor, máximo 3, una línea cada uno, a verificacion.md, "## Minor para la descripción del PR".
+      - Durante las tareas se corren solo las pruebas de la app tocada; la suite completa, con la cobertura mínima de 80 %, la corre `uv run python scripts/verificar.py --completo` en el cierre.
+      - Antes de proponer un commit, lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit` (Ruff y las pruebas de las apps del índice; si cambia algo compartido, toda la suite; sin cobertura). Commit solo con aprobación.
+      - verificacion.md se escribe una vez, en el cierre, y corta - DoD 1 a 9 en una línea cada una, los escenarios del spec sin prueba con su motivo, y los Minor. Sin tabla escenario → prueba, sin evidencia por commit ni commits solo de docs.
+      - A2 (Codex) una vez al final, con foco en los specs del cambio y en las partes "(alto riesgo)" sin "(revisor)" de tasks.md; sin re-revisión del arreglo. Lo que no se puede provocar desde la interfaz va a la deuda.
   archive:
     guidance:
       - Se archiva con "Sync now", como primer commit de la rama de la historia siguiente.

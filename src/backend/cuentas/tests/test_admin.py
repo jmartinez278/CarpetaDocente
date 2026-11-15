@@ -1,5 +1,7 @@
 """Pruebas del panel de administración de usuarios (rol Administrador): alta y desbloqueo."""
 
+import re
+
 import pytest
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.contrib.admin.models import CHANGE, LogEntry
@@ -532,3 +534,13 @@ def test_despues_de_desbloquear_ingresar_acepta_la_contrasena(client, panel, doc
 
     assert respuesta.status_code == 302
     assert respuesta.url == "/docente/"
+
+
+def test_el_panel_carga_su_hoja_y_ninguna_de_dist(client, administrador):
+    """Caracterización: el retiro del marco viejo no toca el panel (rebrand-cierre, decisión 7)."""
+    client.force_login(administrador)
+
+    html = client.get("/admin/").content.decode()
+
+    assert '<link rel="stylesheet" href="/static/css/panel.css">' in html
+    assert not re.search(r'href="/static/dist/[^"]*\.css"', html)

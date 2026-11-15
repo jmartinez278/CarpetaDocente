@@ -1,20 +1,29 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static marco %}
 {% comment %}
-Marco de las pantallas internas (DESIGN.md, Barra superior y Pie): barra fija con el nombre de la I.E.,
-con el menú de la cuenta a la derecha (US-002), y el pie al final. Desde DESIGN.md 0.4, la línea de la barra es tenue. Cada pantalla llena el bloque "principal".
+Marco del rebrand (spec pantallas-de-inicio, «Marco común»; rebrand-base, D8): «Ir al contenido», barra fija con el ☰
+(bloque navegacion, solo interiores de la docente), el texto de la barra (bloque titulo_barra: no es encabezado, el <h1>
+es de cada pantalla), el lugar del tema (vacío hasta T-04) y la cuenta; luego <main> y el pie. Cada pantalla llena el
+bloque "principal". El bloque clase_barra suma una variante a la barra: la portada la deja sin fijar con
+" appbar--portada" (rebrand-portada, D1).
 {% endcomment %}
 
-{% block titulo %}Inicio · CarpetaDocente{% endblock %}
-
 {% block contenido %}
-<header class="barra-superior sticky top-0 z-10 bg-fondo">
-  <div class="mx-auto flex h-14 max-w-280 items-center justify-between px-4 min-[960px]:px-6">
-    <p class="font-display text-xl leading-none font-semibold whitespace-nowrap text-primario min-[960px]:text-[22px]">I.E. Virgen del Carmen</p>
-    {% include "componentes/menu_cuenta.html" %}
+<a class="skip" href="#contenido">Ir al contenido</a>
+<header class="appbar{% block clase_barra %}{% endblock %}">
+  <div class="wrap appbar-inner">
+    {% block navegacion %}{% menu_docente %}{% endblock %}
+    <span class="bar-title">{% block titulo_barra %}{% endblock %}</span>
+    <div class="bar-actions">
+      {% comment %}Lugar del botón de tema (T-04).{% endcomment %}
+      {% menu_cuenta %}
+    </div>
   </div>
 </header>
+<main id="contenido" class="wrap page" tabindex="-1">
 {% block principal %}{% endblock %}
-{% include "componentes/pie.html" %}
+</main>
+{% include "rb/pie.html" %}
 <script src="{% static 'js/bfcache.js' %}" defer></script>
+<script src="{% static 'js/marco.js' %}" defer></script>
 {% endblock %}

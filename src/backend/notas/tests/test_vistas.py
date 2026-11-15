@@ -107,7 +107,13 @@ def test_abre_en_el_vigente(cliente, seccion_tutora, ie):
     json_ = datos(respuesta)
     assert json_["inicial"] == 3
     periodos = json_["periodos"]
-    assert [p["nombre"] for p in periodos] == ["B1", "B2", "B3", "B4"]
+    assert [p["nombre"] for p in periodos] == [
+        "I bimestre",
+        "II bimestre",
+        "III bimestre",
+        "IV bimestre",
+    ]
+    assert [p["corto"] for p in periodos] == ["I", "II", "III", "IV"]
     assert [p["nombre_largo"] for p in periodos] == [f"Bimestre {n}" for n in range(1, 5)]
     assert [p["estado"] for p in periodos] == ["ANTERIOR", "ANTERIOR", "VIGENTE", "FUTURO"]
     assert [p["editable"] for p in periodos] == [True, True, True, False]
@@ -131,7 +137,8 @@ def test_con_trimestres_los_nombres_son_t(cliente, institucion, seccion_tutora, 
 
     periodos = datos(abrir(cliente, seccion_tutora))["periodos"]
 
-    assert [p["nombre"] for p in periodos][:3] == ["T1", "T2", "T3"]
+    assert [p["nombre"] for p in periodos][:3] == ["I trimestre", "II trimestre", "III trimestre"]
+    assert [p["corto"] for p in periodos][:3] == ["I", "II", "III"]
     assert periodos[0]["nombre_largo"] == "Trimestre 1"
 
 
@@ -208,7 +215,7 @@ def test_antes_del_primer_periodo(cliente, seccion_tutora, ie, hoy):
 
     assert respuesta.context["aviso"] == {
         "titulo": "Hoy no hay un periodo vigente",
-        "texto": "El bimestre 1 empieza el 9 de marzo.",
+        "texto": "El I bimestre empieza el 9 de marzo.",
     }
     assert respuesta.context["periodo_inicial"] is None
     json_ = datos(respuesta)
@@ -320,7 +327,7 @@ def test_la_palabra_del_periodo_y_los_elegibles(cliente, seccion_tutora, ie):
     respuesta = abrir(cliente, seccion_tutora)
 
     assert respuesta.context["palabra_periodo"] == "bimestre"
-    assert respuesta.context["periodos_elegibles"] == "B1, B2 y B3"
+    assert respuesta.context["periodos_elegibles"] == "I, II y III"
 
 
 def test_con_trimestres_la_palabra_es_trimestre(cliente, institucion, seccion_tutora, ie):
@@ -330,19 +337,19 @@ def test_con_trimestres_la_palabra_es_trimestre(cliente, institucion, seccion_tu
     respuesta = abrir(cliente, seccion_tutora)
 
     assert respuesta.context["palabra_periodo"] == "trimestre"
-    assert respuesta.context["periodos_elegibles"] == "T1, T2 y T3"
+    assert respuesta.context["periodos_elegibles"] == "I, II y III"
 
 
 def test_en_vacaciones_los_elegibles_son_los_ya_pasados(cliente, seccion_tutora, ie, hoy):
     hoy["valor"] = AGO_1
 
-    assert abrir(cliente, seccion_tutora).context["periodos_elegibles"] == "B1 y B2"
+    assert abrir(cliente, seccion_tutora).context["periodos_elegibles"] == "I y II"
 
 
 def test_con_un_solo_elegible_va_sin_conjuncion(cliente, seccion_tutora, ie, hoy):
     hoy["valor"] = datetime.date(2027, 3, 20)
 
-    assert abrir(cliente, seccion_tutora).context["periodos_elegibles"] == "B1"
+    assert abrir(cliente, seccion_tutora).context["periodos_elegibles"] == "I"
 
 
 def test_sin_periodos_o_antes_del_primero_no_hay_elegibles(cliente, seccion_tutora, ie, hoy):

@@ -1,10 +1,13 @@
 """Verificación antes de un commit o PR: las comprobaciones que antes se hacían a mano.
 
 Uso:
-    uv run python scripts/verificar.py --antes-del-commit  # Ruff y pytest sobre el índice
-    uv run python scripts/verificar.py                  # veredicto en la terminal
+    uv run python scripts/verificar.py --antes-del-commit  # Ruff y pytest de lo del índice
+    uv run python scripts/verificar.py --completo       # suite entera con cobertura (cierre)
+    uv run python scripts/verificar.py                  # igual que --completo
     uv run python scripts/verificar.py --pr 53          # además, checks y aprobación del PR (gh)
     uv run python scripts/verificar.py --markdown       # bloque listo para verificacion.md
+
+Antes de pytest comprueba que PostgreSQL responde; si no, no corre pytest y no pasa.
 
 Sale con 0 si el veredicto es PASA y con 1 si es NO PASA.
 """
@@ -14,6 +17,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import stat
 import subprocess
 import sys
@@ -23,6 +27,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import reglas
 
@@ -43,7 +48,23 @@ ESTADO = ("git", "status", "--porcelain")
 ARCHIVOS = ("git", "ls-files", "-z")
 RUFF_CHECK = ("uv", "run", "ruff", "check")
 RUFF_FORMAT = ("uv", "run", "ruff", "format", "--check")
-PYTEST = ("uv", "run", "pytest", "--cov", f"--cov-fail-under={UMBRAL_COBERTURA}")
+PYTEST_BASE = ("uv", "run", "pytest")
+PYTEST = (*PYTEST_BASE, "--cov", f"--cov-fail-under={UMBRAL_COBERTURA}")
+# Lo que cambia en el índice frente a HEAD. Sin renombres: salen la ruta vieja y la nueva.
+INDICE = ("git", "diff", "--cached", "--name-only", "--no-renames", "-z")
+
+# Antes de pytest se abre una conexión al puerto de DATABASE_URL con esta espera (segundos).
+ESPERA_BASE = 3
+NOMBRE_BASE = "PostgreSQL"
+FALLA_BASE_APAGADA = "la base no responde (docker compose up -d db)"
+# Antes del commit, cambiar esto corre la suite completa: lo usan todas las apps.
+COMPARTIDOS = frozenset(DEPENDENCIAS)
+CARPETA_APPS = ("src", "backend")
+# Sin pruebas de pytest propias (las cubren las e2e del cierre).
+ESTATICOS = (*CARPETA_APPS, "static")
+# Sus pruebas (paquete y build de Vercel) están en scripts/tests.
+FRONTEND = ("src", "frontend")
+APPS_COMPARTIDAS = frozenset({"config"})
 
 _COBERTURA = re.compile(r"Total coverage: (\d+(?:\.\d+)?)%")
 # Líneas de pytest que van en la salida resumida: total, umbral y conteo final.
@@ -121,6 +142,10 @@ class Informe:
     @property
     def pasa(self) -> bool:
         return all(resultado.ok for resultado in self.resultados)
+
+    @property
+    def sin_base(self) -> bool:
+        return any(r.nombre == NOMBRE_BASE and not r.ok for r in self.resultados)
 
     @property
     def fallas(self) -> list[str]:
@@ -294,6 +319,75 @@ def _entornos_de_la_copia(copia: Path) -> tuple[dict[str, str], dict[str, str]]:
     return uv, {**env, **uv, "COVERAGE_FILE": str(copia / ".coverage")}
 
 
+def comprobar_base(espera: float = ESPERA_BASE) -> bool:
+    """True si el puerto de PostgreSQL de DATABASE_URL acepta la conexión antes de ``espera``.
+
+    Sin DATABASE_URL (ni en la terminal ni en .env) no se comprueba: pytest dirá qué falta.
+    """
+    url = os.environ.get("DATABASE_URL") or leer_env(ARCHIVO_ENV).get("DATABASE_URL")
+    if not url:
+        return True
+    partes = urlsplit(url)
+    try:
+        with socket.create_connection(
+            (partes.hostname or "localhost", partes.port or 5432), espera
+        ):
+            return True
+    except (OSError, ValueError):
+        return False
+
+
+def pruebas_del_indice(rutas: list[str], apps: set[str]) -> tuple[str, ...] | None:
+    """Carpetas que pytest debe correr por lo que cambia en el índice.
+
+    ``None`` es la suite completa: cambia algo compartido o algo que no se puede atribuir a
+    una app con pruebas propias. La tupla vacía es que no hay código que probar.
+    """
+    carpetas = set()
+    for ruta in rutas:
+        partes = ruta.split("/")
+        if ruta in COMPARTIDOS or partes[-1] == "conftest.py":
+            return None
+        if partes[0] == "scripts" or tuple(partes[:2]) == FRONTEND:
+            carpetas.add("scripts")
+            continue
+        if partes[0] != "src" or tuple(partes[:3]) == ESTATICOS:
+            continue  # documentos, openspec, .github y estáticos: sin pruebas de pytest
+        resto = partes[2:] if tuple(partes[:2]) == CARPETA_APPS else []
+        if resto[:1] == ["templates"]:
+            resto = resto[1:]
+            if resto[:1] == ["admin"]:
+                resto = resto[1:]
+        app = resto[0] if len(resto) > 1 else None
+        if app not in apps or app in APPS_COMPARTIDAS:
+            return None
+        carpetas.add("/".join((*CARPETA_APPS, app)))
+    return tuple(sorted(carpetas))
+
+
+def _apps_con_pruebas(raiz: Path) -> set[str]:
+    carpeta = raiz.joinpath(*CARPETA_APPS)
+    if not carpeta.is_dir():
+        return set()
+    return {app.name for app in carpeta.iterdir() if (app / "tests").is_dir()}
+
+
+def _pytest_del_indice(ejecutar: Ejecutor, copia: Path) -> tuple[tuple[str, ...] | None, str]:
+    """Comando de pytest antes del commit y el nombre de su resultado (``None``: no se corre)."""
+    salida = ejecutar(INDICE)
+    if salida.codigo != 0:
+        carpetas = None  # sin saber qué cambia, se prueba todo
+    else:
+        rutas = [ruta for ruta in salida.texto.split("\0") if ruta]
+        carpetas = pruebas_del_indice(rutas, _apps_con_pruebas(copia))
+    if carpetas is None:
+        return PYTEST_BASE, "pytest, suite completa (sin cobertura)"
+    if not carpetas:
+        return None, "pytest: sin pruebas que correr (el índice no toca apps ni scripts)"
+    nombres = ", ".join(carpeta.rsplit("/", 1)[-1] for carpeta in carpetas)
+    return (*PYTEST_BASE, *carpetas), f"pytest de {nombres} (sin cobertura)"
+
+
 def _revisar_calidad(
     ejecutar: Ejecutor,
     registros: Path | None,
@@ -304,22 +398,35 @@ def _revisar_calidad(
         datos = _datos_de_cobertura()
         datos.parent.mkdir(parents=True, exist_ok=True)
         entorno_ruff, entorno_pytest = None, {"COVERAGE_FILE": str(datos)}
+        pytest_, nombre = PYTEST, f"pytest --cov (mínimo {UMBRAL_COBERTURA} %)"
     else:
         datos = None  # queda dentro de la copia y se borra con ella
         entorno_ruff, entorno_pytest = _entornos_de_la_copia(copia)
+        pytest_, nombre = _pytest_del_indice(ejecutar, copia)
 
     resultados = []
-    for nombre, comando in (("ruff check", RUFF_CHECK), ("ruff format --check", RUFF_FORMAT)):
+    for nombre_ruff, comando in (("ruff check", RUFF_CHECK), ("ruff format --check", RUFF_FORMAT)):
         salida = ejecutar(comando, entorno_ruff, copia)
         resumen = _ultimas_lineas(salida.texto)
         fallas = [] if salida.codigo == 0 else [resumen or f"salió con código {salida.codigo}"]
-        resultados.append(Resultado(nombre, salida.codigo == 0, fallas, comando, resumen))
+        resultados.append(Resultado(nombre_ruff, salida.codigo == 0, fallas, comando, resumen))
 
-    salida = ejecutar(PYTEST, entorno_pytest, copia)
+    if pytest_ is None:
+        resultados.append(Resultado(nombre, True))
+        return resultados, None
+    # Se busca en el módulo al llamar: las pruebas lo reemplazan sin tocar la firma.
+    if not comprobar_base():
+        resultados.append(Resultado(NOMBRE_BASE, False, [FALLA_BASE_APAGADA]))
+        if datos is not None:
+            datos.unlink(missing_ok=True)
+        return resultados, None
+
+    salida = ejecutar(pytest_, entorno_pytest, copia)
     if datos is not None:
         datos.unlink(missing_ok=True)
     encontrada = _COBERTURA.search(salida.texto)
-    cobertura = float(encontrada.group(1)) if encontrada else None
+    # Antes del commit no se pide --cov: lo que diga la salida no es la cobertura total.
+    cobertura = float(encontrada.group(1)) if encontrada and copia is None else None
     resumen = _resumen_pytest(salida.texto)
     if salida.codigo == 0:
         fallas = []
@@ -330,8 +437,7 @@ def _revisar_calidad(
     if salida.codigo != 0 and registros is not None:
         archivo = _guardar_salida(registros, ahora(), salida.texto)
         fallas.append(f"salida completa en {ruta_legible(archivo)}")
-    nombre = f"pytest --cov (mínimo {UMBRAL_COBERTURA} %)"
-    resultados.append(Resultado(nombre, salida.codigo == 0, fallas, PYTEST, resumen))
+    resultados.append(Resultado(nombre, salida.codigo == 0, fallas, pytest_, resumen))
     return resultados, cobertura
 
 
@@ -366,7 +472,8 @@ def _revisar_calidad_del_indice(
     ahora: Callable[[], datetime],
     temporal: Path | None,
 ) -> tuple[list[Resultado], float | None, list[str]]:
-    """Ruff y pytest sobre una copia del índice fuera del repo, que se borra al terminar."""
+    """Ruff y pytest (solo lo tocado) sobre una copia del índice fuera del repo, que se borra
+    al terminar."""
     copia = Path(tempfile.mkdtemp(prefix="verificar-indice-", dir=temporal))
     terminado = False
     try:
@@ -474,14 +581,19 @@ def verificar(
     return Informe(rama, base, commits, resultados, cobertura, omitidas, avisos, antes_del_commit)
 
 
-def _cobertura_texto(cobertura: float | None) -> str:
+def _cobertura_texto(cobertura: float | None, antes_del_commit: bool = False) -> str:
+    if antes_del_commit:
+        return "no se mide en este modo"
     return "no disponible" if cobertura is None else f"{cobertura:.2f} %".replace(".", ",")
 
 
 def formatear_texto(informe: Informe) -> str:
     lineas = [f"Rama: {informe.rama}", f"Commits sobre {informe.base}: {len(informe.commits)}"]
     if informe.antes_del_commit:
-        lineas.insert(0, "Modo: antes del commit (Ruff y pytest sobre una copia del índice)")
+        modo = "antes del commit (Ruff y pytest de lo que hay en el índice, sobre una copia)"
+    else:
+        modo = f"completo (suite entera, cobertura mínima {UMBRAL_COBERTURA} %)"
+    lineas.insert(0, f"Modo: {modo}")
     lineas += [f"  {c.corto} {c.correo} {c.asunto}" for c in informe.commits]
     if not informe.commits:
         lineas.append(f"  (sin commits sobre {informe.base})")
@@ -491,9 +603,12 @@ def formatear_texto(informe: Informe) -> str:
         lineas += [f"        - {falla}" for falla in resultado.fallas]
     lineas += [f"[OMITIDA] {omitida}" for omitida in informe.omitidas]
     lineas += [f"[AVISO] {aviso}".replace("\n", "\n        ") for aviso in informe.avisos]
-    lineas += ["", f"Cobertura total: {_cobertura_texto(informe.cobertura)}", ""]
+    cobertura = _cobertura_texto(informe.cobertura, informe.antes_del_commit)
+    lineas += ["", f"Cobertura total: {cobertura}", ""]
     if informe.pasa:
         lineas.append("PASA")
+    elif informe.sin_base and len(informe.fallas) == 1:
+        lineas.append(f"NO PASA: {FALLA_BASE_APAGADA}")
     else:
         lineas.append("NO PASA")
         lineas += [f"  - {falla}" for falla in informe.fallas]
@@ -554,10 +669,18 @@ def main(
     parser.add_argument(
         "--markdown", action="store_true", help="imprime un bloque para verificacion.md"
     )
-    parser.add_argument(
+    modo = parser.add_mutually_exclusive_group()
+    modo.add_argument(
         "--antes-del-commit",
         action="store_true",
-        help="Ruff y pytest sobre una copia del índice; lo de fuera de él solo se avisa",
+        help="Ruff y las pruebas de las apps del índice, sin cobertura, sobre una copia del "
+        "índice; lo compartido corre toda la suite y lo de fuera del índice solo se avisa",
+    )
+    modo.add_argument(
+        "--completo",
+        action="store_true",
+        help=f"suite entera con cobertura mínima de {UMBRAL_COBERTURA} %% (cierre de historia); "
+        "es lo que se corre sin modo",
     )
     args = parser.parse_args(argv)
 

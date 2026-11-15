@@ -2,14 +2,18 @@
 <html lang="es-PE">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
   <meta name="color-scheme" content="light dark">
   <title>{% block titulo %}CarpetaDocente{% endblock %}</title>
-  <link rel="preload" href="{% static 'dist/fuentes/besley-latin-600-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  {% comment %}Base del rebrand (rebrand-base, D8 y D9): una sola hoja, dist/app.css, y solo Instrument Sans. El bloque precargas suma
+fuentes de una sola pantalla: Besley, solo en el inicio de sesión (rebrand-us-001, D5).{% endcomment %}
+  <link rel="preload" href="{% static 'dist/fuentes/instrument-sans-latin-400-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'dist/fuentes/instrument-sans-latin-500-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  {% block precargas %}{% endblock %}
   <link rel="stylesheet" href="{% static 'dist/app.css' %}">
   {% block scripts %}{% endblock %}
 </head>
-<body class="flex min-h-dvh flex-col bg-fondo font-sans text-body leading-normal text-texto antialiased">
+<body>
   {% block contenido %}{% endblock %}
 </body>
 </html>

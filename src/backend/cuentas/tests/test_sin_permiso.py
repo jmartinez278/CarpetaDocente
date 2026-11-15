@@ -1,5 +1,6 @@
 """Página y respuesta de «sin permiso» (spec acceso-secciones; design de US-004, D3)."""
 
+import re
 from html import unescape
 
 import pytest
@@ -33,6 +34,25 @@ def test_sin_permiso_la_docente_ve_el_mensaje_sin_crear_entrada(client, docente)
     assert "Volver a tu inicio" in contenido
     assert "Sin permiso · CarpetaDocente" in contenido
     assert not RegistroActividad.objects.filter(operacion=Operacion.INTENTO_SIN_PERMISO).exists()
+
+
+def test_sin_permiso_mensaje_de_error_con_alerta_y_boton_principal(client, docente):
+    """Contenido del boceto con los componentes del rebrand (rebrand-base, D8)."""
+    client.force_login(docente)
+
+    contenido = unescape(client.get(URL).content.decode())
+
+    principal = re.search(r"<main\b.*?</main>", contenido, re.DOTALL).group(0)
+    alerta = re.search(
+        r'<div class="message message--error" role="alert">.*?</div></div>', principal, re.DOTALL
+    )
+    assert alerta, "falta el mensaje de error con role=alert"
+    assert re.search(rf"<h1\b[^>]*>{TITULO}</h1>", alerta.group(0))
+    assert f"<p>{TEXTO}</p>" in alerta.group(0)
+    assert principal.count("<h1") == 1
+    assert re.search(
+        r'<a class="btn btn--primary[^"]*" href="/docente/">Volver a tu inicio</a>', principal
+    )
 
 
 def test_sin_permiso_la_direccion_va_a_su_inicio(client, direccion):

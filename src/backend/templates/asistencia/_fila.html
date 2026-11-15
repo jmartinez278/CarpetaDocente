@@ -1,12 +1,14 @@
-{% comment %}Fila de asistencia (DESIGN.md 0.4): número, nombre completo en mayúsculas que baja de línea, estado en palabras y el círculo de 44 px. El fallo lo muestra el JS; la nota se dibuja abierta si el estado guardado es Justificado (D7). El elemento de lista lo pone hoy.html, para que la lista y sus filas queden en la misma plantilla.{% endcomment %}
+{% comment %}Fila de asistencia (rebrand-us-030, D3): número de dos cifras, nombre en mayúsculas con los apellidos destacados
+(su texto sigue siendo «APELLIDOS, NOMBRES», que el JS usa en el aria-label), estado en palabras fuera del nombre y el
+círculo de 44 px. El fallo lo muestra el JS bajo el estado; la nota se dibuja abierta si el estado guardado es Justificado.
+El elemento de lista lo pone hoy.html.{% endcomment %}
 {% with e=fila.estudiante %}
-  <span class="estudiante__numero" aria-hidden="true">{{ fila.numero }}</span>
-  <div class="nombre-estado"><span class="estudiante__nombre">{{ e.apellidos }}, {{ e.nombres }}</span><span class="etiqueta-estado" data-etiqueta>{{ fila.palabra }}</span></div>
+  <span class="fila__numero" aria-hidden="true">{{ fila.numero|stringformat:"02d" }}</span>
+  <div class="fila__texto"><span class="estudiante__nombre"><strong>{{ e.apellidos }},</strong> {{ e.nombres }}</span><span class="fila__estado" data-etiqueta>{{ fila.palabra }}</span><p class="fila__fallo" id="fallo-{{ e.pk }}" data-fallo hidden>{% include "iconos/circle-alert.svg" %}<span data-fallo-texto></span></p></div>
   <button type="button" class="marcar" data-marcar aria-label="{{ e.apellidos }}, {{ e.nombres }}: {{ fila.palabra }}. Cambiar a {{ fila.siguiente }}">{% include "asistencia/_circulo.html" with circulo=fila.clase %}</button>
-  <p class="fallo-fila" id="fallo-{{ e.pk }}" data-fallo hidden>{% include "iconos/circle-alert.svg" %}<span data-fallo-texto></span></p>
   <div class="nota-justificacion" data-nota{% if fila.estado != "JUSTIFICADO" %} hidden{% endif %}>
-    <label class="campo__etiqueta" for="nota-{{ e.pk }}">Nota de justificación <span class="opcional">(opcional)</span></label>
-    <input class="campo__control" id="nota-{{ e.pk }}" type="text" maxlength="100" autocomplete="off" placeholder="Ej.: constancia entregada" aria-describedby="ayuda-nota-{{ e.pk }}" value="{{ fila.nota }}" data-nota-campo>
-    <p id="ayuda-nota-{{ e.pk }}" class="campo-ayuda">Máximo 100 caracteres · <span data-contador>{{ fila.nota|length }}</span>/100</p>
+    <label for="nota-{{ e.pk }}">Nota de justificación <span class="nota__opcional">(opcional)</span></label>
+    <input class="input" id="nota-{{ e.pk }}" type="text" maxlength="100" autocomplete="off" placeholder="Ej.: constancia entregada" aria-describedby="ayuda-nota-{{ e.pk }}" value="{{ fila.nota }}" data-nota-campo>
+    <p id="ayuda-nota-{{ e.pk }}" class="small">Máximo 100 caracteres · <span data-contador>{{ fila.nota|length }}</span>/100</p>
   </div>
 {% endwith %}
