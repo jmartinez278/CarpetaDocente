@@ -548,7 +548,14 @@ def test_la_jornada_completa_se_dibuja_con_el_cierre(cliente, seccion_docente, l
     assert "Jornada completa" in caja
     assert re.search(r"<p [^>]*data-cierre>.*?Asistencia de hoy completa</p>", caja, re.DOTALL)
     assert "Asistió: 21 · Tarde: 1 · Faltó: 2 · Justificado: 1" in caja
-    assert re.search(r"<p [^>]*data-avance hidden>", caja)
+    assert re.search(r"<p [^>]*data-avance>", caja), "el conteo no se oculta (A-02)"
+    assert "<span data-marcados>25</span>/25 ·</span>" in caja
+    enlaces = re.findall(r"<a [^>]*data-sin-marcar[^>]*>[^<]*</a>", caja)
+    assert len(enlaces) == 2
+    for enlace in enlaces:
+        assert "href" not in enlace, "con 0 sin marcar es texto, no una parada de foco"
+        assert "hidden" not in enlace
+        assert enlace.endswith(">0 sin marcar</a>")
     assert "restantes como Asistió" not in html
     assert "Marcar el restante" not in html
     assert "cierre-animado" not in html, "al abrirla ya completa, sin animación (D3)"
