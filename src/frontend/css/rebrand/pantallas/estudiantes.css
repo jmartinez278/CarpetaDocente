@@ -196,6 +196,7 @@
   @media (max-width: 699px) {
     .estudiante-fila {
       grid-template-columns: minmax(24px, max-content) minmax(0, 1fr) auto;
+      column-gap: var(--s-1);
     }
 
     .panel-lista .dialog-cabecera,
