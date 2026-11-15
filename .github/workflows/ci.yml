@@ -96,8 +96,9 @@ jobs:
   playwright:
     name: Playwright
     runs-on: ubuntu-latest
-    # 602 e2e tardan ~14 min solo en pytest y crecen con cada pantalla: 15, 25 y 40 no alcanzaron.
-    timeout-minutes: 60
+    # 590 e2e en local: 10 min 45 s en serie y 3 min 17 s con -n 4 (2026-11-14). Los 60 min
+    # en serie no eran lentitud sino una prueba colgada en Sesiones: --timeout=180 la corta.
+    timeout-minutes: 30
     permissions:
       contents: read
     services:
@@ -148,7 +149,12 @@ jobs:
           # Playwright síncrono deja un bucle asíncrono en el hilo de la prueba (README).
           # Solo en este paso; nunca en settings.py ni en producción.
           DJANGO_ALLOW_ASYNC_UNSAFE: "true"
-        run: uv run pytest -m e2e --browser chromium --tracing retain-on-failure
+        # Un worker por núcleo (ubuntu-latest de repo público: 4). loadfile deja cada archivo
+        # en un worker; cada uno tiene su base de pruebas (sufijo por PID, conftest.py).
+        # --timeout: ninguna e2e pasa de 8 s; a los 180 s una colgada falla con su traceback.
+        run: >-
+          uv run pytest -m e2e -n 4 --dist loadfile --timeout=180
+          --browser chromium --tracing retain-on-failure
       - name: Subir las trazas de Playwright si algo falló
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
