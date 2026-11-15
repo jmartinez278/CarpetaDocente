@@ -373,7 +373,7 @@
     top: var(--bar-height);
     z-index: 5;
     padding: var(--s-3) var(--s-2);
-    background: var(--card);
+    background: var(--grid-head);
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     color: var(--muted);
@@ -464,7 +464,7 @@
     gap: var(--s-1);
     margin: var(--s-1) 0 0 56px;
     color: var(--muted);
-    font-size: var(--text-support);
+    font-size: var(--text-label);
     text-transform: none;
   }
 
@@ -938,8 +938,9 @@
     border: 1px solid var(--line-strong);
     border-radius: var(--r-md);
     color: var(--ink);
-    font-size: var(--text-section);
+    font-size: var(--text-level);
     font-weight: 500;
+    line-height: var(--leading-level);
     cursor: pointer;
   }
 

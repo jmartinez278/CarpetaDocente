@@ -785,8 +785,7 @@
     $("nota-contexto").textContent = `${area().lista[r].nombre} · ${etiquetaDe(k)}`;
     $("conclusion-pc").value = c.conclusion;
     $("conclusion-pc").readOnly = lectura;
-    $("conclusion-pc").setAttribute("aria-invalid", "false");
-    $("ayuda-nota").className = "small";
+    mostrarErrorConclusion("conclusion-pc", "error-nota", "");
     $("ayuda-nota").textContent = lectura ? "Nota registrada en este bimestre." : "De 10 a 500 caracteres.";
     $("contador-nota").textContent = `${c.conclusion.length}/500`;
     $("listo-nota").textContent = lectura ? "Cerrar" : "Listo";
@@ -810,9 +809,10 @@
     if (!notaActiva) return;
     const { r, k } = notaActiva;
     if (!area().lista[r].lectura && invalida(celda(r, k))) {
-      $("conclusion-pc").setAttribute("aria-invalid", "true");
-      $("ayuda-nota").className = "small hn-error";
-      $("ayuda-nota").textContent = celda(r, k).conclusion.trim() ? "Escribe de 10 a 500 caracteres." : "Falta conclusión.";
+      mostrarErrorConclusion("conclusion-pc", "error-nota", celda(r, k).conclusion.trim() ? "Usa de 10 a 500 caracteres." : "Falta conclusión.");
+      // El error suma una línea: se vuelve a colocar para que siga entero en la ventana.
+      const ancla = document.querySelector(`.hn-nivel[data-r="${r}"][data-k="${k}"]`);
+      if (ancla) posicionarAlLado($("nota-editor"), ancla);
       $("conclusion-pc").focus();
       return;
     }
@@ -879,6 +879,18 @@
     else (document.querySelector(".hn-nivel-grande[aria-pressed=true]") || document.querySelector(".hn-nivel-grande"))?.focus({ preventScroll: true });
   }
 
+  // El error va en su propio párrafo y la instrucción del rango no cambia (rebrand-ajustes-auditoria, D4).
+  function mostrarErrorConclusion(idTexto, idError, mensaje) {
+    $(idTexto).setAttribute("aria-invalid", String(!!mensaje));
+    $(idError).textContent = mensaje;
+    $(idError).hidden = !mensaje;
+  }
+
+  function errorDelPanel(c, error) {
+    if (!error) return "";
+    return c.conclusion.length ? "Usa de 10 a 500 caracteres." : "Falta conclusión";
+  }
+
   function dibujarPanel() {
     const { r, k } = seleccion;
     const a = area();
@@ -895,9 +907,7 @@
     $("conclusion-movil").value = c.conclusion;
     $("conclusion-movil").readOnly = lectura;
     $("contador-movil").textContent = `${c.conclusion.length}/500`;
-    $("conclusion-movil").setAttribute("aria-invalid", String(error));
-    $("ayuda-conclusion").className = error ? "small hn-error" : "small";
-    $("ayuda-conclusion").textContent = error ? (c.conclusion.length ? "Usa de 10 a 500 caracteres." : "Falta conclusión") : "Escribe de 10 a 500 caracteres.";
+    mostrarErrorConclusion("conclusion-movil", "error-conclusion", errorDelPanel(c, error));
     $("ayuda-conclusion").hidden = lectura;
     document.querySelector("[data-panel-borrador]").textContent = lectura ? "Notas registradas en este bimestre. Solo lectura." : "Los cambios quedan como borrador hasta guardar el área.";
     const hayOtra = filtro ? !!siguienteFaltante(r, k) : r < a.activos - 1;
@@ -1432,9 +1442,7 @@
     if (area().lista[r].lectura) return;
     cambiarConclusion(r, k, evento.target.value);
     $("contador-nota").textContent = `${evento.target.value.length}/500`;
-    $("conclusion-pc").setAttribute("aria-invalid", "false");
-    $("ayuda-nota").className = "small";
-    $("ayuda-nota").textContent = "De 10 a 500 caracteres.";
+    mostrarErrorConclusion("conclusion-pc", "error-nota", "");
   });
   $("conclusion-pc").addEventListener("keydown", (evento) => {
     if (evento.ctrlKey && evento.key === "Enter") {
@@ -1458,10 +1466,8 @@
     if (area().lista[r].lectura) return;
     cambiarConclusion(r, k, evento.target.value);
     $("contador-movil").textContent = `${evento.target.value.length}/500`;
-    const error = invalida(celda(r, k));
-    evento.target.setAttribute("aria-invalid", String(error));
-    $("ayuda-conclusion").className = error ? "small hn-error" : "small";
-    $("ayuda-conclusion").textContent = error ? (evento.target.value.length ? "Usa de 10 a 500 caracteres." : "Falta conclusión") : "Escribe de 10 a 500 caracteres.";
+    const c = celda(r, k);
+    mostrarErrorConclusion("conclusion-movil", "error-conclusion", errorDelPanel(c, invalida(c)));
   });
   $("cerrar-panel").addEventListener("click", cerrarPanel);
   $("panel-editor").addEventListener("cancel", (evento) => {

@@ -410,7 +410,73 @@ def test_c_sin_conclusion_no_guarda_nada_y_marca_la_celda(abrir_hoja, estudiante
     page.get_by_role("button", name="Ir a la primera conclusión pendiente").click()
     page.locator("#conclusion-pc").fill("Bien")
     page.locator("#listo-nota").click()
-    expect(page.locator("#ayuda-nota")).to_contain_text("Escribe de 10 a 500 caracteres.")
+    expect(page.locator("#error-nota")).to_have_text("Usa de 10 a 500 caracteres.")
+    expect(page.locator("#ayuda-nota")).to_have_text("De 10 a 500 caracteres.")
+
+
+def test_el_panel_muestra_el_error_y_la_instruccion_a_la_vez(abrir_hoja, estudiantes):
+    """El error de la conclusión no reemplaza la instrucción en el panel del celular
+    (rebrand-ajustes-auditoria, D4; A-04)."""
+    ana, _ = estudiantes
+    page = abrir_hoja(ancho=360)
+    boton_movil(page, ana, 1).click()
+    page.locator('#panel-niveles [data-elegir="B"]').click()
+
+    texto = page.locator("#conclusion-movil")
+    error = page.locator("#error-conclusion")
+    ayuda = page.locator("#ayuda-conclusion")
+    expect(error).to_be_visible()
+    expect(error).to_have_text("Falta conclusión")
+    expect(ayuda).to_be_visible()
+    expect(ayuda).to_have_text("Escribe de 10 a 500 caracteres.")
+    expect(texto).to_have_attribute("aria-invalid", "true")
+
+    texto.fill("Muy")
+    expect(error).to_have_text("Usa de 10 a 500 caracteres.")
+    expect(ayuda).to_have_text("Escribe de 10 a 500 caracteres.")
+    expect(texto).to_have_attribute("aria-invalid", "true")
+
+    texto.fill("Diez letra")
+    expect(error).to_be_hidden()
+    expect(ayuda).to_have_text("Escribe de 10 a 500 caracteres.")
+    expect(texto).to_have_attribute("aria-invalid", "false")
+
+
+def test_el_editor_de_pc_muestra_el_error_y_la_instruccion_a_la_vez(abrir_hoja, estudiantes):
+    """Lo mismo en el recuadro de la PC, que solo existe desde 960 px (rebrand-ajustes-auditoria,
+    D4; A-04). En la última fila, donde el recuadro queda más cerca del borde inferior."""
+    _, luis = estudiantes
+    page = abrir_hoja()
+    entrada(page, luis, 1).focus()
+    page.keyboard.type("b")
+
+    texto = page.locator("#conclusion-pc")
+    error = page.locator("#error-nota")
+    ayuda = page.locator("#ayuda-nota")
+    expect(error).to_be_hidden()
+    page.locator("#listo-nota").click()
+    expect(page.locator("#nota-editor")).to_be_visible()
+    expect(error).to_be_visible()
+    expect(error).to_have_text("Falta conclusión.")
+    expect(ayuda).to_have_text("De 10 a 500 caracteres.")
+    expect(texto).to_have_attribute("aria-invalid", "true")
+    # Con el error, el recuadro crece y sigue entero dentro de la ventana (escenario de la PC).
+    assert page.evaluate(
+        "() => document.getElementById('nota-editor').getBoundingClientRect().bottom <= innerHeight"
+    )
+
+    texto.fill("Muy")
+    expect(error).to_be_hidden()
+    expect(texto).to_have_attribute("aria-invalid", "false")
+    page.locator("#listo-nota").click()
+    expect(error).to_have_text("Usa de 10 a 500 caracteres.")
+    expect(ayuda).to_have_text("De 10 a 500 caracteres.")
+
+    texto.press("End")
+    page.keyboard.type(" bastante")
+    expect(error).to_be_hidden()
+    expect(ayuda).to_have_text("De 10 a 500 caracteres.")
+    expect(texto).to_have_attribute("aria-invalid", "false")
 
 
 # --- Guardado sin conexión y sesión vencida ---

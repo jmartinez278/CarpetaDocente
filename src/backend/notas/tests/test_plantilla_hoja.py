@@ -297,6 +297,7 @@ IDS_DE_NOTAS_JS = (
     "conclusion-movil",
     "contador-movil",
     "ayuda-conclusion",
+    "error-conclusion",
     "panel-rechazo",
     "siguiente",
     "confirmar-relleno",
@@ -320,6 +321,7 @@ IDS_DE_NOTAS_JS = (
     "cerrar-nota",
     "conclusion-pc",
     "ayuda-nota",
+    "error-nota",
     "contador-nota",
     "listo-nota",
 )
@@ -406,6 +408,22 @@ def test_el_panel_del_celular_el_recuadro_y_la_lista(cliente, seccion_tutora, ma
     assert 'role="listbox"' in html and 'id="lista-niveles"' in html
     assert re.search(r'<div id="competencia-detalle"[^>]*role="tooltip"', html)
     assert re.search(r'<div id="nota-previa"[^>]*role="tooltip"[^>]*hidden', html)
+
+
+def test_el_error_de_la_conclusion_va_aparte_de_la_instruccion(cliente, seccion_tutora, matematica):
+    """El error y el rango se leen a la vez (rebrand-ajustes-auditoria, D4; A-04): cada textarea
+    describe la instrucción y un párrafo de error propio, oculto hasta que hay error."""
+    html = pagina(cliente, seccion_tutora)
+
+    assert re.search(r'<p id="error-conclusion" class="small hn-error"[^>]*hidden', html)
+    assert re.search(
+        r'<textarea id="conclusion-movil"[^>]*aria-describedby="ayuda-conclusion error-conclusion"',
+        html,
+    )
+    assert re.search(r'<p id="error-nota" class="small hn-error"[^>]*hidden', html)
+    assert re.search(
+        r'<textarea id="conclusion-pc"[^>]*aria-describedby="ayuda-nota error-nota"', html
+    )
 
 
 def test_las_regiones_del_lector_de_pantalla_y_el_noscript(cliente, seccion_tutora, matematica):

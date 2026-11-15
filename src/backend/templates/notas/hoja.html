@@ -80,7 +80,7 @@ aviso.
     <div class="hn-panel__cabecera"><div><p id="panel-posicion" class="small"></p><h2 id="panel-estudiante">Estudiante</h2></div><button id="cerrar-panel" class="btn icon-button" type="button" aria-label="Cerrar edición">{% include "iconos/x.svg" %}</button></div>
     <p id="panel-competencia" class="hn-panel__competencia"></p>
     <fieldset class="hn-panel__niveles"><legend>Nivel de logro</legend><div id="panel-niveles"></div></fieldset>
-    <div id="panel-conclusion" class="hn-panel__conclusion" hidden><div class="hn-conclusion-etiqueta"><label for="conclusion-movil">Conclusión descriptiva <span>(obligatoria)</span></label><span id="contador-movil" class="small">0/500</span></div><textarea id="conclusion-movil" class="input" rows="3" maxlength="500" aria-describedby="ayuda-conclusion"></textarea><p id="ayuda-conclusion" class="small">Escribe de 10 a 500 caracteres.</p></div>
+    <div id="panel-conclusion" class="hn-panel__conclusion" hidden><div class="hn-conclusion-etiqueta"><label for="conclusion-movil">Conclusión descriptiva <span>(obligatoria)</span></label><span id="contador-movil" class="small">0/500</span></div><textarea id="conclusion-movil" class="input" rows="3" maxlength="500" aria-describedby="ayuda-conclusion error-conclusion"></textarea><p id="ayuda-conclusion" class="small">Escribe de 10 a 500 caracteres.</p><p id="error-conclusion" class="small hn-error" hidden></p></div>
     <p id="panel-rechazo" class="hn-panel__rechazo" role="alert" hidden></p>
     <p class="small" data-panel-borrador>Los cambios quedan como borrador hasta guardar el área.</p>
     <button id="siguiente" class="btn btn--primary hn-siguiente" type="button">Siguiente ↓</button>
@@ -92,8 +92,9 @@ aviso.
   <section id="nota-editor" class="hn-editor" aria-labelledby="nota-titulo" hidden>
     <header class="hn-editor__cabecera"><div><h2 id="nota-titulo">Rellena la conclusión</h2><p id="nota-contexto" class="small"></p></div><button id="cerrar-nota" class="btn icon-button" type="button" aria-label="Cerrar conclusión">{% include "iconos/x.svg" %}</button></header>
     <label for="conclusion-pc" class="sr-only">Conclusión descriptiva</label>
-    <textarea id="conclusion-pc" class="input hn-editor__texto" rows="4" maxlength="500" aria-describedby="ayuda-nota" placeholder="Escribe qué logró y qué necesita reforzar."></textarea>
+    <textarea id="conclusion-pc" class="input hn-editor__texto" rows="4" maxlength="500" aria-describedby="ayuda-nota error-nota" placeholder="Escribe qué logró y qué necesita reforzar."></textarea>
     <p id="ayuda-nota" class="small">De 10 a 500 caracteres.</p>
+    <p id="error-nota" class="small hn-error" hidden></p>
     <div class="hn-editor__pie"><span id="contador-nota" class="small">0/500</span><button id="listo-nota" class="btn btn--secondary" type="button">Listo</button></div>
   </section>
   <template data-iconos>
