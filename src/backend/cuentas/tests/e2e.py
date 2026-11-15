@@ -76,10 +76,14 @@ def revisar_con_axe(page, nombre):
     page.evaluate("document.fonts.ready")
     # Un mensaje que aparece (``aparecer``, 180 ms) a media opacidad da un contraste falso: se
     # espera a que terminen las animaciones finitas; las ligadas al desplazamiento no terminan.
+    # Tampoco las de un elemento que no se pinta (``checkVisibility``): Chromium no las avanza y
+    # su ``finished`` no se resuelve nunca. Pasa con «Cerrar sesión» dentro del menú de cuenta
+    # cerrado al cambiar a oscuro con ``--tracing``, como en el CI.
     page.evaluate(
         """() => Promise.all(document.getAnimations()
             .filter((a) => a.timeline === document.timeline
-                && a.effect.getComputedTiming().iterations !== Infinity)
+                && a.effect.getComputedTiming().iterations !== Infinity
+                && a.effect.target?.checkVisibility())
             .map((a) => a.finished.catch(() => null)))"""
     )
     page.add_script_tag(path=str(AXE))
