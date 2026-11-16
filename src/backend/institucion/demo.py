@@ -477,7 +477,8 @@ def quitar_demo():
         secciones = list(secciones_demo().select_for_update(of=("self",)))
         resumen = conteos_demo()
         _borrar(secciones)
-        ejemplos.quitar_sesiones()
+        # Las que de verdad borró: una enviada mientras tanto también cuenta.
+        resumen.sesiones = ejemplos.quitar_sesiones()
         for seccion in secciones:
             seccion.docente = None
             seccion.save()
