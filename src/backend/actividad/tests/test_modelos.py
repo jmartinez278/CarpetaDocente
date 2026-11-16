@@ -74,13 +74,36 @@ def test_solo_asistencia_notas_guardadas_y_sesion_enviada_cuentan_para_kpi_01():
     }
 
 
-def test_ninguna_operacion_esta_reservada():
-    """US-004 genera INTENTO_SIN_PERMISO: el catálogo ya no salta ninguna."""
-    assert RESERVADAS == frozenset()
+SOBRE_SESIONES = [
+    "SESION_VISTA",
+    "SESION_DESCARGADA",
+    "SESION_COMPARTIDA",
+    "SESION_DESCOMPARTIDA",
+    "SESION_ELIMINADA",
+]
+
+
+def test_las_reservadas_son_las_de_sesiones_que_aun_no_tienen_quien_las_genere():
+    """Entran al catálogo en la parte A; las partes C y D las generan y las sacan de aquí."""
+    assert set(SOBRE_SESIONES) == RESERVADAS
+
+
+@pytest.mark.parametrize("operacion", SOBRE_SESIONES)
+def test_la_base_acepta_las_operaciones_sobre_sesiones(operacion):
+    entrada = _entrada(operacion=operacion)
+
+    entrada.refresh_from_db()
+    assert entrada.operacion == operacion
+
+
+@pytest.mark.parametrize("operacion", SOBRE_SESIONES)
+def test_ver_descargar_compartir_y_eliminar_no_cuentan_para_kpi_01(operacion):
+    assert operacion in Operacion.values
+    assert operacion not in CUENTAN_KPI_01
 
 
 def test_el_catalogo_de_esta_historia():
-    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-010)."""
+    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-011)."""
     assert set(Operacion.values) == {
         "INICIO_SESION",
         "CIERRE_SESION",
@@ -108,6 +131,11 @@ def test_el_catalogo_de_esta_historia():
         "COMPETENCIAS_MARCADAS",
         "NOTAS_GUARDADAS",
         "SESION_ENVIADA",
+        "SESION_VISTA",
+        "SESION_DESCARGADA",
+        "SESION_COMPARTIDA",
+        "SESION_DESCOMPARTIDA",
+        "SESION_ELIMINADA",
         "CATALOGO_EDITADO",
         "DEMO_CARGADA",
         "DEMO_QUITADA",

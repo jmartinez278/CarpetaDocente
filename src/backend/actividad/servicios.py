@@ -51,6 +51,11 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
     Operacion.NOTAS_GUARDADAS: frozenset({"area", "periodo", "creadas", "cambiadas"}),
     # Solo si se compartió; sin título, propósito ni nombre del archivo (US-010, D10).
     Operacion.SESION_ENVIADA: frozenset({"compartida"}),
+    # "descargar" o "ver", y si la sesión es de quien la pide (US-012, D6). SESION_VISTA,
+    # SESION_COMPARTIDA y SESION_DESCOMPARTIDA no llevan detalle.
+    Operacion.SESION_DESCARGADA: frozenset({"modo", "propia"}),
+    # Solo si estaba compartida (US-016, D8).
+    Operacion.SESION_ELIMINADA: frozenset({"compartida"}),
     Operacion.CATALOGO_EDITADO: frozenset({"campos"}),
     Operacion.DEMO_CARGADA: frozenset({"secciones", "estudiantes", "dias"}),
     Operacion.DEMO_QUITADA: frozenset(

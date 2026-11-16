@@ -53,7 +53,7 @@ class Sesion(models.Model):
         related_name="sesiones",
         verbose_name="institución",
     )
-    # Sin índice propio: es idx_sesion_autor, con el nombre del documento 11.
+    # Sin índice propio: lo cubre idx_sesion_autor_fecha, que empieza por la autora.
     autor = models.ForeignKey(
         "cuentas.Usuario",
         on_delete=models.PROTECT,
@@ -85,6 +85,12 @@ class Sesion(models.Model):
     tipo_mime = models.CharField("tipo del archivo", max_length=100, choices=TipoMime)
     tamano_bytes = models.IntegerField("tamaño en bytes")
     terminos_aceptados_en = models.DateTimeField("términos aceptados en", null=True, blank=True)
+    # Texto transcrito del archivo, hasta 100 000 caracteres, y lo que recorre la búsqueda:
+    # título, propósito y texto, normalizados (design de US-011, D1 y D4). Los dos los escribe
+    # solo ``servicios``; pueden traer lo que la docente escribió (RN-015) y no van al registro
+    # ni a los logs.
+    texto = models.TextField("texto transcrito", blank=True, default="")
+    texto_busqueda = models.TextField("texto de búsqueda", blank=True, default="")
     creado_en = models.DateTimeField("creado en", auto_now_add=True)
     actualizado_en = models.DateTimeField("actualizado en", auto_now=True)
 
@@ -112,20 +118,56 @@ class Sesion(models.Model):
                 name="ck_sesion_tamano",
             ),
             models.CheckConstraint(condition=~Q(titulo=""), name="ck_sesion_titulo"),
-            # Compartida si y solo si se aceptaron los términos (decisión 1, US-014).
+            # Compartida solo si se aceptaron los términos (decisión 1, US-014). La que dejó de
+            # compartirse conserva su fecha (US-011, D1).
             models.CheckConstraint(
-                condition=(
-                    Q(compartida=True, terminos_aceptados_en__isnull=False)
-                    | Q(compartida=False, terminos_aceptados_en__isnull=True)
-                ),
+                condition=Q(compartida=False) | Q(terminos_aceptados_en__isnull=False),
                 name="ck_sesion_terminos",
             ),
         ]
-        # Del documento 11; idx_sesion_titulo_trgm llega con la búsqueda (US-011).
+        # idx_sesion_busqueda es del documento 11; idx_sesion_autor_fecha sirve a «Mis sesiones»
+        # (US-011, D1). idx_sesion_titulo_trgm queda en la deuda.
         indexes = [
             models.Index(fields=["institucion", "grado", "area"], name="idx_sesion_busqueda"),
-            models.Index(fields=["autor"], name="idx_sesion_autor"),
+            models.Index(fields=["autor", "-creado_en"], name="idx_sesion_autor_fecha"),
         ]
 
     def __str__(self):
         return self.titulo
+
+
+class SesionVista(models.Model):
+    """Una docente abrió la página de una sesión ajena: una fila por sesión y docente.
+
+    De aquí sale «La vieron N colegas» y, con SESION_VISTA y SESION_DESCARGADA del registro, el
+    uso del repositorio que mide la tesis (design de US-011, D1 y D6). Solo la crea
+    ``servicios``.
+    """
+
+    # Sin índice propio: lo cubre uq_sesion_vista, que empieza por la sesión.
+    sesion = models.ForeignKey(
+        Sesion,
+        on_delete=models.CASCADE,
+        db_index=False,
+        related_name="vistas",
+        verbose_name="sesión",
+    )
+    # PROTECT, como el resto del modelo: las cuentas se desactivan, no se borran.
+    usuario = models.ForeignKey(
+        "cuentas.Usuario",
+        on_delete=models.PROTECT,
+        related_name="sesiones_vistas",
+        verbose_name="usuario",
+    )
+    creado_en = models.DateTimeField("creado en", auto_now_add=True)
+
+    class Meta:
+        db_table = "sesion_vista"
+        verbose_name = "vista de una sesión"
+        verbose_name_plural = "vistas de sesiones"
+        constraints = [
+            models.UniqueConstraint(fields=["sesion", "usuario"], name="uq_sesion_vista"),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario_id} vio {self.sesion_id}"

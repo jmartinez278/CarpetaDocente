@@ -41,6 +41,11 @@ class Operacion(models.TextChoices):
     COMPETENCIAS_MARCADAS = "COMPETENCIAS_MARCADAS", "Competencias marcadas"
     NOTAS_GUARDADAS = "NOTAS_GUARDADAS", "Notas guardadas"
     SESION_ENVIADA = "SESION_ENVIADA", "Sesión enviada"
+    SESION_VISTA = "SESION_VISTA", "Sesión vista"
+    SESION_DESCARGADA = "SESION_DESCARGADA", "Sesión descargada"
+    SESION_COMPARTIDA = "SESION_COMPARTIDA", "Sesión compartida"
+    SESION_DESCOMPARTIDA = "SESION_DESCOMPARTIDA", "Sesión dejada de compartir"
+    SESION_ELIMINADA = "SESION_ELIMINADA", "Sesión eliminada"
     CATALOGO_EDITADO = "CATALOGO_EDITADO", "Catálogo editado"
     DEMO_CARGADA = "DEMO_CARGADA", "Demostración cargada"
     DEMO_QUITADA = "DEMO_QUITADA", "Demostración quitada"
@@ -61,8 +66,17 @@ CUENTAN_KPI_01 = frozenset(
 )
 
 # Operaciones del catálogo que aún no tienen quién las genere (la prueba de cobertura las salta).
-# Vacía desde US-004, que genera INTENTO_SIN_PERMISO; se conserva para la próxima reservada.
-RESERVADAS: frozenset[Operacion] = frozenset()
+# Las de sesiones entran al catálogo con el modelo (US-011, parte A): SESION_VISTA y
+# SESION_DESCARGADA salen de aquí con la parte C, que las genera, y las otras tres con la D.
+RESERVADAS: frozenset[Operacion] = frozenset(
+    {
+        Operacion.SESION_VISTA,
+        Operacion.SESION_DESCARGADA,
+        Operacion.SESION_COMPARTIDA,
+        Operacion.SESION_DESCOMPARTIDA,
+        Operacion.SESION_ELIMINADA,
+    }
+)
 
 
 class RegistroActividad(models.Model):
