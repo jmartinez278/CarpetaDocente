@@ -1,0 +1,5 @@
+{% comment %}
+Diálogo de eliminar (spec detalle-sesion, «Eliminar una sesión propia»; design de US-011, D8): chico y centrado, con el
+foco inicial en «Cancelar». «Eliminar sesión» envía el formulario del cuerpo (POST con 303 a «Mis sesiones»). detalle.js
+lo abre desde «Eliminar» y devuelve el foco ahí al cancelar.
+{% endcomment %}{% include "rb/dialogo.html" with id="eliminar" variante="chico" titulo="¿Eliminar esta sesión?" titulo_id="eliminar-titulo" descripcion="También se retira de la dirección." descripcion_id="eliminar-descripcion" cuerpo="repositorio/_eliminar_cuerpo.html" pie="repositorio/_eliminar_pie.html" %}

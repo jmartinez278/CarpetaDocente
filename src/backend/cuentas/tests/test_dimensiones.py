@@ -8,7 +8,7 @@ import pytest
 from django.template.loader import get_template
 from django.urls import NoReverseMatch, reverse
 
-from cuentas.dimensiones import DIMENSIONES, POR_SECCION, navegacion_docente
+from cuentas.dimensiones import DIMENSIONES, POR_SECCION, navegacion_docente, para_portada
 
 CARPETA_PLANTILLAS = Path(__file__).resolve().parents[2] / "templates"
 
@@ -57,10 +57,23 @@ def test_las_tarjetas_no_traen_el_subtitulo_formal():
     assert not hasattr(DIMENSIONES[0], "subtitulo")
 
 
-def test_desde_us_020_notas_y_asistencia_estan_disponibles():
+def test_desde_us_011_las_tres_dimensiones_estan_disponibles():
     disponibles = [(d.clave, d.url_name) for d in DIMENSIONES if d.disponible or d.url_name]
 
-    assert disponibles == [("asistencia", "asistencia:hoy"), ("notas", "notas:hoja")]
+    assert disponibles == [
+        ("asistencia", "asistencia:hoy"),
+        ("sesiones", "sesiones:inicio"),
+        ("notas", "notas:hoja"),
+    ]
+
+
+def test_sesiones_no_es_una_pantalla_de_la_seccion():
+    """Escenario «Sesiones con o sin sección»: enlaza igual con una, con dos o sin sección."""
+    assert "sesiones" not in POR_SECCION
+    for seccion in (None, SimpleNamespace(pk=7)):
+        tarjeta = next(d for d in para_portada(DIMENSIONES, seccion) if d.clave == "sesiones")
+        assert tarjeta.disponible
+        assert tarjeta.url == reverse("sesiones:inicio")
 
 
 def test_notas_y_asistencia_son_pantallas_de_la_seccion():
@@ -121,7 +134,7 @@ def test_con_seccion_unica_enlaza_igual_que_las_tarjetas():
 
     assert urls == {
         "inicio": reverse("docente:portada"),
-        "sesiones": None,
+        "sesiones": reverse("sesiones:inicio"),
         "asistencia": reverse("asistencia:hoy", args=[7]),
         "notas": reverse("notas:hoja", args=[7]),
     }
@@ -133,19 +146,10 @@ def test_sin_seccion_unica_solo_inicio_enlaza():
 
     assert urls == {
         "inicio": reverse("docente:portada"),
-        "sesiones": None,
+        "sesiones": reverse("sesiones:inicio"),
         "asistencia": None,
         "notas": None,
     }
-
-
-def test_sesiones_disponible_enlaza_su_pantalla():
-    con_sesiones = tuple(
-        replace(d, disponible=True, url_name="sesiones:inicio") if d.clave == "sesiones" else d
-        for d in DIMENSIONES
-    )
-
-    assert destinos(dimensiones=con_sesiones)[1].url == reverse("sesiones:inicio")
 
 
 @pytest.mark.parametrize(
@@ -156,6 +160,9 @@ def test_sesiones_disponible_enlaza_su_pantalla():
         ("competencias:pantalla", "notas"),
         ("asistencia:hoy", "asistencia"),
         ("asistencia:restantes", "asistencia"),
+        ("sesiones:inicio", "sesiones"),
+        ("sesiones:repositorio", "sesiones"),
+        ("sesiones:detalle", "sesiones"),
         ("docente:sin_permiso", None),
         ("estudiantes:lista", None),
         (None, None),
@@ -170,4 +177,4 @@ def test_ubicacion_actual(vista, actual):
 
 def test_un_destino_no_disponible_no_es_el_actual():
     assert not any(d.actual for d in destinos(seccion=None, vista="notas:hoja"))
-    assert not any(d.actual for d in destinos(vista="sesiones:inicio"))
+    assert not any(d.actual for d in destinos(seccion=None, vista="asistencia:hoy"))

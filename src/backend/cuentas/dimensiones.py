@@ -3,7 +3,8 @@
 La historia que construye la pantalla de una dimensión cambia aquí su entrada: pone
 ``disponible=True`` y el ``url_name`` de esa pantalla. ``test_dimensiones.py`` falla si una
 dimensión disponible no resuelve su ruta, para que ninguna tarjeta enlace a una página que no existe
-(spec pantallas-de-inicio). Desde US-030, Asistencia está disponible, y desde US-020, Notas; sus
+(spec pantallas-de-inicio). Desde US-011, Sesiones está disponible con o sin sección: su ruta no
+es de la sección. Desde US-030, Asistencia está disponible, y desde US-020, Notas; sus
 rutas son de la sección, así que la portada las enlaza solo si la docente tiene una sola sección
 (``para_portada``).
 """
@@ -51,6 +52,8 @@ DIMENSIONES = (
         "Envía tu sesión a la dirección y compártela con tus colegas.",
         "Ver sesiones",
         "book-open",
+        url_name="sesiones:inicio",
+        disponible=True,
     ),
     Dimension(
         "notas",

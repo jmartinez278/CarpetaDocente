@@ -1,6 +1,7 @@
-/* Sesiones (rebrand-us-010, D1 y D7), del boceto (insumos/rebrand/repositorio.html): la cabecera
-   con título, subtítulo y «Subir una sesión», que baja entero si no cabe (sin la etiqueta corta ni
-   el ícono +), el formulario y los términos de los diálogos, y el resumen del éxito. */
+/* Sesiones (rebrand-us-010, D1 y D7; US-011, D10), del boceto (insumos/rebrand/repositorio.html y
+   sesion.html): la cabecera con título y «Subir una sesión» («+ Subir» en el celular), las pestañas,
+   el buscador, los filtros, las tarjetas y la página de una sesión, además del formulario y los
+   términos de los diálogos y el resumen del éxito. Solo tokens de DESIGN.md. */
 
 @layer components {
   .page-heading {
@@ -22,26 +23,6 @@
 
   .sesiones-resultado:empty {
     display: none;
-  }
-
-  /* Pestañas y enlaces de las listas (US-011, parte C): solo el área táctil de 44 px (A-01);
-     su diseño es de la tarea 5.2. */
-  .sesiones-pestanas [role="tablist"] {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-    margin-bottom: var(--s-5);
-  }
-
-  .sesiones-pestanas [role="tab"],
-  .repositorio-filtros a,
-  .repositorio-filtros [aria-disabled="true"],
-  [aria-label="Filtros activos"] a,
-  .migas a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    min-width: 44px;
   }
 
   .sesiones-resultado {

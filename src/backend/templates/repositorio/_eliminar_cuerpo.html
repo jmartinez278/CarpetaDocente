@@ -1,0 +1,2 @@
+{% comment %}Cuerpo del diálogo de eliminar: el aviso y el formulario que envía «Eliminar sesión».{% endcomment %}<p>Se eliminarán la sesión y su archivo para todos.</p>
+<form id="form-eliminar" method="post" action="{% url "sesiones:eliminar" sesion.pk %}">{% csrf_token %}</form>

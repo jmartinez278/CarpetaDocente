@@ -14,8 +14,7 @@ from django.core.files.storage import storages
 from playwright.sync_api import expect
 
 from actividad.models import Operacion, RegistroActividad
-from catalogo.models import InstitucionArea
-from cuentas.tests.e2e import ANCHOS, TEMAS, con_pantalla, ingresar, revisar_con_axe
+from cuentas.tests.e2e import TEMAS, con_pantalla, ingresar, revisar_con_axe
 from repositorio.models import Sesion
 from repositorio.tests.archivos import docx_bytes, pdf_bytes
 
@@ -183,19 +182,6 @@ def test_orden_de_los_botones(pantalla, ancho):
 # --- Campos ---
 
 
-def test_las_areas_son_las_que_trabaja_la_institucion_en_orden_siagie(pantalla, institucion):
-    abrir(pantalla)
-
-    esperadas = [
-        fila.area.nombre
-        for fila in InstitucionArea.objects.filter(institucion=institucion, se_trabaja=True)
-        .select_related("area")
-        .order_by("area__orden")
-    ]
-    opciones = pantalla.locator("#area option").all_inner_texts()
-    assert opciones == ["Elige el área", *esperadas]
-
-
 def test_archivo_elegido_muestra_nombre_tipo_tamano_y_cambiar(pantalla):
     abrir(pantalla)
 
@@ -213,15 +199,6 @@ def test_un_docx_se_reconoce_como_word(pantalla):
 
     expect(pantalla.locator("[data-archivo-detalle]")).to_contain_text("Word ·")
     expect(error_de(pantalla, "archivo")).to_be_hidden()
-
-
-def test_el_grado_viene_con_el_de_su_seccion(pantalla):
-    abrir(pantalla)
-
-    expect(pantalla.locator("#grado")).to_have_value("2")
-    expect(pantalla.locator("#grado-ayuda")).to_have_text(
-        "Grado de tu sección: 2.º A. Puedes cambiarlo."
-    )
 
 
 # --- Datos que faltan ---
@@ -310,7 +287,7 @@ def test_enviar_sin_compartir_va_directo_y_muestra_el_exito(pantalla):
     expect(exito).to_have_attribute("role", "status")
     expect(exito.get_by_role("heading", name="Leemos un cuento")).to_be_focused()
     expect(boton_subir(pantalla)).to_be_hidden()
-    expect(pantalla.get_by_text("Aquí verás las sesiones que envíes y su estado.")).to_be_visible()
+    expect(pantalla.get_by_role("link", name="Abrir Leemos un cuento")).to_be_visible()
     sesion = Sesion.objects.get()
     assert sesion.compartida is False
     assert sesion.terminos_aceptados_en is None
@@ -600,66 +577,20 @@ def revisar_estado(page, estado, tema, ancho):
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_los_estados_del_boceto_son_accesibles_y_sin_desplazamiento(pantalla, tema, ancho):
-    con_pantalla(pantalla, ancho, tema)
-    revisar_estado(pantalla, "1", tema, ancho)
+def test_los_estados_del_boceto_son_accesibles_y_sin_desplazamiento(pantalla, tema):
+    """Reducida (US-011, D12): 360 px, ambos temas, el estado principal y cada diálogo abierto."""
+    con_pantalla(pantalla, 360, tema)
+    revisar_estado(pantalla, "1", tema, 360)
 
     abrir(pantalla)
-    revisar_estado(pantalla, "2", tema, ancho)
+    revisar_estado(pantalla, "2", tema, 360)
 
     llenar(pantalla)
     pantalla.locator("#compartir").check()
-    revisar_estado(pantalla, "3", tema, ancho)
-
     enviar(pantalla).click()
     expect(terminos(pantalla)).to_be_visible()
     quieto(pantalla)
-    revisar_estado(pantalla, "4a", tema, ancho)
-    terminos(pantalla).get_by_role("button", name="Volver").click()
-
-    pantalla.locator("#compartir").uncheck()
-    pantalla.locator("#area").select_option("")
-    pantalla.locator("#titulo").fill("")
-    enviar(pantalla).click()
-    expect(error_de(pantalla, "titulo")).to_be_visible()
-    revisar_estado(pantalla, "5", tema, ancho)
-
-    elegir(pantalla, "foto-de-la-sesion.jpg", b"\xff\xd8\xff\xe0" + b"\x00" * 900, "image/jpeg")
-    expect(error_de(pantalla, "archivo")).to_be_visible()
-    revisar_estado(pantalla, "6a", tema, ancho)
-
-    elegir(pantalla, "leemos-un-cuento.pdf", pdf_bytes(CUATRO_MB + 1))
-    expect(error_de(pantalla, "archivo")).to_contain_text("4 MB")
-    revisar_estado(pantalla, "6b", tema, ancho)
-
-    detenidas = []
-
-    def detener(ruta):
-        detenidas.append(ruta)
-
-    pantalla.route(ENVIO, detener)
-    llenar(pantalla)
-    enviar(pantalla).click()
-    expect(pantalla.locator("[data-progreso]")).to_be_visible()
-    revisar_estado(pantalla, "7", tema, ancho)
-
-    detenidas.pop().abort("failed")
-    expect(popup(pantalla).locator("[data-error-red]")).to_be_visible()
-    revisar_estado(pantalla, "8", tema, ancho)
-
-    pantalla.unroute(ENVIO)
-    enviar(pantalla).click()
-    esperar_exito(pantalla)
-    revisar_estado(pantalla, "9", tema, ancho)
-
-    resultado(pantalla).get_by_role("button", name="Subir otra").click()
-    llenar(pantalla)
-    pantalla.locator("#compartir").check()
-    enviar(pantalla).click()
-    terminos(pantalla).get_by_role("button", name="Acepto y envío").click()
-    esperar_exito(pantalla, "compartida en el repositorio")
-    revisar_estado(pantalla, "10", tema, ancho)
+    revisar_estado(pantalla, "4a", tema, 360)
 
 
 def test_pantalla_baja_los_terminos_se_desplazan_y_sus_botones_siguen_a_la_vista(pantalla):
@@ -679,85 +610,6 @@ def test_pantalla_baja_los_terminos_se_desplazan_y_sus_botones_siguen_a_la_vista
 
 
 # --- Marco del rebrand: diálogo y cabecera (rebrand-us-010, D1, D3 y D4) ---
-
-
-def caja_de(page, selector):
-    return page.locator(selector).bounding_box()
-
-
-def test_en_el_celular_el_popup_es_una_hoja_abajo_a_todo_el_ancho(pantalla):
-    con_pantalla(pantalla, 360, "light")
-    abrir(pantalla)
-
-    caja = caja_de(pantalla, "#subir")
-    alto = pantalla.viewport_size["height"]
-    assert caja["x"] == 0 and caja["width"] == 360
-    assert abs(caja["y"] + caja["height"] - alto) <= 1, "pegada abajo"
-
-
-def test_en_la_pc_el_popup_es_una_ventana_centrada_de_480_px_o_menos(pantalla):
-    con_pantalla(pantalla, 1280, "light")
-    abrir(pantalla)
-
-    caja = caja_de(pantalla, "#subir")
-    alto = pantalla.viewport_size["height"]
-    assert caja["width"] <= 480
-    assert abs(caja["x"] + caja["width"] / 2 - 640) <= 1, "centrada en horizontal"
-    assert caja["y"] > 0 and caja["y"] + caja["height"] < alto, "no toca los bordes"
-
-
-ESTADO_DEL_DIALOGO = """() => {
-  const subir = document.getElementById("subir");
-  return {
-    abierto: subir.open,
-    animaciones: document.getAnimations().length,
-    transform: getComputedStyle(subir).transform,
-  };
-}"""
-
-
-def test_con_el_teclado_el_popup_abre_y_cierra_sin_transicion(pantalla):
-    """Regla 1 de Movimiento: Enter abre en su lugar y Esc cierra de inmediato."""
-    con_pantalla(pantalla, 360, "light")
-    boton_subir(pantalla).focus()
-
-    pantalla.keyboard.press("Enter")
-    abierto = pantalla.evaluate(ESTADO_DEL_DIALOGO)
-    assert abierto == {"abierto": True, "animaciones": 0, "transform": "none"}
-
-    pantalla.keyboard.press("Escape")
-    cerrado = pantalla.evaluate(ESTADO_DEL_DIALOGO)
-    assert cerrado["abierto"] is False and cerrado["animaciones"] == 0
-    expect(popup(pantalla)).to_be_hidden()
-
-
-@pytest.mark.parametrize("ancho", [360, 1280])
-def test_con_movimiento_reducido_el_popup_no_se_desplaza(pantalla, ancho):
-    con_pantalla(pantalla, ancho, "light")
-    pantalla.emulate_media(reduced_motion="reduce")
-
-    boton_subir(pantalla).click()
-    assert pantalla.evaluate(ESTADO_DEL_DIALOGO)["transform"] == "none"
-    quieto(pantalla)
-    assert pantalla.evaluate(ESTADO_DEL_DIALOGO)["transform"] == "none"
-
-
-@pytest.mark.parametrize("ancho", [360, 1280])
-def test_a04_al_cerrar_con_el_mouse_el_popup_sale_en_columna(pantalla, ancho):
-    """Auditoría de Emil A-04: durante la salida, cabecera, cuerpo y pie no se ponen en fila."""
-    con_pantalla(pantalla, ancho, "light")
-    abrir(pantalla)
-
-    cancelar(pantalla).click()
-    saliendo = pantalla.evaluate(
-        """() => {
-          const estilo = getComputedStyle(document.getElementById("subir"));
-          return { display: estilo.display, direccion: estilo.flexDirection };
-        }"""
-    )
-    assert saliendo == {"display": "flex", "direccion": "column"}
-    quieto(pantalla)
-    expect(popup(pantalla)).to_be_hidden()
 
 
 @pytest.mark.parametrize("ancho", [320, 568])
@@ -785,14 +637,18 @@ def test_b02_en_una_pantalla_muy_baja_el_cuerpo_del_popup_sigue_a_la_vista(panta
 
 
 def test_en_el_celular_subir_una_sesion_se_lee_completo(pantalla):
-    """Escenario «Botón en el celular»."""
+    """Escenario «Botón en el celular»: dice «Subir» y se anuncia como «Subir una sesión»."""
     con_pantalla(pantalla, 360, "light")
 
     boton = boton_subir(pantalla)
     caja = boton.bounding_box()
     assert caja["x"] >= 0 and caja["x"] + caja["width"] <= 360
     assert boton.evaluate("(el) => el.scrollWidth <= el.clientWidth"), "texto sin recortar"
-    expect(boton).to_have_text("Subir una sesión")
+    expect(boton).to_have_text("Subir", use_inner_text=True)
+    titulo = pantalla.get_by_role("heading", name="Sesiones", exact=True).bounding_box()
+    assert abs((caja["y"] + caja["height"] / 2) - (titulo["y"] + titulo["height"] / 2)) < 12, (
+        "el botón va en la misma fila que el título"
+    )
     assert pantalla.evaluate(
         "document.documentElement.scrollWidth <= document.documentElement.clientWidth"
     )

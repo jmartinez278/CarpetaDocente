@@ -1,31 +1,33 @@
 {% extends "marco.html" %}
 {% load static %}
 {% comment %}
-Sesiones de la docente en el marco del rebrand (spec envio-sesiones; rebrand-us-010, D1): cabecera con «Sesiones», su
-subtítulo y «Subir una sesión» (debajo en el celular si no cabe), la región del éxito y el estado vacío, sin lista. El
-<main> es del marco: aquí va el gancho data-dimension. Los dos popups (#subir y #terminos, encima) van en la página;
-sesiones.js los abre, valida y envía. Sin JavaScript, el <noscript> lo dice.
+Sesiones de la docente en el marco del rebrand (specs envio-sesiones y repositorio-sesiones; design de US-011, D10):
+cabecera con «Sesiones» y «Subir una sesión» («+ Subir» en el celular, mismo nombre accesible), las pestañas «Mis sesiones»
+y «Repositorio» y el panel de la pestaña. El <main> es del marco: aquí va el gancho data-dimension. Los dos popups
+(#subir y #terminos, encima) van en la página; sesiones.js los abre, valida y envía, y listas.js maneja las pestañas, el
+buscador y el panel de filtros con HTMX. HTMX no guarda copia de la pantalla en el navegador (historyCacheSize 0): «atrás»
+la pide de nuevo al servidor. Sin JavaScript, el <noscript> lo dice y las listas siguen siendo enlaces normales.
 {% endcomment %}
 
 {% block titulo %}Sesiones · CarpetaDocente{% endblock %}
-{% block scripts %}<script src="{% static 'js/sesiones.js' %}" defer></script>{% endblock %}
+{% block scripts %}<meta name="htmx-config" content='{"historyCacheSize":0,"refreshOnHistoryMiss":true}'>
+<script src="{% static 'dist/vendor/htmx.min.js' %}" defer></script>
+<script src="{% static 'js/sesiones.js' %}" defer></script>
+<script src="{% static 'js/listas.js' %}" defer></script>{% endblock %}
 
 {% block titulo_barra %}Sesiones{% endblock %}
 
 {% block principal %}
 <div class="sesiones" data-dimension="sesiones">
   <div class="page-heading sessions-heading">
-    <div>
-      <h1>Sesiones</h1>
-      <p class="small">Planificación de sesiones de aprendizaje</p>
-    </div>
-    {% include "rb/boton.html" with texto="Subir una sesión" variante="principal" datos="abrir-subir" %}
+    <h1>Sesiones</h1>
+    <button class="btn btn--primary" type="button" data-abrir-subir aria-label="Subir una sesión">{% include "iconos/plus.svg" with clase=None %}<span class="subir-largo">Subir una sesión</span><span class="subir-corto" aria-hidden="true">Subir</span></button>
   </div>
   <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Para subir una sesión necesitas activar JavaScript." %}</noscript>
   {% include "repositorio/_mensajes.html" %}
   {% include "repositorio/_pestanas.html" %}
   <section class="sesiones-resultado" aria-label="Envío de la sesión" role="status" data-resultado></section>
-  <div id="resultados" class="sesiones-panel" role="tabpanel">{% include "repositorio/_panel.html" %}</div>
+  <div id="panel-sesiones" class="sesiones-panel" role="tabpanel" aria-labelledby="pestana-{{ pestana }}">{% include "repositorio/_panel.html" %}</div>
 </div>
 {% include "repositorio/_formulario.html" %}
 {% include "repositorio/_terminos.html" %}

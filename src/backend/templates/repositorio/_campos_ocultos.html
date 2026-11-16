@@ -1,0 +1,4 @@
+{% comment %}
+Grado y área vigentes dentro del formulario del buscador (design de US-011, D10): así lo que se escribe conserva los filtros.
+Con oob los actualiza HTMX fuera de banda, sin tocar el campo de búsqueda.
+{% endcomment %}<span id="campos-ocultos"{% if oob %} hx-swap-oob="true"{% endif %}>{% if pagina.grado %}<input type="hidden" name="grado" value="{{ pagina.grado }}">{% endif %}{% if pagina.area %}<input type="hidden" name="area" value="{{ pagina.area.pk }}">{% endif %}</span>

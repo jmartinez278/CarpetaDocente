@@ -176,7 +176,7 @@ def test_primera_visita_cabecera_boton_y_estado_vacio_sin_lista(cliente):
 
     assert respuesta.templates[0].name == "repositorio/sesiones.html"
     assert "<h1" in html and "Sesiones</h1>" in html
-    assert "Planificación de sesiones de aprendizaje" in html
+    assert "Planificación de sesiones de aprendizaje" not in html
     assert "franjas-cabecera" not in html
     assert "Subir una sesión" in html
     assert "Aquí verás las sesiones que envíes y su estado." in html

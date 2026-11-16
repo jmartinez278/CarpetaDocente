@@ -1,0 +1,5 @@
+{% comment %}
+Respuesta de HTMX a una búsqueda o un filtro (design de US-011, D10): los resultados, que es lo único que se reemplaza en
+pantalla, y fuera de banda el panel de filtros, los filtros activos, los campos ocultos del buscador y el contador de
+«Filtrar». El campo de búsqueda no se toca, así que conserva el foco y lo escrito.
+{% endcomment %}{% include "repositorio/_lista_repositorio.html" %}{% include "repositorio/_filtros.html" with oob=True %}{% include "repositorio/_filtros_activos.html" with oob=True %}{% include "repositorio/_campos_ocultos.html" with oob=True %}{% include "repositorio/_filtrar_cuenta.html" with oob=True %}

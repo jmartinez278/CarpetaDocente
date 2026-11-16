@@ -6,7 +6,6 @@ axe en los grupos 6 y 8.
 """
 
 import re
-from dataclasses import replace
 from datetime import date, datetime
 from pathlib import Path
 
@@ -14,7 +13,6 @@ import pytest
 from django.utils import timezone
 
 from asistencia.models import Asistencia, Jornada
-from cuentas import dimensiones
 from cuentas.models import Usuario
 from institucion.models import AnioEscolar, Estudiante, Seccion
 
@@ -512,7 +510,7 @@ def test_tres_tarjetas_en_orden_con_su_frase_y_sin_subtitulo_formal(portada):
         assert f'id="c-{clave}"' in t
         assert f'aria-labelledby="dim-{clave}"' in t
         assert re.search(
-            rf'<h2\b[^>]*id="dim-{clave}"[^>]*>.*?>{titulo}</button></h2>', t, re.DOTALL
+            rf'<h2\b[^>]*id="dim-{clave}"[^>]*>.*?>{titulo}</(?:button|a)></h2>', t, re.DOTALL
         )
         assert f">{frase}</p>" in t
         assert re.search(r'<div class="miniatura[^"]*" aria-hidden="true">', t)
@@ -520,8 +518,17 @@ def test_tres_tarjetas_en_orden_con_su_frase_y_sin_subtitulo_formal(portada):
         assert subtitulo not in portada
 
 
+def proximas(html):
+    """Las tarjetas «Próximamente» de una docente sin sección: todas menos Sesiones (US-011)."""
+    encontradas = [
+        (t, clave) for t, clave in zip(tarjetas(html), ORDEN, strict=True) if clave != "sesiones"
+    ]
+    assert [clave for _, clave in encontradas] == ["asistencia", "notas"]
+    return encontradas
+
+
 def test_las_tarjetas_proximamente_son_botones_sin_enlace(portada):
-    for t, clave in zip(tarjetas(portada), ORDEN, strict=True):
+    for t, clave in proximas(portada):
         assert "href" not in t
         assert "<a " not in t
         assert "dimension--proxima" in t
@@ -536,7 +543,7 @@ def test_las_tarjetas_proximamente_son_botones_sin_enlace(portada):
 
 
 def test_cada_tarjeta_proximamente_tiene_su_region_aria_live_vacia(portada):
-    for t in tarjetas(portada):
+    for t, _ in proximas(portada):
         assert re.search(r'<p class="dimension-aviso" aria-live="polite"></p>', t)
 
 
@@ -701,23 +708,15 @@ def test_sin_seccion_o_con_varias_no_hay_enlace_ni_aviso_ni_dialogo(portada_con,
     assert "data-abrir-estudiantes" not in html
 
 
-def test_una_dimension_disponible_enlaza_a_su_pantalla(client, docente, monkeypatch):
-    """Escenario "Dimensión activada por su historia", con una ruta que existe en vez de la suya.
-
-    Sin sección, Asistencia y Notas quedan en "Próximamente": la única disponible es Sesiones.
-    """
-    activas = tuple(
-        replace(d, disponible=True, url_name="docente:portada") if d.clave == "sesiones" else d
-        for d in dimensiones.DIMENSIONES
-    )
-    monkeypatch.setattr(dimensiones, "DIMENSIONES", activas)
+def test_sesiones_enlaza_a_su_pantalla_con_o_sin_seccion(client, docente):
+    """Escenario «Sesiones con o sin sección» (sin sección, la única disponible es Sesiones)."""
     client.force_login(docente)
 
     html = client.get(PORTADA).content.decode()
     sesiones = tarjeta(html, "sesiones")
 
     enlace = etiqueta(sesiones, 'class="dimension-enlace"')
-    assert 'href="/docente/"' in enlace
+    assert 'href="/docente/sesiones/"' in enlace
     assert 'aria-describedby="acc-sesiones"' in enlace
     assert re.search(r'<p class="dimension-accion" id="acc-sesiones">Ver sesiones\s*<svg', sesiones)
     assert "Próximamente" not in sesiones
@@ -777,8 +776,8 @@ def test_con_una_seccion_asistencia_lleva_a_la_asistencia_de_hoy(portada_con):
     )
     assert "Próximamente" not in t
     sesiones = tarjeta(html, "sesiones")
-    assert "Próximamente" in sesiones
-    assert "<a " not in sesiones
+    assert "Próximamente" not in sesiones
+    assert 'href="/docente/sesiones/"' in sesiones
 
 
 @pytest.mark.parametrize("secciones", [[], [(2, "A"), (3, "B")]], ids=["sin-seccion", "dos"])

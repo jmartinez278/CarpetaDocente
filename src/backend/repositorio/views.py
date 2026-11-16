@@ -23,6 +23,7 @@ from django.http import FileResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.cache import patch_cache_control, patch_vary_headers
+from django.utils.http import urlencode
 from django.views import View
 
 from cuentas.acceso import RolRequeridoMixin, es_htmx
@@ -43,16 +44,72 @@ def no_disponible(request):
     return render(request, PLANTILLA_NO_DISPONIBLE, status=404)
 
 
+def _url_repositorio(q="", grado=None, area=None, pagina=None):
+    """La dirección del repositorio con esa búsqueda, ese grado y esa área (los vacíos no van)."""
+    parametros = [("q", q), ("grado", grado), ("area", area), ("pagina", pagina)]
+    consulta = urlencode([(nombre, valor) for nombre, valor in parametros if valor])
+    base = reverse("sesiones:repositorio")
+    return f"{base}?{consulta}" if consulta else base
+
+
+def _enlaces_de_la_lista(contexto):
+    """Las direcciones que dibujan las listas: filtros, filtros activos y «Ver más» (D10).
+
+    Cada filtro es un enlace con la dirección ya armada, así que funciona sin JavaScript; tocar
+    el grado o el área elegidos los quita. ``cuenta`` es cuántos filtros hay puestos.
+    """
+    pagina = contexto["pagina"]
+    if contexto["pestana"] == "mis_sesiones":
+        mas = f"{reverse('sesiones:inicio')}?{urlencode({'pagina': pagina.pagina + 1})}"
+        return {"cuenta": 0, "mas": mas}
+    q, grado, area = pagina.q, pagina.grado, pagina.area.pk if pagina.area else None
+    conteos = contexto["conteos"]
+    areas = [("", "Todas las áreas", conteos.total, _url_repositorio(q, grado), area is None)]
+    areas += [
+        (
+            a.pk,
+            a.nombre,
+            n,
+            _url_repositorio(q, grado, None if a.pk == area else a.pk),
+            a.pk == area,
+        )
+        for a, n in conteos.areas
+    ]
+    return {
+        "cuenta": sum(bool(filtro) for filtro in (q, grado, area)),
+        "grados": [
+            (g, etiqueta, _url_repositorio(q, None if g == grado else g, area), g == grado)
+            for g, etiqueta in contexto["grados"]
+        ],
+        "areas": areas,
+        "sin_q": _url_repositorio("", grado, area),
+        "sin_grado": _url_repositorio(q, None, area),
+        "sin_area": _url_repositorio(q, grado, None),
+        "limpiar": _url_repositorio(),
+        "mas": _url_repositorio(q, grado, area, pagina.pagina + 1),
+    }
+
+
+def _plantilla_htmx(request, contexto):
+    """La plantilla de una petición de HTMX: tarjetas, resultados con sus filtros o el panel."""
+    if "pagina" in request.GET:
+        return "repositorio/_tarjetas.html"
+    # Buscar y filtrar piden solo #resultados; las pestañas y el envío piden todo el panel.
+    if request.headers.get("HX-Target") == "resultados" and contexto["pestana"] == "repositorio":
+        return "repositorio/_actualizacion.html"
+    return "repositorio/_resultados.html"
+
+
 def _responder_lista(request, contexto):
-    """La pantalla, el panel de resultados (HTMX) o solo las tarjetas siguientes (D10)."""
-    if es_htmx(request) and "pagina" in request.GET:
-        respuesta = render(request, "repositorio/_tarjetas.html", contexto)
-    elif es_htmx(request):
-        respuesta = render(request, "repositorio/_resultados.html", contexto)
+    """La pantalla, el panel, los resultados (HTMX) o solo las tarjetas siguientes (D10)."""
+    contexto["enlaces"] = _enlaces_de_la_lista(contexto)
+    # «Atrás» con HTMX pide la página entera aunque lleve HX-Request: nunca un fragmento.
+    if es_htmx(request) and not request.headers.get("HX-History-Restore-Request"):
+        respuesta = render(request, _plantilla_htmx(request, contexto), contexto)
     else:
         contexto |= servicios.datos_del_formulario(request.user)
         respuesta = render(request, "repositorio/sesiones.html", contexto)
-    patch_vary_headers(respuesta, ["HX-Request"])
+    patch_vary_headers(respuesta, ["HX-Request", "HX-Target"])
     return respuesta
 
 
