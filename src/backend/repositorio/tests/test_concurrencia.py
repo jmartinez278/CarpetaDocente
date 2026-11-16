@@ -79,3 +79,78 @@ def test_dos_envios_con_el_mismo_id_dejan_una_sesion_y_los_dos_ven_el_exito(
     assert guardados == ["primero"]
     ganadora = Sesion.objects.get()
     assert almacen.listdir("sesiones")[1] == [ganadora.archivo_clave.removeprefix("sesiones/")]
+
+
+# --- Escrituras de la autora a la vez (design de US-011, D8) ---------------------------------
+
+
+def _pausar_en(operacion, monkeypatch):
+    """Detiene al hilo «primero» justo después de dejar ``operacion``, con la fila bloqueada."""
+    original = servicios.registrar
+    llego, seguir = threading.Event(), threading.Event()
+
+    def registrar(usuario, op, **kwargs):
+        resultado = original(usuario, op, **kwargs)
+        if op == operacion and threading.current_thread().name == "primero":
+            llego.set()
+            seguir.wait(5)
+        return resultado
+
+    monkeypatch.setattr(servicios, "registrar", registrar)
+    return llego, seguir
+
+
+def _correr_a_la_vez(primero_fn, segundo_fn, llego, seguir):
+    resultados, errores = {}, []
+    primero = en_hilo("primero", primero_fn, resultados, errores)
+    segundo = en_hilo("segundo", segundo_fn, resultados, errores)
+    primero.start()
+    assert llego.wait(5)
+    segundo.start()
+    segundo.join(1)
+    assert segundo.is_alive(), "el segundo debía esperar el bloqueo de la fila"
+    seguir.set()
+    primero.join(10)
+    segundo.join(10)
+    return resultados, errores
+
+
+def test_dos_eliminar_a_la_vez_dejan_una_entrada_y_ningun_error(docente, crear_sesion, monkeypatch):
+    sesion = crear_sesion(docente, compartida=True)
+    storages["sesiones"].save(sesion.archivo_clave, pdf())
+    llego, seguir = _pausar_en(Operacion.SESION_ELIMINADA, monkeypatch)
+    ruta = f"/docente/sesiones/{sesion.pk}/eliminar/"
+
+    resultados, errores = _correr_a_la_vez(
+        lambda: servicios.eliminar_sesion(docente, sesion.pk, ruta),
+        lambda: servicios.eliminar_sesion(docente, sesion.pk, ruta),
+        llego,
+        seguir,
+    )
+
+    # La segunda ve «La sesión ya no está disponible»; nada más falla.
+    assert [type(error) for error in errores] == [servicios.SesionNoDisponible]
+    assert "primero" in resultados
+    assert not Sesion.objects.exists()
+    assert RegistroActividad.objects.filter(operacion=Operacion.SESION_ELIMINADA).count() == 1
+    assert not RegistroActividad.objects.filter(operacion=Operacion.INTENTO_SIN_PERMISO).exists()
+    assert not storages["sesiones"].exists(sesion.archivo_clave)
+
+
+def test_eliminar_y_compartir_a_la_vez_nunca_comparten_una_sesion_sin_fila(
+    docente, crear_sesion, monkeypatch
+):
+    sesion = crear_sesion(docente, compartida=False)
+    llego, seguir = _pausar_en(Operacion.SESION_ELIMINADA, monkeypatch)
+
+    resultados, errores = _correr_a_la_vez(
+        lambda: servicios.eliminar_sesion(docente, sesion.pk, "/eliminar/"),
+        lambda: servicios.compartir_sesion(docente, sesion.pk, True, "/compartir/"),
+        llego,
+        seguir,
+    )
+
+    assert [type(error) for error in errores] == [servicios.SesionNoDisponible]
+    assert "segundo" not in resultados
+    assert not Sesion.objects.exists()
+    assert not RegistroActividad.objects.filter(operacion=Operacion.SESION_COMPARTIDA).exists()

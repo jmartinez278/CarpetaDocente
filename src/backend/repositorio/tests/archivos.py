@@ -1,6 +1,7 @@
 """Archivos ficticios para las pruebas de repositorio: PDF, DOCX y los que se disfrazan (D6).
 
-Se arman en memoria con lo mínimo que tiene cada formato real; ninguno trae datos de nadie.
+Se arman en memoria con lo mínimo que tiene cada formato real; ninguno trae datos de nadie. El
+PDF con capa de texto es el mismo de las sesiones de ejemplo (``repositorio.ejemplos``).
 """
 
 import io
@@ -10,6 +11,8 @@ from xml.sax.saxutils import escape
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from pypdf import PdfReader, PdfWriter
+
+from repositorio.ejemplos import pdf_con_texto
 
 # Tipo de la parte principal de un .docx y de un .docm ([Content_Types].xml).
 PRINCIPAL_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
@@ -92,56 +95,6 @@ def parrafos_xml(parrafos):
 def docx_con_texto(parrafos):
     """Un .docx válido cuyo cuerpo son ``parrafos``."""
     return docx_bytes(extras={"word/document.xml": documento_xml(parrafos_xml(parrafos))})
-
-
-def _cadena_pdf(texto):
-    """``texto`` como cadena literal de PDF en WinAnsi, con sus escapes."""
-    crudo = texto.encode("cp1252")
-    for signo in (b"\\", b"(", b")"):
-        crudo = crudo.replace(signo, b"\\" + signo)
-    return b"(" + crudo + b")"
-
-
-def pdf_con_texto(paginas):
-    """Un PDF con capa de texto: ``paginas`` es una lista de páginas, cada una con sus líneas.
-
-    Una página sin líneas queda en blanco, como una hoja escaneada sin texto reconocido.
-    """
-    objetos = [
-        b"<< /Type /Catalog /Pages 2 0 R >>",
-        None,  # el árbol de páginas, cuando se conocen sus números
-        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-    ]
-    hijas = []
-    for lineas in paginas:
-        dibujo = b"BT /F1 12 Tf 14 TL 72 720 Td "
-        dibujo += b" ".join(_cadena_pdf(linea) + b" Tj T*" for linea in lineas) + b" ET"
-        contenido = len(objetos) + 2
-        hijas.append(len(objetos) + 1)
-        objetos.append(
-            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
-            b"/Resources << /Font << /F1 3 0 R >> >> /Contents %d 0 R >>" % contenido
-        )
-        objetos.append(b"<< /Length %d >>\nstream\n" % len(dibujo) + dibujo + b"\nendstream")
-    objetos[1] = b"<< /Type /Pages /Kids [%s] /Count %d >>" % (
-        b" ".join(b"%d 0 R" % numero for numero in hijas),
-        len(hijas),
-    )
-
-    salida = io.BytesIO()
-    salida.write(b"%PDF-1.4\n")
-    posiciones = []
-    for numero, objeto in enumerate(objetos, start=1):
-        posiciones.append(salida.tell())
-        salida.write(b"%d 0 obj\n" % numero + objeto + b"\nendobj\n")
-    tabla = salida.tell()
-    salida.write(b"xref\n0 %d\n0000000000 65535 f \n" % (len(objetos) + 1))
-    for posicion in posiciones:
-        salida.write(b"%010d 00000 n \n" % posicion)
-    salida.write(
-        b"trailer << /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objetos) + 1, tabla)
-    )
-    return salida.getvalue()
 
 
 def pdf_cifrado(paginas):

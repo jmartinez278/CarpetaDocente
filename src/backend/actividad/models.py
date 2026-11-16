@@ -66,15 +66,8 @@ CUENTAN_KPI_01 = frozenset(
 )
 
 # Operaciones del catálogo que aún no tienen quién las genere (la prueba de cobertura las salta).
-# Las de sesiones entran al catálogo con el modelo (US-011, parte A); SESION_VISTA y
-# SESION_DESCARGADA ya las genera la parte C, y estas tres salen de aquí con la D.
-RESERVADAS: frozenset[Operacion] = frozenset(
-    {
-        Operacion.SESION_COMPARTIDA,
-        Operacion.SESION_DESCOMPARTIDA,
-        Operacion.SESION_ELIMINADA,
-    }
-)
+# Vacía desde US-011: cada operación tiene su prueba real.
+RESERVADAS: frozenset[Operacion] = frozenset()
 
 
 class RegistroActividad(models.Model):

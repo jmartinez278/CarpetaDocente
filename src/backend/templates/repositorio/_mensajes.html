@@ -1,0 +1,7 @@
+{% comment %}
+Mensajes de Sesiones (design de US-011, D8): el de éxito de una escritura de la autora, que llega por
+django.contrib.messages con la etiqueta «sesiones» y se lee una sola vez (PRG), y el de error con que se responde un 403
+o un 400 en la página de la sesión. El de éxito se anuncia sin interrumpir; el de error, como alerta.
+{% endcomment %}
+{% for mensaje in messages %}{% if "sesiones" in mensaje.tags %}{% include "rb/mensaje.html" with tipo="exito" titulo=mensaje.message estado=True %}{% endif %}{% endfor %}
+{% if error %}{% include "rb/mensaje.html" with tipo="error" titulo=error alerta=True %}{% endif %}

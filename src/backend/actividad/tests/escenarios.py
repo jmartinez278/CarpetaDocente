@@ -16,6 +16,7 @@ _PERIODOS = "institucion.tests.test_servicios_periodos"
 _MARCAS = "notas.tests.test_servicios_guardar"
 _NOTAS = "notas.tests.test_servicios_guardar_hoja"
 _CONSULTAS = "repositorio.tests.test_servicios_consultas"
+_AUTORA = "repositorio.tests.test_servicios_autora"
 
 ESCENARIOS: dict[Operacion, str] = {
     Operacion.INICIO_SESION: f"{_SESION}::test_ingreso_correcto_deja_inicio_sesion",
@@ -70,6 +71,15 @@ ESCENARIOS: dict[Operacion, str] = {
     ),
     Operacion.SESION_DESCARGADA: (
         f"{_CONSULTAS}::test_descargar_y_ver_dejan_sesion_descargada_con_modo_y_propia"
+    ),
+    Operacion.SESION_COMPARTIDA: (
+        f"{_AUTORA}::test_compartir_aceptando_guarda_la_fecha_de_esta_aceptacion"
+    ),
+    Operacion.SESION_DESCOMPARTIDA: (
+        f"{_AUTORA}::test_dejar_de_compartir_la_saca_del_repositorio_y_conserva_la_fecha"
+    ),
+    Operacion.SESION_ELIMINADA: (
+        f"{_AUTORA}::test_eliminar_borra_la_sesion_su_archivo_y_deja_sesion_eliminada"
     ),
     Operacion.CATALOGO_EDITADO: (
         f"{_PANEL}::test_editar_desde_list_editable_deja_catalogo_editado"

@@ -188,6 +188,11 @@ _SI = {"on", "1", "true"}
 _ID_MAXIMO = 2**31
 
 
+def casilla_marcada(valor):
+    """``True`` si una casilla llegó marcada (``on``, ``1`` o ``true``)."""
+    return (valor or "").strip().lower() in _SI
+
+
 def _texto(datos, campo):
     return (datos.get(campo) or "").strip()
 
@@ -782,6 +787,156 @@ def entregar_archivo(usuario, id_sesion, modo):
             return Entrega(url, None, sesion.tipo_mime, disposicion)
         archivo = almacen.open(sesion.archivo_clave, "rb")
     return Entrega(None, archivo, sesion.tipo_mime, disposicion)
+
+
+# --- Escrituras de la autora (design de US-011, D8) ------------------------------------------
+
+# Motivos del intento sin permiso sobre una sesión. Solo van al registro: la respuesta de una
+# no visible es la misma que la de una inexistente.
+SESION_AJENA = "sesion_ajena"
+SESION_NO_VISIBLE = "sesion_no_visible"
+
+
+class SoloLaAutora(Exception):
+    """Otra docente pidió eliminar, compartir o dejar de compartir una sesión que sí puede ver."""
+
+    def __init__(self):
+        super().__init__("Solo el autor puede eliminar esta sesión")
+
+
+def _intento_sobre_sesion(usuario, id_sesion, ruta, motivo):
+    """Una entrada INTENTO_SIN_PERMISO por la sesión ``id_sesion`` (spec registro-actividad).
+
+    ``ruta`` es ``request.path``: solo el UUID, sin título ni otro dato de la sesión (RN-015).
+    """
+    registrar(
+        usuario,
+        Operacion.INTENTO_SIN_PERMISO,
+        entidad=Sesion._meta.db_table,
+        entidad_id=id_sesion,
+        detalle={"ruta": ruta, "motivo": motivo},
+    )
+
+
+def _bloquear_de_la_autora(usuario, id_sesion, ruta):
+    """La sesión de ``usuario`` con su fila bloqueada, o el error que corresponde (D8).
+
+    Debe llamarse dentro de una transacción. Si no es de ``usuario``: inexistente → ``None`` y
+    ``SesionNoDisponible`` sin entrada; ajena no visible → INTENTO_SIN_PERMISO y
+    ``SesionNoDisponible``; ajena visible (``sesion_visible``) → INTENTO_SIN_PERMISO y
+    ``SoloLaAutora``. El error se devuelve, no se lanza: la entrada del intento debe confirmarse.
+    """
+    if not isinstance(id_sesion, uuid.UUID):
+        id_sesion = _uuid(str(id_sesion or ""))
+        if id_sesion is None:
+            return None, SesionNoDisponible()
+    sesion = (
+        Sesion.objects.select_for_update()
+        .defer("texto", "texto_busqueda")
+        .filter(pk=id_sesion, autor_id=usuario.pk)
+        .first()
+    )
+    if sesion is not None:
+        return sesion, None
+    if not Sesion.objects.filter(pk=id_sesion).exists():
+        return None, SesionNoDisponible()
+    if sesion_visible(usuario, id_sesion, con_texto=False) is not None:
+        _intento_sobre_sesion(usuario, id_sesion, ruta, SESION_AJENA)
+        return None, SoloLaAutora()
+    _intento_sobre_sesion(usuario, id_sesion, ruta, SESION_NO_VISIBLE)
+    return None, SesionNoDisponible()
+
+
+def _borrar_archivo(clave):
+    try:
+        storages["sesiones"].delete(clave)
+    except Exception:
+        # La sesión ya no existe: el objeto queda huérfano en el bucket privado. Solo la clave
+        # va al log, nunca el título ni la autora (deuda: comando de conciliación).
+        logger.exception("No se pudo borrar %s, de una sesión eliminada.", clave)
+
+
+def borrar_sesiones(consulta):
+    """Borra las sesiones de ``consulta`` y, al confirmarse, sus archivos (D8, D11).
+
+    Sus vistas caen por ``CASCADE``. Si la transacción no se confirma, los archivos siguen. Va
+    dentro de una transacción; devuelve cuántas sesiones borró.
+    """
+    filas = list(consulta.values_list("pk", "archivo_clave"))
+    Sesion.objects.filter(pk__in=[pk for pk, _ in filas]).delete()
+    for _, clave in filas:
+        transaction.on_commit(lambda clave=clave: _borrar_archivo(clave))
+    return len(filas)
+
+
+def eliminar_sesion(usuario, id_sesion, ruta):
+    """Elimina la sesión de ``usuario`` y, al confirmarse, su archivo; deja SESION_ELIMINADA.
+
+    ``SesionNoDisponible`` si no existe o no la ve; ``SoloLaAutora`` si la ve y es de otra (las
+    dos ajenas dejan INTENTO_SIN_PERMISO). Eliminarla dos veces: la segunda no está disponible
+    y no deja entrada.
+    """
+    with transaction.atomic():
+        sesion, error = _bloquear_de_la_autora(usuario, id_sesion, ruta)
+        if sesion is not None:
+            borrar_sesiones(Sesion.objects.filter(pk=sesion.pk))
+            registrar(
+                usuario,
+                Operacion.SESION_ELIMINADA,
+                entidad=Sesion._meta.db_table,
+                entidad_id=sesion.pk,
+                detalle={"compartida": sesion.compartida},
+            )
+    if error is not None:
+        raise error
+
+
+def compartir_sesion(usuario, id_sesion, acepta, ruta):
+    """Comparte la sesión de ``usuario`` con la fecha de esta aceptación (decisión 13).
+
+    Sin ``acepta``, ``ValidationError`` con el mensaje de los términos y nada cambia. Si ya está
+    compartida, la devuelve igual y sin entrada. Los mismos errores que ``eliminar_sesion``.
+    """
+    with transaction.atomic():
+        sesion, error = _bloquear_de_la_autora(usuario, id_sesion, ruta)
+        if sesion is not None:
+            if not acepta:
+                raise ValidationError(SIN_TERMINOS, code="terminos")
+            if not sesion.compartida:
+                sesion.compartida = True
+                sesion.terminos_aceptados_en = timezone.now()
+                sesion.save(update_fields=["compartida", "terminos_aceptados_en", "actualizado_en"])
+                registrar(
+                    usuario,
+                    Operacion.SESION_COMPARTIDA,
+                    entidad=Sesion._meta.db_table,
+                    entidad_id=sesion.pk,
+                )
+    if error is not None:
+        raise error
+    return sesion
+
+
+def dejar_de_compartir(usuario, id_sesion, ruta):
+    """Saca del repositorio la sesión de ``usuario``; conserva la fecha de los términos.
+
+    Si ya no estaba compartida, la devuelve igual y sin entrada. Los mismos errores que
+    ``eliminar_sesion``.
+    """
+    with transaction.atomic():
+        sesion, error = _bloquear_de_la_autora(usuario, id_sesion, ruta)
+        if sesion is not None and sesion.compartida:
+            sesion.compartida = False
+            sesion.save(update_fields=["compartida", "actualizado_en"])
+            registrar(
+                usuario,
+                Operacion.SESION_DESCOMPARTIDA,
+                entidad=Sesion._meta.db_table,
+                entidad_id=sesion.pk,
+            )
+    if error is not None:
+        raise error
+    return sesion
 
 
 def datos_de_la_pagina(usuario, sesion):

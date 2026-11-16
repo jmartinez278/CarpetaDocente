@@ -10,11 +10,18 @@ Las dos listas responden la pantalla completa o, con ``HX-Request``, el panel de
 los contadores fuera de banda; con ``?pagina=N`` y ``HX-Request``, solo las tarjetas siguientes.
 Una sesión que no está disponible para quien la pide responde 404 con la misma página en todos
 los casos.
+
+Eliminar, compartir y dejar de compartir son formularios normales (``POST``, PRG con
+``django.contrib.messages``): 303 a «Mis sesiones» o a la página con su Mensaje; 403 con la página
+y «Solo el autor puede eliminar esta sesión» si es ajena y visible; 400 con la página si se
+comparte sin aceptar los términos (D8).
 """
 
+from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import FileResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils.cache import patch_cache_control, patch_vary_headers
 from django.views import View
 
@@ -23,6 +30,8 @@ from cuentas.models import Usuario
 from repositorio import servicios
 
 PLANTILLA_NO_DISPONIBLE = "repositorio/no_disponible.html"
+# Etiqueta de los Mensajes de Sesiones: solo los muestran sus plantillas.
+ETIQUETA_MENSAJE = "sesiones"
 
 
 class DocenteMixin(RolRequeridoMixin):
@@ -123,3 +132,68 @@ class EntregarView(DocenteMixin, View):
             respuesta["X-Content-Type-Options"] = "nosniff"
         patch_cache_control(respuesta, no_store=True)
         return respuesta
+
+
+class _EscrituraDeLaAutoraView(DocenteMixin, View):
+    """Base de eliminar, compartir y dejar de compartir: solo ``POST`` (D8, D10)."""
+
+    http_method_names = ["post"]
+    mensaje = ""
+
+    def escribir(self, request, id_sesion):
+        raise NotImplementedError
+
+    def destino(self, id_sesion):
+        return reverse("sesiones:detalle", args=[id_sesion])
+
+    def post(self, request, id_sesion):
+        try:
+            self.escribir(request, id_sesion)
+        except servicios.SesionNoDisponible:
+            return no_disponible(request)
+        except servicios.SoloLaAutora as error:
+            return _pagina_con_error(request, id_sesion, str(error), status=403)
+        except ValidationError as error:
+            return _pagina_con_error(request, id_sesion, error.messages[0], status=400)
+        messages.success(request, self.mensaje, extra_tags=ETIQUETA_MENSAJE)
+        return HttpResponseRedirect(self.destino(id_sesion), status=303)
+
+
+def _pagina_con_error(request, id_sesion, error, status):
+    """La página de la sesión con el Mensaje de error; si dejó de verse, «no disponible»."""
+    sesion = servicios.sesion_visible(request.user, id_sesion)
+    if sesion is None:
+        return no_disponible(request)
+    contexto = servicios.datos_de_la_pagina(request.user, sesion) | {"error": error}
+    return render(request, "repositorio/sesion.html", contexto, status=status)
+
+
+class EliminarView(_EscrituraDeLaAutoraView):
+    """Elimina la sesión propia y lleva a «Mis sesiones» con «Sesión eliminada»."""
+
+    mensaje = "Sesión eliminada"
+
+    def escribir(self, request, id_sesion):
+        servicios.eliminar_sesion(request.user, id_sesion, request.path)
+
+    def destino(self, id_sesion):
+        return reverse("sesiones:inicio")
+
+
+class CompartirView(_EscrituraDeLaAutoraView):
+    """Comparte la sesión propia si llega la aceptación de los términos."""
+
+    mensaje = "Sesión compartida en el repositorio"
+
+    def escribir(self, request, id_sesion):
+        acepta = servicios.casilla_marcada(request.POST.get("acepta_terminos"))
+        servicios.compartir_sesion(request.user, id_sesion, acepta, request.path)
+
+
+class DejarDeCompartirView(_EscrituraDeLaAutoraView):
+    """Saca la sesión propia del repositorio, sin confirmación."""
+
+    mensaje = "Dejaste de compartir la sesión"
+
+    def escribir(self, request, id_sesion):
+        servicios.dejar_de_compartir(request.user, id_sesion, request.path)

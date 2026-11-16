@@ -3,7 +3,7 @@
 Página de una sesión (spec detalle-sesion; design de US-011, D5 a D7). Migas a «Mis sesiones» o al «Repositorio», los
 datos, el propósito, la vista previa del texto, «Descargar» y, en un PDF, «Ver» (enlaces del aplicativo, nunca de R2) y,
 en una propia, la tarjeta «Tu sesión» con cuántas colegas la vieron. Todo pasa por el autoescape. Su diseño final y las
-acciones de la autora son de las tareas 4.2 y 5.2.
+formularios de las acciones de la autora son de la tarea 5.2; aquí ya van sus Mensajes (D8).
 {% endcomment %}
 
 {% block titulo %}{{ sesion.titulo }} · CarpetaDocente{% endblock %}
@@ -13,6 +13,7 @@ acciones de la autora son de las tareas 4.2 y 5.2.
 {% block principal %}
 <div class="sesion" data-dimension="sesiones">
   <nav class="migas" aria-label="Migas"><a href="{{ miga.1 }}">{{ miga.0 }}</a></nav>
+  {% include "repositorio/_mensajes.html" %}
   <p class="small">Sesión de aprendizaje · {{ sesion.tipo_corto }}</p>
   <h1>{{ sesion.titulo }}</h1>
   <p class="sesion-chips"><span class="chip">{{ grado }}</span><span class="chip">{{ sesion.area.nombre }}</span>{% if sesion.compartida %}<span class="chip">Compartida</span>{% endif %}</p>

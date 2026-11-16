@@ -21,4 +21,11 @@ urlpatterns = [
         name="descargar",
     ),
     path("<uuid:id_sesion>/ver/", views.EntregarView.as_view(modo="ver"), name="ver"),
+    path("<uuid:id_sesion>/eliminar/", views.EliminarView.as_view(), name="eliminar"),
+    path("<uuid:id_sesion>/compartir/", views.CompartirView.as_view(), name="compartir"),
+    path(
+        "<uuid:id_sesion>/dejar-de-compartir/",
+        views.DejarDeCompartirView.as_view(),
+        name="dejar_de_compartir",
+    ),
 ]

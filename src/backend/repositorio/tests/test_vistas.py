@@ -716,3 +716,181 @@ def test_con_un_almacen_que_firma_la_descarga_redirige_al_enlace(
     assert respuesta.url.startswith("https://cuenta-ficticia.r2.cloudflarestorage.com/")
     assert "no-store" in respuesta["Cache-Control"]
     assert almacen_que_firma.llamadas[0]["expire"] == 60
+
+
+# --- Escrituras de la autora (design de US-011, D8 y D10) ---
+
+SOLO_EL_AUTOR = "Solo el autor puede eliminar esta sesión"
+SIN_TERMINOS = "Para compartirla en el repositorio debes aceptar los términos."
+
+
+def test_las_rutas_post_estan_bajo_docente_sesiones():
+    id_sesion = uuid.uuid4()
+
+    assert reverse("sesiones:eliminar", args=[id_sesion]) == url_de(id_sesion, "eliminar/")
+    assert reverse("sesiones:compartir", args=[id_sesion]) == url_de(id_sesion, "compartir/")
+    assert reverse("sesiones:dejar_de_compartir", args=[id_sesion]) == url_de(
+        id_sesion, "dejar-de-compartir/"
+    )
+
+
+@pytest.mark.parametrize("sufijo", ["eliminar/", "compartir/", "dejar-de-compartir/"])
+def test_las_escrituras_no_aceptan_get(cliente, crear_sesion, docente, sufijo):
+    sesion = crear_sesion(docente, compartida=True)
+
+    assert cliente.get(url_de(sesion, sufijo)).status_code == 405
+    assert Sesion.objects.filter(pk=sesion.pk, compartida=True).exists()
+
+
+def test_una_escritura_sin_token_csrf_se_rechaza(docente, crear_sesion):
+    sesion = crear_sesion(docente)
+    cliente = Client(enforce_csrf_checks=True)
+    cliente.force_login(docente)
+
+    assert cliente.post(url_de(sesion, "eliminar/")).status_code == 403
+    assert Sesion.objects.filter(pk=sesion.pk).exists()
+
+
+def test_eliminar_lleva_a_mis_sesiones_con_el_mensaje_que_no_vuelve_al_recargar(
+    cliente, con_archivo, docente, django_capture_on_commit_callbacks
+):
+    sesion = con_archivo(docente, compartida=True)
+
+    with django_capture_on_commit_callbacks(execute=True):
+        respuesta = cliente.post(url_de(sesion, "eliminar/"))
+
+    assert (respuesta.status_code, respuesta.url) == (303, URL_INICIO)
+    assert not Sesion.objects.filter(pk=sesion.pk).exists()
+    assert not storages["sesiones"].exists(sesion.archivo_clave)
+    lista = texto_de(cliente.get(URL_INICIO))
+    assert "Sesión eliminada" in lista
+    assert 'role="status"' in lista
+    assert "Sesión eliminada" not in texto_de(cliente.get(URL_INICIO))
+    assert cliente.get(url_de(sesion)).status_code == 404
+
+
+def test_eliminar_dos_veces_la_segunda_es_no_disponible(cliente, crear_sesion, docente):
+    sesion = crear_sesion(docente)
+    cliente.post(url_de(sesion, "eliminar/"))
+
+    respuesta = cliente.post(url_de(sesion, "eliminar/"))
+
+    assert respuesta.status_code == 404
+    assert NO_DISPONIBLE in texto_de(respuesta)
+
+
+def test_eliminar_una_ajena_visible_responde_403_solo_el_autor(cliente, crear_sesion, otra_docente):
+    sesion = crear_sesion(otra_docente, compartida=True, titulo="De la colega")
+
+    respuesta = cliente.post(url_de(sesion, "eliminar/"))
+
+    assert respuesta.status_code == 403
+    assert respuesta.templates[0].name == "repositorio/sesion.html"
+    html = texto_de(respuesta)
+    assert SOLO_EL_AUTOR in html
+    assert "De la colega" in html
+    assert Sesion.objects.filter(pk=sesion.pk).exists()
+    assert intentos() == [(str(sesion.pk), url_de(sesion, "eliminar/"), "sesion_ajena")]
+    # La respuesta de error no cuenta como vista.
+    assert not SesionVista.objects.exists()
+
+
+def test_eliminar_una_ajena_no_compartida_responde_404_igual_que_inexistente(
+    cliente, crear_sesion, otra_docente
+):
+    sesion = crear_sesion(otra_docente, compartida=False, titulo="Secreta de la colega")
+
+    ajena = cliente.post(url_de(sesion, "eliminar/"))
+    inexistente = cliente.post(url_de(uuid.uuid4(), "eliminar/"))
+
+    assert ajena.status_code == inexistente.status_code == 404
+    assert sin_csrf(ajena) == sin_csrf(inexistente)
+    assert "Secreta" not in texto_de(ajena)
+    assert Sesion.objects.filter(pk=sesion.pk).exists()
+
+
+def test_dejar_de_compartir_vuelve_a_la_pagina_con_su_mensaje(cliente, crear_sesion, docente):
+    sesion = crear_sesion(docente, compartida=True)
+
+    respuesta = cliente.post(url_de(sesion, "dejar-de-compartir/"))
+
+    assert (respuesta.status_code, respuesta.url) == (303, url_de(sesion))
+    assert not Sesion.objects.get(pk=sesion.pk).compartida
+    assert "Dejaste de compartir la sesión" in texto_de(cliente.get(url_de(sesion)))
+
+
+def test_compartir_aceptando_vuelve_a_la_pagina_con_su_mensaje(cliente, crear_sesion, docente):
+    sesion = crear_sesion(docente, compartida=False)
+
+    respuesta = cliente.post(url_de(sesion, "compartir/"), {"acepta_terminos": "on"})
+
+    assert (respuesta.status_code, respuesta.url) == (303, url_de(sesion))
+    assert Sesion.objects.get(pk=sesion.pk).compartida
+    assert "Sesión compartida en el repositorio" in texto_de(cliente.get(url_de(sesion)))
+
+
+def test_compartir_sin_aceptar_responde_400_con_su_mensaje(cliente, crear_sesion, docente):
+    sesion = crear_sesion(docente, compartida=False)
+
+    respuesta = cliente.post(url_de(sesion, "compartir/"))
+
+    assert respuesta.status_code == 400
+    assert respuesta.templates[0].name == "repositorio/sesion.html"
+    assert SIN_TERMINOS in texto_de(respuesta)
+    assert not Sesion.objects.get(pk=sesion.pk).compartida
+    assert not entradas()
+
+
+def test_compartir_una_ajena_sin_compartir_responde_404(cliente, crear_sesion, otra_docente):
+    sesion = crear_sesion(otra_docente, compartida=False)
+
+    respuesta = cliente.post(url_de(sesion, "compartir/"), {"acepta_terminos": "on"})
+
+    assert respuesta.status_code == 404
+    assert NO_DISPONIBLE in texto_de(respuesta)
+    assert not Sesion.objects.get(pk=sesion.pk).compartida
+
+
+def test_dejar_de_compartir_una_ajena_responde_403_y_sigue_compartida(
+    cliente, crear_sesion, otra_docente
+):
+    sesion = crear_sesion(otra_docente, compartida=True)
+
+    respuesta = cliente.post(url_de(sesion, "dejar-de-compartir/"))
+
+    assert respuesta.status_code == 403
+    assert Sesion.objects.get(pk=sesion.pk).compartida
+
+
+def _rutas_post(sesion):
+    return [url_de(sesion, s) for s in ("eliminar/", "compartir/", "dejar-de-compartir/")]
+
+
+@pytest.mark.parametrize(
+    ("rol", "inicio"), [("direccion", "/direccion/"), ("administrador", "/admin/")]
+)
+def test_otro_rol_va_a_su_inicio_sin_cambiar_nada(
+    request, entrar, crear_sesion, otra_docente, rol, inicio
+):
+    # Escenario «Otro rol» de «Solo la autora elimina».
+    sesion = crear_sesion(otra_docente, compartida=True)
+    cliente = entrar(request.getfixturevalue(rol))
+
+    for ruta in _rutas_post(sesion):
+        respuesta = cliente.post(ruta, {"acepta_terminos": "on"})
+        assert (respuesta.status_code, respuesta.url) == (302, inicio), ruta
+    assert Sesion.objects.filter(pk=sesion.pk, compartida=True).exists()
+    assert not entradas()
+
+
+def test_sin_sesion_las_escrituras_van_al_ingreso_sin_cambiar_nada(
+    client, crear_sesion, otra_docente
+):
+    sesion = crear_sesion(otra_docente, compartida=True)
+
+    for ruta in _rutas_post(sesion):
+        respuesta = client.post(ruta, {"acepta_terminos": "on"})
+        assert respuesta.status_code == 302, ruta
+        assert respuesta.url.startswith("/ingresar/?next="), ruta
+    assert Sesion.objects.filter(pk=sesion.pk, compartida=True).exists()
+    assert not RegistroActividad.objects.exists()
