@@ -13,19 +13,33 @@ import uuid
 import zipfile
 import zlib
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import PurePosixPath
 from xml.etree import ElementTree
+from zoneinfo import ZoneInfo
 
 from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
+from django.db.models import Count, Q
+from django.db.models.functions import Left
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import content_disposition_header
+from storages.backends.s3 import S3Storage
 
 from actividad.models import Operacion
 from actividad.servicios import registrar
 from catalogo.models import InstitucionArea
 from institucion.servicios import secciones_docente, texto_seccion_corto
-from repositorio.models import TAMANO_MAXIMO, TIPO_DOCX, TIPO_PDF, TITULO_MAXIMO, Sesion
+from repositorio.models import (
+    TAMANO_MAXIMO,
+    TIPO_DOCX,
+    TIPO_PDF,
+    TITULO_MAXIMO,
+    Sesion,
+    SesionVista,
+)
 from repositorio.texto import extraer_texto, normalizar
 
 logger = logging.getLogger(__name__)
@@ -489,3 +503,302 @@ def transcribir_pendientes():
         )
         con_texto += 1
     return Transcritas(con_texto=con_texto, sin_texto=sin_texto, sin_archivo=sin_archivo)
+
+
+# --- Visibilidad y consultas (design de US-011, D4 y D5) -------------------------------------
+
+LIMA = ZoneInfo("America/Lima")
+POR_PAGINA = 20
+# Lo que se lee del texto para la página dibujada de la tarjeta.
+INICIO_TEXTO = 600
+BUSQUEDA_MAXIMA = 100
+PALABRAS_MAXIMAS = 8
+# Tope de ``?pagina=``: evita un desplazamiento enorme en la base.
+_PAGINA_MAXIMA = 10_000
+_DIAS = ("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
+_MESES = ("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic")
+
+
+def sesion_visible(usuario, id_sesion, con_texto=True):
+    """La sesión ``id_sesion`` si ``usuario`` puede verla; si no, ``None`` (D5).
+
+    La ve su autora, compartida o no, y cualquier cuenta de la misma institución si está
+    compartida. Es la única puerta de la página, la descarga, la vista y las escrituras: lo no
+    visible es igual a lo inexistente. Un ``id`` que no es UUID tampoco es visible.
+    """
+    if not isinstance(id_sesion, uuid.UUID):
+        id_sesion = _uuid(str(id_sesion or ""))
+        if id_sesion is None:
+            return None
+    consulta = Sesion.objects.all()
+    if not con_texto:
+        consulta = consulta.defer("texto", "texto_busqueda")
+    return (
+        consulta.filter(pk=id_sesion)
+        .filter(Q(autor_id=usuario.pk) | Q(compartida=True, institucion_id=usuario.institucion_id))
+        .select_related("area", "autor")
+        .first()
+    )
+
+
+@dataclass(frozen=True)
+class Pagina:
+    """Una página de tarjetas: las sesiones en orden y si hay más después."""
+
+    sesiones: list
+    hay_mas: bool
+    pagina: int
+    # Solo del repositorio: total con los filtros y los filtros que sí se aplicaron.
+    total: int | None = None
+    q: str = ""
+    grado: int | None = None
+    area: object = None
+
+    @property
+    def grupos(self):
+        """Las sesiones agrupadas por día de envío en hora de Lima: «Hoy», «Ayer», «lun 2 nov»."""
+        hoy = timezone.localtime(timezone.now(), LIMA).date()
+        grupos = []
+        for sesion in self.sesiones:
+            dia = timezone.localtime(sesion.creado_en, LIMA).date()
+            etiqueta = _etiqueta_dia(dia, hoy)
+            if grupos and grupos[-1][0] == etiqueta:
+                grupos[-1][1].append(sesion)
+            else:
+                grupos.append((etiqueta, [sesion]))
+        return grupos
+
+
+def _etiqueta_dia(dia, hoy):
+    if dia == hoy:
+        return "Hoy"
+    if dia == hoy - timedelta(days=1):
+        return "Ayer"
+    return f"{_DIAS[dia.weekday()]} {dia.day} {_MESES[dia.month - 1]}"
+
+
+def _numero_de_pagina(valor):
+    if isinstance(valor, int):
+        numero = valor
+    else:
+        numero = _entero((valor or "").strip())
+    if numero is None or not 1 <= numero <= _PAGINA_MAXIMA:
+        return 1
+    return numero
+
+
+def _tarjetas(consulta):
+    """Lo que necesita una tarjeta, sin el texto completo ni el de búsqueda (D5)."""
+    return (
+        consulta.select_related("area", "autor")
+        .defer("texto", "texto_busqueda")
+        .annotate(inicio_texto=Left("texto", INICIO_TEXTO))
+        .order_by("-creado_en", "pk")
+    )
+
+
+def _paginar(consulta, pagina):
+    numero = _numero_de_pagina(pagina)
+    inicio = (numero - 1) * POR_PAGINA
+    filas = list(consulta[inicio : inicio + POR_PAGINA + 1])
+    return filas[:POR_PAGINA], len(filas) > POR_PAGINA, numero
+
+
+def mis_sesiones(usuario, pagina=1):
+    """Las sesiones que envió ``usuario``, compartidas o no, con cuántas colegas las vieron."""
+    consulta = _tarjetas(Sesion.objects.filter(autor_id=usuario.pk)).annotate(
+        vistas_total=Count("vistas")
+    )
+    sesiones, hay_mas, numero = _paginar(consulta, pagina)
+    return Pagina(sesiones=sesiones, hay_mas=hay_mas, pagina=numero)
+
+
+def _compartidas(usuario):
+    """Las compartidas de la institución de ``usuario``: nunca sale de la petición."""
+    return Sesion.objects.filter(institucion_id=usuario.institucion_id, compartida=True)
+
+
+def limpiar_busqueda(q):
+    """La búsqueda tal como se muestra: sin espacios en los bordes y hasta 100 caracteres."""
+    return (q or "").strip()[:BUSQUEDA_MAXIMA].strip()
+
+
+def _con_palabras(consulta, q):
+    """Cada palabra (hasta 8) debe estar en ``texto_busqueda``; Django escapa ``%`` y ``_``."""
+    for palabra in normalizar(limpiar_busqueda(q)).split()[:PALABRAS_MAXIMAS]:
+        consulta = consulta.filter(texto_busqueda__contains=palabra)
+    return consulta
+
+
+def _grado_valido(valor):
+    """El grado de 1 a 6, o ``None``: un valor inválido llega por la dirección y se ignora."""
+    grado = _entero((valor or "").strip()) if isinstance(valor, str) else valor
+    return grado if isinstance(grado, int) and 1 <= grado <= 6 else None
+
+
+def _areas_trabajadas(usuario):
+    return InstitucionArea.objects.filter(
+        institucion_id=usuario.institucion_id, se_trabaja=True
+    ).select_related("area")
+
+
+def _area_valida(usuario, valor):
+    """El área si la institución la trabaja; si no, ``None`` (se ignora)."""
+    area_id = _entero((valor or "").strip()) if isinstance(valor, str) else None
+    if area_id is None:
+        return None
+    fila = _areas_trabajadas(usuario).filter(area_id=area_id).first()
+    return fila.area if fila else None
+
+
+def buscar_repositorio(usuario, q="", grado="", area="", pagina=1):
+    """Las compartidas de la institución que cumplen la búsqueda, el grado y el área (D4, D5)."""
+    grado_valido = _grado_valido(grado)
+    area_valida = _area_valida(usuario, area)
+    consulta = _con_palabras(_compartidas(usuario), q)
+    if grado_valido is not None:
+        consulta = consulta.filter(grado=grado_valido)
+    if area_valida is not None:
+        consulta = consulta.filter(area=area_valida)
+    total = consulta.count()
+    sesiones, hay_mas, numero = _paginar(_tarjetas(consulta), pagina)
+    return Pagina(
+        sesiones=sesiones,
+        hay_mas=hay_mas,
+        pagina=numero,
+        total=total,
+        q=limpiar_busqueda(q),
+        grado=grado_valido,
+        area=area_valida,
+    )
+
+
+@dataclass(frozen=True)
+class ConteosPorArea:
+    """«Todas las áreas» y cada área que la institución trabaja, en orden SIAGIE, con su total."""
+
+    total: int
+    areas: list
+
+
+def conteos_por_area(usuario, q="", grado=""):
+    """Cuántas compartidas hay por área con la búsqueda y el grado vigentes (D5)."""
+    consulta = _con_palabras(_compartidas(usuario), q)
+    grado_valido = _grado_valido(grado)
+    if grado_valido is not None:
+        consulta = consulta.filter(grado=grado_valido)
+    por_area = dict(
+        consulta.order_by().values("area_id").annotate(n=Count("pk")).values_list("area_id", "n")
+    )
+    areas = [
+        (fila.area, por_area.get(fila.area_id, 0))
+        for fila in _areas_trabajadas(usuario).order_by("area__orden", "area__pk")
+    ]
+    return ConteosPorArea(total=sum(por_area.values()), areas=areas)
+
+
+def contadores(usuario):
+    """Los totales de las pestañas, sin filtros (D5)."""
+    return {
+        "mis_sesiones": Sesion.objects.filter(autor_id=usuario.pk).count(),
+        "repositorio": _compartidas(usuario).count(),
+    }
+
+
+# --- Vistas y entrega del archivo (design de US-011, D6 y D7) --------------------------------
+
+# Vida del enlace firmado de R2 (decisión 10).
+ENLACE_SEGUNDOS = 60
+# Modo → si el navegador debe guardarlo (descarga) o mostrarlo (vista del PDF).
+_MODOS = {"descargar": True, "ver": False}
+
+
+class SesionNoDisponible(Exception):
+    """La sesión no existe o quien la pide no puede verla: se responde igual en los dos casos."""
+
+
+def registrar_vista(usuario, sesion):
+    """Cuenta la primera vez que una colega abre la página de ``sesion`` (D6).
+
+    Devuelve ``True`` solo si es esa primera vez: entonces crea su ``SesionVista`` y deja
+    SESION_VISTA, juntas. La autora no cuenta.
+    """
+    if sesion.autor_id == usuario.pk:
+        return False
+    with transaction.atomic():
+        _, creada = SesionVista.objects.get_or_create(sesion=sesion, usuario=usuario)
+        if creada:
+            registrar(
+                usuario,
+                Operacion.SESION_VISTA,
+                entidad=Sesion._meta.db_table,
+                entidad_id=sesion.pk,
+            )
+    return creada
+
+
+@dataclass(frozen=True)
+class Entrega:
+    """Cómo responder una descarga: un enlace firmado (``url``) o el archivo abierto."""
+
+    url: str | None
+    archivo: object
+    tipo_mime: str
+    disposicion: str
+
+
+def entregar_archivo(usuario, id_sesion, modo):
+    """El archivo de la sesión para ``modo`` («descargar» o «ver»), con su SESION_DESCARGADA.
+
+    El permiso se revisa en cada petición (``sesion_visible``). «Ver» solo existe para el PDF.
+    Si no está disponible, ``SesionNoDisponible`` sin entrada. Con ``S3Storage`` devuelve un
+    enlace firmado de 60 s que fija el nombre original y el modo; con otro almacén, el archivo
+    abierto. Si no se puede firmar ni abrir, no queda la entrada (D7).
+    """
+    if modo not in _MODOS:
+        raise ValueError(f"Modo de entrega desconocido: {modo!r}")
+    sesion = sesion_visible(usuario, id_sesion, con_texto=False)
+    if sesion is None or (modo == "ver" and sesion.tipo_mime != TIPO_PDF):
+        raise SesionNoDisponible
+    disposicion = content_disposition_header(_MODOS[modo], sesion.archivo_nombre)
+    almacen = storages["sesiones"]
+    with transaction.atomic():
+        registrar(
+            usuario,
+            Operacion.SESION_DESCARGADA,
+            entidad=Sesion._meta.db_table,
+            entidad_id=sesion.pk,
+            detalle={"modo": modo, "propia": sesion.autor_id == usuario.pk},
+        )
+        if isinstance(almacen, S3Storage):
+            url = almacen.url(
+                sesion.archivo_clave,
+                parameters={
+                    "ResponseContentDisposition": disposicion,
+                    "ResponseContentType": sesion.tipo_mime,
+                },
+                expire=ENLACE_SEGUNDOS,
+            )
+            return Entrega(url, None, sesion.tipo_mime, disposicion)
+        archivo = almacen.open(sesion.archivo_clave, "rb")
+    return Entrega(None, archivo, sesion.tipo_mime, disposicion)
+
+
+def datos_de_la_pagina(usuario, sesion):
+    """Lo que muestra la página de ``sesion`` a ``usuario`` (D5, D10).
+
+    Las migas llevan a «Mis sesiones» si es suya y al «Repositorio» si es de una colega. El
+    total de colegas que la vieron solo se da a la autora.
+    """
+    propia = sesion.autor_id == usuario.pk
+    if propia:
+        miga = ("Mis sesiones", reverse("sesiones:inicio"))
+    else:
+        miga = ("Repositorio", reverse("sesiones:repositorio"))
+    return {
+        "sesion": sesion,
+        "propia": propia,
+        "miga": miga,
+        "grado": dict(GRADOS)[sesion.grado],
+        "vistas_total": sesion.vistas.count() if propia else None,
+    }

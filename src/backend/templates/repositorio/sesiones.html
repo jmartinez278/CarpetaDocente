@@ -22,8 +22,9 @@ sesiones.js los abre, valida y envía. Sin JavaScript, el <noscript> lo dice.
     {% include "rb/boton.html" with texto="Subir una sesión" variante="principal" datos="abrir-subir" %}
   </div>
   <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Para subir una sesión necesitas activar JavaScript." %}</noscript>
+  {% include "repositorio/_pestanas.html" %}
   <section class="sesiones-resultado" aria-label="Envío de la sesión" role="status" data-resultado></section>
-  {% include "rb/estado_vacio.html" with icono="inbox" texto="Aquí verás las sesiones que envíes y su estado." %}
+  <div id="resultados" class="sesiones-panel" role="tabpanel">{% include "repositorio/_panel.html" %}</div>
 </div>
 {% include "repositorio/_formulario.html" %}
 {% include "repositorio/_terminos.html" %}

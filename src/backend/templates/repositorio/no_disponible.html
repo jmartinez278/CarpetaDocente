@@ -1,0 +1,16 @@
+{% extends "marco.html" %}
+{% comment %}
+«La sesión ya no está disponible» (spec detalle-sesion, «Quién ve una sesión»): la misma página, con 404, para una sesión
+eliminada, inexistente, ajena sin compartir o de otra institución. No lleva ningún dato de la sesión pedida.
+{% endcomment %}
+
+{% block titulo %}Sesión no disponible · CarpetaDocente{% endblock %}
+
+{% block titulo_barra %}Sesiones{% endblock %}
+
+{% block principal %}
+<div class="permission">
+  {% include "rb/mensaje.html" with tipo="error" titulo="La sesión ya no está disponible" nivel=1 alerta=True %}
+  <div class="permission-acciones">{% url "sesiones:inicio" as inicio %}{% include "rb/boton.html" with texto="Volver a Sesiones" href=inicio variante="principal" %}</div>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% comment %}
+Tarjeta de una sesión (spec repositorio-sesiones, «Tarjeta de sesión»): un solo enlace a su página, con la página
+dibujada (decorativa), el tipo, el título, «grado · área», la autora y la fecha. En «Mis sesiones» (mis=True), los chips
+y cuántas colegas la vieron. Sin la clave del archivo ni enlaces de descarga.
+{% endcomment %}
+<li class="sesion-tarjeta"><a href="{% url "sesiones:detalle" s.pk %}" aria-label="Abrir {{ s.titulo }}"><span class="sesion-hoja" aria-hidden="true">{{ s.inicio_texto }}</span><span class="sesion-tipo" aria-hidden="true">{{ s.tipo_corto }}</span><span class="sesion-titulo">{{ s.titulo }}</span><span class="sesion-datos">{{ s.grado }}.º grado · {{ s.area.nombre }}</span><span class="sesion-datos">{{ s.autor.get_full_name }} · {{ s.creado_en|date:"j M" }}</span>{% if mis %}<span class="sesion-chips"><span class="chip">Enviada</span>{% if s.compartida %}<span class="chip">Compartida</span>{% endif %}</span>{% if s.vistas_total %}<span class="sesion-vistas">{% if s.vistas_total == 1 %}La vio 1 colega{% else %}La vieron {{ s.vistas_total }} colegas{% endif %}</span>{% endif %}{% endif %}</a></li>

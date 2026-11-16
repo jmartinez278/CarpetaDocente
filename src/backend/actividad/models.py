@@ -66,12 +66,10 @@ CUENTAN_KPI_01 = frozenset(
 )
 
 # Operaciones del catálogo que aún no tienen quién las genere (la prueba de cobertura las salta).
-# Las de sesiones entran al catálogo con el modelo (US-011, parte A): SESION_VISTA y
-# SESION_DESCARGADA salen de aquí con la parte C, que las genera, y las otras tres con la D.
+# Las de sesiones entran al catálogo con el modelo (US-011, parte A); SESION_VISTA y
+# SESION_DESCARGADA ya las genera la parte C, y estas tres salen de aquí con la D.
 RESERVADAS: frozenset[Operacion] = frozenset(
     {
-        Operacion.SESION_VISTA,
-        Operacion.SESION_DESCARGADA,
         Operacion.SESION_COMPARTIDA,
         Operacion.SESION_DESCOMPARTIDA,
         Operacion.SESION_ELIMINADA,

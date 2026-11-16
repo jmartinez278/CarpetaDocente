@@ -1,0 +1,30 @@
+{% extends "marco.html" %}
+{% comment %}
+Página de una sesión (spec detalle-sesion; design de US-011, D5 a D7). Migas a «Mis sesiones» o al «Repositorio», los
+datos, el propósito, la vista previa del texto, «Descargar» y, en un PDF, «Ver» (enlaces del aplicativo, nunca de R2) y,
+en una propia, la tarjeta «Tu sesión» con cuántas colegas la vieron. Todo pasa por el autoescape. Su diseño final y las
+acciones de la autora son de las tareas 4.2 y 5.2.
+{% endcomment %}
+
+{% block titulo %}{{ sesion.titulo }} · CarpetaDocente{% endblock %}
+
+{% block titulo_barra %}Sesiones{% endblock %}
+
+{% block principal %}
+<div class="sesion" data-dimension="sesiones">
+  <nav class="migas" aria-label="Migas"><a href="{{ miga.1 }}">{{ miga.0 }}</a></nav>
+  <p class="small">Sesión de aprendizaje · {{ sesion.tipo_corto }}</p>
+  <h1>{{ sesion.titulo }}</h1>
+  <p class="sesion-chips"><span class="chip">{{ grado }}</span><span class="chip">{{ sesion.area.nombre }}</span>{% if sesion.compartida %}<span class="chip">Compartida</span>{% endif %}</p>
+  <dl class="sesion-ficha">
+    <dt>Autora</dt><dd>{{ sesion.autor.get_full_name }}</dd>
+    <dt>Enviada</dt><dd>{{ sesion.creado_en|date:"j \d\e F \d\e Y" }}</dd>
+    <dt>Formato</dt><dd>{{ sesion.tipo_corto }}</dd>
+    <dt>Tamaño</dt><dd>{{ sesion.tamano_bytes|filesizeformat }}</dd>
+  </dl>
+  <p class="sesion-acciones">{% url "sesiones:descargar" sesion.pk as url_descargar %}{% include "rb/boton.html" with texto="Descargar" href=url_descargar variante="principal" %}{% if sesion.tipo_corto == "PDF" %}<a class="btn btn--secondary" href="{% url "sesiones:ver" sesion.pk %}" target="_blank" rel="noopener">Ver</a>{% endif %}</p>
+  {% if propia %}<section class="sesion-tuya" aria-labelledby="tu-sesion"><h2 id="tu-sesion">Tu sesión</h2><p>{% if sesion.compartida %}Compartida con tus colegas y enviada a la dirección.{% else %}Enviada a la dirección. Solo tú y la dirección la ven.{% endif %}</p>{% if vistas_total %}<p>{% if vistas_total == 1 %}La vio 1 colega{% else %}La vieron {{ vistas_total }} colegas{% endif %}</p>{% endif %}</section>{% endif %}
+  {% if sesion.proposito %}<section aria-labelledby="proposito"><h2 id="proposito">Propósito</h2><p>{{ sesion.proposito }}</p></section>{% endif %}
+  <section aria-labelledby="vista-previa"><h2 id="vista-previa">Vista previa del texto</h2>{% if sesion.texto %}<p class="small">Texto sin formato. Descarga el archivo para verlo tal como es.</p><div class="sesion-texto">{{ sesion.texto }}</div>{% else %}<p>La vista previa no está disponible. Puedes descargar el archivo.</p>{% endif %}</section>
+</div>
+{% endblock %}

@@ -24,6 +24,26 @@
     display: none;
   }
 
+  /* Pestañas y enlaces de las listas (US-011, parte C): solo el área táctil de 44 px (A-01);
+     su diseño es de la tarea 5.2. */
+  .sesiones-pestanas [role="tablist"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-bottom: var(--s-5);
+  }
+
+  .sesiones-pestanas [role="tab"],
+  .repositorio-filtros a,
+  .repositorio-filtros [aria-disabled="true"],
+  [aria-label="Filtros activos"] a,
+  .migas a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   .sesiones-resultado {
     display: grid;
     gap: var(--s-4);

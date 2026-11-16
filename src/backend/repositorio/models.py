@@ -135,6 +135,11 @@ class Sesion(models.Model):
     def __str__(self):
         return self.titulo
 
+    @property
+    def tipo_corto(self):
+        """«PDF» o «Word», como lo nombran la tarjeta y la página."""
+        return "PDF" if self.tipo_mime == TIPO_PDF else "Word"
+
 
 class SesionVista(models.Model):
     """Una docente abrió la página de una sesión ajena: una fila por sesión y docente.

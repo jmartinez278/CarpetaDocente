@@ -85,7 +85,7 @@ SOBRE_SESIONES = [
 
 def test_las_reservadas_son_las_de_sesiones_que_aun_no_tienen_quien_las_genere():
     """Entran al catálogo en la parte A; las partes C y D las generan y las sacan de aquí."""
-    assert set(SOBRE_SESIONES) == RESERVADAS
+    assert set(SOBRE_SESIONES) - {"SESION_VISTA", "SESION_DESCARGADA"} == RESERVADAS
 
 
 @pytest.mark.parametrize("operacion", SOBRE_SESIONES)
