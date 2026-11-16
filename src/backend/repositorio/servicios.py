@@ -4,9 +4,11 @@ Toda regla y toda escritura de ``repositorio`` pasa por aquí; las vistas leen l
 llaman a estos servicios y responden.
 """
 
+import io
 import logging
 import re
 import secrets
+import time
 import uuid
 import zipfile
 import zlib
@@ -24,6 +26,7 @@ from actividad.servicios import registrar
 from catalogo.models import InstitucionArea
 from institucion.servicios import secciones_docente, texto_seccion_corto
 from repositorio.models import TAMANO_MAXIMO, TIPO_DOCX, TIPO_PDF, TITULO_MAXIMO, Sesion
+from repositorio.texto import extraer_texto, normalizar
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +124,8 @@ def _es_docx(archivo):
 
 # Extensión → (tipo, cómo se reconoce por su contenido).
 _TIPOS = {".pdf": (TIPO_PDF, _es_pdf), ".docx": (TIPO_DOCX, _es_docx)}
+# Cómo se nombra el tipo en el resumen («PDF · 1,2 MB», boceto) y en el log.
+_TIPO_CORTO = {TIPO_PDF: "PDF", TIPO_DOCX: "Word"}
 
 
 def validar_archivo(archivo):
@@ -274,7 +279,36 @@ def _validar(usuario, datos, archivo):
     return _Datos(grado, area, titulo, proposito, compartida), valido
 
 
-def _guardar(usuario, id_sesion, limpios, valido, archivo):
+def texto_de_busqueda(titulo, proposito, texto):
+    """Lo que recorre la búsqueda de una sesión: título, propósito y texto, normalizados."""
+    return normalizar(f"{titulo} {proposito} {texto}")
+
+
+def _transcribir(archivo, tipo_mime):
+    """El texto de ``archivo`` o ``""``; nunca detiene el envío (design de US-011, D3).
+
+    Corre antes de la transacción. Deja en el log cuánto tardó, con el tipo y el largo del
+    texto: ni el título ni el nombre del archivo.
+    """
+    inicio = time.perf_counter()
+    try:
+        texto = extraer_texto(archivo, tipo_mime)
+    except Exception as error:
+        # ``extraer_texto`` no lanza; si un día lo hace, la sesión se envía sin texto.
+        logger.warning("La extracción de texto falló: %s", type(error).__name__)
+        texto = ""
+    finally:
+        archivo.seek(0)
+    logger.info(
+        "Extracción de texto: %d ms, %s, %d caracteres.",
+        (time.perf_counter() - inicio) * 1000,
+        _TIPO_CORTO[tipo_mime],
+        len(texto),
+    )
+    return texto
+
+
+def _guardar(usuario, id_sesion, limpios, valido, archivo, texto):
     """La fila, su entrada y el archivo en una transacción; nada si algo falla (D4, pasos 2 y 3).
 
     La fila va primero: un envío simultáneo con el mismo ``id`` queda esperando en la PK y nunca
@@ -304,6 +338,8 @@ def _guardar(usuario, id_sesion, limpios, valido, archivo):
                 archivo_nombre=valido.nombre,
                 tipo_mime=valido.tipo_mime,
                 tamano_bytes=valido.tamano,
+                texto=texto,
+                texto_busqueda=texto_de_busqueda(limpios.titulo, limpios.proposito, texto),
             )
             registrar(
                 usuario,
@@ -337,6 +373,9 @@ def enviar_sesion(usuario, datos, archivo):
     Con un dato inválido, ``ValidationError`` con un mensaje por campo y nada escrito. Si la
     sesión de ese ``id`` ya es de la docente, la devuelve sin escribir (un reintento). Si el
     almacenamiento o la base fallan, se lanza su error sin dejar sesión, entrada ni archivo.
+
+    El texto del archivo se extrae después de validar y antes de la transacción; si no se puede
+    leer, la sesión se envía igual, sin texto (design de US-011, D3).
     """
     id_sesion = _uuid(_texto(datos, "id"))
     if id_sesion is None:
@@ -346,8 +385,9 @@ def enviar_sesion(usuario, datos, archivo):
         return previa
 
     limpios, valido = _validar(usuario, datos, archivo)
+    texto = _transcribir(archivo, valido.tipo_mime)
     try:
-        return _guardar(usuario, id_sesion, limpios, valido, archivo)
+        return _guardar(usuario, id_sesion, limpios, valido, archivo, texto)
     except IntegrityError:
         # Otro envío con el mismo id llegó primero (D5): su éxito es el de este.
         previa = _sesion_previa(usuario, id_sesion)
@@ -384,9 +424,6 @@ def datos_del_formulario(usuario):
 
 # --- Resumen del envío (D7) -----------------------------------------------------------------
 
-# Cómo se nombra el tipo en el resumen («PDF · 1,2 MB», boceto).
-_TIPO_CORTO = {TIPO_PDF: "PDF", TIPO_DOCX: "Word"}
-
 
 def resumen(sesion):
     """Lo que muestra el Mensaje de éxito de ``sesion``: grado y tipo en palabras.
@@ -398,3 +435,57 @@ def resumen(sesion):
         "grado": dict(GRADOS)[sesion.grado],
         "tipo": _TIPO_CORTO[sesion.tipo_mime],
     }
+
+
+# --- Sesiones anteriores (design de US-011, D3) ----------------------------------------------
+
+
+@dataclass(frozen=True)
+class Transcritas:
+    """Lo que hizo ``transcribir_pendientes``."""
+
+    con_texto: int
+    sin_texto: int
+    sin_archivo: int
+
+    def texto(self):
+        total = self.con_texto + self.sin_texto + self.sin_archivo
+        return (
+            f"Sesiones sin texto: {total}. Con texto ahora: {self.con_texto}. "
+            f"Siguen sin texto: {self.sin_texto}. No se pudo abrir su archivo: {self.sin_archivo}."
+        )
+
+
+def transcribir_pendientes():
+    """Llena el texto de las sesiones que no lo tienen, desde su archivo del almacenamiento.
+
+    Para las sesiones enviadas antes de US-011; lo corre el comando ``extraer_textos``. No toca
+    las que ya tienen texto, así que repetirlo no cambia nada. Un archivo que no se puede abrir
+    queda en el log con su clave (nunca el título) y no detiene a las demás. No es una acción de
+    una docente: no deja entrada de actividad ni cambia ``actualizado_en``.
+    """
+    almacen = storages["sesiones"]
+    pendientes = list(
+        Sesion.objects.filter(texto="")
+        .order_by("creado_en", "pk")
+        .values_list("pk", "archivo_clave", "tipo_mime", "titulo", "proposito")
+    )
+    con_texto = sin_texto = sin_archivo = 0
+    for pk, clave, tipo_mime, titulo, proposito in pendientes:
+        try:
+            with almacen.open(clave) as guardado:
+                contenido = io.BytesIO(guardado.read(TAMANO_MAXIMO + 1))
+        except Exception as error:
+            logger.warning("No se pudo abrir %s: %s", clave, type(error).__name__)
+            sin_archivo += 1
+            continue
+        texto = extraer_texto(contenido, tipo_mime)
+        if not texto:
+            sin_texto += 1
+            continue
+        # Solo si sigue sin texto: no pisa lo que otra corrida guardó mientras tanto.
+        Sesion.objects.filter(pk=pk, texto="").update(
+            texto=texto, texto_busqueda=texto_de_busqueda(titulo, proposito, texto)
+        )
+        con_texto += 1
+    return Transcritas(con_texto=con_texto, sin_texto=sin_texto, sin_archivo=sin_archivo)

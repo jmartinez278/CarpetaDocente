@@ -5,6 +5,7 @@ Todo o nada: la sesión, su entrada SESION_ENVIADA y su archivo se guardan junto
 ninguno. Un envío repetido con el mismo ``id`` responde el mismo éxito sin escribir otra vez.
 """
 
+import logging
 import re
 import uuid
 
@@ -19,7 +20,14 @@ from catalogo.models import Area, InstitucionArea
 from institucion.models import AnioEscolar, Seccion
 from repositorio import servicios
 from repositorio.models import TAMANO_MAXIMO, TIPO_DOCX, TIPO_PDF, Sesion
-from repositorio.tests.archivos import docx, pdf, subido
+from repositorio.tests.archivos import (
+    docx,
+    docx_con_texto,
+    pdf,
+    pdf_cifrado,
+    pdf_con_texto,
+    subido,
+)
 from repositorio.tests.conftest import COMUNICACION, MATEMATICA
 
 pytestmark = pytest.mark.django_db
@@ -143,6 +151,144 @@ def test_docente_sin_seccion_tambien_envia(docente, datos):
     servicios.enviar_sesion(docente, datos(), pdf())
 
     assert Sesion.objects.filter(autor=docente).count() == 1
+
+
+# --- Texto transcrito (US-011, D3) ------------------------------------------------------------
+
+
+def test_un_word_guarda_su_texto_y_se_encuentra_por_el(docente, datos, almacen):
+    # Escenario «Word».
+    contenido = docx_con_texto(["Formamos equipos", "Lista de cotejo"])
+
+    sesion = servicios.enviar_sesion(docente, datos(), subido("sesion.docx", contenido))
+
+    sesion = Sesion.objects.get(pk=sesion.pk)
+    assert sesion.texto == "Formamos equipos\nLista de cotejo"
+    assert "equipos" in sesion.texto_busqueda
+    assert Sesion.objects.filter(texto_busqueda__contains="equipos").exists()
+    # La extracción deja el archivo al principio: se guarda entero.
+    with almacen.open(sesion.archivo_clave) as guardado:
+        assert guardado.read() == contenido
+
+
+def test_un_pdf_con_texto_guarda_su_texto(docente, datos, almacen):
+    # Escenario «PDF con texto».
+    contenido = pdf_con_texto([["Formamos equipos"], ["Evaluamos con una rúbrica"]])
+
+    sesion = servicios.enviar_sesion(docente, datos(), subido("sesion.pdf", contenido))
+
+    sesion = Sesion.objects.get(pk=sesion.pk)
+    assert sesion.texto == "Formamos equipos\nEvaluamos con una rúbrica"
+    with almacen.open(sesion.archivo_clave) as guardado:
+        assert guardado.read() == contenido
+
+
+def test_el_texto_de_busqueda_lleva_titulo_proposito_y_texto_normalizados(docente, datos):
+    contenido = docx_con_texto(["Escribimos una RECOMENDACIÓN"])
+    enviados = datos(titulo="Cuidamos el Árbol", proposito="Que la niña opine.")
+
+    sesion = servicios.enviar_sesion(docente, enviados, subido("sesion.docx", contenido))
+
+    sesion.refresh_from_db()
+    assert sesion.texto_busqueda == (
+        "cuidamos el arbol que la nina opine. escribimos una recomendacion"
+    )
+
+
+@pytest.mark.parametrize(
+    "archivo",
+    [
+        subido("escaneada.pdf", pdf_con_texto([[], []])),
+        subido("cifrada.pdf", pdf_cifrado([["Formamos equipos"]])),
+        subido("rota.pdf", b"%PDF-1.4\nroto"),
+        docx(extras={"word/document.xml": b"<w:document"}),
+    ],
+    ids=["pdf-escaneado", "pdf-cifrado", "pdf-roto", "docx-roto"],
+)
+def test_sin_texto_o_ilegible_se_envia_con_el_mismo_exito_y_sin_texto(
+    docente, datos, almacen, archivo
+):
+    # Escenarios «PDF escaneado» y «Archivo que no se puede leer».
+    sesion = servicios.enviar_sesion(docente, datos(), archivo)
+
+    sesion = Sesion.objects.get(pk=sesion.pk)
+    assert sesion.texto == ""
+    assert (
+        sesion.texto_busqueda == "leemos un cuento que lean un cuento y cuenten lo que entendieron."
+    )
+    assert sesion.estado == Sesion.Estado.ENVIADA
+    assert RegistroActividad.objects.filter(operacion=Operacion.SESION_ENVIADA).count() == 1
+    assert almacen.exists(sesion.archivo_clave)
+
+
+def test_si_la_extraccion_lanzara_el_envio_sigue(docente, datos, almacen, monkeypatch):
+    def lanzar(archivo, tipo_mime):
+        archivo.read(10)
+        raise RuntimeError("no debía pasar")
+
+    monkeypatch.setattr(servicios, "extraer_texto", lanzar)
+    contenido = docx_con_texto(["Formamos equipos"])
+
+    sesion = servicios.enviar_sesion(docente, datos(), subido("sesion.docx", contenido))
+
+    sesion.refresh_from_db()
+    assert sesion.texto == ""
+    assert sesion.texto_busqueda.startswith("leemos un cuento")
+    with almacen.open(sesion.archivo_clave) as guardado:
+        assert guardado.read() == contenido
+
+
+def test_un_reintento_con_el_mismo_id_no_extrae_otra_vez(docente, datos, monkeypatch):
+    enviados = datos()
+    contenido = docx_con_texto(["Formamos equipos"])
+    primera = servicios.enviar_sesion(docente, enviados, subido("sesion.docx", contenido))
+    extracciones = []
+    monkeypatch.setattr(servicios, "extraer_texto", lambda *a: extracciones.append(a) or "")
+
+    segunda = servicios.enviar_sesion(docente, enviados, subido("sesion.docx", contenido))
+
+    assert not extracciones
+    assert segunda.pk == primera.pk
+    assert segunda.texto == "Formamos equipos"
+
+
+def test_un_envio_rechazado_no_extrae(docente, datos, monkeypatch):
+    extracciones = []
+    monkeypatch.setattr(servicios, "extraer_texto", lambda *a: extracciones.append(a) or "")
+
+    with pytest.raises(ValidationError):
+        servicios.enviar_sesion(docente, datos(titulo=""), pdf())
+
+    assert not extracciones
+
+
+def test_la_extraccion_corre_antes_de_crear_la_fila(docente, datos, monkeypatch):
+    # D3: mientras se lee el archivo todavía no hay fila que otro envío tenga que esperar.
+    abiertas = []
+    extraer = servicios.extraer_texto
+
+    def anotar(archivo, tipo_mime):
+        abiertas.append(Sesion.objects.exists())
+        return extraer(archivo, tipo_mime)
+
+    monkeypatch.setattr(servicios, "extraer_texto", anotar)
+
+    servicios.enviar_sesion(docente, datos(), pdf())
+
+    assert abiertas == [False]
+
+
+def test_la_duracion_de_la_extraccion_queda_en_el_log_sin_titulo_ni_texto(docente, datos, caplog):
+    contenido = docx_con_texto(["Formamos equipos"])
+
+    with caplog.at_level(logging.INFO, logger="repositorio.servicios"):
+        servicios.enviar_sesion(docente, datos(), subido("Sesion de Ana.docx", contenido))
+
+    (aviso,) = [r.getMessage() for r in caplog.records if "Extracción" in r.getMessage()]
+    assert re.fullmatch(r"Extracción de texto: \d+ ms, Word, 16 caracteres\.", aviso)
+    todo = " ".join(registro.getMessage() for registro in caplog.records)
+    for privado in ("Leemos", "Formamos", "Ana"):
+        assert privado not in todo
 
 
 # --- Compartir y términos --------------------------------------------------------------------

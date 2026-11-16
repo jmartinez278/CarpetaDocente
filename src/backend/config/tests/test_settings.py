@@ -262,6 +262,7 @@ def test_en_vercel_los_logs_van_a_la_salida_estandar():
         " print(json.dumps({'clase': h['class'], 'stream': h['stream'] is sys.stdout,"
         " 'django': s.LOGGING['loggers']['django']['level'],"
         " 'request': s.LOGGING['loggers']['django.request']['level'],"
+        " 'repositorio': s.LOGGING['loggers']['repositorio'],"
         " 'handlers': [s.LOGGING['loggers'][n]['handlers'] for n in ('django', 'django.request')],"
         " 'existentes': s.LOGGING['disable_existing_loggers']}))"
     )
@@ -273,6 +274,8 @@ def test_en_vercel_los_logs_van_a_la_salida_estandar():
         "stream": True,
         "django": "WARNING",
         "request": "ERROR",
+        # INFO: la duración de la extracción de texto de cada envío (US-011, D3).
+        "repositorio": {"handlers": ["consola"], "level": "INFO"},
         "handlers": [["consola"], ["consola"]],
         "existentes": False,
     }
