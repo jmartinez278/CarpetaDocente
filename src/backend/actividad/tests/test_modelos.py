@@ -90,9 +90,9 @@ SOBRE_REFERENCIAS = [
 ]
 
 
-def test_solo_quedan_reservadas_las_de_material_de_referencia():
-    """Entran al catálogo en la parte A de US-018; las genera el servicio de la parte B."""
-    assert RESERVADAS == frozenset(SOBRE_REFERENCIAS)
+def test_no_queda_ninguna_operacion_reservada():
+    """Las de material de referencia las genera el servicio de US-018 (parte B)."""
+    assert RESERVADAS == frozenset()
 
 
 @pytest.mark.parametrize("operacion", SOBRE_REFERENCIAS)

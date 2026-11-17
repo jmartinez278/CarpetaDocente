@@ -17,6 +17,7 @@ _MARCAS = "notas.tests.test_servicios_guardar"
 _NOTAS = "notas.tests.test_servicios_guardar_hoja"
 _CONSULTAS = "repositorio.tests.test_servicios_consultas"
 _AUTORA = "repositorio.tests.test_servicios_autora"
+_REFERENCIA = "repositorio.tests.test_servicios_referencia"
 
 ESCENARIOS: dict[Operacion, str] = {
     Operacion.INICIO_SESION: f"{_SESION}::test_ingreso_correcto_deja_inicio_sesion",
@@ -80,6 +81,15 @@ ESCENARIOS: dict[Operacion, str] = {
     ),
     Operacion.SESION_ELIMINADA: (
         f"{_AUTORA}::test_eliminar_borra_la_sesion_su_archivo_y_deja_sesion_eliminada"
+    ),
+    Operacion.SESION_REFERENCIA_CARGADA: (
+        f"{_REFERENCIA}::test_cargar_deja_sesion_referencia_cargada_y_ninguna_sesion_enviada"
+    ),
+    Operacion.SESION_REFERENCIA_EDITADA: (
+        f"{_REFERENCIA}::test_editar_titulo_y_fuente_deja_sesion_referencia_editada_con_los_campos"
+    ),
+    Operacion.SESION_REFERENCIA_ELIMINADA: (
+        f"{_REFERENCIA}::test_eliminar_borra_fila_vistas_y_al_confirmar_el_archivo"
     ),
     Operacion.CATALOGO_EDITADO: (
         f"{_PANEL}::test_editar_desde_list_editable_deja_catalogo_editado"

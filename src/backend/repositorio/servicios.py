@@ -18,7 +18,7 @@ from pathlib import PurePosixPath
 from xml.etree import ElementTree
 from zoneinfo import ZoneInfo
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import NON_FIELD_ERRORS, PermissionDenied, ValidationError
 from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
@@ -31,6 +31,8 @@ from storages.backends.s3 import S3Storage
 from actividad.models import Operacion
 from actividad.servicios import registrar
 from catalogo.models import InstitucionArea
+from cuentas.models import Usuario
+from institucion.models import Institucion
 from institucion.servicios import secciones_docente, texto_seccion_corto
 from repositorio.models import (
     TAMANO_MAXIMO,
@@ -245,8 +247,8 @@ def _validar_grado(datos, errores):
     return grado
 
 
-def _validar_area(usuario, datos, errores):
-    """El área si la institución de ``usuario`` la trabaja (RN-007)."""
+def _validar_area(institucion_id, datos, errores):
+    """El área si la institución ``institucion_id`` la trabaja (RN-007)."""
     texto = _texto(datos, "area")
     if not texto:
         errores["area"] = FALTA_AREA
@@ -256,7 +258,7 @@ def _validar_area(usuario, datos, errores):
     if area_id is not None:
         fila = (
             InstitucionArea.objects.filter(
-                institucion_id=usuario.institucion_id, area_id=area_id, se_trabaja=True
+                institucion_id=institucion_id, area_id=area_id, se_trabaja=True
             )
             .select_related("area")
             .first()
@@ -271,7 +273,7 @@ def _validar(usuario, datos, archivo):
     """``(_Datos, ArchivoValido)`` o ``ValidationError`` con un mensaje por campo (D4, paso 1)."""
     errores = {}
     grado = _validar_grado(datos, errores)
-    area = _validar_area(usuario, datos, errores)
+    area = _validar_area(usuario.institucion_id, datos, errores)
 
     titulo = _texto(datos, "titulo")
     if not titulo:
@@ -327,8 +329,11 @@ def _transcribir(archivo, tipo_mime):
     return texto
 
 
-def _guardar(usuario, id_sesion, limpios, valido, archivo, texto):
+def _guardar(usuario, id_sesion, campos, valido, archivo, texto, operacion, detalle=None):
     """La fila, su entrada y el archivo en una transacción; nada si algo falla (D4, pasos 2 y 3).
+
+    ``campos`` son los de la fila que cambian entre la sesión de una docente y la de referencia
+    (US-018, D4); ``operacion`` y ``detalle``, su entrada de actividad.
 
     La fila va primero: un envío simultáneo con el mismo ``id`` queda esperando en la PK y nunca
     llega a escribir el archivo (D5). La clave es de este intento (``<id>-<token>``) y se conoce
@@ -342,31 +347,21 @@ def _guardar(usuario, id_sesion, limpios, valido, archivo, texto):
         with transaction.atomic():
             sesion = Sesion.objects.create(
                 id=id_sesion,
-                institucion_id=usuario.institucion_id,
-                autor=usuario,
                 subido_por=usuario,
-                grado=limpios.grado,
-                grado_hasta=limpios.grado,
-                area=limpios.area,
-                titulo=limpios.titulo,
-                proposito=limpios.proposito,
-                origen=Sesion.Origen.PROPIA,
-                estado=Sesion.Estado.ENVIADA,
-                compartida=limpios.compartida,
-                terminos_aceptados_en=timezone.now() if limpios.compartida else None,
                 archivo_clave=clave,
                 archivo_nombre=valido.nombre,
                 tipo_mime=valido.tipo_mime,
                 tamano_bytes=valido.tamano,
                 texto=texto,
-                texto_busqueda=texto_de_busqueda(limpios.titulo, limpios.proposito, texto),
+                texto_busqueda=texto_de_busqueda(campos["titulo"], campos["proposito"], texto),
+                **campos,
             )
             registrar(
                 usuario,
-                Operacion.SESION_ENVIADA,
+                operacion,
                 entidad=Sesion._meta.db_table,
                 entidad_id=sesion.pk,
-                detalle={"compartida": limpios.compartida},
+                detalle=detalle,
             )
             guardado = almacen.save(clave, archivo)
             if guardado != clave:
@@ -382,6 +377,23 @@ def _guardar(usuario, id_sesion, limpios, valido, archivo, texto):
                 logger.exception("No se pudo borrar %s, de una sesión que no se guardó.", escrita)
         raise
     return sesion
+
+
+def _campos_del_envio(usuario, limpios):
+    """Los campos de la sesión que envía una docente: suya, de un grado y enviada."""
+    return {
+        "institucion_id": usuario.institucion_id,
+        "autor": usuario,
+        "grado": limpios.grado,
+        "grado_hasta": limpios.grado,
+        "area": limpios.area,
+        "titulo": limpios.titulo,
+        "proposito": limpios.proposito,
+        "origen": Sesion.Origen.PROPIA,
+        "estado": Sesion.Estado.ENVIADA,
+        "compartida": limpios.compartida,
+        "terminos_aceptados_en": timezone.now() if limpios.compartida else None,
+    }
 
 
 def enviar_sesion(usuario, datos, archivo):
@@ -407,13 +419,251 @@ def enviar_sesion(usuario, datos, archivo):
     limpios, valido = _validar(usuario, datos, archivo)
     texto = _transcribir(archivo, valido.tipo_mime)
     try:
-        return _guardar(usuario, id_sesion, limpios, valido, archivo, texto)
+        return _guardar(
+            usuario,
+            id_sesion,
+            _campos_del_envio(usuario, limpios),
+            valido,
+            archivo,
+            texto,
+            Operacion.SESION_ENVIADA,
+            {"compartida": limpios.compartida},
+        )
     except IntegrityError:
         # Otro envío con el mismo id llegó primero (D5): su éxito es el de este.
         previa = _sesion_previa(usuario, id_sesion)
         if previa is None:
             raise
         return previa
+
+
+# --- Sesión de referencia (design de US-018, D4 y D5) ----------------------------------------
+
+FUENTE_MAXIMO = 300
+FALTA_INSTITUCION = "Falta indicar la institución."
+INSTITUCION_FUERA = "Elige una institución de la lista."
+FALTA_GRADO_FINAL = "Falta indicar el grado final."
+RANGO_AL_REVES = "El grado final no puede ser menor que el inicial."
+# Error de la ficha, no de un campo (spec material-referencia).
+FALTA_FUENTE_O_PERMISO = "Indique la fuente y el permiso de uso"
+FUENTE_LARGA = f"La fuente puede tener hasta {FUENTE_MAXIMO} caracteres."
+PERMISO_LARGO = f"El permiso de uso puede tener hasta {FUENTE_MAXIMO} caracteres."
+# Lo que la ficha deja editar; el archivo y la institución no cambian (D4).
+CAMPOS_EDITABLES = (
+    "grado",
+    "grado_hasta",
+    "area",
+    "titulo",
+    "proposito",
+    "fuente",
+    "permiso_uso",
+)
+
+
+@dataclass(frozen=True)
+class DatosReferencia:
+    institucion: object
+    grado: int
+    grado_hasta: int
+    area: object
+    titulo: str
+    proposito: str
+    fuente: str
+    permiso_uso: str
+
+
+def _solo_administrador(usuario):
+    """Solo el Administrador carga, edita y elimina el material de referencia (RF-018)."""
+    if getattr(usuario, "rol", None) != Usuario.Rol.ADMINISTRADOR:
+        raise PermissionDenied
+
+
+def _validar_institucion(datos, errores):
+    texto = _texto(datos, "institucion")
+    if not texto:
+        errores["institucion"] = FALTA_INSTITUCION
+        return None
+    institucion_id = _entero(texto)
+    institucion = Institucion.objects.filter(pk=institucion_id).first() if institucion_id else None
+    if institucion is None:
+        errores["institucion"] = INSTITUCION_FUERA
+    return institucion
+
+
+def _validar_grados(datos, errores):
+    """``(inicial, final)``: los dos de 1 a 6 y el final no menor que el inicial (D2)."""
+    grado = _validar_grado(datos, errores)
+    texto = _texto(datos, "grado_hasta")
+    grado_hasta = None
+    if not texto:
+        errores["grado_hasta"] = FALTA_GRADO_FINAL
+    else:
+        grado_hasta = _entero(texto)
+        if grado_hasta is None or not 1 <= grado_hasta <= 6:
+            errores["grado_hasta"] = GRADO_FUERA
+            grado_hasta = None
+        elif grado is not None and grado_hasta < grado:
+            errores["grado_hasta"] = RANGO_AL_REVES
+    return grado, grado_hasta
+
+
+def _validar_fuente_y_permiso(datos, errores):
+    fuente = _texto(datos, "fuente")
+    permiso = _texto(datos, "permiso_uso")
+    if not fuente or not permiso:
+        errores[NON_FIELD_ERRORS] = FALTA_FUENTE_O_PERMISO
+    if len(fuente) > FUENTE_MAXIMO:
+        errores["fuente"] = FUENTE_LARGA
+    if len(permiso) > FUENTE_MAXIMO:
+        errores["permiso_uso"] = PERMISO_LARGO
+    return fuente, permiso
+
+
+def validar_referencia(datos, archivo, al_crear):
+    """``(DatosReferencia, ArchivoValido | None)`` o ``ValidationError`` por campo (D4).
+
+    ``datos`` es lo que manda la ficha del panel, como texto: ``institucion``, ``grado``,
+    ``grado_hasta``, ``area``, ``titulo``, ``proposito``, ``fuente`` y ``permiso_uso``. El área
+    debe ser una que la institución elegida trabaja (RN-007). Si falta la fuente o el permiso,
+    el error es de la ficha (``NON_FIELD_ERRORS``). El archivo se valida solo ``al_crear``.
+    """
+    errores = {}
+    institucion = _validar_institucion(datos, errores)
+    grado, grado_hasta = _validar_grados(datos, errores)
+    if institucion is not None:
+        area = _validar_area(institucion.pk, datos, errores)
+    else:
+        area = None
+        if not _texto(datos, "area"):
+            errores["area"] = FALTA_AREA
+
+    titulo = _texto(datos, "titulo")
+    if not titulo:
+        errores["titulo"] = FALTA_TITULO
+    elif len(titulo) > TITULO_MAXIMO:
+        errores["titulo"] = TITULO_LARGO
+
+    proposito = _texto(datos, "proposito")
+    if len(proposito) > PROPOSITO_MAXIMO:
+        errores["proposito"] = PROPOSITO_LARGO
+
+    fuente, permiso = _validar_fuente_y_permiso(datos, errores)
+
+    valido = None
+    if al_crear:
+        try:
+            valido = validar_archivo(archivo)
+        except ValidationError as error:
+            errores["archivo"] = error.messages[0]
+
+    if errores:
+        raise ValidationError(errores)
+    limpios = DatosReferencia(
+        institucion, grado, grado_hasta, area, titulo, proposito, fuente, permiso
+    )
+    return limpios, valido
+
+
+def cargar_referencia(administrador, datos, archivo):
+    """Guarda una sesión de referencia y devuelve la ``Sesion`` (spec material-referencia, D4).
+
+    Sin autora, sin estado de envío ni términos, y en el repositorio de la institución elegida
+    desde que se guarda (``compartida=True``, D1). Deja SESION_REFERENCIA_CARGADA, nunca
+    SESION_ENVIADA. Con un dato inválido, ``ValidationError`` y nada escrito; si el almacén o la
+    base fallan, su error, sin fila, entrada ni archivo.
+    """
+    _solo_administrador(administrador)
+    limpios, valido = validar_referencia(datos, archivo, al_crear=True)
+    texto = _transcribir(archivo, valido.tipo_mime)
+    campos = {
+        "institucion": limpios.institucion,
+        "autor": None,
+        "grado": limpios.grado,
+        "grado_hasta": limpios.grado_hasta,
+        "area": limpios.area,
+        "titulo": limpios.titulo,
+        "proposito": limpios.proposito,
+        "fuente": limpios.fuente,
+        "permiso_uso": limpios.permiso_uso,
+        "origen": Sesion.Origen.REFERENCIA,
+        "estado": "",
+        "compartida": True,
+        "terminos_aceptados_en": None,
+    }
+    return _guardar(
+        administrador,
+        uuid.uuid4(),
+        campos,
+        valido,
+        archivo,
+        texto,
+        Operacion.SESION_REFERENCIA_CARGADA,
+    )
+
+
+def _bloquear_referencia(id_sesion):
+    """La sesión de referencia con su fila bloqueada; ``SesionNoDisponible`` si no lo es."""
+    sesion = (
+        Sesion.objects.select_for_update()
+        .filter(pk=getattr(id_sesion, "pk", id_sesion), origen=Sesion.Origen.REFERENCIA)
+        .first()
+    )
+    if sesion is None:
+        raise SesionNoDisponible
+    return sesion
+
+
+def editar_referencia(administrador, sesion, datos):
+    """Cambia los datos de una sesión de referencia; devuelve la ``Sesion`` guardada (D4).
+
+    Se compara con la fila leída de nuevo y bloqueada, no con ``sesion`` (la ficha del panel ya
+    le puso los valores del formulario). La institución y el archivo no cambian: la institución
+    se valida con la guardada. Recalcula ``texto_busqueda`` con el texto guardado y deja
+    SESION_REFERENCIA_EDITADA con los nombres de los campos que cambiaron; sin cambios, nada.
+    """
+    _solo_administrador(administrador)
+    with transaction.atomic():
+        guardada = _bloquear_referencia(sesion)
+        datos = {**datos, "institucion": str(guardada.institucion_id)}
+        limpios, _ = validar_referencia(datos, None, al_crear=False)
+        cambiados = [
+            campo
+            for campo in CAMPOS_EDITABLES
+            if getattr(guardada, campo) != getattr(limpios, campo)
+        ]
+        if not cambiados:
+            return guardada
+        for campo in cambiados:
+            setattr(guardada, campo, getattr(limpios, campo))
+        guardada.texto_busqueda = texto_de_busqueda(
+            guardada.titulo, guardada.proposito, guardada.texto
+        )
+        guardada.save(update_fields=[*cambiados, "texto_busqueda", "actualizado_en"])
+        registrar(
+            administrador,
+            Operacion.SESION_REFERENCIA_EDITADA,
+            entidad=Sesion._meta.db_table,
+            entidad_id=guardada.pk,
+            detalle={"campos": cambiados},
+        )
+    return guardada
+
+
+def eliminar_referencia(administrador, sesion):
+    """Elimina una sesión de referencia, sus vistas y, al confirmarse, su archivo (D5).
+
+    Deja SESION_REFERENCIA_ELIMINADA. ``SesionNoDisponible`` si no existe o no es de referencia.
+    """
+    _solo_administrador(administrador)
+    with transaction.atomic():
+        guardada = _bloquear_referencia(sesion)
+        borrar_sesiones(Sesion.objects.filter(pk=guardada.pk))
+        registrar(
+            administrador,
+            Operacion.SESION_REFERENCIA_ELIMINADA,
+            entidad=Sesion._meta.db_table,
+            entidad_id=guardada.pk,
+        )
 
 
 # --- Formulario (D9) ------------------------------------------------------------------------

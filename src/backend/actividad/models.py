@@ -70,14 +70,7 @@ CUENTAN_KPI_01 = frozenset(
 )
 
 # Operaciones del catálogo que aún no tienen quién las genere (la prueba de cobertura las salta).
-# Las de material de referencia entran en la parte A de US-018 y las genera su parte B.
-RESERVADAS: frozenset[Operacion] = frozenset(
-    {
-        Operacion.SESION_REFERENCIA_CARGADA,
-        Operacion.SESION_REFERENCIA_EDITADA,
-        Operacion.SESION_REFERENCIA_ELIMINADA,
-    }
-)
+RESERVADAS: frozenset[Operacion] = frozenset()
 
 
 class RegistroActividad(models.Model):

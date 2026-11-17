@@ -8,7 +8,7 @@ pantallas del panel, con el Administrador ficticio.
 import pytest
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
-from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
+from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth.models import Group
 from django.db import connection
 from django.test import RequestFactory
@@ -433,4 +433,39 @@ def test_cada_model_admin_que_escribe_usa_la_mezcla(administrador):
         )
         if escribe:
             assert isinstance(model_admin, RegistraEnPanel), modelo
-        assert not model_admin.has_delete_permission(peticion), modelo
+        # Solo borra el que declara su operación (US-018, D5), y nunca en masa.
+        if model_admin.has_delete_permission(peticion):
+            assert isinstance(model_admin, RegistraEnPanel), modelo
+            assert model_admin.operacion_al_borrar is not None, modelo
+            assert "delete_selected" not in model_admin.get_actions(peticion), modelo
+
+
+class _SinOperacionAlBorrar(RegistraEnPanel, admin.ModelAdmin):
+    pass
+
+
+class _ConOperacionAlBorrar(RegistraEnPanel, admin.ModelAdmin):
+    operacion_al_borrar = Operacion.SESION_REFERENCIA_ELIMINADA
+
+
+def peticion_de(usuario):
+    peticion = RequestFactory().post("/admin/")
+    peticion.user = usuario
+    return peticion
+
+
+def test_sin_operacion_al_borrar_el_panel_no_borra(administrador, institucion):
+    model_admin = _SinOperacionAlBorrar(Institucion, admin.site)
+
+    with pytest.raises(NotImplementedError):
+        model_admin.log_deletions(peticion_de(administrador), [institucion])
+
+    assert not LogEntry.objects.exists()
+
+
+def test_con_operacion_al_borrar_deja_el_historial_de_django(administrador, institucion):
+    model_admin = _ConOperacionAlBorrar(Institucion, admin.site)
+
+    model_admin.log_deletions(peticion_de(administrador), [institucion])
+
+    assert set(LogEntry.objects.values_list("action_flag", flat=True)) == {DELETION}
