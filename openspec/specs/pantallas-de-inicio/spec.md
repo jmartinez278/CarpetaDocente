@@ -114,7 +114,7 @@ La portada del docente SHALL saludar al docente por su nombre y mostrar las tarj
 - **THEN** la tarjeta Asistencia no muestra "Hoy: pendiente"
 
 ### Requirement: Disponibilidad de cada dimensión
-Cada dimensión SHALL tener una bandera de disponibilidad que activa la historia que construye su pantalla. Una dimensión no disponible se muestra como "Próximamente" y nunca se oculta; una disponible enlaza a su pantalla. Ninguna tarjeta MUST enlazar a una página que no existe. Al cerrar US-001, las tres están en "Próximamente". Desde US-030, Asistencia está disponible y su tarjeta enlaza a la asistencia de hoy de la sección, con la misma regla que "Ver estudiantes": solo si la docente tiene una sola sección en el año ABIERTO. Sin esa sección única, la tarjeta Asistencia se muestra como "Próximamente". Desde US-020, Notas está disponible con la misma regla y su tarjeta enlaza a la hoja de notas de la sección, que abre en el periodo vigente.
+Cada dimensión SHALL tener una bandera de disponibilidad que activa la historia que construye su pantalla. Una dimensión no disponible se muestra como "Próximamente" y nunca se oculta; una disponible enlaza a su pantalla. Ninguna tarjeta MUST enlazar a una página que no existe. Al cerrar US-001, las tres están en "Próximamente". Desde US-030, Asistencia está disponible y su tarjeta enlaza a la asistencia de hoy de la sección, con la misma regla que "Ver estudiantes": solo si la docente tiene una sola sección en el año ABIERTO. Sin esa sección única, la tarjeta Asistencia se muestra como "Próximamente". Desde US-020, Notas está disponible con la misma regla y su tarjeta enlaza a la hoja de notas de la sección, que abre en el periodo vigente. Desde US-011, Sesiones está disponible y su tarjeta enlaza a la pantalla Sesiones, tenga o no sección la docente.
 
 #### Scenario: Tres dimensiones en "Próximamente"
 - **WHEN** un docente abre la portada al cerrar US-001
@@ -134,7 +134,7 @@ Cada dimensión SHALL tener una bandera de disponibilidad que activa la historia
 
 #### Scenario: Asistencia con una sección
 - **WHEN** una docente con una sola sección en el año ABIERTO abre la portada
-- **THEN** la tarjeta Asistencia dice "Registrar asistencia" y lleva a la asistencia de hoy de esa sección; Sesiones sigue en "Próximamente"
+- **THEN** la tarjeta Asistencia dice "Registrar asistencia" y lleva a la asistencia de hoy de esa sección
 
 #### Scenario: Asistencia sin sección única
 - **WHEN** una docente sin sección, o con dos, abre la portada
@@ -147,6 +147,10 @@ Cada dimensión SHALL tener una bandera de disponibilidad que activa la historia
 #### Scenario: Notas sin sección única
 - **WHEN** una docente sin sección, o con dos, abre la portada
 - **THEN** la tarjeta Notas se muestra como "Próximamente" y no contiene un enlace
+
+#### Scenario: Sesiones con o sin sección
+- **WHEN** una docente con una sección, con dos o sin sección abre la portada
+- **THEN** la tarjeta Sesiones dice "Ver sesiones" y lleva a la pantalla Sesiones
 
 ### Requirement: Inicio de la dirección
 El inicio de la dirección SHALL saludar al usuario por su nombre y mostrar, mientras no exista el panel de consolidados (US-040), el estado vacío "Los consolidados de notas y asistencia estarán aquí en una próxima versión."
@@ -175,15 +179,19 @@ El ☰ de las pantallas interiores de la docente SHALL abrir un panel lateral, s
 
 #### Scenario: Abrir el ☰
 - **WHEN** una docente con una sola sección en el año ABIERTO toca el ☰ en «sin permiso»
-- **THEN** ve un panel que cubre la barra, con "Cerrar navegación" y con Inicio, Sesiones, Asistencia y Notas, en ese orden; Inicio lleva a la portada, Asistencia a la asistencia de hoy de su sección y Notas a la hoja de notas de su sección, igual que las tarjetas de la portada
+- **THEN** ve un panel que cubre la barra, con "Cerrar navegación" y con Inicio, Sesiones, Asistencia y Notas, en ese orden; Inicio lleva a la portada, Sesiones a la pantalla Sesiones, Asistencia a la asistencia de hoy de su sección y Notas a la hoja de notas de su sección, igual que las tarjetas de la portada
 
 #### Scenario: Destino no disponible
-- **WHEN** la bandera de Sesiones está apagada, o la docente no tiene sección única en el año ABIERTO, y abre el ☰
-- **THEN** Sesiones (y, sin sección única, también Asistencia y Notas) se ve con "Próximamente", sin enlace, y sigue en la lista
+- **WHEN** la docente no tiene sección única en el año ABIERTO y abre el ☰
+- **THEN** Asistencia y Notas se ven con "Próximamente", sin enlace, y siguen en la lista; Sesiones sí enlaza a su pantalla
 
 #### Scenario: Ubicación actual
 - **WHEN** la docente abre el ☰ desde la hoja de notas de su sección
 - **THEN** Notas está marcada como la pantalla actual, a la vista y para el lector de pantalla, y ningún otro destino lo está; desde «sin permiso», ninguno está marcado
+
+#### Scenario: Ubicación actual en Sesiones
+- **WHEN** la docente abre el ☰ desde «Mis sesiones», el repositorio o la página de una sesión
+- **THEN** Sesiones está marcada como la pantalla actual y ningún otro destino lo está
 
 #### Scenario: Teclado
 - **WHEN** la docente abre el ☰ con el teclado, recorre el panel con Tab y pulsa Escape
