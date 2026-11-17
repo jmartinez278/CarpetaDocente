@@ -684,6 +684,20 @@
     color: var(--cocoa-muted);
   }
 
+  /* Material de referencia (US-018): fuente y permiso de uso; una URL larga parte la línea. */
+  .sesion-referencia {
+    display: grid;
+    gap: var(--s-3);
+  }
+
+  .sesion-referencia dt {
+    margin-bottom: var(--s-1);
+  }
+
+  .sesion-referencia dd {
+    overflow-wrap: anywhere;
+  }
+
   .sesion-tuya form,
   .sesion-tuya .btn {
     width: 100%;

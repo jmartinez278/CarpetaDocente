@@ -49,7 +49,8 @@ def crear_sesion(comunicacion):
         texto = campos.pop("texto", "")
         valores = {
             "id": id_sesion,
-            "institucion_id": autor.institucion_id,
+            # Sin autora (material de referencia), la institución va en ``campos``.
+            "institucion_id": autor.institucion_id if autor else None,
             "autor": autor,
             "subido_por": autor,
             "grado": 2,
@@ -77,6 +78,30 @@ def crear_sesion(comunicacion):
             Sesion.objects.filter(pk=sesion.pk).update(creado_en=creado_en)
             sesion.refresh_from_db()
         return sesion
+
+    return crear
+
+
+@pytest.fixture
+def material_de_referencia(crear_sesion, administrador, institucion):
+    """Una sesión de referencia ficticia de 3.º a 5.º, como la deja ``cargar_referencia`` (D1)."""
+
+    def crear(institucion=institucion, creado_en=None, **campos):
+        valores = {
+            "institucion_id": institucion.pk,
+            "subido_por": administrador,
+            "titulo": "Contamos y agrupamos objetos",
+            "grado": 3,
+            "grado_hasta": 5,
+            "origen": Sesion.Origen.REFERENCIA,
+            "estado": "",
+            "compartida": True,
+            "terminos_aceptados_en": None,
+            "fuente": "Equipo del proyecto",
+            "permiso_uso": "Elaborada por el equipo; uso libre en la I.E.",
+            **campos,
+        }
+        return crear_sesion(None, creado_en=creado_en, **valores)
 
     return crear
 

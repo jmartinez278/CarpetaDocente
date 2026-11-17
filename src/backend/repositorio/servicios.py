@@ -898,6 +898,14 @@ def _grado_valido(valor):
     return grado if isinstance(grado, int) and 1 <= grado <= 6 else None
 
 
+def _del_grado(consulta, grado):
+    """Las sesiones cuyo rango de grados incluye ``grado`` (design de US-018, D2).
+
+    La de una docente tiene ``grado_hasta = grado``; la de referencia puede abarcar varios.
+    """
+    return consulta.filter(grado__lte=grado, grado_hasta__gte=grado)
+
+
 def _areas_trabajadas(usuario):
     return InstitucionArea.objects.filter(
         institucion_id=usuario.institucion_id, se_trabaja=True
@@ -919,7 +927,7 @@ def buscar_repositorio(usuario, q="", grado="", area="", pagina=1):
     area_valida = _area_valida(usuario, area)
     consulta = _con_palabras(_compartidas(usuario), q)
     if grado_valido is not None:
-        consulta = consulta.filter(grado=grado_valido)
+        consulta = _del_grado(consulta, grado_valido)
     if area_valida is not None:
         consulta = consulta.filter(area=area_valida)
     total = consulta.count()
@@ -948,7 +956,7 @@ def conteos_por_area(usuario, q="", grado=""):
     consulta = _con_palabras(_compartidas(usuario), q)
     grado_valido = _grado_valido(grado)
     if grado_valido is not None:
-        consulta = consulta.filter(grado=grado_valido)
+        consulta = _del_grado(consulta, grado_valido)
     por_area = dict(
         consulta.order_by().values("area_id").annotate(n=Count("pk")).values_list("area_id", "n")
     )
@@ -1211,8 +1219,9 @@ def dejar_de_compartir(usuario, id_sesion, ruta):
 def datos_de_la_pagina(usuario, sesion):
     """Lo que muestra la página de ``sesion`` a ``usuario`` (D5, D10).
 
-    Las migas llevan a «Mis sesiones» si es suya y al «Repositorio» si es de una colega. El
-    total de colegas que la vieron solo se da a la autora.
+    Las migas llevan a «Mis sesiones» si es suya y al «Repositorio» si es de una colega o
+    material de referencia (sin autora, nunca es propia). El total de colegas que la vieron solo
+    se da a la autora.
     """
     propia = sesion.autor_id == usuario.pk
     if propia:
@@ -1222,7 +1231,8 @@ def datos_de_la_pagina(usuario, sesion):
     return {
         "sesion": sesion,
         "propia": propia,
+        "referencia": sesion.origen == Sesion.Origen.REFERENCIA,
         "miga": miga,
-        "grado": dict(GRADOS)[sesion.grado],
+        "grado": sesion.grados_texto,
         "vistas_total": sesion.vistas.count() if propia else None,
     }
