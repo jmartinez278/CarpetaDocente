@@ -65,6 +65,7 @@ def crear_sesion(comunicacion):
             "tamano_bytes": 1024,
             **campos,
         }
+        valores.setdefault("grado_hasta", valores["grado"])
         if valores["compartida"]:
             valores.setdefault("terminos_aceptados_en", timezone.now())
         valores["texto"] = texto

@@ -788,6 +788,8 @@ def test_la_carga_crea_sesiones_de_ejemplo_repartidas(cargar):
     assert len(sesiones) >= 8
     assert {s.autor.username for s in sesiones} <= set(DEMO)
     assert len({s.grado for s in sesiones}) >= 3
+    # Un solo grado, como la sesión de una docente (US-018, D2).
+    assert all(s.grado_hasta == s.grado for s in sesiones)
     assert len({s.area_id for s in sesiones}) >= 3
     assert len({timezone.localtime(s.creado_en).date() for s in sesiones}) >= 3
     assert all(timezone.localtime(s.creado_en).date() < HOY for s in sesiones)
@@ -918,6 +920,7 @@ def test_quitar_no_toca_las_sesiones_reales_y_borra_las_vistas_demo(
         autor=docente,
         subido_por=docente,
         grado=3,
+        grado_hasta=3,
         area=Area.objects.get(codigo_siagie="0005"),
         titulo="Sesión real",
         origen=Sesion.Origen.PROPIA,

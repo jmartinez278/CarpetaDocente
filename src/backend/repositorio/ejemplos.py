@@ -352,6 +352,7 @@ def cargar_sesiones(institucion, hoy, zona, escritas):
             autor=cuenta,
             subido_por=cuenta,
             grado=ejemplo.grado,
+            grado_hasta=ejemplo.grado,
             area=areas[ejemplo.area % len(areas)],
             titulo=ejemplo.titulo,
             proposito=ejemplo.proposito,

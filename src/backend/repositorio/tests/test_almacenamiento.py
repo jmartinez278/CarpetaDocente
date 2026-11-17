@@ -54,6 +54,7 @@ def test_con_un_almacen_que_firma_la_entrega_es_un_enlace_de_60_segundos(
         autor=docente,
         subido_por=docente,
         grado=2,
+        grado_hasta=2,
         area=comunicacion,
         titulo="Leemos un cuento",
         origen=Sesion.Origen.PROPIA,

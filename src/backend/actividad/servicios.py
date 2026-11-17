@@ -56,6 +56,9 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
     Operacion.SESION_DESCARGADA: frozenset({"modo", "propia"}),
     # Solo si estaba compartida (US-016, D8).
     Operacion.SESION_ELIMINADA: frozenset({"compartida"}),
+    # Solo los nombres de los campos que cambiaron; cargar y eliminar no llevan detalle. Nunca el
+    # título, la fuente, el permiso de uso ni el nombre del archivo (US-018, D7).
+    Operacion.SESION_REFERENCIA_EDITADA: frozenset({"campos"}),
     Operacion.CATALOGO_EDITADO: frozenset({"campos"}),
     Operacion.DEMO_CARGADA: frozenset({"secciones", "estudiantes", "dias"}),
     Operacion.DEMO_QUITADA: frozenset(

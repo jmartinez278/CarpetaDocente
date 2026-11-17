@@ -93,6 +93,8 @@ def test_enviar_sin_compartir_guarda_la_sesion_con_sus_datos(
     assert sesion.autor == docente
     assert sesion.subido_por == docente
     assert sesion.grado == 2
+    # La sesión de una docente tiene un solo grado (US-018, D2).
+    assert sesion.grado_hasta == 2
     assert sesion.area == comunicacion
     assert sesion.titulo == "Leemos un cuento"
     assert sesion.proposito == "Que lean un cuento y cuenten lo que entendieron."

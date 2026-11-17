@@ -346,6 +346,7 @@ def _guardar(usuario, id_sesion, limpios, valido, archivo, texto):
                 autor=usuario,
                 subido_por=usuario,
                 grado=limpios.grado,
+                grado_hasta=limpios.grado,
                 area=limpios.area,
                 titulo=limpios.titulo,
                 proposito=limpios.proposito,

@@ -46,6 +46,10 @@ class Operacion(models.TextChoices):
     SESION_COMPARTIDA = "SESION_COMPARTIDA", "Sesión compartida"
     SESION_DESCOMPARTIDA = "SESION_DESCOMPARTIDA", "Sesión dejada de compartir"
     SESION_ELIMINADA = "SESION_ELIMINADA", "Sesión eliminada"
+    # Material de referencia que carga el Administrador en el panel (US-018, D7).
+    SESION_REFERENCIA_CARGADA = "SESION_REFERENCIA_CARGADA", "Sesión de referencia cargada"
+    SESION_REFERENCIA_EDITADA = "SESION_REFERENCIA_EDITADA", "Sesión de referencia editada"
+    SESION_REFERENCIA_ELIMINADA = "SESION_REFERENCIA_ELIMINADA", "Sesión de referencia eliminada"
     CATALOGO_EDITADO = "CATALOGO_EDITADO", "Catálogo editado"
     DEMO_CARGADA = "DEMO_CARGADA", "Demostración cargada"
     DEMO_QUITADA = "DEMO_QUITADA", "Demostración quitada"
@@ -66,8 +70,14 @@ CUENTAN_KPI_01 = frozenset(
 )
 
 # Operaciones del catálogo que aún no tienen quién las genere (la prueba de cobertura las salta).
-# Vacía desde US-011: cada operación tiene su prueba real.
-RESERVADAS: frozenset[Operacion] = frozenset()
+# Las de material de referencia entran en la parte A de US-018 y las genera su parte B.
+RESERVADAS: frozenset[Operacion] = frozenset(
+    {
+        Operacion.SESION_REFERENCIA_CARGADA,
+        Operacion.SESION_REFERENCIA_EDITADA,
+        Operacion.SESION_REFERENCIA_ELIMINADA,
+    }
+)
 
 
 class RegistroActividad(models.Model):
