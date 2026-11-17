@@ -80,7 +80,9 @@ class Sesion(models.Model):
     )
     # Rango de grados (US-018, D2): la sesión de una docente tiene los dos iguales.
     grado = models.SmallIntegerField("grado")
-    grado_hasta = models.SmallIntegerField("grado final")
+    # Nulo solo para las filas que escribe el código anterior a US-018 durante un despliegue: se lee
+    # como ``grado``. Pasar a NOT NULL es una migración posterior, ya sin ese código en servicio.
+    grado_hasta = models.SmallIntegerField("grado final", null=True, blank=True)
     area = models.ForeignKey(
         "catalogo.Area",
         on_delete=models.PROTECT,
@@ -186,7 +188,7 @@ class Sesion(models.Model):
     @property
     def grados_texto(self):
         """«2.º grado» o, con varios, «3.º–5.º grado» (US-018, D1)."""
-        if self.grado_hasta == self.grado:
+        if self.grado_hasta in (None, self.grado):
             return f"{self.grado}.º grado"
         return f"{self.grado}.º–{self.grado_hasta}.º grado"
 

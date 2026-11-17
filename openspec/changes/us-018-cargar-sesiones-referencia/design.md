@@ -11,7 +11,7 @@
 
 ## Riesgos y zonas delicadas (primero)
 
-- **[CHECK de `Sesion`]** (zona de cuidado) → D1: los `CHECK` nuevos se definen antes que el código y la migración `0003` los reemplaza en un paso; las filas actuales (todas PROPIA) cumplen todos. La vuelta atrás falla si ya hay una sesión de referencia: se acepta (se borran antes a mano).
+- **[CHECK de `Sesion`]** (zona de cuidado) → D1: los `CHECK` nuevos se definen antes que el código y la migración `0003` los reemplaza en un paso; las filas actuales (todas PROPIA) cumplen todos. La vuelta atrás falla si ya hay una sesión de referencia: se acepta (se borran antes a mano). **Escritura de la versión anterior (A2):** `migrate` corre antes de publicar el código nuevo, así que `repositorio/0004` deja `grado_hasta` nulable; los CHECK dejan pasar el nulo y se lee como `grado`. Volver a NOT NULL es una migración de otra historia, ya sin el código anterior.
 - **[Fuga entre instituciones]** → D3: la referencia reusa la puerta única `sesion_visible` y `_compartidas`, que filtran por la institución del usuario; no se agrega otro camino de lectura. La institución de la sesión la fija el Administrador en la ficha y no se edita.
 - **[Vistas y descarga que asumen una autora]** (zona de cuidado) → D3 y D6: cada lugar que lee `autor` se revisa (tarjeta, página, `datos_de_la_pagina`, `registrar_vista`, `entregar_archivo`, `_bloquear_de_la_autora`, demo). Con `autor_id = None`, las comparaciones con `usuario.pk` dan «ajena», que es lo correcto; las plantillas dejan de leer `autor.get_full_name` en la referencia.
 - **[El panel ve sesiones de docentes]** (RN-015) → D4: el `ModelAdmin` es de un modelo proxy cuyo gestor filtra `origen=REFERENCIA`; la ficha de una sesión de docente da 404 en el panel.
@@ -92,7 +92,7 @@
 1. `repositorio/0003`: `AddField` de `grado_hasta` (con valor provisional), `RunPython` que copia `grado` a `grado_hasta`, `AlterField` de `autor` y `estado`, `AddField` de `fuente` y `permiso_uso`, reemplazo de los `CHECK` y proxy. `actividad`: migración del `CHECK` de operaciones.
 2. La vista previa de Vercel aplica las dos en Neon; se carga una sesión de referencia de prueba ficticia (RN-018) y se borra.
 3. Después de la fusión, Marco carga por el panel las sesiones reales anonimizadas, con su texto de permiso de uso.
-4. Vuelta atrás: revertir las migraciones solo si no hay sesiones de referencia.
+4. Vuelta atrás: revertir `repositorio/0004` y `0003`, solo si no hay sesiones de referencia. `actividad/0007` se revierte sin tocar el CHECK de la base (operación `SoloAdelante`): el registro conserva las entradas `SESION_REFERENCIA_*` y el CHECK ampliado es inofensivo para el código anterior.
 
 ## Open Questions
 

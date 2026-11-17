@@ -903,7 +903,8 @@ def _del_grado(consulta, grado):
 
     La de una docente tiene ``grado_hasta = grado``; la de referencia puede abarcar varios.
     """
-    return consulta.filter(grado__lte=grado, grado_hasta__gte=grado)
+    sin_final = Q(grado_hasta__isnull=True, grado=grado)  # fila del código anterior
+    return consulta.filter(Q(grado__lte=grado, grado_hasta__gte=grado) | sin_final)
 
 
 def _areas_trabajadas(usuario):
