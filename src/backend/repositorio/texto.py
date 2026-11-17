@@ -63,7 +63,9 @@ _FIN_DE_LINEA = re.compile(r"\r\n?")
 _ESPACIOS = re.compile(r"[^\S\n]+")
 # Caracteres de control, de formato (ancho cero, guion opcional, marcas de dirección), de uso
 # privado y medios pares sustitutos. PostgreSQL rechaza el NUL y un sustituto suelto.
-_CONTROL = re.compile("[\x00-\x09\x0b-\x1f\x7f-\x9f­؜​-‏‪-‮⁠-⁯﻿￹-￻\ud800-\udfff-]")
+_CONTROL = re.compile(
+    "[\x00-\x09\x0b-\x1f\x7f-\x9f\u00ad\u061c\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb\ud800-\udfff\ue000-\uf8ff]"
+)
 _VARIOS_ESPACIOS = re.compile(r" {2,}")
 _BORDE_DE_LINEA = re.compile(r" ?\n ?")
 _VARIOS_SALTOS = re.compile(r"\n{3,}")

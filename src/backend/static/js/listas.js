@@ -222,7 +222,7 @@
   function iniciar() {
     colocarIndicador({ animar: false });
     // Con la fuente cargada cambia el ancho de las pestañas: se coloca de nuevo, sin transición.
-    document.fonts?.ready.then(() => colocarIndicador({ animar: false }));
+    void document.fonts?.ready.then(() => colocarIndicador({ animar: false }));
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar);
