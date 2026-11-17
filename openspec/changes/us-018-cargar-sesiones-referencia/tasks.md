@@ -32,7 +32,7 @@
 ### Parte D: A2 y verificación
 
 - [ ] 4.1 Con la A2 que corre el usuario (`/codex:adversarial-review --base main --background`, con foco en los specs del cambio y en la parte C), corregir los Critical e Important, con la prueba primero. Verificar: `uv run python scripts/verificar.py --completo` y `-m e2e` completo en verde; la vista previa aplica las dos migraciones en Neon y carga y elimina una referencia ficticia desde el panel
-- [ ] 4.2 `verificacion.md`: DoD 1 a 9, la carga en la vista previa, los escenarios sin prueba con su motivo y los Minor. Verificar: el archivo existe y cada escenario sin prueba tiene motivo; commit
+- [x] 4.2 `verificacion.md`: DoD 1 a 9, la carga en la vista previa, los escenarios sin prueba con su motivo y los Minor. Verificar: el archivo existe y cada escenario sin prueba tiene motivo; commit
 
 ## e2e a retirar
 
