@@ -22,6 +22,11 @@ from repositorio.models import TAMANO_MAXIMO, TIPO_DOCX, TIPO_PDF
 
 logger = logging.getLogger(__name__)
 
+# Con ``strict=False`` pypdf se recupera de un PDF dañado y avisa citando cadenas del documento
+# (por ejemplo, una clave de diccionario repetida): lo que la docente escribió llegaría al log
+# (RN-015). Ningún aviso de pypdf sale; el error que importa ya lo cuenta ``extraer_texto``.
+logging.getLogger("pypdf").setLevel(logging.CRITICAL + 1)
+
 # Lo que se guarda de una sesión (decisión 8).
 MAXIMO_CARACTERES = 100_000
 MAXIMO_PAGINAS = 40

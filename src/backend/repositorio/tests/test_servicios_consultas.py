@@ -428,6 +428,33 @@ def test_la_autora_no_cuenta_ni_registra(crear_sesion, docente):
     assert vistas_registradas() == []
 
 
+def test_la_vista_de_una_sesion_eliminada_en_el_camino_no_esta_disponible(
+    crear_sesion, docente, otra_docente
+):
+    # La página leyó la sesión y la autora la eliminó antes de contar la vista.
+    sesion = crear_sesion(otra_docente, compartida=True)
+    Sesion.objects.filter(pk=sesion.pk).delete()
+
+    with pytest.raises(servicios.SesionNoDisponible):
+        servicios.registrar_vista(docente, sesion)
+
+    assert not SesionVista.objects.exists()
+    assert vistas_registradas() == []
+
+
+def test_la_vista_de_una_sesion_que_dejo_de_compartirse_en_el_camino_no_cuenta(
+    crear_sesion, docente, otra_docente
+):
+    sesion = crear_sesion(otra_docente, compartida=True)
+    Sesion.objects.filter(pk=sesion.pk).update(compartida=False)
+
+    with pytest.raises(servicios.SesionNoDisponible):
+        servicios.registrar_vista(docente, sesion)
+
+    assert not SesionVista.objects.exists()
+    assert vistas_registradas() == []
+
+
 # --- Entrega del archivo (D6, D7) ------------------------------------------------------------
 
 

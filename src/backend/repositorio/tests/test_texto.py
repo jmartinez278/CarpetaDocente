@@ -191,6 +191,15 @@ def test_los_topes_de_pypdf_valen_solo_durante_la_lectura():
     assert pypdf.get_configuration() == antes
 
 
+def test_los_avisos_internos_de_pypdf_no_salen_a_ningun_registro(caplog):
+    # RN-015: pypdf cita cadenas del documento en sus avisos de recuperación (strict=False).
+    with caplog.at_level(logging.DEBUG):
+        for nombre in ("pypdf", "pypdf._reader", "pypdf.generic._data_structures"):
+            logging.getLogger(nombre).warning("Clave con MARCADOR-PERSONAL repetida")
+
+    assert "MARCADOR-PERSONAL" not in caplog.text
+
+
 # --- Lo común --------------------------------------------------------------------------------
 
 

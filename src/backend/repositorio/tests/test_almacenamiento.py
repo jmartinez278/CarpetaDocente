@@ -74,6 +74,7 @@ def test_con_un_almacen_que_firma_la_entrega_es_un_enlace_de_60_segundos(
                     "inline; filename*=utf-8''Sesi%C3%B3n%20%C3%B1and%C3%BA.pdf"
                 ),
                 "ResponseContentType": TIPO_PDF,
+                "ResponseCacheControl": "no-store",
             },
             "expire": 60,
         }
@@ -83,6 +84,8 @@ def test_con_un_almacen_que_firma_la_entrega_es_un_enlace_de_60_segundos(
     assert entrega.url.startswith(ENDPOINT)
     assert consulta["X-Amz-Expires"] == ["60"]
     assert consulta["response-content-type"] == [TIPO_PDF]
+    # Escenario «Respuesta sin caché»: la que trae el archivo es la de R2, no la del aplicativo.
+    assert consulta["response-cache-control"] == ["no-store"]
     assert consulta["response-content-disposition"] == [
         "inline; filename*=utf-8''Sesi%C3%B3n%20%C3%B1and%C3%BA.pdf"
     ]

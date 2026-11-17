@@ -487,10 +487,16 @@ def transcribir_pendientes():
     pendientes = list(
         Sesion.objects.filter(texto="")
         .order_by("creado_en", "pk")
-        .values_list("pk", "archivo_clave", "tipo_mime", "titulo", "proposito")
+        .values_list("pk", "archivo_clave", "tipo_mime", "titulo", "proposito", "texto_busqueda")
     )
     con_texto = sin_texto = sin_archivo = 0
-    for pk, clave, tipo_mime, titulo, proposito in pendientes:
+    for pk, clave, tipo_mime, titulo, proposito, busqueda in pendientes:
+        if not busqueda:
+            # Nació con el código anterior, después de la migración 0002: sin esto, ni el título
+            # ni el propósito la encuentran aunque el archivo no dé texto.
+            Sesion.objects.filter(pk=pk, texto_busqueda="").update(
+                texto_busqueda=texto_de_busqueda(titulo, proposito, "")
+            )
         try:
             with almacen.open(clave) as guardado:
                 contenido = io.BytesIO(guardado.read(TAMANO_MAXIMO + 1))
@@ -726,11 +732,21 @@ def registrar_vista(usuario, sesion):
     """Cuenta la primera vez que una colega abre la página de ``sesion`` (D6).
 
     Devuelve ``True`` solo si es esa primera vez: entonces crea su ``SesionVista`` y deja
-    SESION_VISTA, juntas. La autora no cuenta.
+    SESION_VISTA, juntas. La autora no cuenta. La página leyó ``sesion`` antes: aquí se vuelve a
+    comprobar, con la fila bloqueada, que sigue compartida en su institución; si la autora la
+    eliminó o la dejó de compartir mientras tanto, ``SesionNoDisponible`` y nada se cuenta.
     """
     if sesion.autor_id == usuario.pk:
         return False
     with transaction.atomic():
+        vigente = (
+            Sesion.objects.select_for_update(no_key=True)
+            .only("pk")
+            .filter(pk=sesion.pk, compartida=True, institucion_id=usuario.institucion_id)
+            .exists()
+        )
+        if not vigente:
+            raise SesionNoDisponible
         _, creada = SesionVista.objects.get_or_create(sesion=sesion, usuario=usuario)
         if creada:
             registrar(
@@ -781,6 +797,8 @@ def entregar_archivo(usuario, id_sesion, modo):
                 parameters={
                     "ResponseContentDisposition": disposicion,
                     "ResponseContentType": sesion.tipo_mime,
+                    # La que trae el archivo es la respuesta de R2, no la del aplicativo.
+                    "ResponseCacheControl": "no-store",
                 },
                 expire=ENLACE_SEGUNDOS,
             )

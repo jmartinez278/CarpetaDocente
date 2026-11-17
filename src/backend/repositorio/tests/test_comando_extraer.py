@@ -96,6 +96,24 @@ def test_una_sin_texto_o_ilegible_queda_sin_texto(anterior):
     assert "Siguen sin texto: 2." in salida
 
 
+def test_repara_la_busqueda_de_las_que_nacieron_con_el_despliegue_anterior(anterior):
+    # El código anterior inserta sin ``texto_busqueda`` (queda vacío) después de la migración:
+    # aunque el archivo no dé texto, el título y el propósito deben encontrarse.
+    escaneada = anterior("Escaneada", subido("a.pdf", pdf_con_texto([[]])))
+    rota = anterior("Rota", subido("b.pdf", b"%PDF-1.4\nrota"))
+    perdida = anterior("Perdida", subido("c.pdf", pdf_con_texto([["No se va a leer"]])))
+    storages["sesiones"].delete(perdida.archivo_clave)
+    Sesion.objects.update(texto_busqueda="")
+
+    correr()
+
+    for sesion, titulo in [(escaneada, "escaneada"), (rota, "rota"), (perdida, "perdida")]:
+        sesion.refresh_from_db()
+        assert sesion.texto == ""
+        assert sesion.texto_busqueda == f"{titulo} que opinen."
+    assert Sesion.objects.filter(texto_busqueda__contains="escaneada").exists()
+
+
 def test_un_archivo_que_falta_no_detiene_a_las_demas(anterior, caplog):
     perdida = anterior("Perdida", subido("a.docx", docx_con_texto(["No se va a leer"])))
     otra = anterior("Otra", subido("b.docx", docx_con_texto(["Formamos equipos"])))

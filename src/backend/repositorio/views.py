@@ -166,7 +166,10 @@ class SesionView(DocenteMixin, View):
         sesion = servicios.sesion_visible(request.user, id_sesion)
         if sesion is None:
             return no_disponible(request)
-        servicios.registrar_vista(request.user, sesion)
+        try:
+            servicios.registrar_vista(request.user, sesion)
+        except servicios.SesionNoDisponible:
+            return no_disponible(request)
         contexto = servicios.datos_de_la_pagina(request.user, sesion)
         return render(request, "repositorio/sesion.html", contexto)
 

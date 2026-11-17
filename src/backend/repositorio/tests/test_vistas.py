@@ -20,6 +20,7 @@ from django.utils import timezone
 from actividad.models import Operacion, RegistroActividad
 from actividad.tests.intentos import intentos
 from catalogo.models import Area, InstitucionArea
+from repositorio import servicios
 from repositorio.models import TIPO_DOCX, Sesion, SesionVista
 from repositorio.tests.archivos import docx, pdf, pdf_bytes, subido
 from repositorio.tests.conftest import COMUNICACION, MATEMATICA
@@ -642,6 +643,25 @@ def test_no_disponible_responde_404_con_el_mismo_cuerpo_en_los_cuatro_casos(
     for dato in ["Privada de la colega", "Ajena", "Dejó de compartirse", "Rosa", "Pía"]:
         assert dato not in cuerpo
     assert not entradas()
+    assert not SesionVista.objects.exists()
+
+
+def test_si_la_sesion_se_elimina_entre_leerla_y_contar_la_vista_responde_404(
+    cliente, con_archivo, otra_docente, monkeypatch
+):
+    sesion = con_archivo(otra_docente, compartida=True)
+    contar = servicios.registrar_vista
+
+    def eliminar_antes(usuario, leida):
+        Sesion.objects.filter(pk=leida.pk).delete()
+        return contar(usuario, leida)
+
+    monkeypatch.setattr(servicios, "registrar_vista", eliminar_antes)
+
+    respuesta = cliente.get(url_de(sesion.pk, ""))
+
+    assert respuesta.status_code == 404
+    assert NO_DISPONIBLE in sin_csrf(respuesta)
     assert not SesionVista.objects.exists()
 
 
