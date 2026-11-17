@@ -4,19 +4,27 @@
 """
 
 import datetime
+import io
+import uuid
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile, File
+from django.core.files.storage import storages
 from django.utils import timezone
 
 from actividad.models import Operacion, RegistroActividad
 from asistencia.models import Asistencia, Jornada
-from catalogo.models import Competencia, InstitucionArea
+from catalogo.models import Area, Competencia, InstitucionArea
 from cuentas.models import Usuario
 from institucion import demo, servicios
 from institucion.models import AnioEscolar, Estudiante, Institucion, Periodo, Seccion
 from notas import servicios as notas
 from notas.models import Calificacion, CompetenciaPeriodo
+from repositorio import servicios as repositorio
+from repositorio.models import TIPO_DOCX, TIPO_PDF, Sesion, SesionVista
+from repositorio.tests.archivos import pdf
+from repositorio.texto import extraer_texto, normalizar
 
 pytestmark = pytest.mark.django_db
 
@@ -760,3 +768,181 @@ def test_descartar_una_seccion_con_notas(anio, con_bimestres, tres_a_real):
     assert "y 40 notas" in conteos.texto()
     entrada = RegistroActividad.objects.get(operacion=Operacion.SECCION_DESCARTADA)
     assert entrada.detalle["notas"] == 40
+
+
+# --- Sesiones de ejemplo (US-011, D11) ---
+
+
+def sesiones_demo_guardadas():
+    return list(Sesion.objects.filter(autor__es_demo=True).order_by("creado_en", "pk"))
+
+
+def claves_guardadas():
+    return sorted(storages["sesiones"].listdir("sesiones")[1])
+
+
+def test_la_carga_crea_sesiones_de_ejemplo_repartidas(cargar):
+    cargar()
+
+    sesiones = sesiones_demo_guardadas()
+    assert len(sesiones) >= 8
+    assert {s.autor.username for s in sesiones} <= set(DEMO)
+    assert len({s.grado for s in sesiones}) >= 3
+    assert len({s.area_id for s in sesiones}) >= 3
+    assert len({timezone.localtime(s.creado_en).date() for s in sesiones}) >= 3
+    assert all(timezone.localtime(s.creado_en).date() < HOY for s in sesiones)
+    assert {s.tipo_mime for s in sesiones} == {TIPO_PDF, TIPO_DOCX}
+    compartidas = [s for s in sesiones if s.compartida]
+    assert len(compartidas) > len(sesiones) // 2
+    assert all(s.terminos_aceptados_en is not None for s in compartidas)
+    assert any(not s.compartida for s in sesiones)
+    assert any(s.tipo_mime == TIPO_PDF and not s.texto for s in sesiones)
+
+
+def test_las_areas_de_las_sesiones_son_las_que_trabaja_la_institucion(cargar, institucion):
+    cargar()
+
+    trabajadas = set(
+        InstitucionArea.objects.filter(institucion=institucion, se_trabaja=True).values_list(
+            "area_id", flat=True
+        )
+    )
+    assert {s.area_id for s in sesiones_demo_guardadas()} <= trabajadas
+
+
+def test_los_archivos_de_ejemplo_son_validos_y_su_texto_es_el_guardado(cargar):
+    cargar()
+
+    for sesion in sesiones_demo_guardadas():
+        with storages["sesiones"].open(sesion.archivo_clave) as guardado:
+            contenido = guardado.read()
+        archivo = File(io.BytesIO(contenido), name=sesion.archivo_nombre)
+        valido = repositorio.validar_archivo(archivo)
+        assert valido.tipo_mime == sesion.tipo_mime, sesion.archivo_nombre
+        assert sesion.tamano_bytes == len(contenido)
+        assert extraer_texto(io.BytesIO(contenido), sesion.tipo_mime) == sesion.texto
+        assert sesion.texto_busqueda == repositorio.texto_de_busqueda(
+            sesion.titulo, sesion.proposito, sesion.texto
+        )
+
+
+def test_una_docente_demo_encuentra_una_sesion_por_una_palabra_de_su_texto(cargar):
+    cargar()
+    sesiones = sesiones_demo_guardadas()
+    con_texto = next(s for s in sesiones if s.compartida and s.texto)
+    encabezado = normalizar(f"{con_texto.titulo} {con_texto.proposito}")
+    palabra = next(
+        p for p in normalizar(con_texto.texto).split() if len(p) > 5 and p not in encabezado
+    )
+    otra_cuenta = next(s.autor for s in sesiones if s.autor_id != con_texto.autor_id)
+
+    pagina = repositorio.buscar_repositorio(otra_cuenta, palabra)
+
+    assert con_texto.pk in [s.pk for s in pagina.sesiones]
+
+
+def test_las_sesiones_de_ejemplo_no_dejan_sesion_enviada(cargar):
+    cargar()
+
+    assert sesiones_demo_guardadas()
+    assert not RegistroActividad.objects.filter(operacion=Operacion.SESION_ENVIADA).exists()
+
+
+def test_volver_a_cargar_no_duplica_sesiones_ni_archivos(cargar):
+    cargar()
+    antes = [s.pk for s in sesiones_demo_guardadas()]
+    claves = claves_guardadas()
+
+    cargar()
+
+    assert [s.pk for s in sesiones_demo_guardadas()] == antes
+    assert claves_guardadas() == claves
+    assert len(claves) == len(antes)
+
+
+def test_si_la_carga_falla_no_quedan_sesiones_ni_archivos(cargar, monkeypatch):
+    def fallar(*args, **kwargs):
+        raise RuntimeError("falla al final de la carga")
+
+    monkeypatch.setattr(demo, "registrar", fallar)
+
+    with pytest.raises(RuntimeError):
+        cargar()
+
+    assert not sesiones_demo_guardadas()
+    assert claves_guardadas() == []
+
+
+# --- Sesiones al quitar la demostración (US-011, D11) ---
+
+
+def test_quitar_borra_las_sesiones_demo_y_sus_archivos(cargar, django_capture_on_commit_callbacks):
+    cargar()
+    total = len(sesiones_demo_guardadas())
+
+    with django_capture_on_commit_callbacks(execute=True):
+        resumen = demo.quitar_demo()
+
+    assert not sesiones_demo_guardadas()
+    assert claves_guardadas() == []
+    assert resumen.sesiones == total
+    assert f"Sesiones demo eliminadas: {total}." in resumen.texto()
+    entrada = RegistroActividad.objects.get(operacion=Operacion.DEMO_QUITADA)
+    assert entrada.detalle["sesiones"] == total
+    assert not RegistroActividad.objects.filter(operacion=Operacion.SESION_ELIMINADA).exists()
+
+
+def test_quitar_borra_la_sesion_que_una_docente_demo_envio_a_mano(
+    cargar, django_capture_on_commit_callbacks
+):
+    cargar()
+    cuenta = Usuario.objects.get(username="demounoa")
+    area = Area.objects.get(codigo_siagie="0005")
+    datos = {"id": str(uuid.uuid4()), "grado": "1", "area": str(area.pk), "titulo": "A mano"}
+    enviada = repositorio.enviar_sesion(cuenta, datos, pdf())
+
+    with django_capture_on_commit_callbacks(execute=True):
+        demo.quitar_demo()
+
+    assert not sesiones_demo_guardadas()
+    assert enviada.archivo_clave.removeprefix("sesiones/") not in claves_guardadas()
+
+
+def test_quitar_no_toca_las_sesiones_reales_y_borra_las_vistas_demo(
+    cargar, docente, django_capture_on_commit_callbacks
+):
+    cargar()
+    real = Sesion.objects.create(
+        id=uuid.uuid4(),
+        institucion_id=docente.institucion_id,
+        autor=docente,
+        subido_por=docente,
+        grado=3,
+        area=Area.objects.get(codigo_siagie="0005"),
+        titulo="Sesión real",
+        origen=Sesion.Origen.PROPIA,
+        estado=Sesion.Estado.ENVIADA,
+        compartida=True,
+        terminos_aceptados_en=timezone.now(),
+        archivo_clave="sesiones/real-0123456789abcdef.pdf",
+        archivo_nombre="real.pdf",
+        tipo_mime=TIPO_PDF,
+        tamano_bytes=10,
+    )
+    storages["sesiones"].save(real.archivo_clave, ContentFile(b"%PDF-1.4 x"))
+    repositorio.registrar_vista(Usuario.objects.get(username="demodosa"), real)
+
+    with django_capture_on_commit_callbacks(execute=True):
+        demo.quitar_demo()
+
+    assert Sesion.objects.filter(pk=real.pk).exists()
+    assert storages["sesiones"].exists(real.archivo_clave)
+    assert not SesionVista.objects.exists()
+    assert repositorio.mis_sesiones(docente).sesiones[0].vistas_total == 0
+
+
+def test_conteos_demo_dice_cuantas_sesiones_quitaria(cargar):
+    cargar()
+
+    assert sesiones_demo_guardadas()
+    assert demo.conteos_demo().sesiones == len(sesiones_demo_guardadas())

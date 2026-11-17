@@ -1,0 +1,5 @@
+{% comment %}
+Términos para compartir después (spec detalle-sesion, «Compartir después»; design de US-011, D8): los mismos términos del
+doc 09 §4, ahora con «Acepto y comparto». Solo ese botón, con name="acepta_terminos", envía el formulario del cuerpo; «Volver» y
+Esc cierran sin cambiar nada y el foco vuelve a «Compartir» (detalle.js).
+{% endcomment %}{% include "rb/dialogo.html" with id="terminos-compartir" variante="chico" titulo="Antes de compartir" titulo_id="terminos-compartir-titulo" descripcion="Para compartirla en el repositorio debes aceptar los términos." descripcion_id="terminos-compartir-descripcion" cuerpo="repositorio/_compartir_cuerpo.html" pie="repositorio/_compartir_pie.html" marca_cuerpo=True %}

@@ -9,10 +9,12 @@ Solo nombres ficticios (RN-018): los estudiantes y las docentes salen de ``APELL
 """
 
 import datetime
+import logging
 import random
 from dataclasses import dataclass, field
 
 from django.core.exceptions import ValidationError
+from django.core.files.storage import storages
 from django.db import connection, transaction
 from django.utils import timezone
 
@@ -24,6 +26,9 @@ from institucion import servicios
 from institucion.models import AnioEscolar, Estudiante, Institucion, Periodo, Seccion
 from notas import servicios as notas
 from notas.models import Calificacion, CompetenciaPeriodo
+from repositorio import ejemplos
+
+logger = logging.getLogger(__name__)
 
 # Una cuenta por sección, de 1.º A a 2.º D, en formato R-11 (D8). La lista solo da los nombres:
 # una cuenta es demo por ``Usuario.es_demo``, que pone la carga.
@@ -317,12 +322,33 @@ def _en_fila():
         cursor.execute("SELECT pg_advisory_xact_lock(%s)", [BLOQUEO_DEMO])
 
 
+def _borrar_escritas(claves):
+    """Los archivos que escribió una carga que no se confirmó (US-011, D11)."""
+    almacen = storages["sesiones"]
+    for clave in claves:
+        try:
+            almacen.delete(clave)
+        except Exception:
+            # Se conserva el error de la carga; el objeto queda para borrarlo a mano.
+            logger.exception("No se pudo borrar %s, de una carga demo que no se guardó.", clave)
+
+
 def cargar_demo(institucion, estudiantes, hoy, clave):
     """Llena las 8 primeras secciones del año ABIERTO, todo o nada (D6 a D8).
 
     Devuelve el ``PlanDemo`` cumplido. Cada sección usa un ``random.Random`` con semilla fija:
-    la misma carga da los mismos nombres y estados.
+    la misma carga da los mismos nombres y estados. Suma las sesiones de ejemplo de las cuentas
+    demo; si la carga falla, borra los archivos que escribió (US-011, D11).
     """
+    escritas = []
+    try:
+        return _cargar_demo(institucion, estudiantes, hoy, clave, escritas)
+    except BaseException:
+        _borrar_escritas(escritas)
+        raise
+
+
+def _cargar_demo(institucion, estudiantes, hoy, clave, escritas):
     with transaction.atomic():
         _en_fila()
         plan = planear_demo(institucion, estudiantes, hoy, clave)
@@ -345,6 +371,7 @@ def cargar_demo(institucion, estudiantes, hoy, clave):
         )
         for seccion in [*plan.ya_cargadas, *(seccion for seccion, _ in plan.cargadas)]:
             notas.marcar_todo_sin_registro(seccion, empezados)
+        ejemplos.cargar_sesiones(institucion, hoy, timezone.get_current_timezone(), escritas)
         # Una sola entrada para toda la carga, con el usuario vacío: la corre la consola (US-008).
         registrar(
             None,
@@ -382,17 +409,19 @@ class Conteos:
 class ResumenQuitar(Conteos):
     secciones: int = 0
     cuentas: int = 0
+    sesiones: int = 0
 
     @property
     def vacio(self):
-        return self.secciones == 0 and self.cuentas == 0
+        return self.secciones == 0 and self.cuentas == 0 and self.sesiones == 0
 
     def texto(self):
         if self.vacio:
             return "No hay demostración que quitar: no cambió nada."
         return (
             f"{self.secciones} secciones demo liberadas: {super().texto()}. "
-            f"Cuentas demo desactivadas: {self.cuentas}."
+            f"Cuentas demo desactivadas: {self.cuentas}. "
+            f"Sesiones demo eliminadas: {self.sesiones}."
         )
 
 
@@ -432,6 +461,7 @@ def conteos_demo():
         **vars(_conteos(secciones)),
         secciones=len(secciones),
         cuentas=Usuario.objects.filter(es_demo=True, is_active=True).count(),
+        sesiones=ejemplos.sesiones_demo().count(),
     )
 
 
@@ -439,12 +469,16 @@ def quitar_demo():
     """Libera las secciones demo y desactiva las cuentas demo sin borrarlas (D9, RN-023).
 
     ``jornada.registrado_por`` es ``PROTECT``: las cuentas no se podrían borrar aunque se quisiera.
+    Elimina las sesiones de las cuentas demo con sus archivos, al confirmarse, y las vistas que
+    dejaron en sesiones reales (US-011, D11).
     """
     with transaction.atomic():
         _en_fila()
         secciones = list(secciones_demo().select_for_update(of=("self",)))
         resumen = conteos_demo()
         _borrar(secciones)
+        # Las que de verdad borró: una enviada mientras tanto también cuenta.
+        resumen.sesiones = ejemplos.quitar_sesiones()
         for seccion in secciones:
             seccion.docente = None
             seccion.save()

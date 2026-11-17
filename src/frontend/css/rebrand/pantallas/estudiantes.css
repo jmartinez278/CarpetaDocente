@@ -129,6 +129,7 @@
     color: var(--muted);
     font-size: var(--text-label);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
   .estudiante-nombre {
@@ -194,7 +195,8 @@
 
   @media (max-width: 699px) {
     .estudiante-fila {
-      grid-template-columns: 16px minmax(0, 1fr) auto;
+      grid-template-columns: minmax(24px, max-content) minmax(0, 1fr) auto;
+      column-gap: var(--s-1);
     }
 
     .panel-lista .dialog-cabecera,

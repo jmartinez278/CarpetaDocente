@@ -6,7 +6,9 @@ de la fixture ``clave``, generada en cada prueba (DoD 8).
 
 import json
 import re
+from dataclasses import replace
 from datetime import timedelta
+from importlib import import_module
 from pathlib import Path
 
 import pytest
@@ -22,6 +24,20 @@ AXE = RAIZ / "src" / "frontend" / "node_modules" / "axe-core" / "axe.min.js"
 INFORMES = RAIZ / "test-results"
 ETIQUETAS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
 IMPACTOS_QUE_FALLAN = {"critical", "serious"}
+
+
+def sesiones_proximamente(monkeypatch):
+    """Vuelve a poner Sesiones como «Próximamente» en la portada de esta prueba.
+
+    Desde US-011 las tres dimensiones están disponibles; el aviso de «Próximamente» sigue en la
+    plantilla para la dimensión que aún no tenga pantalla, y estas pruebas lo ejercitan con ella.
+    """
+    dimensiones = import_module("cuentas.dimensiones")
+    nuevas = tuple(
+        replace(d, disponible=False) if d.clave == "sesiones" else d
+        for d in dimensiones.DIMENSIONES
+    )
+    monkeypatch.setattr(dimensiones, "DIMENSIONES", nuevas)
 
 
 def saludo_de(nombre):

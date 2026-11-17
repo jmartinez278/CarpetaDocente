@@ -7,6 +7,7 @@
 @import "./rebrand/componentes.css";
 @import "./rebrand/pantallas/sin-permiso.css";
 @import "./rebrand/pantallas/sesiones.css";
+@import "./rebrand/pantallas/repositorio.css";
 @import "./rebrand/pantallas/ingreso.css";
 @import "./rebrand/pantallas/estudiantes.css";
 @import "./rebrand/pantallas/portada.css";

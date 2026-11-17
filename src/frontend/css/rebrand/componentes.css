@@ -302,7 +302,7 @@
     }
 
     .dialog-acciones .btn {
-      flex: 1;
+      flex: 1 1 auto;
     }
   }
 
@@ -363,7 +363,7 @@
     }
 
     .dialog-acciones .btn {
-      flex: 1;
+      flex: 1 1 auto;
     }
   }
 

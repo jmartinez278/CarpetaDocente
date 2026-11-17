@@ -9,6 +9,7 @@ dependencies = [
     "django-environ>=0.14.0",
     "django-storages[s3]>=1.14.6",
     "psycopg[binary]>=3.3.6",
+    "pypdf>=7.1.0",
 ]
 
 [tool.uv]

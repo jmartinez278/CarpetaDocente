@@ -1,0 +1,14 @@
+{% comment %}
+Panel de la pestaña actual (spec repositorio-sesiones; design de US-011, D10). «Mis sesiones»: sus sesiones por día o el
+estado vacío. «Repositorio»: el buscador y «Filtrar» (celular), la zona de filtros activos, la barra o el panel de filtros y
+los resultados. El buscador y los filtros nunca se reemplazan al buscar: solo #resultados y, fuera de banda, los filtros, los
+campos ocultos, los activos y el contador de «Filtrar». Lo piden las pestañas (HX-Target #panel-sesiones) y el envío.
+{% endcomment %}{% if pestana == "mis_sesiones" %}{% if pagina.sesiones %}{% include "repositorio/_tarjetas.html" %}{% else %}{% include "rb/estado_vacio.html" with icono="inbox" texto="Aquí verás las sesiones que envíes y su estado." %}{% endif %}{% else %}{% url "sesiones:repositorio" as url_repo %}<div class="repositorio-herramientas">
+<form class="repositorio-buscador" method="get" action="{{ url_repo }}" role="search" hx-get="{{ url_repo }}" hx-trigger="input changed delay:400ms, submit" hx-sync="this:replace" hx-target="#resultados" hx-swap="innerHTML show:none" hx-replace-url="true">{% include "repositorio/_campos_ocultos.html" %}<div class="buscador-campo">{% include "iconos/search.svg" with clase="buscador-icono" %}<label class="sr-only" for="buscar">Buscar sesiones por título, propósito o texto</label><input class="input" id="buscar" type="search" name="q" value="{{ pagina.q }}" maxlength="100" placeholder="Buscar sesiones" autocomplete="off"><button class="btn icon-button buscador-borrar" type="button" id="borrar-busqueda" aria-label="Borrar búsqueda"{% if not pagina.q %} hidden{% endif %}>{% include "iconos/x.svg" with clase=None %}</button></div></form>
+<button class="btn btn--secondary repositorio-filtrar" type="button" aria-controls="filtros" aria-expanded="false" data-abrir-filtros>{% include "iconos/sliders-horizontal.svg" with clase=None %}Filtrar{% include "repositorio/_filtrar_cuenta.html" %}</button>
+</div>
+{% include "repositorio/_filtros_activos.html" %}
+<div class="repositorio-rejilla">
+{% include "repositorio/_filtros.html" %}
+<section class="repositorio-lista" id="resultados" aria-labelledby="resultados-titulo">{% include "repositorio/_lista_repositorio.html" %}</section>
+</div>{% endif %}

@@ -274,6 +274,68 @@ def test_n_sin_marcar_lleva_a_la_primera_fila_sin_marcar(abrir_asistencia, veint
     bajo_el_resumen(page, boton)
 
 
+def test_el_conteo_sigue_visible_con_la_jornada_completa(abrir_asistencia, veinticinco):
+    """rebrand-ajustes-auditoria, D1 (A-02): a 360 px el conteo no se oculta al completar."""
+    page = abrir_asistencia()
+    conteo = page.locator("[data-avance]")
+
+    marcar_restantes(page)
+
+    expect(conteo).to_be_visible()
+    expect(conteo).to_contain_text("25/25 · 0 sin marcar")
+    expect(page.locator("[data-guardado]:visible")).to_have_text("Pendiente de deshacer")
+    expect(page.locator("[data-sin-marcar]:visible")).not_to_have_attribute("href", re.compile("."))
+
+    expect(cierre(page)).to_be_visible(timeout=8000)
+    expect(conteo).to_contain_text("25/25 · 0 sin marcar")
+    expect(page.locator("[data-guardado]:visible")).to_have_text("Guardado")
+    expect(cierre(page)).to_have_text("Asistencia de hoy completa")
+
+
+def test_el_enlace_n_sin_marcar_mide_44_y_no_se_cruza_con_el_guardado(
+    abrir_asistencia, veinticinco
+):
+    """rebrand-ajustes-auditoria, D1 (A-01): a 360 px el enlace es un blanco de 44 × 44 px."""
+    page = abrir_asistencia()
+    tocar(page, veinticinco[0])
+    esperar_guardado(page)
+
+    enlace = page.locator("[data-sin-marcar]:visible").bounding_box()
+    guardado_caja = page.locator("[data-guardado]:visible").bounding_box()
+
+    assert enlace["width"] >= 44 and enlace["height"] >= 44, enlace
+    separados = (
+        enlace["x"] + enlace["width"] <= guardado_caja["x"]
+        or guardado_caja["x"] + guardado_caja["width"] <= enlace["x"]
+        or enlace["y"] + enlace["height"] <= guardado_caja["y"]
+        or guardado_caja["y"] + guardado_caja["height"] <= enlace["y"]
+    )
+    assert separados, (enlace, guardado_caja)
+
+
+def test_el_foco_no_queda_bajo_la_barra_deshacer(abrir_asistencia, veinticinco):
+    """rebrand-ajustes-auditoria, D2 (A-14): a 360 px, con la cuenta pausada por el foco, ningún
+    círculo que recibe el foco con Tab queda bajo la barra «Deshacer»."""
+    page = abrir_asistencia()
+    marcar_restantes(page)
+    expect(barra(page)).to_be_visible()
+    circulo(page, veinticinco[0]).focus()
+    page.keyboard.press("Tab")
+    page.keyboard.press("Shift+Tab")
+    expect(circulo(page, veinticinco[0])).to_be_focused()
+
+    for estudiante in veinticinco:
+        expect(circulo(page, estudiante)).to_be_focused()
+        punto = circulo(page, estudiante).bounding_box()
+        cuadro = barra(page).bounding_box()
+        assert (
+            punto["y"] + punto["height"] <= cuadro["y"]
+            or cuadro["y"] + cuadro["height"] <= punto["y"]
+        ), (estudiante.pk, punto, cuadro)
+        expect(barra(page)).to_be_visible()
+        page.keyboard.press("Tab")
+
+
 def bajo_el_resumen(page, elemento):
     """El elemento empieza debajo del resumen fijo (la tarjeta), que sigue en la vista."""
     resumen = page.locator(".tarjeta-jornada")

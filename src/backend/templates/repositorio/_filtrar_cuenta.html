@@ -1,0 +1,1 @@
+{% comment %}Cuántos filtros hay puestos, junto a «Filtrar» (spec «Filtros en el celular»); con oob lo actualiza HTMX fuera de banda.{% endcomment %}<span class="filtrar-cuenta" id="filtrar-cuenta"{% if oob %} hx-swap-oob="true"{% endif %}{% if not enlaces.cuenta %} hidden{% endif %}>{% if enlaces.cuenta %}{{ enlaces.cuenta }}{% endif %}</span>

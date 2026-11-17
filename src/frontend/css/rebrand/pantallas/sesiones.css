@@ -1,6 +1,7 @@
-/* Sesiones (rebrand-us-010, D1 y D7), del boceto (insumos/rebrand/repositorio.html): la cabecera
-   con título, subtítulo y «Subir una sesión», que baja entero si no cabe (sin la etiqueta corta ni
-   el ícono +), el formulario y los términos de los diálogos, y el resumen del éxito. */
+/* Sesiones (rebrand-us-010, D1 y D7; US-011, D10), del boceto (insumos/rebrand/repositorio.html y
+   sesion.html): la cabecera con título y «Subir una sesión» («+ Subir» en el celular), las pestañas,
+   el buscador, los filtros, las tarjetas y la página de una sesión, además del formulario y los
+   términos de los diálogos y el resumen del éxito. Solo tokens de DESIGN.md. */
 
 @layer components {
   .page-heading {

@@ -1,0 +1,2 @@
+{% comment %}Cuerpo de compartir después: los términos literales y el formulario que envía «Acepto y comparto».{% endcomment %}{% include "repositorio/_terminos_cuerpo.html" %}
+<form id="form-compartir" method="post" action="{% url "sesiones:compartir" sesion.pk %}">{% csrf_token %}</form>

@@ -360,6 +360,8 @@
     cerrarTodo({ foco: false });
     origen = abrirBoton;
     $("h2", resultado)?.focus();
+    // listas.js vuelve a pedir la lista de la pestaña abierta y sus contadores.
+    document.dispatchEvent(new CustomEvent("sesion-enviada"));
   }
 
   function errores400(texto) {

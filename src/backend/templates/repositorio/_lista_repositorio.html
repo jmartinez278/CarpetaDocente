@@ -1,0 +1,6 @@
+{% comment %}
+Resultados del repositorio (spec repositorio-sesiones; design de US-011, D10): el título con el total, las tarjetas o su
+estado vacío («Sin coincidencias» con filtros, «Repositorio vacío» sin ellos). Es lo único que HTMX reemplaza al buscar o
+filtrar; el total lo anuncia listas.js en la región #anuncio.
+{% endcomment %}<div class="resultados-cabecera"><h2 id="resultados-titulo" data-q="{{ pagina.q }}">{% if enlaces.cuenta %}{{ pagina.total }} sesi{{ pagina.total|pluralize:"ón,ones" }}{% else %}{{ pagina.total }} sesi{{ pagina.total|pluralize:"ón compartida,ones compartidas" }}{% endif %}</h2><span class="resultados-ie">I.E. Virgen del Carmen</span></div>
+{% if pagina.sesiones %}{% include "repositorio/_tarjetas.html" %}{% elif enlaces.cuenta %}<div class="empty"><p>No se encontraron sesiones con esos filtros</p><a class="btn btn--secondary" href="{{ enlaces.limpiar }}" hx-get="{{ enlaces.limpiar }}" hx-push-url="true" hx-target="#resultados" hx-swap="innerHTML show:none">Borrar filtros</a></div>{% else %}{% url "sesiones:inicio" as url_mis %}{% include "rb/estado_vacio.html" with icono="inbox" texto="Comparte una de tus sesiones" accion="Ir a Mis sesiones" href=url_mis %}{% endif %}

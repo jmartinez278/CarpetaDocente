@@ -164,9 +164,10 @@
     for (const el of raiz.querySelectorAll("[data-total]")) el.textContent = totales[el.dataset.total];
     for (const el of raiz.querySelectorAll("[data-progreso]")) el.value = marcados;
     for (const el of raiz.querySelectorAll("[data-sin-marcar]")) {
+      // El conteo no se oculta nunca (A-02): con 0 es texto, sin enlace ni parada de foco que no lleve a nada.
       el.textContent = `${sinMarcar} sin marcar`;
-      el.hidden = sinMarcar === 0;
       if (primeraSinMarcar) el.href = `#${primeraSinMarcar.li.id}`;
+      else el.removeAttribute("href");
     }
     for (const el of raiz.querySelectorAll("[data-marcar-todos]")) {
       el.textContent = textoRestantes(sinMarcar);
@@ -178,7 +179,6 @@
       el.textContent = resumen;
       el.hidden = sinMarcar > 0;
     }
-    for (const el of raiz.querySelectorAll("[data-avance]")) el.hidden = sinMarcar === 0;
   }
 
   function mostrarGuardado() {

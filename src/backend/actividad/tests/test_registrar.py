@@ -11,6 +11,16 @@ from institucion.models import Institucion
 
 pytestmark = pytest.mark.django_db
 
+# UUID de una sesión ficticia: la entidad de las operaciones sobre sesiones.
+ID_SESION = "7d1c4a52-6c0e-4b7e-9d3a-2f5b8e1a9c04"
+SOBRE_SESIONES = [
+    "SESION_VISTA",
+    "SESION_DESCARGADA",
+    "SESION_COMPARTIDA",
+    "SESION_DESCOMPARTIDA",
+    "SESION_ELIMINADA",
+]
+
 
 def test_guarda_usuario_operacion_entidad_id_como_texto_y_detalle(docente):
     registrar(
@@ -74,6 +84,40 @@ def test_operacion_fuera_del_catalogo_lanza_value_error_sin_guardar(docente):
 def test_clave_de_detalle_no_permitida_lanza_value_error_sin_guardar(docente):
     with pytest.raises(ValueError, match="nombres"):
         registrar(docente, Operacion.ESTUDIANTE_EDITADO, detalle={"nombres": "ANA"})
+
+    assert RegistroActividad.objects.count() == 0
+
+
+def test_eliminar_una_sesion_solo_admite_si_estaba_compartida(docente):
+    registrar(docente, "SESION_ELIMINADA", "sesion", ID_SESION, {"compartida": True})
+
+    entrada = RegistroActividad.objects.get()
+    assert (entrada.entidad, entrada.entidad_id) == ("sesion", ID_SESION)
+    assert entrada.detalle == {"compartida": True}
+
+
+def test_descargar_una_sesion_admite_el_modo_y_si_es_propia(docente):
+    detalle = {"modo": "ver", "propia": False}
+
+    registrar(docente, "SESION_DESCARGADA", "sesion", ID_SESION, detalle)
+
+    assert RegistroActividad.objects.get().detalle == detalle
+
+
+@pytest.mark.parametrize("operacion", SOBRE_SESIONES)
+@pytest.mark.parametrize("clave", ["titulo", "proposito", "texto", "archivo_nombre"])
+def test_ninguna_operacion_sobre_sesiones_admite_datos_de_la_sesion(docente, operacion, clave):
+    # RN-015: el título, el propósito, el texto y el nombre del archivo nunca van al registro.
+    with pytest.raises(ValueError, match=clave):
+        registrar(docente, operacion, "sesion", ID_SESION, {clave: "Leemos un cuento"})
+
+    assert RegistroActividad.objects.count() == 0
+
+
+@pytest.mark.parametrize("operacion", ["SESION_VISTA", "SESION_COMPARTIDA", "SESION_DESCOMPARTIDA"])
+def test_ver_compartir_y_dejar_de_compartir_no_admiten_detalle(docente, operacion):
+    with pytest.raises(ValueError, match="compartida"):
+        registrar(docente, operacion, "sesion", ID_SESION, {"compartida": True})
 
     assert RegistroActividad.objects.count() == 0
 

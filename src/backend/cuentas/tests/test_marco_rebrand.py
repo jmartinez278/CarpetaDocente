@@ -158,7 +158,7 @@ def test_sin_seccion_unica_solo_inicio_enlaza(html_de, docente):
     """Escenario «Destino no disponible»."""
     assert destinos(html_de(docente)) == [
         ("Inicio", "/docente/"),
-        ("Sesiones Próximamente", None),
+        ("Sesiones", reverse("sesiones:inicio")),
         ("Asistencia Próximamente", None),
         ("Notas Próximamente", None),
     ]
@@ -168,7 +168,7 @@ def test_con_seccion_unica_enlaza_como_las_tarjetas(html_de, docente, con_seccio
     """Escenario «Abrir el ☰»."""
     assert destinos(html_de(docente)) == [
         ("Inicio", "/docente/"),
-        ("Sesiones Próximamente", None),
+        ("Sesiones", reverse("sesiones:inicio")),
         ("Asistencia", reverse("asistencia:hoy", args=[con_seccion.pk])),
         ("Notas", reverse("notas:hoja", args=[con_seccion.pk])),
     ]

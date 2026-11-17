@@ -1,0 +1,10 @@
+{% comment %}
+Panel de filtros del repositorio (spec «Filtros de grado y área» y «Filtros en el celular»; design de US-011, D10): un solo
+marcado. Desde 700 px es la barra de la izquierda (listas.css lo muestra aunque el <dialog> esté cerrado); hasta 699 px
+lo abre «Filtrar» con showModal() y es un panel. Los filtros son enlaces con la dirección ya armada (sin JavaScript
+recargan la página; con HTMX, solo los resultados). El grado elegido se quita al tocarlo de nuevo; un área con 0 no se puede
+elegir. Con oob solo se reemplaza el contenido (#filtros-contenido), no el <dialog>: así no se pierde si está abierto.
+{% endcomment %}{% if oob %}<div id="filtros-contenido" hx-swap-oob="innerHTML">{% include "repositorio/_filtros_contenido.html" %}</div>{% else %}<dialog class="filtros" id="filtros" aria-labelledby="filtros-titulo">
+<div class="filtros-cabecera"><h2 id="filtros-titulo" tabindex="-1">Filtros</h2><button class="btn icon-button filtros-cerrar" type="button" aria-label="Cerrar filtros" data-cerrar-filtros>{% include "iconos/x.svg" with clase=None %}</button></div>
+<div class="filtros-cuerpo" id="filtros-contenido" hx-target="#resultados" hx-swap="innerHTML show:none">{% include "repositorio/_filtros_contenido.html" %}</div>
+</dialog>{% endif %}

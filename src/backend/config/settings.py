@@ -155,6 +155,9 @@ if EN_VERCEL:
         "loggers": {
             "django": {"handlers": ["consola"], "level": "WARNING"},
             "django.request": {"handlers": ["consola"], "level": "ERROR", "propagate": False},
+            # INFO: cuánto tarda la extracción de texto de cada envío (US-011, D3). Esos
+            # mensajes no llevan títulos, nombres de archivo ni texto de las sesiones.
+            "repositorio": {"handlers": ["consola"], "level": "INFO"},
         },
     }
 

@@ -25,6 +25,7 @@ from cuentas.tests.e2e import (
     fijar_hora_de_lima,
     ingresar,
     revisar_con_axe,
+    sesiones_proximamente,
 )
 from institucion.models import AnioEscolar, Estudiante, Seccion
 
@@ -159,6 +160,8 @@ def test_sin_infracciones_graves_de_accesibilidad(
     live_server, page, vista, tema, ancho, docente, direccion, clave, monkeypatch
 ):
     fijar_hora_de_lima(monkeypatch, MIERCOLES_9)
+    if vista == "portada-proximamente":
+        sesiones_proximamente(monkeypatch)
     con_pantalla(page, ancho, tema)
     abrir_vista(page, live_server, vista, docente, direccion, clave)
     if vista == "portada-hoy-pendiente":

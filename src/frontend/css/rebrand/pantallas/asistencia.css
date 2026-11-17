@@ -195,7 +195,7 @@
     height: 18px;
   }
 
-  .sin-marcar--pc a[hidden] + .sin-marcar__flecha {
+  .sin-marcar--pc a:not([href]) + .sin-marcar__flecha {
     display: none;
   }
 
@@ -616,6 +616,12 @@
     transform: translateX(-50%);
   }
 
+  /* Mientras la barra está a la vista, el foco que baja por la lista queda sobre ella (A-14, WCAG 2.4.11):
+     alto de la barra (hasta dos renglones), su separación inferior y un respiro. Sin JS. */
+  html:has([data-barra-deshacer]:not([hidden])) {
+    scroll-padding-bottom: 104px;
+  }
+
   .barra-deshacer p {
     min-width: 0;
   }
@@ -665,7 +671,7 @@
   /* --- Hasta 699 px: una columna; la tarjeta es el resumen compacto fijo bajo la barra --- */
   @media (max-width: 699px) {
     .asistencia-hoy {
-      --asistencia-margen-fila: calc(var(--bar-height) + 136px);
+      --asistencia-margen-fila: calc(var(--bar-height) + 144px);
     }
 
     .page:has(> .asistencia-hoy) {
@@ -674,7 +680,7 @@
 
     /* La variable se define aquí: html es ancestro de .asistencia-hoy y no la hereda (A2). */
     html:has(.asistencia-rejilla) {
-      --asistencia-margen-fila: calc(var(--bar-height) + 136px);
+      --asistencia-margen-fila: calc(var(--bar-height) + 144px);
       scroll-padding-top: var(--asistencia-margen-fila);
     }
 
@@ -729,8 +735,7 @@
       display: contents;
     }
 
-    .conteo,
-    .resumen-completo {
+    .conteo {
       grid-column: 1;
       grid-row: 1;
       align-self: center;
@@ -738,13 +743,35 @@
       font-variant-numeric: tabular-nums;
     }
 
+    /* El desglose del día baja a su fila, secundario, para que el conteo siga a la vista (A-02). */
+    .resumen-completo {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      color: var(--cocoa-muted);
+      font-size: var(--text-label);
+    }
+
     .conteo__pc {
       display: none;
     }
 
-    .conteo__movil,
-    .sin-marcar--movil {
+    .conteo {
+      display: flex;
+      align-items: center;
+      gap: var(--s-1);
+    }
+
+    .conteo__movil {
       display: inline;
+    }
+
+    /* Blanco de 44 × 44 px (A-01); el margen negativo lo compensa para que el resumen no crezca de más. */
+    .sin-marcar--movil {
+      display: inline-flex;
+      align-items: center;
+      min-width: var(--touch-min);
+      min-height: var(--touch-min);
+      margin-block: calc((var(--touch-min) - 1lh) / -2);
     }
 
     .guardado-grupo {
@@ -763,7 +790,7 @@
 
     .cierre-jornada {
       grid-column: 1 / -1;
-      grid-row: 3;
+      grid-row: 4;
       margin-top: 0;
       font-size: var(--text-label);
     }

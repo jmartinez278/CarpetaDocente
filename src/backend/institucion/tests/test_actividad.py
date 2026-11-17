@@ -18,6 +18,7 @@ from asistencia import servicios as asistencia
 from asistencia.models import Asistencia, Jornada
 from institucion import servicios
 from institucion.models import Estudiante, Seccion
+from repositorio import ejemplos
 
 pytestmark = pytest.mark.django_db
 
@@ -266,6 +267,7 @@ def test_quitar_demo_deja_demo_quitada_con_usuario_vacio_y_conteos(institucion, 
     assert entrada.detalle == {
         "secciones": 8,
         "cuentas": 8,
+        "sesiones": len(ejemplos.EJEMPLOS),
         "estudiantes": 24,
         "jornadas": 8 * dias,
         "estados": 24 * dias,
