@@ -7,6 +7,7 @@ PDF con capa de texto es el mismo de las sesiones de ejemplo (``repositorio.ejem
 import io
 import secrets
 import zipfile
+import zlib
 from xml.sax.saxutils import escape
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -103,6 +104,37 @@ def pdf_cifrado(paginas):
     escritor.encrypt(secrets.token_hex(8), algorithm="RC4-128")
     salida = io.BytesIO()
     escritor.write(salida)
+    return salida.getvalue()
+
+
+def pdf_comprimido(descomprimido):
+    """Un PDF de una página cuyo contenido, ya descomprimido, pesa ``descomprimido`` bytes.
+
+    Es un flujo de espacios tras un texto: ocupa unos pocos KB en el archivo y mucho al leerse.
+    """
+    dibujo = b"BT /F1 12 Tf 72 720 Td (Texto) Tj ET" + b" " * descomprimido
+    flujo = zlib.compress(dibujo, 9)
+    objetos = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+        b"/Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Length %d /Filter /FlateDecode >>\nstream\n" % len(flujo) + flujo + b"\nendstream",
+    ]
+    salida = io.BytesIO()
+    salida.write(b"%PDF-1.4\n")
+    posiciones = []
+    for numero, objeto in enumerate(objetos, start=1):
+        posiciones.append(salida.tell())
+        salida.write(b"%d 0 obj\n" % numero + objeto + b"\nendobj\n")
+    tabla = salida.tell()
+    salida.write(b"xref\n0 %d\n0000000000 65535 f \n" % (len(objetos) + 1))
+    for posicion in posiciones:
+        salida.write(b"%010d 00000 n \n" % posicion)
+    salida.write(
+        b"trailer << /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objetos) + 1, tabla)
+    )
     return salida.getvalue()
 
 

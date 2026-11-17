@@ -24,6 +24,7 @@ from cuentas.tests.e2e import (
     fijar_hora_de_lima,
     ingresar,
     revisar_con_axe,
+    sesiones_proximamente,
 )
 from institucion.models import AnioEscolar, Estudiante, Seccion
 
@@ -196,7 +197,10 @@ def grabar_aviso(page, selector):
     )
 
 
-def test_tarjeta_proximamente_avisa_sin_mover_la_miniatura(live_server, page, docente, clave):
+def test_tarjeta_proximamente_avisa_sin_mover_la_miniatura(
+    live_server, page, docente, clave, monkeypatch
+):
+    sesiones_proximamente(monkeypatch)
     abrir_portada(page, live_server, docente, clave, 360)
     page.wait_for_load_state("load")
     miniatura = page.locator("#c-sesiones .miniatura")
@@ -213,7 +217,10 @@ def test_tarjeta_proximamente_avisa_sin_mover_la_miniatura(live_server, page, do
     expect(page).to_have_url(f"{live_server.url}/docente/")
 
 
-def test_un_segundo_toque_vuelve_a_escribir_el_aviso(live_server, page, docente, clave):
+def test_un_segundo_toque_vuelve_a_escribir_el_aviso(
+    live_server, page, docente, clave, monkeypatch
+):
+    sesiones_proximamente(monkeypatch)
     abrir_portada(page, live_server, docente, clave, 360)
     page.wait_for_load_state("load")
     boton = page.get_by_role("button", name="Sesiones", exact=True)
@@ -229,7 +236,8 @@ def test_un_segundo_toque_vuelve_a_escribir_el_aviso(live_server, page, docente,
     assert page.evaluate("window.textosDelAviso") == ["", AVISO]
 
 
-def test_el_aviso_se_vacia_a_los_tres_segundos(live_server, page, docente, clave):
+def test_el_aviso_se_vacia_a_los_tres_segundos(live_server, page, docente, clave, monkeypatch):
+    sesiones_proximamente(monkeypatch)
     abrir_portada(page, live_server, docente, clave, 1280)
     page.wait_for_load_state("load")
     aviso = page.locator("#c-sesiones .dimension-aviso")

@@ -9,7 +9,7 @@ from importlib import import_module
 
 import pytest
 from django.apps import apps
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.db.models import ProtectedError
 from django.utils import timezone
 
@@ -180,6 +180,20 @@ def test_el_texto_y_el_texto_de_busqueda_nacen_vacios(crear_sesion):
     sesion.refresh_from_db()
     assert sesion.texto == ""
     assert sesion.texto_busqueda == ""
+
+
+def test_las_columnas_nuevas_tienen_valor_en_la_base_para_el_despliegue_anterior():
+    # Hallazgo de la A2: la migración corre antes del corte y el código anterior inserta sin
+    # estas columnas; sin un DEFAULT de PostgreSQL ese INSERT falla con NOT NULL.
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT column_name, column_default FROM information_schema.columns "
+            "WHERE table_name = 'sesion' AND column_name IN ('texto', 'texto_busqueda')"
+        )
+        valores = dict(cursor.fetchall())
+
+    assert set(valores) == {"texto", "texto_busqueda"}
+    assert all(valor is not None for valor in valores.values())
 
 
 def test_mis_sesiones_tiene_su_indice_por_autora_y_fecha():

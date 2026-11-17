@@ -19,6 +19,7 @@ from repositorio.tests.archivos import (
     parrafos_xml,
     pdf_bytes,
     pdf_cifrado,
+    pdf_comprimido,
     pdf_con_texto,
 )
 
@@ -154,6 +155,40 @@ def test_un_pdf_deja_de_leerse_al_llegar_a_100_000_caracteres(monkeypatch):
 
     assert 99_000 < len(extraido) <= 100_000
     assert len(leidas) < 40
+
+
+def test_un_pdf_que_pesa_poco_y_se_descomprime_enorme_queda_sin_texto():
+    # Hallazgo de la A2: pypdf deja hasta 75 MB por flujo; aquí el tope es el de un .docx (8 MB).
+    contenido = pdf_comprimido(texto.MAXIMO_DOCUMENTO + 1)
+
+    assert len(contenido) < 100 * 1024
+    assert extraer(contenido, TIPO_PDF) == ""
+
+
+def test_un_pdf_con_la_descompresion_dentro_del_tope_se_lee():
+    contenido = pdf_comprimido(1024 * 1024)
+
+    assert extraer(contenido, TIPO_PDF) == "Texto"
+
+
+def test_un_pdf_que_pasa_del_tiempo_se_queda_con_lo_leido_y_avisa(monkeypatch, caplog):
+    monkeypatch.setattr(texto, "MAXIMO_SEGUNDOS", -1.0)
+    contenido = pdf_con_texto([["Formamos equipos"]])
+
+    with caplog.at_level(logging.WARNING, logger="repositorio.texto"):
+        assert extraer(contenido, TIPO_PDF) == ""
+
+    assert "pasó de" in caplog.text
+    assert "Formamos" not in caplog.text
+
+
+def test_los_topes_de_pypdf_valen_solo_durante_la_lectura():
+    pypdf = import_module("pypdf")
+    antes = pypdf.get_configuration()
+
+    extraer(pdf_comprimido(1024), TIPO_PDF)
+
+    assert pypdf.get_configuration() == antes
 
 
 # --- Lo común --------------------------------------------------------------------------------

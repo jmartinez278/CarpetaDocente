@@ -89,8 +89,8 @@ class Sesion(models.Model):
     # título, propósito y texto, normalizados (design de US-011, D1 y D4). Los dos los escribe
     # solo ``servicios``; pueden traer lo que la docente escribió (RN-015) y no van al registro
     # ni a los logs.
-    texto = models.TextField("texto transcrito", blank=True, default="")
-    texto_busqueda = models.TextField("texto de búsqueda", blank=True, default="")
+    texto = models.TextField("texto transcrito", blank=True, default="", db_default="")
+    texto_busqueda = models.TextField("texto de búsqueda", blank=True, default="", db_default="")
     creado_en = models.DateTimeField("creado en", auto_now_add=True)
     actualizado_en = models.DateTimeField("actualizado en", auto_now=True)
 

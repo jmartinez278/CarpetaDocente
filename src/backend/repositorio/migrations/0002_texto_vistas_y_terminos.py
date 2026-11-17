@@ -63,12 +63,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="sesion",
             name="texto",
-            field=models.TextField(blank=True, default="", verbose_name="texto transcrito"),
+            field=models.TextField(
+                blank=True, db_default="", default="", verbose_name="texto transcrito"
+            ),
         ),
         migrations.AddField(
             model_name="sesion",
             name="texto_busqueda",
-            field=models.TextField(blank=True, default="", verbose_name="texto de búsqueda"),
+            field=models.TextField(
+                blank=True, db_default="", default="", verbose_name="texto de búsqueda"
+            ),
         ),
         migrations.AddIndex(
             model_name="sesion",

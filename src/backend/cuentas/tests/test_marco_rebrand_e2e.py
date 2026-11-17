@@ -125,8 +125,8 @@ def test_abrir_el_menu(live_server, page, docente, clave, con_seccion):
         "document.querySelector('dialog#navegacion').contains(document.elementFromPoint(40, 20))"
     )
     nav = page.get_by_role("navigation", name="Navegación principal")
-    expect(nav.get_by_role("link")).to_have_text(["Inicio", "Asistencia", "Notas"])
-    expect(nav.get_by_text("Próximamente")).to_have_count(1)
+    expect(nav.get_by_role("link")).to_have_text(["Inicio", "Sesiones", "Asistencia", "Notas"])
+    expect(nav.get_by_text("Próximamente")).to_have_count(0)
     expect(cerrar_navegacion(page)).to_be_visible()
 
 

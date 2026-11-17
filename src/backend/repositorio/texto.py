@@ -11,13 +11,14 @@ el nombre del archivo.
 import contextlib
 import logging
 import re
+import time
 import unicodedata
 import zipfile
 from xml.etree import ElementTree
 
-from pypdf import PdfReader
+from pypdf import Configuration, PdfReader, apply_configuration
 
-from repositorio.models import TIPO_DOCX, TIPO_PDF
+from repositorio.models import TAMANO_MAXIMO, TIPO_DOCX, TIPO_PDF
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,26 @@ MAXIMO_PAGINAS = 40
 # Tope de ``word/document.xml`` ya descomprimido: un .docx de 4 MB real queda muy por debajo.
 MAXIMO_DOCUMENTO = 8 * 1024 * 1024
 _TROZO = 64 * 1024
+# Topes de pypdf mientras se lee un PDF. Los de fábrica dejan 75 MB por flujo (y 300 MB de trabajo
+# de decodificación): un archivo de 4 MB puede pedir mucha memoria y CPU antes de que corran los
+# topes de páginas y de caracteres. Aquí el flujo de una página cabe en lo mismo que un .docx.
+_TOPES_PDF = Configuration().with_overwrites(
+    maximum_declared_stream_length=TAMANO_MAXIMO,
+    array_based_stream_maximum_output_length=MAXIMO_DOCUMENTO,
+    zlib_maximum_output_length=MAXIMO_DOCUMENTO,
+    lzw_maximum_output_length=MAXIMO_DOCUMENTO,
+    run_length_maximum_output_length=MAXIMO_DOCUMENTO,
+    jbig2_maximum_output_length=MAXIMO_DOCUMENTO,
+    image_maximum_buffer_size=MAXIMO_DOCUMENTO,
+    stream_decoding_work_maximum_length=2 * MAXIMO_DOCUMENTO,
+    stream_parsing_work_maximum_count=500_000,
+    xform_maximum_invocations_per_extraction=200,
+    array_maximum_element_count=20_000,
+    dictionary_maximum_element_count=20_000,
+    jbig2dec_binary=None,
+)
+# Tiempo total para leer un PDF; al pasarse se queda con lo leído hasta entonces.
+MAXIMO_SEGUNDOS = 5.0
 
 _W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 _TEXTO, _PARRAFO, _TABULACION = f"{_W}t", f"{_W}p", f"{_W}tab"
@@ -138,17 +159,24 @@ def _texto_docx(archivo):
 
 
 def _texto_pdf(archivo):
-    lector = PdfReader(archivo, strict=False)
-    if lector.is_encrypted:
-        return ""
-    paginas, largo = [], 0
-    for numero, pagina in enumerate(lector.pages):
-        if numero >= MAXIMO_PAGINAS or largo >= MAXIMO_CARACTERES:
-            break
-        parte = (pagina.extract_text() or "").strip()
-        if parte:
-            paginas.append(parte)
-            largo += len(parte) + 1
+    limite = time.monotonic() + MAXIMO_SEGUNDOS
+    with apply_configuration(_TOPES_PDF):
+        lector = PdfReader(archivo, strict=False)
+        if lector.is_encrypted:
+            return ""
+        paginas, largo = [], 0
+        for numero, pagina in enumerate(lector.pages):
+            if numero >= MAXIMO_PAGINAS or largo >= MAXIMO_CARACTERES:
+                break
+            if time.monotonic() > limite:
+                logger.warning(
+                    "La lectura de un PDF pasó de %s s: se guarda lo leído", MAXIMO_SEGUNDOS
+                )
+                break
+            parte = (pagina.extract_text() or "").strip()
+            if parte:
+                paginas.append(parte)
+                largo += len(parte) + 1
     return "\n".join(paginas)
 
 
