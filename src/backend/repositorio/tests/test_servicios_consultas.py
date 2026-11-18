@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
+from django.core.files.base import ContentFile
+from django.core.files.storage import storages
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
@@ -550,3 +552,102 @@ def test_si_el_archivo_no_se_puede_abrir_no_queda_entrada(crear_sesion, docente)
     with pytest.raises(FileNotFoundError):
         servicios.entregar_archivo(docente, sesion.pk, "descargar")
     assert descargas() == []
+
+
+# --- Material de referencia (design de US-018, D2 y D3) --------------------------------------
+
+
+def test_el_repositorio_incluye_el_material_de_referencia_de_su_institucion(
+    crear_sesion, material_de_referencia, docente, otra_docente, otra_institucion
+):
+    # Escenario «Con material de referencia».
+    crear_sesion(docente, titulo="Propia", compartida=True)
+    crear_sesion(otra_docente, titulo="De una colega", compartida=True)
+    for numero in range(3):
+        material_de_referencia(titulo=f"Referencia {numero}")
+    material_de_referencia(institucion=otra_institucion, titulo="De otra institución")
+
+    pagina = servicios.buscar_repositorio(docente)
+
+    assert pagina.total == 5
+    assert "De otra institución" not in titulos(pagina)
+    assert servicios.contadores(docente)["repositorio"] == 5
+
+
+@pytest.mark.parametrize(("grado", "la_ve"), [("3", True), ("4", True), ("5", True), ("6", False)])
+def test_filtrar_por_un_grado_del_rango(material_de_referencia, docente, grado, la_ve):
+    # Escenario «Filtrar por un grado del rango».
+    material_de_referencia(titulo="Contamos", grado=3, grado_hasta=5)
+
+    pagina = servicios.buscar_repositorio(docente, grado=grado)
+
+    assert titulos(pagina) == (["Contamos"] if la_ve else [])
+    assert servicios.conteos_por_area(docente, grado=grado).total == (1 if la_ve else 0)
+
+
+def test_el_conteo_por_area_cuenta_la_referencia_una_vez(
+    material_de_referencia, docente, matematica
+):
+    # Escenario «Conteo por área».
+    material_de_referencia(area=matematica, grado=3, grado_hasta=5)
+
+    conteos = servicios.conteos_por_area(docente)
+
+    assert conteos.total == 1
+    assert dict(conteos.areas)[matematica] == 1
+
+
+def test_la_referencia_no_esta_en_mis_sesiones(crear_sesion, material_de_referencia, docente):
+    # Escenario «No está en Mis sesiones».
+    crear_sesion(docente, titulo="Propia")
+    material_de_referencia()
+
+    assert titulos(servicios.mis_sesiones(docente)) == ["Propia"]
+    assert servicios.contadores(docente)["mis_sesiones"] == 1
+
+
+def test_una_docente_ve_la_referencia_de_su_institucion_y_no_la_de_otra(
+    material_de_referencia, docente, otra_institucion
+):
+    # Escenario «Material de referencia» de «Quién ve una sesión».
+    propia = material_de_referencia()
+    ajena = material_de_referencia(institucion=otra_institucion)
+
+    assert servicios.sesion_visible(docente, propia.pk) == propia
+    assert servicios.sesion_visible(docente, ajena.pk) is None
+
+
+def test_una_docente_ve_y_descarga_la_referencia_como_ajena(material_de_referencia, docente):
+    # Escenario «Una docente la descarga».
+    sesion = material_de_referencia()
+    storages["sesiones"].save(sesion.archivo_clave, ContentFile(b"%PDF-1.4 cuerpo"))
+
+    assert servicios.registrar_vista(docente, sesion) is True
+    entrega = servicios.entregar_archivo(docente, sesion.pk, "descargar")
+    entrega.archivo.close()
+
+    assert vistas_registradas() == [(docente.pk, "sesion", str(sesion.pk), {})]
+    assert descargas() == [
+        (docente.pk, "sesion", str(sesion.pk), {"modo": "descargar", "propia": False})
+    ]
+
+
+def test_la_pagina_de_la_referencia_lleva_al_repositorio_con_su_rango(
+    material_de_referencia, docente
+):
+    sesion = material_de_referencia(grado=3, grado_hasta=5)
+
+    datos = servicios.datos_de_la_pagina(docente, sesion)
+
+    assert datos["referencia"] is True
+    assert datos["propia"] is False
+    assert datos["miga"][0] == "Repositorio"
+    assert datos["grado"] == "3.º–5.º grado"
+    assert datos["vistas_total"] is None
+
+
+def test_la_pagina_de_una_sesion_de_docente_no_es_referencia(crear_sesion, docente):
+    datos = servicios.datos_de_la_pagina(docente, crear_sesion(docente, grado=2))
+
+    assert datos["referencia"] is False
+    assert datos["grado"] == "2.º grado"

@@ -23,7 +23,12 @@ CAMPOS_DEL_PANEL = "_campos_del_panel"
 
 
 class RegistraEnPanel:
-    """Para los ``ModelAdmin`` que escriben. Ninguno permite borrar (RN-023)."""
+    """Para los ``ModelAdmin`` que escriben. Ninguno borra (RN-023) salvo el que declara
+    ``operacion_al_borrar`` y la registra al borrar (US-018, D5)."""
+
+    # La operación que deja borrar un objeto desde la ficha. La registra el ``ModelAdmin`` (en
+    # ``delete_model``, por medio de su servicio); aquí solo abre ``log_deletions``.
+    operacion_al_borrar = None
 
     def operacion_del_panel(self, request, obj, accion, campos):
         """``[(operacion, detalle), ...]`` que deja ``accion`` sobre ``obj``.
@@ -69,10 +74,12 @@ class RegistraEnPanel:
         return entrada
 
     def log_deletions(self, request, queryset):
-        raise NotImplementedError(
-            "Un ModelAdmin que registra en el panel no permite borrar: si se habilita, "
-            "hay que registrar su operación (US-008, D5)."
-        )
+        if self.operacion_al_borrar is None:
+            raise NotImplementedError(
+                "Un ModelAdmin que registra en el panel no permite borrar: si se habilita, "
+                "hay que declarar operacion_al_borrar y registrarla (US-008, D5; US-018, D5)."
+            )
+        return super().log_deletions(request, queryset)
 
     def _registrar(self, request, obj, accion):
         campos = request.__dict__.pop(CAMPOS_DEL_PANEL, [])

@@ -13,6 +13,7 @@ import uuid
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.core.files.storage import storages
 from django.db import DatabaseError
 from django.utils import timezone
@@ -257,6 +258,34 @@ def test_dejar_de_compartir_una_ajena_la_deja_compartida_y_deja_intento(
     assert sesion.compartida is True
     assert intentos() == [(str(sesion.pk), RUTA, servicios.SESION_AJENA)]
     assert not entradas(Operacion.SESION_DESCOMPARTIDA)
+
+
+# --- Una docente no cambia el material de referencia (design de US-018, D3) -------------------
+
+
+@pytest.mark.parametrize(
+    "escribir",
+    [
+        lambda docente, id_sesion: servicios.eliminar_sesion(docente, id_sesion, RUTA),
+        lambda docente, id_sesion: servicios.compartir_sesion(docente, id_sesion, True, RUTA),
+        lambda docente, id_sesion: servicios.dejar_de_compartir(docente, id_sesion, RUTA),
+    ],
+    ids=["eliminar", "compartir", "dejar de compartir"],
+)
+def test_una_docente_no_cambia_el_material_de_referencia(material_de_referencia, docente, escribir):
+    # Escenarios «Eliminar el material de referencia» y «Dejar de compartir el material de
+    # referencia».
+    sesion = material_de_referencia()
+    storages["sesiones"].save(sesion.archivo_clave, ContentFile(b"%PDF-1.4 cuerpo"))
+
+    with pytest.raises(servicios.SoloLaAutora):
+        escribir(docente, sesion.pk)
+
+    sesion.refresh_from_db()
+    assert sesion.compartida is True
+    assert tiene_archivo(sesion)
+    assert intentos() == [(str(sesion.pk), RUTA, servicios.SESION_AJENA)]
+    assert RegistroActividad.objects.count() == 1
 
 
 # --- Compartir después ------------------------------------------------------------------------

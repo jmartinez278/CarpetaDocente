@@ -882,6 +882,21 @@ def test_dejar_de_compartir_una_ajena_responde_403_y_sigue_compartida(
     assert Sesion.objects.get(pk=sesion.pk).compartida
 
 
+@pytest.mark.parametrize("sufijo", ["eliminar/", "compartir/", "dejar-de-compartir/"])
+def test_una_docente_no_cambia_el_material_de_referencia(cliente, material_de_referencia, sufijo):
+    # Escenarios de «Una docente no cambia el material de referencia» (US-018).
+    sesion = material_de_referencia(titulo="Contamos y agrupamos objetos")
+
+    respuesta = cliente.post(url_de(sesion, sufijo), {"acepta_terminos": "on"})
+
+    assert respuesta.status_code == 403
+    html = texto_de(respuesta)
+    assert SOLO_EL_AUTOR in html
+    assert "Contamos y agrupamos objetos" in html
+    assert Sesion.objects.filter(pk=sesion.pk, compartida=True).exists()
+    assert intentos() == [(str(sesion.pk), url_de(sesion, sufijo), "sesion_ajena")]
+
+
 def _rutas_post(sesion):
     return [url_de(sesion, s) for s in ("eliminar/", "compartir/", "dejar-de-compartir/")]
 

@@ -114,6 +114,38 @@ def test_ninguna_operacion_sobre_sesiones_admite_datos_de_la_sesion(docente, ope
     assert RegistroActividad.objects.count() == 0
 
 
+SOBRE_REFERENCIAS = [
+    "SESION_REFERENCIA_CARGADA",
+    "SESION_REFERENCIA_EDITADA",
+    "SESION_REFERENCIA_ELIMINADA",
+]
+
+
+def test_editar_material_de_referencia_admite_los_nombres_de_los_campos(administrador):
+    # Spec material-referencia, «Registro de la carga», escenario «Editar» (US-018, D7).
+    detalle = {"campos": ["titulo", "fuente"]}
+
+    registrar(administrador, "SESION_REFERENCIA_EDITADA", "sesion", ID_SESION, detalle)
+
+    assert RegistroActividad.objects.get().detalle == detalle
+
+
+@pytest.mark.parametrize("operacion", SOBRE_REFERENCIAS)
+@pytest.mark.parametrize("clave", ["titulo", "fuente", "permiso_uso", "archivo_nombre"])
+def test_ninguna_operacion_de_referencia_admite_datos_de_la_sesion(administrador, operacion, clave):
+    # RN-015: ni el título, ni la fuente, ni el permiso de uso, ni el nombre del archivo.
+    with pytest.raises(ValueError, match=clave):
+        registrar(administrador, operacion, "sesion", ID_SESION, {clave: "Equipo del proyecto"})
+
+    assert RegistroActividad.objects.count() == 0
+
+
+@pytest.mark.parametrize("operacion", ["SESION_REFERENCIA_CARGADA", "SESION_REFERENCIA_ELIMINADA"])
+def test_cargar_y_eliminar_material_de_referencia_no_admiten_detalle(administrador, operacion):
+    with pytest.raises(ValueError, match="campos"):
+        registrar(administrador, operacion, "sesion", ID_SESION, {"campos": ["titulo"]})
+
+
 @pytest.mark.parametrize("operacion", ["SESION_VISTA", "SESION_COMPARTIDA", "SESION_DESCOMPARTIDA"])
 def test_ver_compartir_y_dejar_de_compartir_no_admiten_detalle(docente, operacion):
     with pytest.raises(ValueError, match="compartida"):

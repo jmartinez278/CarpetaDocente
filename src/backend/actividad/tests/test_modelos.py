@@ -83,9 +83,31 @@ SOBRE_SESIONES = [
 ]
 
 
+SOBRE_REFERENCIAS = [
+    "SESION_REFERENCIA_CARGADA",
+    "SESION_REFERENCIA_EDITADA",
+    "SESION_REFERENCIA_ELIMINADA",
+]
+
+
 def test_no_queda_ninguna_operacion_reservada():
-    """Las de sesiones entraron al catálogo en la parte A; las partes C y D las generan."""
+    """Las de material de referencia las genera el servicio de US-018 (parte B)."""
     assert RESERVADAS == frozenset()
+
+
+@pytest.mark.parametrize("operacion", SOBRE_REFERENCIAS)
+def test_la_base_acepta_las_operaciones_de_material_de_referencia(operacion):
+    entrada = _entrada(operacion=operacion)
+
+    entrada.refresh_from_db()
+    assert entrada.operacion == operacion
+
+
+@pytest.mark.parametrize("operacion", SOBRE_REFERENCIAS)
+def test_cargar_editar_y_eliminar_material_de_referencia_no_cuentan_para_kpi_01(operacion):
+    # Spec material-referencia, «No cuenta en los indicadores» (US-018, D7).
+    assert operacion in Operacion.values
+    assert operacion not in CUENTAN_KPI_01
 
 
 @pytest.mark.parametrize("operacion", SOBRE_SESIONES)
@@ -103,7 +125,7 @@ def test_ver_descargar_compartir_y_eliminar_no_cuentan_para_kpi_01(operacion):
 
 
 def test_el_catalogo_de_esta_historia():
-    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-011)."""
+    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-018)."""
     assert set(Operacion.values) == {
         "INICIO_SESION",
         "CIERRE_SESION",
@@ -136,6 +158,9 @@ def test_el_catalogo_de_esta_historia():
         "SESION_COMPARTIDA",
         "SESION_DESCOMPARTIDA",
         "SESION_ELIMINADA",
+        "SESION_REFERENCIA_CARGADA",
+        "SESION_REFERENCIA_EDITADA",
+        "SESION_REFERENCIA_ELIMINADA",
         "CATALOGO_EDITADO",
         "DEMO_CARGADA",
         "DEMO_QUITADA",

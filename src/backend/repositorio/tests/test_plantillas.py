@@ -979,6 +979,113 @@ def test_el_mensaje_de_exito_se_anuncia_sin_interrumpir(cliente, crear_sesion, d
     assert "Dejaste de compartir la sesión" in html
 
 
+# --- Material de referencia (US-018, design D6) ---
+
+FUENTE = "Equipo del proyecto"
+PERMISO = "Elaborada por el equipo; uso libre en la I.E."
+
+
+def test_la_tarjeta_de_la_referencia_dice_material_de_referencia_y_su_rango(
+    cliente, material_de_referencia, matematica, administrador
+):
+    """Escenario «Tarjeta» de «Material de referencia en las listas»."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    material_de_referencia(
+        titulo="Contamos y agrupamos objetos",
+        area=matematica,
+        creado_en=datetime(2026, 11, 10, 10, tzinfo=ZoneInfo("America/Lima")),
+    )
+    administrador.first_name, administrador.last_name = "Nombre", "Delpanel"
+    administrador.save()
+
+    tarjeta = texto_plano(tarjetas_de(repositorio(cliente))[0])
+
+    assert "Contamos y agrupamos objetos" in tarjeta
+    assert "3.º–5.º grado · Matemática" in tarjeta
+    assert "Material de referencia · 10 nov" in tarjeta
+    assert "Delpanel" not in tarjeta
+
+
+def test_la_tarjeta_de_una_referencia_de_un_solo_grado(cliente, material_de_referencia):
+    """Escenario «Un solo grado»."""
+    material_de_referencia(grado=2, grado_hasta=2)
+
+    tarjeta = texto_plano(tarjetas_de(repositorio(cliente))[0])
+
+    assert "2.º grado · Comunicación" in tarjeta
+    assert "–" not in tarjeta
+
+
+def test_la_tarjeta_de_una_docente_sigue_con_su_nombre(cliente, crear_sesion, otra_docente):
+    crear_sesion(otra_docente, compartida=True, grado=4)
+
+    tarjeta = texto_plano(tarjetas_de(repositorio(cliente))[0])
+
+    assert "4.º grado · Comunicación" in tarjeta
+    assert "Rosa Mamani ·" in tarjeta
+    assert "Material de referencia" not in tarjeta
+
+
+def test_la_pagina_de_la_referencia_muestra_fuente_y_permiso(cliente, material_de_referencia):
+    """Escenario «Fuente y permiso» de «Página del material de referencia»."""
+    sesion = material_de_referencia(fuente=FUENTE, permiso_uso=PERMISO)
+
+    html = detalle(cliente, sesion)
+    plano = texto_plano(html)
+
+    chips = re.search(r'<p class="sesion-chips">.*?</p>', html, re.DOTALL).group(0)
+    assert texto_plano(chips) == "3.º–5.º grado Comunicación Material de referencia"
+    ficha = texto_plano(re.search(r'<dl class="sesion-ficha">.*?</dl>', html, re.DOTALL).group(0))
+    assert "Fecha de carga" in ficha
+    assert "Autora" not in ficha and "Fecha de envío" not in ficha
+    aside = re.search(r"<aside\b[^>]*>.*?</aside>", html, re.DOTALL).group(0)
+    assert 'aria-labelledby="material-referencia"' in aside
+    assert texto_plano(aside) == f"Material de referencia Fuente {FUENTE} Permiso de uso {PERMISO}"
+    assert "Tu sesión" not in plano
+
+
+def test_la_pagina_de_la_referencia_no_tiene_acciones_de_autora(cliente, material_de_referencia):
+    """Escenario «Sin acciones»."""
+    sesion = material_de_referencia()
+
+    html = detalle(cliente, sesion)
+    plano = texto_plano(html)
+
+    assert f"/docente/sesiones/{sesion.pk}/descargar/" in html
+    assert f"/docente/sesiones/{sesion.pk}/ver/" in html
+    migas = re.search(r'<nav class="migas".*?</nav>', html, re.DOTALL).group(0)
+    assert 'href="/docente/sesiones/repositorio/"' in migas
+    for accion in ("Tu sesión", "Compartir", "Dejar de compartir", "Eliminar"):
+        assert accion not in plano, accion
+    assert "<dialog" not in html and "/eliminar/" not in html and "/compartir/" not in html
+    assert "detalle.js" not in html
+
+
+def test_fuente_y_permiso_salen_escapados(cliente, material_de_referencia):
+    sesion = material_de_referencia(
+        fuente="<script>alert(1)</script>", permiso_uso="<img src=x onerror=alert(2)>"
+    )
+
+    html = detalle(cliente, sesion)
+
+    assert "<script>alert" not in html and "<img src=x" not in html
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+    assert "&lt;img src=x onerror=alert(2)&gt;" in html
+
+
+def test_la_pagina_de_una_docente_sigue_con_autora_y_fecha_de_envio(
+    cliente, crear_sesion, otra_docente
+):
+    html = detalle(cliente, crear_sesion(otra_docente, compartida=True))
+    plano = texto_plano(html)
+
+    assert "Autora Rosa Mamani" in plano and "Fecha de envío" in plano
+    assert '<span class="chip">Compartida</span>' in html
+    assert "Material de referencia" not in plano and "Fecha de carga" not in plano
+
+
 # --- Reglas de plantillas ---
 
 

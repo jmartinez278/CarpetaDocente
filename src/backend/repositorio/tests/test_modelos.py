@@ -13,7 +13,7 @@ from django.db import IntegrityError, connection, transaction
 from django.db.models import ProtectedError
 from django.utils import timezone
 
-from repositorio.models import TAMANO_MAXIMO, Sesion, SesionVista
+from repositorio.models import TAMANO_MAXIMO, Sesion, SesionReferencia, SesionVista
 
 pytestmark = pytest.mark.django_db
 
@@ -45,8 +45,33 @@ def crear_sesion(institucion, docente, comunicacion):
             "tamano_bytes": 1_258_291,
             **campos,
         }
+        # La sesión de una docente tiene un solo grado (US-018, D2).
+        valores.setdefault("grado_hasta", valores["grado"])
         with transaction.atomic():
             return Sesion.objects.create(**valores)
+
+    return crear
+
+
+@pytest.fixture
+def crear_referencia(crear_sesion, administrador):
+    """Guarda una sesión de referencia válida (US-018, D1) con los cambios de ``campos``."""
+
+    def crear(**campos):
+        valores = {
+            "autor": None,
+            "subido_por": administrador,
+            "grado": 3,
+            "grado_hasta": 5,
+            "origen": Sesion.Origen.REFERENCIA,
+            "estado": "",
+            "compartida": True,
+            "terminos_aceptados_en": None,
+            "fuente": "Equipo del proyecto",
+            "permiso_uso": "Uso libre en la I.E. con fines educativos",
+            **campos,
+        }
+        return crear_sesion(**valores)
 
     return crear
 
@@ -94,6 +119,97 @@ def test_la_base_rechaza_una_sesion_incoherente(crear_sesion, campos, restriccio
         crear_sesion(**campos)
 
     assert not Sesion.objects.exists()
+
+
+# --- Sesión de referencia (spec material-referencia; design de US-018, D1) -------------------
+
+
+def test_una_sesion_de_referencia_valida_se_guarda(crear_referencia, administrador):
+    sesion = crear_referencia()
+
+    sesion.refresh_from_db()
+    assert sesion.autor is None
+    assert sesion.subido_por == administrador
+    assert sesion.estado == ""
+    assert sesion.compartida
+    assert sesion.terminos_aceptados_en is None
+    assert (sesion.grado, sesion.grado_hasta) == (3, 5)
+    assert sesion.fuente == "Equipo del proyecto"
+
+
+def test_la_fuente_y_el_permiso_nacen_vacios_en_la_sesion_de_una_docente(crear_sesion):
+    sesion = crear_sesion()
+
+    sesion.refresh_from_db()
+    assert (sesion.fuente, sesion.permiso_uso) == ("", "")
+
+
+@pytest.mark.parametrize(
+    ("campos", "restriccion"),
+    [
+        ({"autor": "docente"}, "ck_sesion_autor"),
+        ({"terminos_aceptados_en": "ahora"}, "ck_sesion_referencia"),
+        ({"compartida": False}, "ck_sesion_referencia"),
+        ({"fuente": ""}, "ck_sesion_referencia"),
+        ({"permiso_uso": ""}, "ck_sesion_referencia"),
+        ({"estado": "ENVIADA"}, "ck_sesion_estado"),
+        ({"grado": 5, "grado_hasta": 3}, "ck_sesion_grado"),
+        ({"grado_hasta": 7}, "ck_sesion_grado"),
+    ],
+    ids=[
+        "con-autora",
+        "con-terminos",
+        "no-compartida",
+        "sin-fuente",
+        "sin-permiso",
+        "con-estado",
+        "rango-al-reves",
+        "grado-final-7",
+    ],
+)
+def test_la_base_rechaza_una_referencia_incoherente(crear_referencia, docente, campos, restriccion):
+    reemplazos = {"docente": docente, "ahora": timezone.now()}
+    campos = {campo: reemplazos.get(valor, valor) for campo, valor in campos.items()}
+
+    with pytest.raises(IntegrityError, match=restriccion):
+        crear_referencia(**campos)
+
+    assert not Sesion.objects.exists()
+
+
+@pytest.mark.parametrize(
+    ("campos", "restriccion"),
+    [
+        ({"autor": None}, "ck_sesion_autor"),
+        ({"estado": ""}, "ck_sesion_estado"),
+        ({"grado_hasta": 3}, "ck_sesion_un_grado"),
+    ],
+    ids=["sin-autora", "estado-vacio", "varios-grados"],
+)
+def test_la_base_rechaza_una_sesion_propia_con_lo_de_la_referencia(
+    crear_sesion, campos, restriccion
+):
+    with pytest.raises(IntegrityError, match=restriccion):
+        crear_sesion(**campos)
+
+    assert not Sesion.objects.exists()
+
+
+def test_el_proxy_de_referencia_solo_devuelve_referencias(crear_sesion, crear_referencia):
+    crear_sesion()
+    referencia = crear_referencia()
+
+    assert list(SesionReferencia.objects.values_list("pk", flat=True)) == [referencia.pk]
+    assert Sesion.objects.count() == 2
+
+
+@pytest.mark.parametrize(
+    ("grado", "grado_hasta", "texto"),
+    [(2, 2, "2.º grado"), (3, 5, "3.º–5.º grado")],
+    ids=["un-grado", "rango"],
+)
+def test_grados_texto(grado, grado_hasta, texto):
+    assert Sesion(grado=grado, grado_hasta=grado_hasta).grados_texto == texto
 
 
 def test_justo_4_mb_se_guarda(crear_sesion):
