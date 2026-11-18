@@ -357,7 +357,12 @@ def test_con_periodos_un_post_que_cambia_la_organizacion_no_la_cambia(
 
     admin_client.post(
         url_institucion(institucion),
-        {"nombre": institucion.nombre, "codigo_modular": "", "organizacion_periodos": "TRIMESTRE"},
+        {
+            "nombre": institucion.nombre,
+            "codigo_modular": "",
+            "anexo": 0,
+            "organizacion_periodos": "TRIMESTRE",
+        },
     )
 
     institucion.refresh_from_db()
@@ -369,7 +374,12 @@ def test_sin_periodos_la_organizacion_cambia(admin_client, anio):
 
     respuesta = admin_client.post(
         url_institucion(institucion),
-        {"nombre": institucion.nombre, "codigo_modular": "", "organizacion_periodos": "TRIMESTRE"},
+        {
+            "nombre": institucion.nombre,
+            "codigo_modular": "",
+            "anexo": 0,
+            "organizacion_periodos": "TRIMESTRE",
+        },
     )
 
     assert respuesta.status_code == 302
@@ -385,7 +395,12 @@ def test_el_formulario_de_la_institucion_rechaza_cambiar_la_organizacion_con_per
 
     institucion = anio_con_periodos.institucion
     form = FormularioInstitucion(
-        {"nombre": institucion.nombre, "codigo_modular": "", "organizacion_periodos": "TRIMESTRE"},
+        {
+            "nombre": institucion.nombre,
+            "codigo_modular": "",
+            "anexo": 0,
+            "organizacion_periodos": "TRIMESTRE",
+        },
         instance=institucion,
     )
 

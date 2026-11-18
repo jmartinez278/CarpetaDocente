@@ -177,7 +177,7 @@ def test_desbloquear_deja_cuenta_editada_con_desbloqueo(panel, docente):
 
 
 def test_alta_de_institucion_deja_institucion_creada(panel, administrador):
-    panel.post(url("institucion_institucion", "add"), {"nombre": "I.E. Ficticia N.° 7"})
+    panel.post(url("institucion_institucion", "add"), {"nombre": "I.E. Ficticia N.° 7", "anexo": 0})
 
     nueva = Institucion.objects.get(nombre="I.E. Ficticia N.° 7")
     entrada = una(Operacion.INSTITUCION_CREADA)
@@ -188,7 +188,7 @@ def test_alta_de_institucion_deja_institucion_creada(panel, administrador):
 def test_editar_institucion_deja_institucion_editada(panel, institucion):
     panel.post(
         url("institucion_institucion", "change", institucion.pk),
-        {"nombre": "I.E. Ficticia N.° 8"},
+        {"nombre": "I.E. Ficticia N.° 8", "anexo": 0},
     )
 
     assert una(Operacion.INSTITUCION_EDITADA).detalle == {"campos": ["nombre"]}
@@ -356,10 +356,10 @@ def test_editar_desde_list_editable_deja_catalogo_editado(panel, institucion):
 
 
 def test_el_historial_de_django_sigue_apareciendo(panel, institucion):
-    panel.post(url("institucion_institucion", "add"), {"nombre": "I.E. Ficticia N.° 9"})
+    panel.post(url("institucion_institucion", "add"), {"nombre": "I.E. Ficticia N.° 9", "anexo": 0})
     panel.post(
         url("institucion_institucion", "change", institucion.pk),
-        {"nombre": "I.E. Ficticia N.° 10"},
+        {"nombre": "I.E. Ficticia N.° 10", "anexo": 0},
     )
 
     banderas = set(LogEntry.objects.values_list("action_flag", flat=True))

@@ -178,3 +178,42 @@ def test_el_registro_falla_y_la_operacion_no_se_guarda(docente):
         crear_y_registrar()
 
     assert not Institucion.objects.filter(nombre="I.E. Ficticia N.° 9").exists()
+
+
+# --- Plantilla del SIAGIE (US-024/025, design D11 y D13) ---
+
+DETALLE_COMPLETADA = {
+    "periodo": 3,
+    "anio": 2026,
+    "encontrados": 26,
+    "no_encontrados": 2,
+    "faltantes": 3,
+    "reemplazadas": 4,
+    "equivalencia": False,
+}
+DETALLE_BORRADA = {"anio": 2026, "grado": 2}
+
+
+@pytest.mark.parametrize(
+    ("operacion", "detalle"),
+    [
+        ("PLANTILLA_SIAGIE_COMPLETADA", DETALLE_COMPLETADA),
+        ("EQUIVALENCIA_SECCION_BORRADA", DETALLE_BORRADA),
+    ],
+)
+def test_la_plantilla_del_siagie_admite_su_detalle(direccion, operacion, detalle):
+    registrar(direccion, operacion, "seccion", 7, detalle)
+
+    assert RegistroActividad.objects.get().detalle == detalle
+
+
+@pytest.mark.parametrize(
+    "operacion", ["PLANTILLA_SIAGIE_COMPLETADA", "EQUIVALENCIA_SECCION_BORRADA"]
+)
+@pytest.mark.parametrize("clave", ["nombres", "archivo", "codigo_siagie", "seccion_siagie"])
+def test_la_plantilla_del_siagie_no_admite_datos_de_la_plantilla(direccion, operacion, clave):
+    # RN-015: ni nombres de estudiantes, ni el archivo, ni la sección del SIAGIE.
+    with pytest.raises(ValueError, match=clave):
+        registrar(direccion, operacion, "seccion", 7, {clave: "TRIUNFADORES"})
+
+    assert RegistroActividad.objects.count() == 0

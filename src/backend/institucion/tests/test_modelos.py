@@ -43,3 +43,26 @@ def test_organizacion_de_periodos_permitida(organizacion):
 def test_organizacion_de_periodos_no_permitida_se_rechaza():
     with pytest.raises(IntegrityError), transaction.atomic():
         Institucion.objects.create(nombre="I.E. Ficticia N.° 1", organizacion_periodos="SEMESTRE")
+
+
+# --- Anexo (US-024/025, design D2) ---
+
+
+def test_institucion_sin_anexo_queda_con_anexo_0():
+    institucion = Institucion.objects.create(nombre="I.E. Ficticia N.° 1")
+
+    institucion.refresh_from_db()
+    assert institucion.anexo == 0
+
+
+@pytest.mark.parametrize("anexo", [0, 9])
+def test_anexo_dentro_del_rango_se_acepta(anexo):
+    institucion = Institucion.objects.create(nombre="I.E. Ficticia N.° 1", anexo=anexo)
+
+    institucion.refresh_from_db()
+    assert institucion.anexo == anexo
+
+
+def test_anexo_fuera_de_rango_se_rechaza():
+    with pytest.raises(IntegrityError), transaction.atomic():
+        Institucion.objects.create(nombre="I.E. Ficticia N.° 1", anexo=10)

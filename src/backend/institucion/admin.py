@@ -21,7 +21,15 @@ class FormularioInstitucion(forms.ModelForm):
 
     class Meta:
         model = Institucion
-        fields = ["nombre", "codigo_modular", "organizacion_periodos"]
+        fields = ["nombre", "codigo_modular", "anexo", "organizacion_periodos"]
+        # La base solo admite 0 a 9 (``ck_institucion_anexo``); la ficha da el error en el campo.
+        widgets = {"anexo": forms.NumberInput(attrs={"min": 0, "max": 9})}
+
+    def clean_anexo(self):
+        anexo = self.cleaned_data["anexo"]
+        if anexo is not None and anexo > 9:
+            raise ValidationError("El anexo va de 0 a 9.")
+        return anexo
 
     def clean(self):
         """Repite la regla para la ficha que se abrió con el campo editable, antes de los periodos.

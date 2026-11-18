@@ -90,9 +90,26 @@ SOBRE_REFERENCIAS = [
 ]
 
 
-def test_no_queda_ninguna_operacion_reservada():
-    """Las de material de referencia las genera el servicio de US-018 (parte B)."""
-    assert RESERVADAS == frozenset()
+DE_LA_PLANTILLA_SIAGIE = ["PLANTILLA_SIAGIE_COMPLETADA", "EQUIVALENCIA_SECCION_BORRADA"]
+
+
+def test_solo_quedan_reservadas_las_de_la_plantilla_del_siagie():
+    """Las genera el servicio de US-024/025 en su parte B; ahí salen de RESERVADAS."""
+    assert frozenset(DE_LA_PLANTILLA_SIAGIE) == RESERVADAS
+
+
+@pytest.mark.parametrize("operacion", DE_LA_PLANTILLA_SIAGIE)
+def test_la_base_acepta_las_operaciones_de_la_plantilla_del_siagie(operacion):
+    entrada = _entrada(operacion=operacion)
+
+    entrada.refresh_from_db()
+    assert entrada.operacion == operacion
+
+
+@pytest.mark.parametrize("operacion", DE_LA_PLANTILLA_SIAGIE)
+def test_las_operaciones_de_la_plantilla_del_siagie_no_cuentan_para_kpi_01(operacion):
+    assert operacion in Operacion.values
+    assert operacion not in CUENTAN_KPI_01
 
 
 @pytest.mark.parametrize("operacion", SOBRE_REFERENCIAS)
@@ -125,7 +142,7 @@ def test_ver_descargar_compartir_y_eliminar_no_cuentan_para_kpi_01(operacion):
 
 
 def test_el_catalogo_de_esta_historia():
-    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-018)."""
+    """Escenario «Catálogo de esta historia» del spec registro-actividad (US-024/025)."""
     assert set(Operacion.values) == {
         "INICIO_SESION",
         "CIERRE_SESION",
@@ -152,6 +169,8 @@ def test_el_catalogo_de_esta_historia():
         "JORNADA_COMPLETA",
         "COMPETENCIAS_MARCADAS",
         "NOTAS_GUARDADAS",
+        "PLANTILLA_SIAGIE_COMPLETADA",
+        "EQUIVALENCIA_SECCION_BORRADA",
         "SESION_ENVIADA",
         "SESION_VISTA",
         "SESION_DESCARGADA",

@@ -40,6 +40,9 @@ class Operacion(models.TextChoices):
     JORNADA_COMPLETA = "JORNADA_COMPLETA", "Jornada completa"
     COMPETENCIAS_MARCADAS = "COMPETENCIAS_MARCADAS", "Competencias marcadas"
     NOTAS_GUARDADAS = "NOTAS_GUARDADAS", "Notas guardadas"
+    # La dirección completa la plantilla de notas del SIAGIE (US-024/025, D11 y D13).
+    PLANTILLA_SIAGIE_COMPLETADA = "PLANTILLA_SIAGIE_COMPLETADA", "Plantilla del SIAGIE completada"
+    EQUIVALENCIA_SECCION_BORRADA = "EQUIVALENCIA_SECCION_BORRADA", "Equivalencia de sección borrada"
     SESION_ENVIADA = "SESION_ENVIADA", "Sesión enviada"
     SESION_VISTA = "SESION_VISTA", "Sesión vista"
     SESION_DESCARGADA = "SESION_DESCARGADA", "Sesión descargada"
@@ -70,7 +73,10 @@ CUENTAN_KPI_01 = frozenset(
 )
 
 # Operaciones del catálogo que aún no tienen quién las genere (la prueba de cobertura las salta).
-RESERVADAS: frozenset[Operacion] = frozenset()
+RESERVADAS: frozenset[Operacion] = frozenset(
+    # Las genera el servicio de exportaciones (US-024/025, parte B).
+    {Operacion.PLANTILLA_SIAGIE_COMPLETADA, Operacion.EQUIVALENCIA_SECCION_BORRADA}
+)
 
 
 class RegistroActividad(models.Model):

@@ -49,6 +49,21 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
     # Código SIAGIE del área, número del periodo, cuántas se crearon y los pares
     # [estudiante, competencia] cambiados, sin niveles ni conclusiones (US-020, D13).
     Operacion.NOTAS_GUARDADAS: frozenset({"area", "periodo", "creadas", "cambiadas"}),
+    # Número del periodo, año, los cuatro conteos y si se guardó una equivalencia; sin nombres,
+    # notas, archivo ni la sección del SIAGIE (US-024/025, D11).
+    Operacion.PLANTILLA_SIAGIE_COMPLETADA: frozenset(
+        {
+            "periodo",
+            "anio",
+            "encontrados",
+            "no_encontrados",
+            "faltantes",
+            "reemplazadas",
+            "equivalencia",
+        }
+    ),
+    # Solo el año y el grado de la sección, sin el código ni el nombre del SIAGIE (D13).
+    Operacion.EQUIVALENCIA_SECCION_BORRADA: frozenset({"anio", "grado"}),
     # Solo si se compartió; sin título, propósito ni nombre del archivo (US-010, D10).
     Operacion.SESION_ENVIADA: frozenset({"compartida"}),
     # "descargar" o "ver", y si la sesión es de quien la pide (US-012, D6). SESION_VISTA,
