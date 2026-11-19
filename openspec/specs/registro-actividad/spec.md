@@ -43,6 +43,7 @@ La operación de una entrada MUST ser una del catálogo; cada operación del cat
 | Asistencia | REGISTRO_ASISTENCIA, ASISTENCIA_CAMBIADA, JORNADA_COMPLETA | Sí |
 | Notas | COMPETENCIAS_MARCADAS | No |
 | Notas | NOTAS_GUARDADAS | Sí |
+| Notas | PLANTILLA_SIAGIE_COMPLETADA, EQUIVALENCIA_SECCION_BORRADA | No |
 | Sesiones de aprendizaje | SESION_ENVIADA | Sí |
 | Sesiones de aprendizaje | SESION_VISTA, SESION_DESCARGADA, SESION_COMPARTIDA, SESION_DESCOMPARTIDA, SESION_ELIMINADA | No |
 | Material de referencia | SESION_REFERENCIA_CARGADA, SESION_REFERENCIA_EDITADA, SESION_REFERENCIA_ELIMINADA | No |
@@ -262,3 +263,29 @@ La primera vez que una docente abre la página de una sesión ajena SHALL quedar
 #### Scenario: Solo ver no activa
 - **WHEN** una docente participante, en una semana, solo abre sesiones del repositorio y las descarga
 - **THEN** no cuenta como activa en esa semana (KPI-01)
+
+### Requirement: Plantilla del SIAGIE completada
+Cada plantilla completada y devuelta SHALL dejar una entrada PLANTILLA_SIAGIE_COMPLETADA con el usuario de la dirección, la sección como entidad y, en el detalle, solo el número del periodo, el año, los cuatro conteos (encontrados, no encontrados, faltantes y reemplazadas) y si se guardó una equivalencia en ese paso, sin nombres de estudiantes, niveles, conclusiones, nombre del archivo ni nombre de la sección del SIAGIE (RN-015). Guardar la equivalencia y la entrada van en la misma transacción. Un archivo rechazado, una elección cancelada o un periodo sin notas no dejan entrada.
+
+#### Scenario: Plantilla completada
+- **WHEN** la dirección completa la plantilla del bimestre 3 de 2.º B con 26 encontrados, 2 no encontrados, 3 faltantes y 4 reemplazadas
+- **THEN** queda una entrada PLANTILLA_SIAGIE_COMPLETADA con su usuario, la entidad `seccion`, el id de 2.º B y el detalle `{"periodo": 3, "anio": 2026, "encontrados": 26, "no_encontrados": 2, "faltantes": 3, "reemplazadas": 4, "equivalencia": false}`
+
+#### Scenario: Con equivalencia nueva
+- **WHEN** la dirección elige 2.º B para TRIUNFADORES y se completa la plantilla
+- **THEN** el detalle dice `"equivalencia": true` y no lleva «TRIUNFADORES»
+
+#### Scenario: Sin entrada
+- **WHEN** el archivo no corresponde a la plantilla, la dirección cancela la elección de sección o el periodo no tiene notas
+- **THEN** no queda entrada PLANTILLA_SIAGIE_COMPLETADA
+
+### Requirement: Equivalencia de sección borrada
+Borrar una equivalencia desde «¿No es esta sección?» SHALL dejar, en la misma transacción, una entrada EQUIVALENCIA_SECCION_BORRADA con el usuario de la dirección, la sección de la I.E. como entidad y, en el detalle, solo el año y el grado, sin el código ni el nombre de la sección del SIAGIE. Un borrado que no encuentra la equivalencia no deja entrada.
+
+#### Scenario: Equivalencia borrada
+- **WHEN** la dirección borra la equivalencia de TRIUNFADORES con 2.º B de 2026
+- **THEN** queda una entrada EQUIVALENCIA_SECCION_BORRADA con su usuario, la entidad `seccion`, el id de 2.º B y el detalle `{"anio": 2026, "grado": 2}`
+
+#### Scenario: Borrado repetido
+- **WHEN** llega otra vez el borrado de la misma equivalencia
+- **THEN** no queda una entrada nueva
