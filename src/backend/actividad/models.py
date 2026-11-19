@@ -73,10 +73,8 @@ CUENTAN_KPI_01 = frozenset(
 )
 
 # Operaciones del catálogo que aún no tienen quién las genere (la prueba de cobertura las salta).
-RESERVADAS: frozenset[Operacion] = frozenset(
-    # Las genera el servicio de exportaciones (US-024/025, parte B).
-    {Operacion.PLANTILLA_SIAGIE_COMPLETADA, Operacion.EQUIVALENCIA_SECCION_BORRADA}
-)
+# Hoy ninguna: cada operación tiene su prueba real (spec «Cada operación tiene su prueba»).
+RESERVADAS: frozenset[Operacion] = frozenset()
 
 
 class RegistroActividad(models.Model):

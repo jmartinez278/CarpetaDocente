@@ -93,9 +93,9 @@ SOBRE_REFERENCIAS = [
 DE_LA_PLANTILLA_SIAGIE = ["PLANTILLA_SIAGIE_COMPLETADA", "EQUIVALENCIA_SECCION_BORRADA"]
 
 
-def test_solo_quedan_reservadas_las_de_la_plantilla_del_siagie():
-    """Las genera el servicio de US-024/025 en su parte B; ahí salen de RESERVADAS."""
-    assert frozenset(DE_LA_PLANTILLA_SIAGIE) == RESERVADAS
+def test_ninguna_operacion_queda_reservada():
+    """Spec «Cada operación tiene su prueba»: el servicio de US-024/025 ya genera las dos."""
+    assert frozenset() == RESERVADAS
 
 
 @pytest.mark.parametrize("operacion", DE_LA_PLANTILLA_SIAGIE)

@@ -18,6 +18,8 @@ _NOTAS = "notas.tests.test_servicios_guardar_hoja"
 _CONSULTAS = "repositorio.tests.test_servicios_consultas"
 _AUTORA = "repositorio.tests.test_servicios_autora"
 _REFERENCIA = "repositorio.tests.test_servicios_referencia"
+_PLANTILLA = "exportaciones.tests.test_servicios_llenar"
+_EQUIVALENCIA = "exportaciones.tests.test_servicios_equivalencia"
 
 ESCENARIOS: dict[Operacion, str] = {
     Operacion.INICIO_SESION: f"{_SESION}::test_ingreso_correcto_deja_inicio_sesion",
@@ -62,6 +64,12 @@ ESCENARIOS: dict[Operacion, str] = {
     ),
     Operacion.NOTAS_GUARDADAS: (
         f"{_NOTAS}::test_camino_ideal_guarda_la_nota_de_ana_quispe_y_deja_notas_guardadas"
+    ),
+    Operacion.PLANTILLA_SIAGIE_COMPLETADA: (
+        f"{_PLANTILLA}::test_plantilla_completada_deja_su_entrada_sin_nombres"
+    ),
+    Operacion.EQUIVALENCIA_SECCION_BORRADA: (
+        f"{_EQUIVALENCIA}::test_borrar_la_propia_deja_equivalencia_seccion_borrada"
     ),
     Operacion.SESION_ENVIADA: (
         "repositorio.tests.test_servicios_enviar::"
