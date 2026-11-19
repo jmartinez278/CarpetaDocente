@@ -21,6 +21,7 @@ pytestmark = [pytest.mark.e2e, pytest.mark.django_db(transaction=True)]
 
 TIPO_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 URL_ENVIO = "**/direccion/plantilla-siagie/"
+URL_BORRAR = "**/direccion/plantilla-siagie/equivalencias/*/borrar/"
 NOMBRE_ARCHIVO = "RegNotas_2_B_B3.xlsx"
 AVISO_BORRADA = (
     "Quitamos la equivalencia. "
@@ -179,6 +180,44 @@ def test_elige_la_seccion_completa_sin_volver_a_elegir_el_archivo_y_la_corrige(i
     expect(page.get_by_role("button", name="¿No es esta sección?")).to_have_count(0)
     expect(page.get_by_role("button", name="Subir plantilla otra vez")).to_be_visible()
     assert not EquivalenciaSeccion.objects.exists()
+
+
+def descarga_viva(page):
+    """El Blob del enlace sigue vivo: ``fetch`` de una URL revocada falla."""
+    return page.evaluate(
+        """() => fetch(document.querySelector("[data-archivo]").href)
+            .then((r) => r.ok, () => false)"""
+    )
+
+
+def test_un_borrado_lento_no_toca_la_descarga_de_la_exportacion_siguiente(inicio):
+    """Hallazgo de Codex (parte D): la respuesta del borrado llega después de otra exportación."""
+    page = inicio
+    retenidas = []
+    page.route(URL_BORRAR, lambda ruta: retenidas.append(ruta))
+    archivo = plantilla(nombre_seccion="TRIUNFADORES")
+    completar_con(page, archivo, "RegNotas_2_TRIUNFADORES_B3.xlsx")
+    dialogo(page).get_by_label("2.º B").check()
+    dialogo(page).get_by_role("button", name="Guardar y completar").click()
+    expect(resumen(page)).to_be_visible()
+
+    with page.expect_request(URL_BORRAR):
+        page.get_by_role("button", name="¿No es esta sección?").click()
+    # La siguiente se completa por el nombre («B»): su resumen no trae «¿No es esta sección?».
+    page.get_by_role("button", name="Subir otra plantilla").click()
+    elegir(page, plantilla(), NOMBRE_ARCHIVO)
+    completar(page).click()
+    expect(page.get_by_role("button", name="¿No es esta sección?")).to_have_count(0)
+    expect(page.get_by_role("link", name="Descargar plantilla")).to_be_visible()
+    assert descarga_viva(page)
+
+    assert len(retenidas) == 1
+    with page.expect_response(URL_BORRAR):
+        retenidas[0].continue_()
+
+    expect(page.get_by_role("link", name="Descargar plantilla")).to_be_visible()
+    expect(page.get_by_text("Quitamos la equivalencia.")).to_have_count(0)
+    assert descarga_viva(page)
 
 
 def test_cancelar_la_eleccion_no_guarda_la_equivalencia(inicio):

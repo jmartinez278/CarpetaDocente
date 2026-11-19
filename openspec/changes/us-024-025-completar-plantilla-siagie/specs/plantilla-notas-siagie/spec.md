@@ -48,15 +48,19 @@ Mientras el archivo sube y se completa, el diálogo SHALL mostrar «Procesando l
 - **THEN** el resumen está listo en 5 s o menos, contando la subida (RNF-003)
 
 ### Requirement: Archivo que no corresponde a la plantilla
-El servidor MUST reconocer la plantilla por su contenido y no por su nombre: un .xlsx de hasta 4 MB con la hoja «Parametros», cuyo código modular y anexo son los de la institución de la dirección, cuyo año académico es un año escolar de la institución y cuyo periodo (por ejemplo «B3») es un periodo de ese año con la organización de la institución, con un grado de PRIMERO a SEXTO en texto, y cuyas hojas de área llevan un código y números de competencia que el catálogo tiene. Si algo de eso no se cumple, no procesa nada y el campo SHALL mostrar «El archivo no corresponde a la plantilla de notas del SIAGIE», la ayuda «Elige el Excel que descargaste en «Periodo por Excel».» y la ruta «En el SIAGIE, ve a Evaluación → Registro de calificaciones → Periodo por Excel.», con el foco en el mensaje y el nombre del archivo a la vista.
+El servidor MUST reconocer la plantilla por su contenido y no por su nombre: un .xlsx de hasta 3 MB con la hoja «Parametros», cuyo código modular y anexo son los de la institución de la dirección, cuyo año académico es un año escolar de la institución y cuyo periodo (por ejemplo «B3») es un periodo de ese año con la organización de la institución, con un grado de PRIMERO a SEXTO en texto, y cuyas hojas de área llevan un código y números de competencia que el catálogo tiene. Si algo de eso no se cumple, no procesa nada y el campo SHALL mostrar «El archivo no corresponde a la plantilla de notas del SIAGIE», la ayuda «Elige el Excel que descargaste en «Periodo por Excel».» y la ruta «En el SIAGIE, ve a Evaluación → Registro de calificaciones → Periodo por Excel.», con el foco en el mensaje y el nombre del archivo a la vista.
 
 #### Scenario: Otro Excel
 - **WHEN** la dirección sube «Listado_2do.xlsx», un Excel sin la hoja «Parametros»
 - **THEN** ve «El archivo no corresponde a la plantilla de notas del SIAGIE» con la ayuda y la ruta, el campo conserva «Listado_2do.xlsx» y puede elegir otro archivo en el mismo diálogo
 
 #### Scenario: Otro tipo con nombre de Excel
-- **WHEN** sube un PDF renombrado como «notas.xlsx», un archivo vacío o uno de más de 4 MB
-- **THEN** el servidor no lo procesa; con más de 4 MB el campo dice «El archivo supera los 4 MB. Elige uno más pequeño.» y en los otros casos, el mensaje de la plantilla
+- **WHEN** sube un PDF renombrado como «notas.xlsx», un archivo vacío o uno de más de 3 MB
+- **THEN** el servidor no lo procesa; con más de 3 MB el campo dice «El archivo supera los 3 MB. Elige uno más pequeño.» y en los otros casos, el mensaje de la plantilla
+
+#### Scenario: La completada no cabe en la respuesta
+- **WHEN** la plantilla completada pasa de 3 MB
+- **THEN** el campo dice «La plantilla completada supera los 3 MB y no se puede descargar. No se guardó ningún cambio.», sin la ayuda del SIAGIE, y no quedan ni la equivalencia nueva ni la entrada en el registro
 
 #### Scenario: Plantilla de otra institución
 - **WHEN** sube una plantilla con otro código modular, u otro anexo

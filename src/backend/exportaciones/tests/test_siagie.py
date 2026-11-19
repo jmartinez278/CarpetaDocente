@@ -138,11 +138,12 @@ def test_un_libro_con_macros_no_se_reconoce():
     _no_se_reconoce(con_macros(generar()))
 
 
-def test_mas_de_4_mb_tiene_su_propio_mensaje():
+def test_mas_de_3_mb_tiene_su_propio_mensaje():
+    assert siagie.LIMITE_BYTES == 3 * 1024 * 1024
     with pytest.raises(siagie.ArchivoDemasiadoGrande) as error:
         siagie.abrir(b"x" * (siagie.LIMITE_BYTES + 1))
 
-    assert str(error.value) == "El archivo supera los 4 MB. Elige uno más pequeño."
+    assert str(error.value) == "El archivo supera los 3 MB. Elige uno más pequeño."
 
 
 def test_el_mensaje_del_rechazo_no_lleva_el_error_de_openpyxl():

@@ -332,6 +332,32 @@ def test_con_equivalencia_nueva_el_detalle_lo_dice_sin_el_nombre_del_siagie(
     assert resumen.equivalencia_id == EquivalenciaSeccion.objects.get().pk
 
 
+def test_una_completada_que_no_cabe_en_la_respuesta_no_guarda_nada(
+    direccion, notas_b3, secciones_de_segundo, monkeypatch
+):
+    """En base64 debe caber en los 4,5 MB de una respuesta de Vercel; si no, nada queda guardado:
+    ni la equivalencia nueva ni la entrada (hallazgo de Codex de la parte D)."""
+    pesada = b"0" * (servicios.siagie.LIMITE_BYTES + 1)
+    monkeypatch.setattr(servicios.siagie.Libro, "guardar", lambda libro: pesada)
+
+    with pytest.raises(servicios.CompletadaDemasiadoGrande) as error:
+        completar(direccion, secciones_de_segundo[0].pk, nombre_seccion="TRIUNFADORES")
+
+    assert str(error.value) == (
+        "La plantilla completada supera los 3 MB y no se puede descargar. "
+        "No se guardó ningún cambio."
+    )
+    assert not EquivalenciaSeccion.objects.exists()
+    assert not RegistroActividad.objects.exists()
+
+
+def test_una_completada_justo_en_el_limite_se_entrega(direccion, notas_b3, monkeypatch):
+    justa = b"0" * servicios.siagie.LIMITE_BYTES
+    monkeypatch.setattr(servicios.siagie.Libro, "guardar", lambda libro: justa)
+
+    assert completar(direccion).contenido == justa
+
+
 def test_un_archivo_rechazado_no_deja_entrada(direccion, notas_b3):
     with pytest.raises(servicios.PlantillaNoReconocida):
         completar(direccion, codigo_modular="0999992")

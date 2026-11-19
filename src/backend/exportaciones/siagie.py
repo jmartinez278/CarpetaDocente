@@ -17,11 +17,12 @@ from openpyxl import load_workbook
 from openpyxl.cell.cell import MergedCell
 
 NO_ES_LA_PLANTILLA = "El archivo no corresponde a la plantilla de notas del SIAGIE"
-DEMASIADO_GRANDE = "El archivo supera los 4 MB. Elige uno más pequeño."
+DEMASIADO_GRANDE = "El archivo supera los 3 MB. Elige uno más pequeño."
 
-# D9: el límite de cuerpo de Vercel, como US-010; lo descomprimido y la cantidad de partes se
-# revisan antes de abrir el libro.
-LIMITE_BYTES = 4 * 1024 * 1024
+# D9: 3 MB porque el libro vuelve en base64 (×4/3, ~4,2 MB) y una respuesta de Vercel admite
+# 4,5 MB; la completada tiene el mismo tope (``servicios.completar_plantilla``). Lo descomprimido
+# y la cantidad de partes se revisan antes de abrir el libro.
+LIMITE_BYTES = 3 * 1024 * 1024
 LIMITE_DESCOMPRIMIDO = 40 * 1024 * 1024
 LIMITE_PARTES = 300
 FILAS_MAXIMAS = 60
@@ -54,7 +55,7 @@ class PlantillaNoReconocida(Exception):
 
 
 class ArchivoDemasiadoGrande(Exception):
-    """Más de 4 MB: tiene su propio mensaje (spec «Otro tipo con nombre de Excel»)."""
+    """Más de 3 MB: tiene su propio mensaje (spec «Otro tipo con nombre de Excel»)."""
 
     def __init__(self):
         super().__init__(DEMASIADO_GRANDE)

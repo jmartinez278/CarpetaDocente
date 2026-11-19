@@ -14,7 +14,7 @@
 
 - **[El SIAGIE rechaza el archivo]** (zona de cuidado) → D8 y D9: solo se escriben valores en celdas que ya existen; no se crean hojas, estilos ni validaciones; se conserva el nombre del archivo. La aceptación real solo se confirma cargando una plantilla llena: antes del piloto, abrirla en Excel y LibreOffice (RNF-006) y que la dirección la cargue una vez (Workflow follow-up). Una prueba de ida y vuelta fija lo que openpyxl conserva.
 - **[Datos de menores]** (RN-015, Ley 29733, zona de cuidado) → D3, D4 y D11: el archivo vive solo en la memoria de la petición; ni se guarda ni se registra. Los nombres de «No encontrados» van solo en la respuesta. Ningún `logger` ni mensaje de excepción lleva celdas del libro. Las pruebas generan plantillas ficticias (D12); la muestra de `insumos/` nunca entra al repo.
-- **[Archivo hostil]** → D9: un .xlsx es un zip con XML. Límite de 4 MB, límite del tamaño descomprimido y de la cantidad de partes antes de abrirlo, `defusedxml` (la documentación de openpyxl lo pide para *billion laughs* y *quadratic blowup*), sin macros. Cualquier fallo al abrir da el mensaje de D3, nunca un 500.
+- **[Archivo hostil]** → D9: un .xlsx es un zip con XML. Límite de 3 MB (para que la respuesta en base64 quepa en Vercel), límite del tamaño descomprimido y de la cantidad de partes antes de abrirlo, `defusedxml` (la documentación de openpyxl lo pide para *billion laughs* y *quadratic blowup*), sin macros. Cualquier fallo al abrir da el mensaje de D3, nunca un 500.
 - **[Escribir la nota de otro estudiante o de otra sección]** (notas) → D5 a D7: la sección sale de la institución de la dirección y del año y grado de la plantilla; las notas, de una consulta filtrada por esa sección y ese periodo; los nombres se cruzan exactos tras normalizar, sin parecidos, y un homónimo no se toca.
 - **[Equivalencia mal elegida]** → D5 y D13: queda guardada y dirige las siguientes plantillas. La señal visible es el resumen (sección de la I.E. y muchos «no encontrados»); «¿No es esta sección?» la borra y oculta la descarga del archivo equivocado. La alerta automática por muchos «no encontrados» queda en la deuda.
 - **[Permisos de la primera pantalla de la dirección]** (zona de cuidado) → D1: la vista usa `RolRequeridoMixin` con DIRECCION y toma la institución del usuario, nunca de la petición. Pruebas de la matriz para la ruta nueva.
@@ -64,7 +64,7 @@
 ### D5. Sección y equivalencia
 - Modelo `EquivalenciaSeccion` (`exportaciones`, tabla `equivalencia_seccion`): `seccion` `OneToOneField` (CASCADE), `anio_escolar` FK (CASCADE), `grado`, `codigo_siagie` (`CharField(4)`), `nombre_siagie` (`CharField(60)`, normalizado), `creado_por` FK (SET_NULL), `creado_en`. `UniqueConstraint(anio_escolar, grado, codigo_siagie, nombre_siagie)`. El servicio comprueba que la sección sea de ese año y grado.
 - Orden: 1) equivalencia guardada; 2) una sola sección del grado cuyo nombre normalizado es el de la plantilla; 3) elegir. Sin secciones del grado → `SinSeccionesDelGrado`.
-- Guardar la equivalencia, comprobar que hay notas y registrar van en un `transaction.atomic()`: sin notas, no queda la equivalencia. Una carrera (dos sesiones guardan a la vez) da `IntegrityError` dentro de un *savepoint*: si la existente apunta a la misma sección se sigue; si no, `SeccionNoValida`.
+- Guardar la equivalencia, comprobar que hay notas, medir la completada (D9) y registrar van en un `transaction.atomic()`: sin notas, o si la completada no cabe en la respuesta, no queda la equivalencia. Una carrera (dos sesiones guardan a la vez) da `IntegrityError` dentro de un *savepoint*: si la existente apunta a la misma sección se sigue; si no, `SeccionNoValida`.
 - Admin de solo lectura (sin agregar, cambiar ni borrar), para ver qué está guardado.
 
 ### D6. Competencias por número
@@ -85,7 +85,7 @@
 - Observaciones (título): no encontrados > 0 o faltantes > 0.
 
 ### D9. Seguridad y límites del archivo
-- De 1 byte a 4 194 304 bytes (límite de cuerpo de Vercel, como US-010); `zipfile.is_zipfile`; suma de `file_size` de las partes ≤ 40 MB y ≤ 300 partes; tipo de contenido del libro .xlsx (no `macroEnabled`).
+- De 1 byte a 3 145 728 bytes (3 MB): el libro vuelve en base64 (×4/3, ~4,2 MB) y una respuesta de Vercel admite 4,5 MB (hallazgo de Codex, parte D). La completada tiene el mismo tope: se mide dentro del `atomic()` de D5, antes de registrar, y si lo pasa → `CompletadaDemasiadoGrande` (400, sin ayuda del SIAGIE) sin equivalencia ni entrada; `zipfile.is_zipfile`; suma de `file_size` de las partes ≤ 40 MB y ≤ 300 partes; tipo de contenido del libro .xlsx (no `macroEnabled`).
 - `load_workbook(..., data_only=False, keep_vba=False)`; `defusedxml` instalado (openpyxl lo usa solo). Cualquier excepción al abrir o leer → `PlantillaNoReconocida`, sin registrar su texto.
 - `openpyxl` y `defusedxml` en `pyproject.toml` (Context7 para la API de openpyxl en la parte B).
 

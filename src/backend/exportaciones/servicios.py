@@ -27,6 +27,9 @@ from notas.servicios import CON_CONCLUSION, notas_faltantes
 SECCION_NO_VALIDA = "La sección elegida no es válida. Elige una de la lista."
 SIN_NOTAS = "No hay notas para completar en este periodo"
 EQUIVALENCIA_INEXISTENTE = "Esta equivalencia ya no existe."
+COMPLETADA_GRANDE = (
+    "La plantilla completada supera los 3 MB y no se puede descargar. No se guardó ningún cambio."
+)
 COMPLETADA = "Plantilla completada"
 CON_OBSERVACIONES = "Plantilla completada con observaciones"
 PERIODO_SIAGIE = re.compile(r"^B([1-4])$")
@@ -75,6 +78,14 @@ class SinNotasEnElPeriodo(Exception):
 
     def __init__(self):
         super().__init__(SIN_NOTAS)
+
+
+class CompletadaDemasiadoGrande(Exception):
+    """La completada pasa de ``siagie.LIMITE_BYTES``: en base64 no cabría en la respuesta de
+    Vercel, así que nada se guarda (D4, D9)."""
+
+    def __init__(self):
+        super().__init__(COMPLETADA_GRANDE)
 
 
 # --- D2 y D6. Reconocer ---
@@ -369,9 +380,10 @@ def completar_plantilla(usuario, contenido, seccion_id=None):
     """Reconoce la plantilla, resuelve su sección, la llena y registra (D1).
 
     Devuelve el ``Resumen`` o lanza ``ArchivoDemasiadoGrande``, ``PlantillaNoReconocida``,
-    ``SinSeccionesDelGrado``, ``EligeSeccion``, ``SeccionNoValida`` o ``SinNotasEnElPeriodo``.
-    Guardar la equivalencia, comprobar las notas y registrar van en un ``atomic()``: sin notas,
-    la equivalencia nueva no queda (D5).
+    ``SinSeccionesDelGrado``, ``EligeSeccion``, ``SeccionNoValida``, ``SinNotasEnElPeriodo`` o
+    ``CompletadaDemasiadoGrande``. Guardar la equivalencia, comprobar las notas, medir la
+    completada y registrar van en un ``atomic()``: sin notas, o si la completada no cabe en la
+    respuesta, la equivalencia nueva no queda (D5).
     """
     plantilla = reconocer(usuario, siagie.abrir(contenido))
     resuelta = resolver_seccion(plantilla, seccion_id)
@@ -384,6 +396,9 @@ def completar_plantilla(usuario, contenido, seccion_id=None):
             raise SinNotasEnElPeriodo
         encontrados, no_encontrados, reemplazadas = _llenar(plantilla, seccion, notas)
         faltantes = _faltantes(seccion, periodo)
+        contenido = plantilla.libro.guardar()
+        if len(contenido) > siagie.LIMITE_BYTES:
+            raise CompletadaDemasiadoGrande
         registrar(
             usuario,
             Operacion.PLANTILLA_SIAGIE_COMPLETADA,
@@ -409,7 +424,7 @@ def completar_plantilla(usuario, contenido, seccion_id=None):
         faltantes=faltantes,
         reemplazadas=reemplazadas,
         equivalencia_id=resuelta.equivalencia.pk if resuelta.equivalencia else None,
-        contenido=plantilla.libro.guardar(),
+        contenido=contenido,
     )
 
 

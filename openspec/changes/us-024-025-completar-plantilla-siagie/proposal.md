@@ -17,7 +17,7 @@ Se aplican tal cual las decisiones 1 a 13 de `insumos/US-024/decisiones.md`, con
 - **Escritura de una nota**: el nivel y la conclusión juntos; con AD o A, la conclusión de la celda queda vacía. Una celda cuenta como reemplazada si tenía otro valor, también una fórmula (design D8).
 - **«¿No es esta sección?»**: si la sección salió de una equivalencia, el resumen permite borrarla; la próxima plantilla vuelve a preguntar. Operación nueva EQUIVALENCIA_SECCION_BORRADA (design D13).
 - **Título del resumen**: «Plantilla completada con observaciones» si hay no encontrados o faltan notas; si no, «Plantilla completada».
-- **Seguridad del archivo**: .xlsx reconocido por su contenido, hasta 4 MB y con límite de tamaño descomprimido; `defusedxml` entra junto con `openpyxl` (design D9).
+- **Seguridad del archivo**: .xlsx reconocido por su contenido, hasta 3 MB (la completada vuelve en base64 y debe caber en una respuesta de Vercel) y con límite de tamaño descomprimido; `defusedxml` entra junto con `openpyxl` (design D9).
 - **BREAKING (base de datos)**: columna `institucion.anexo` y tabla nueva de equivalencias.
 
 **Fuera de alcance:**

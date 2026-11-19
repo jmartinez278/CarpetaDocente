@@ -172,13 +172,29 @@ def error_de(respuesta):
     return json.loads(respuesta.content)
 
 
-def test_mas_de_4_mb_tiene_su_propio_mensaje(cliente, notas_b3):
-    cuerpo = error_de(subir(cliente, b"0" * (4 * 1024 * 1024 + 1)))
+def test_mas_de_3_mb_tiene_su_propio_mensaje(cliente, notas_b3):
+    """3 MB: en base64 la completada aún cabe en los 4,5 MB de una respuesta de Vercel."""
+    cuerpo = error_de(subir(cliente, b"0" * (3 * 1024 * 1024 + 1)))
 
     assert cuerpo == {
-        "error": "El archivo supera los 4 MB. Elige uno más pequeño.",
+        "error": "El archivo supera los 3 MB. Elige uno más pequeño.",
         "ayuda_siagie": False,
     }
+
+
+def test_una_completada_que_no_cabe_en_la_respuesta_es_un_400(cliente, notas_b3, monkeypatch):
+    monkeypatch.setattr(
+        servicios.siagie.Libro, "guardar", lambda libro: b"0" * (3 * 1024 * 1024 + 1)
+    )
+
+    cuerpo = error_de(subir(cliente, plantilla()))
+
+    assert cuerpo == {
+        "error": "La plantilla completada supera los 3 MB y no se puede descargar. "
+        "No se guardó ningún cambio.",
+        "ayuda_siagie": False,
+    }
+    assert not completadas().exists()
 
 
 @pytest.mark.parametrize("contenido", [b"%PDF-1.4 no es un libro", b""])

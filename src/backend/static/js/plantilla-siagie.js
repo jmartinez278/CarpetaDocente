@@ -14,10 +14,10 @@
   const principal = document.getElementById("contenido");
   if (!dialogo || !principal) return;
 
-  const TAMANO_MAXIMO = 4 * 1024 * 1024;
+  const TAMANO_MAXIMO = 3 * 1024 * 1024;
   const TIPO_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   const MENSAJES = {
-    grande: "El archivo supera los 4 MB. Elige uno más pequeño.",
+    grande: "El archivo supera los 3 MB. Elige uno más pequeño.",
     corte: "Se cortó la conexión.",
     corteDetalle: "Tu archivo sigue aquí: revisa tu conexión e inténtalo de nuevo.",
     quitar: "No pudimos quitar la equivalencia. Inténtalo de nuevo.",
@@ -164,7 +164,8 @@
     if (!elegido) return;
     limpiarErrores();
     if (elegido.size > TAMANO_MAXIMO) {
-      // Solo una ayuda: Vercel corta los cuerpos de más de 4,5 MB antes de que lleguen a Django.
+      // Solo una ayuda: el servidor tiene el mismo tope (3 MB, para que la respuesta en base64
+      // quepa en los 4,5 MB de Vercel).
       archivo = null;
       pintarArchivo(elegido, true);
       mostrarError({ titulo: MENSAJES.grande });
@@ -310,7 +311,8 @@
   });
 
   // «¿No es esta sección?» (D13): borra la equivalencia y cambia el panel del archivo. Sin este script, el formulario
-  // se envía solo y el servidor redirige al inicio.
+  // se envía solo y el servidor redirige al inicio. Cada borrado queda atado al panel de su resumen: si mientras
+  // tanto llegó otro resumen, la respuesta ya no toca nada (ni el panel ni el Blob del resumen nuevo).
   document.addEventListener("submit", (evento) => {
     const formulario = evento.target.closest("[data-borrar-equivalencia]");
     if (!formulario) return;
@@ -318,13 +320,14 @@
     const boton = $("button", formulario);
     if (boton.disabled) return;
     boton.disabled = true;
+    const panel = $("[data-panel-archivo]", principal);
 
     const peticion = new XMLHttpRequest();
     peticion.open("POST", formulario.action);
     peticion.setRequestHeader("X-CSRFToken", csrf);
     peticion.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     peticion.addEventListener("load", () => {
-      const panel = $("[data-panel-archivo]", principal);
+      if (!panel.isConnected) return;
       if (peticion.status >= 200 && peticion.status < 300) {
         const plantilla = document.createElement("template");
         plantilla.innerHTML = peticion.responseText;
@@ -338,9 +341,9 @@
       }
     });
     for (const fallo of ["error", "abort", "timeout"]) {
-      peticion.addEventListener(fallo, () =>
-        fallaBorrar($("[data-panel-archivo]", principal), boton, MENSAJES.quitar),
-      );
+      peticion.addEventListener(fallo, () => {
+        if (panel.isConnected) fallaBorrar(panel, boton, MENSAJES.quitar);
+      });
     }
     peticion.send();
   });

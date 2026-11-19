@@ -71,7 +71,7 @@ class CompletarPlantillaView(DireccionMixin, View):
             resumen = servicios.completar_plantilla(
                 request.user, contenido, request.POST.get("seccion")
             )
-        except servicios.ArchivoDemasiadoGrande as error:
+        except (servicios.ArchivoDemasiadoGrande, servicios.CompletadaDemasiadoGrande) as error:
             return _error(str(error))
         except servicios.PlantillaNoReconocida as error:
             return _error(str(error), ayuda_siagie=True)
