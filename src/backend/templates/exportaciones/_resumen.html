@@ -1,0 +1,41 @@
+{% comment %}
+Resumen del llenado (US-024/025, D4, D8 y D13). Fragmento que reemplaza el contenido de <main>; los bocetos y las
+clases finales llegan con la parte D. Recibe: resumen, archivo_base64, nombre_archivo y periodo_texto. Los nombres
+no encontrados van escapados por la plantilla y solo aquí: nunca se guardan.
+{% endcomment %}
+<div data-paso="resumen">
+  <a href="{% url 'direccion:inicio' %}">Inicio de dirección</a>
+  <h1 tabindex="-1">{{ resumen.titulo }}</h1>
+  <p>Sección de la I.E. {{ resumen.seccion.grado }}.º {{ resumen.seccion.nombre }} · {{ periodo_texto }}</p>
+  <p>Sección en el SIAGIE {{ resumen.grado_siagie }}.º {{ resumen.nombre_siagie }}</p>
+  {% if resumen.equivalencia_id %}
+  <form method="post" action="{% url 'plantilla_siagie:borrar' resumen.equivalencia_id %}" data-borrar-equivalencia>
+    {% csrf_token %}
+    <button type="submit">¿No es esta sección?</button>
+  </form>
+  {% endif %}
+  <section aria-labelledby="resultado-titulo">
+    <h2 id="resultado-titulo">Resultado del llenado</h2>
+    <ul>
+      <li>{{ resumen.encontrados }} estudiantes encontrados</li>
+      <li>{{ resumen.no_encontrados|length }} no encontrados</li>
+      <li>Faltan {{ resumen.faltantes }} notas</li>
+      <li>{{ resumen.reemplazadas }} celdas reemplazadas</li>
+    </ul>
+  </section>
+  {% if resumen.no_encontrados %}
+  <section aria-labelledby="no-encontrados-titulo">
+    <h2 id="no-encontrados-titulo">Estudiantes no encontrados</h2>
+    <p>Sus filas quedaron intactas en la plantilla.</p>
+    <ul>
+      {% for nombre in resumen.no_encontrados %}<li>{{ nombre }}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  <section aria-labelledby="salida-titulo" data-panel-archivo>
+    <h2 id="salida-titulo">Archivo de salida</h2>
+    <p>Plantilla de notas del SIAGIE (.xlsx)</p>
+    <a href="#" data-archivo="{{ archivo_base64 }}" download="{{ nombre_archivo }}">Descargar plantilla</a>
+    <button type="button" data-subir-otra>Subir otra plantilla</button>
+  </section>
+</div>

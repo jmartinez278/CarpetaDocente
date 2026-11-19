@@ -1,0 +1,6 @@
+{% extends "marco.html" %}
+{% block titulo %}Equivalencia no encontrada · CarpetaDocente{% endblock %}
+{% block principal %}
+{% include "rb/mensaje.html" with tipo="error" titulo=mensaje alerta=True %}
+<a href="{% url 'direccion:inicio' %}">Inicio de dirección</a>
+{% endblock %}

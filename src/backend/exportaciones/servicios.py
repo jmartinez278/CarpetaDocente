@@ -419,7 +419,8 @@ def completar_plantilla(usuario, contenido, seccion_id=None):
 def borrar_equivalencia(usuario, equivalencia_id):
     """Borra la equivalencia de la institución de ``usuario`` y registra
     EQUIVALENCIA_SECCION_BORRADA en la misma transacción (D13). Si no es de su institución o ya
-    no existe, ``EquivalenciaInexistente`` sin entrada."""
+    no existe, ``EquivalenciaInexistente`` sin entrada. Devuelve la equivalencia borrada (para
+    el aviso de la vista)."""
     institucion_id = getattr(usuario, "institucion_id", None)
     equivalencia_id = _como_id(equivalencia_id)
     with transaction.atomic():
@@ -443,3 +444,4 @@ def borrar_equivalencia(usuario, equivalencia_id):
             entidad_id=seccion_id,
             detalle=detalle,
         )
+    return equivalencia

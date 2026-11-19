@@ -1,0 +1,20 @@
+{% comment %}
+Paso «Elige la sección» (US-024/025, D3 y D10). Fragmento que reemplaza el cuerpo del diálogo; los bocetos y las clases
+finales llegan con la parte D. Recibe: grado, nombre_siagie, periodo_texto y opciones (secciones sin otra equivalencia).
+{% endcomment %}
+<div data-paso="seccion">
+  <h2 id="plantilla-seccion-titulo" tabindex="-1">Elige la sección</h2>
+  <div>
+    <p>Sección en la plantilla del SIAGIE</p>
+    <p>{{ grado }}.º {{ nombre_siagie }} · {{ periodo_texto }}</p>
+  </div>
+  <fieldset>
+    <legend>Sección de tu I.E.</legend>
+    {% for seccion in opciones %}
+    <label><input type="radio" name="seccion" value="{{ seccion.pk }}"> {{ seccion.grado }}.º {{ seccion.nombre }}</label>
+    {% endfor %}
+  </fieldset>
+  <p>Guardaremos esta equivalencia para las próximas plantillas de {{ grado }}.º {{ nombre_siagie }}.</p>
+  <button type="submit" disabled>Guardar y completar</button>
+  <button type="button" data-cancelar>Cancelar</button>
+</div>
