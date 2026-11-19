@@ -1,10 +1,15 @@
 {% extends "marco.html" %}
+{% load static %}
 {% comment %}
 Inicio de la dirección en el marco del rebrand (rebrand-cierre, D1), solo con DESIGN.md: barra de la portada (sin ☰ ni
-título), el encabezado con el marcado de la portada y los consolidados como estado vacío hasta US-040.
+título), el encabezado con el marcado de la portada, el bloque «Plantilla de notas del SIAGIE» (US-024/025, D10) y los
+consolidados como estado vacío hasta US-040. El diálogo de subida va aquí mismo (sin carga extra); plantilla-siagie.js lo
+abre y, al completar, cambia el contenido de <main> por el resumen sin tocar el diálogo.
 {% endcomment %}
 
 {% block titulo %}Inicio · CarpetaDocente{% endblock %}
+
+{% block scripts %}<script src="{% static 'js/plantilla-siagie.js' %}" defer></script>{% endblock %}
 
 {% block clase_barra %} appbar--portada{% endblock %}
 
@@ -15,8 +20,18 @@ título), el encabezado con el marcado de la portada y los consolidados como est
   <h1><span class="saludo">Hola,</span> <span class="docente">{{ user.get_full_name|default:user.username }}</span></h1>
   <p>Dirección</p>
 </div>
-<section aria-labelledby="consolidados-titulo">
+<section class="inicio-tarea" aria-labelledby="plantilla-titulo-inicio">
+  <div class="inicio-icono">{% include "iconos/file-text.svg" with clase=None %}</div>
+  <div class="inicio-texto">
+    <h2 id="plantilla-titulo-inicio">Plantilla de notas del SIAGIE</h2>
+    <p>Completa la plantilla de una sección con las notas de CarpetaDocente.</p>
+    <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Para completar la plantilla necesitas activar JavaScript." %}</noscript>
+  </div>
+  <button class="btn btn--primary" type="button" data-abrir-plantilla>Subir plantilla</button>
+</section>
+<section class="inicio-consolidados" aria-labelledby="consolidados-titulo">
   <h2 id="consolidados-titulo">Consolidados</h2>
   {% include "rb/estado_vacio.html" with icono="inbox" texto="Los consolidados de notas y asistencia estarán aquí en una próxima versión." %}
 </section>
+{% include "exportaciones/_dialogo.html" %}
 {% endblock %}

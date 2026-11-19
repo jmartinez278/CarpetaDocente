@@ -14,6 +14,7 @@
 @import "./rebrand/pantallas/asistencia.css";
 @import "./rebrand/pantallas/competencias.css";
 @import "./rebrand/pantallas/notas.css";
+@import "./rebrand/pantallas/plantilla-siagie.css";
 
 /* Solo las plantillas del marco nuevo y las pantallas ya migradas (rutas relativas a este
    archivo). Cada pantalla del rebrand suma aquí su línea. */
@@ -26,6 +27,7 @@
 @source "../../backend/templates/institucion/estudiantes";
 @source "../../backend/templates/cuentas/portada_docente.html";
 @source "../../backend/templates/direccion/inicio.html";
+@source "../../backend/templates/exportaciones";
 @source "../../backend/templates/asistencia";
 @source "../../backend/templates/notas/competencias.html";
 @source "../../backend/templates/notas/_area.html";

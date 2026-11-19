@@ -879,7 +879,11 @@ def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
     assert re.search(r'<span class="saludo">Hola,</span>', inicio_direccion)
     assert re.search(r'<span class="docente">Rosa Huamán</span>', inicio_direccion)
     assert re.search(r"<p>Dirección</p>", inicio_direccion)
-    seccion = re.search(r"<section\b.*?</section>", inicio_direccion, re.DOTALL)
+    seccion = re.search(
+        r'<section\b[^>]*aria-labelledby="consolidados-titulo".*?</section>',
+        inicio_direccion,
+        re.DOTALL,
+    )
     assert seccion, "no hay sección de consolidados"
     assert re.search(r"<h2\b[^>]*>Consolidados</h2>", seccion.group(0))
     assert re.search(r'<div class="empty">', seccion.group(0))
@@ -896,11 +900,43 @@ def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_portada_js(inicio_direcci
         [
             "/static/js/notas-borrador.js",
             "/static/js/menu.js",
+            "/static/js/plantilla-siagie.js",
             "/static/js/bfcache.js",
             "/static/js/marco.js",
         ]
     )
     assert "htmx" not in inicio_direccion.lower()
+
+
+def test_la_direccion_ve_la_plantilla_del_siagie_entre_el_saludo_y_los_consolidados(
+    inicio_direccion,
+):
+    """Spec pantallas-de-inicio, «Acceso a la plantilla del SIAGIE»."""
+    bloque = re.search(
+        r'<section\b[^>]*aria-labelledby="plantilla-titulo-inicio".*?</section>',
+        inicio_direccion,
+        re.DOTALL,
+    )
+    assert bloque, "no hay bloque de la plantilla del SIAGIE"
+    assert re.search(r"<h2\b[^>]*>Plantilla de notas del SIAGIE</h2>", bloque.group(0))
+    assert "Completa la plantilla de una sección con las notas de CarpetaDocente." in texto(
+        bloque.group(0)
+    )
+    boton = re.search(
+        r"<button\b[^>]*data-abrir-plantilla[^>]*>(.*?)</button>", bloque.group(0), re.DOTALL
+    )
+    assert boton, "«Subir plantilla» es un botón que abre el diálogo"
+    assert texto(boton.group(1)) == "Subir plantilla"
+    saludo = inicio_direccion.index('<span class="saludo">')
+    consolidados = inicio_direccion.index('id="consolidados-titulo"')
+    assert saludo < inicio_direccion.index(bloque.group(0)) < consolidados
+
+
+def test_el_inicio_de_la_direccion_trae_el_dialogo_de_subida_cerrado(inicio_direccion):
+    dialogo = re.search(r'<dialog\b[^>]*id="plantilla-siagie"[^>]*>', inicio_direccion)
+    assert dialogo, "el diálogo va en la misma plantilla, sin carga extra"
+    assert "open" not in dialogo.group(0).split()
+    assert "Sube la plantilla del SIAGIE" in inicio_direccion
 
 
 # --- Menú de la cuenta (spec cierre-sesion, "Menú de la cuenta"; design.md de US-002, D5) ---

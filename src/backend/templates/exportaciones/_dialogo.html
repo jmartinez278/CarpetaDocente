@@ -1,0 +1,7 @@
+{% comment %}
+Diálogo «Sube la plantilla del SIAGIE» (spec plantilla-notas-siagie; US-024/025, D10): rb/dialogo.html de hoja, el mismo
+patrón de «Subir una sesión» (US-010). Cuerpo en _dialogo_cuerpo.html y pie en _dialogo_pie.html. plantilla-siagie.js lo
+abre con showModal(), guarda este marcado para que cada apertura sea un formulario nuevo y cambia el cuerpo y el pie por
+el paso «Elige la sección» (_seccion.html) cuando la plantilla no trae una sección conocida.
+{% endcomment %}
+{% include "rb/dialogo.html" with id="plantilla-siagie" variante="hoja" titulo="Sube la plantilla del SIAGIE" titulo_id="plantilla-titulo" descripcion="Sube una plantilla de notas en Excel (.xlsx) por sección." descripcion_id="plantilla-ayuda" cuerpo="exportaciones/_dialogo_cuerpo.html" pie="exportaciones/_dialogo_pie.html" marca_cuerpo=True %}

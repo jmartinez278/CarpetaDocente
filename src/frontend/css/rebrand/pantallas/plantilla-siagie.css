@@ -1,0 +1,344 @@
+/* Plantilla de notas del SIAGIE (US-024/025, D10), del boceto aprobado (prototipos-cd/US-024: index, subida, procesando,
+   error, seccion-a y resumen-b). El bloque del inicio de la dirección, el diálogo «Sube la plantilla del SIAGIE», el paso
+   «Elige la sección» y el resumen del llenado. Solo tokens de DESIGN.md; lo que toca a los componentes compartidos (el
+   pie del diálogo, el botón deshabilitado, la barra) queda acotado a #plantilla-siagie. El botón de tema del boceto es de
+   T-04 y no está aquí. */
+
+@layer components {
+  /* --- Inicio de la dirección: el bloque de la plantilla --- */
+
+  .inicio-tarea {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-5);
+    padding: var(--s-5);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+  }
+
+  .inicio-icono {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    background: var(--folder);
+    border-radius: var(--r-md);
+  }
+
+  .inicio-icono .icono {
+    width: 28px;
+    height: 28px;
+  }
+
+  .inicio-texto p {
+    margin-top: var(--s-1);
+    color: var(--muted);
+  }
+
+  .inicio-consolidados {
+    margin-top: var(--s-6);
+  }
+
+  .inicio-consolidados h2 {
+    margin-bottom: var(--s-3);
+  }
+
+  /* --- Diálogo de subida --- */
+
+  #plantilla-siagie .ruta-siagie {
+    margin-top: var(--s-2);
+    color: var(--muted);
+  }
+
+  #plantilla-siagie .ruta-siagie[hidden] {
+    display: none;
+  }
+
+  #plantilla-siagie .file-control .small,
+  #plantilla-siagie .file-control-texto {
+    overflow-wrap: anywhere;
+  }
+
+  /* Sin la casilla de elegir mientras procesa: el cursor no promete nada. */
+  #plantilla-siagie .file-control:has(.file-control-input:disabled) .file-control-elegir {
+    cursor: default;
+  }
+
+  #plantilla-siagie .file-control-input {
+    margin: 0;
+  }
+
+  #plantilla-siagie .btn:disabled {
+    color: var(--muted);
+    background: var(--g-alt);
+    border-color: var(--line);
+    cursor: default;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Después de la subida el servidor aún trabaja: la barra sin valor es indeterminada, con una marca fija en --gold
+     (sin animar, regla 3 de DESIGN.md). */
+  #plantilla-siagie .progress progress:indeterminate::-webkit-progress-bar {
+    background: var(--line);
+    border-inline-start: 3ch solid var(--gold);
+  }
+
+  /* El paso «Elige la sección» es un formulario que no pinta caja: su cabecera, cuerpo y pie siguen siendo hijos de la
+     columna del diálogo. */
+  .dialog-paso {
+    display: contents;
+  }
+
+  @media (min-width: 700px) {
+    #plantilla-siagie .dialog-acciones .btn {
+      flex: 0 1 auto;
+    }
+  }
+
+  /* --- Paso «Elige la sección» --- */
+
+  .origen-seccion {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    margin-bottom: var(--s-4);
+    padding: var(--s-3) var(--s-4);
+    background: var(--folder);
+    border-radius: var(--r-md);
+  }
+
+  .origen-seccion .icono {
+    flex: none;
+    color: var(--action);
+  }
+
+  .origen-seccion > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .origen-seccion p + p {
+    margin-top: var(--s-1);
+  }
+
+  .secciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-2);
+    margin-top: var(--s-2);
+  }
+
+  .seccion-opcion {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 48px;
+    min-width: var(--touch-min);
+    padding: var(--s-2) var(--s-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+  }
+
+  .seccion-opcion:has(input:checked) {
+    background: var(--sel-bg);
+    border-color: var(--action);
+    box-shadow: inset 0 0 0 1px var(--action);
+  }
+
+  .seccion-opcion:has(input:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .seccion-opcion input {
+    flex: none;
+    margin: 0;
+    accent-color: var(--action);
+  }
+
+  .equivalencia-ayuda {
+    margin-top: var(--s-3);
+    color: var(--muted);
+  }
+
+  /* --- Resumen del llenado --- */
+
+  .resultado-pagina {
+    padding-top: var(--s-3);
+  }
+
+  .resultado-cabecera {
+    margin-bottom: var(--s-5);
+  }
+
+  .resultado-cabecera .regresar {
+    margin: 0 0 var(--s-3);
+  }
+
+  .resultado-cabecera h1 {
+    margin-bottom: var(--s-2);
+  }
+
+  .resultado-cabecera p + p {
+    margin-top: var(--s-1);
+  }
+
+  .resultado-seccion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1) var(--s-3);
+    margin-bottom: var(--s-1);
+  }
+
+  .periodo-resultado {
+    white-space: nowrap;
+  }
+
+  .resultado-panel {
+    min-width: 0;
+    padding: var(--s-5);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+  }
+
+  .resultado-panel > h2 {
+    margin-bottom: var(--s-3);
+  }
+
+  .resumen-metricas {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+
+  .resumen-metricas li {
+    display: grid;
+    gap: var(--s-1);
+    align-content: start;
+    min-width: 0;
+    padding-top: var(--s-2);
+    border-top: 1px solid var(--line);
+  }
+
+  .resumen-cifra {
+    font-size: var(--text-count);
+    font-weight: var(--display-weight);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--leading-count);
+  }
+
+  .resumen-prefijo {
+    font-size: var(--text-body);
+    font-weight: var(--weight-body);
+  }
+
+  .resultado-bajo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+    gap: var(--s-4);
+    align-items: start;
+    margin-top: var(--s-4);
+  }
+
+  .resultado-bajo--limpio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nombres {
+    min-width: 0;
+    padding: var(--s-4);
+    color: var(--warn-ink);
+    background: var(--warn-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+  }
+
+  .nombres h3 {
+    display: flex;
+    gap: var(--s-2);
+    align-items: baseline;
+  }
+
+  .nombres .icono {
+    align-self: center;
+    width: 18px;
+    height: 18px;
+  }
+
+  .nombres p {
+    margin-block: var(--s-1) var(--s-2);
+  }
+
+  .lista-nombres {
+    padding-inline-start: var(--s-5);
+    overflow-wrap: anywhere;
+    list-style: disc;
+  }
+
+  .lista-nombres li + li {
+    margin-top: var(--s-1);
+  }
+
+  .descarga-panel p {
+    color: var(--muted);
+  }
+
+  .resultado-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin-top: var(--s-4);
+  }
+
+  @media (max-width: 699px) {
+    .inicio-tarea {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--s-3);
+      padding: var(--s-4);
+    }
+
+    .inicio-icono {
+      align-self: start;
+      width: var(--touch-min);
+      height: var(--touch-min);
+    }
+
+    .inicio-icono .icono {
+      width: 24px;
+      height: 24px;
+    }
+
+    .inicio-tarea > .btn {
+      grid-column: 1 / -1;
+    }
+
+    .resultado-panel {
+      padding: var(--s-4);
+    }
+
+    .resultado-bajo {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .resumen-metricas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .resultado-acciones {
+      display: grid;
+      gap: var(--s-2);
+    }
+  }
+
+  @media (max-width: 359px) {
+    #plantilla-siagie .file-control > .icono {
+      display: none;
+    }
+  }
+}

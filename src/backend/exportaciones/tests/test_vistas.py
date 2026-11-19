@@ -20,15 +20,6 @@ from exportaciones import servicios
 from exportaciones.models import EquivalenciaSeccion
 from exportaciones.tests.plantilla import generar
 from institucion.models import AnioEscolar, Seccion
-from notas.tests.conftest import (
-    COMUNICACION,
-    MATEMATICA,
-    competencia,
-    crear_estudiantes,
-    ids_de,
-    marcar,
-    poner_nota,
-)
 
 pytestmark = pytest.mark.django_db
 
@@ -38,30 +29,6 @@ AVISO_BORRADA = (
     "Quitamos la equivalencia. "
     "La próxima plantilla de 2.º TRIUNFADORES te pedirá elegir la sección."
 )
-
-
-@pytest.fixture
-def b3(bimestres):
-    return bimestres[2]
-
-
-@pytest.fixture
-def notas_b3(seccion_tutora, ie_siagie, b3):
-    """María con una nota de Matemática en B3, en 2.º A."""
-    (maria,) = crear_estudiantes(seccion_tutora, MARIA)
-    marcar(seccion_tutora, b3, ids_de(MATEMATICA, COMUNICACION))
-    poner_nota(maria, competencia(MATEMATICA, 1), b3, "B")
-    return b3
-
-
-@pytest.fixture
-def b_con_notas(secciones_de_segundo, ie_siagie, b3):
-    """2.º B con una nota en B3; 2.º A, C y D no tienen estudiantes."""
-    seccion_b = secciones_de_segundo[1]
-    (maria,) = crear_estudiantes(seccion_b, MARIA)
-    marcar(seccion_b, b3, ids_de(MATEMATICA))
-    poner_nota(maria, competencia(MATEMATICA, 1), b3, "B")
-    return seccion_b
 
 
 def plantilla(**campos):

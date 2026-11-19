@@ -1,0 +1,13 @@
+{% comment %}
+Pie de «Sube la plantilla del SIAGIE»: el avance anunciado al lector y, en el DOM, «Completar plantilla» antes de
+«Cancelar» (arriba en el celular; en la PC, el CSS lo pone a la derecha). «Completar plantilla» nace deshabilitado hasta
+elegir un archivo.
+{% endcomment %}
+<div class="progress" data-progreso hidden>
+  <p class="small" data-progreso-texto role="status">Procesando la plantilla…</p>
+  <progress max="100" aria-label="Avance de la plantilla" data-barra></progress>
+</div>
+<div class="dialog-acciones">
+  <button class="btn btn--primary" type="submit" form="formulario-plantilla" data-enviar disabled>Completar plantilla</button>
+  <button class="btn btn--secondary" type="button" data-cancelar>Cancelar</button>
+</div>
