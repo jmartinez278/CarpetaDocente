@@ -64,23 +64,26 @@ class CompletarPlantillaView(DireccionMixin, View):
     def post(self, request):
         archivo = request.FILES.get("archivo")
         if archivo is None:
-            return _error(servicios.PlantillaNoReconocida().args[0], ayuda_siagie=True)
+            return _error(servicios.siagie.NO_ES_LA_PLANTILLA, ayuda_siagie=True)
         # Un byte más que el límite basta para que ``siagie.abrir`` lo rechace sin leer todo.
         contenido = archivo.read(servicios.siagie.LIMITE_BYTES + 1)
+        # Cada rechazo responde su mensaje fijo, nunca el texto de la excepción (CodeQL).
         try:
             resumen = servicios.completar_plantilla(
                 request.user, contenido, request.POST.get("seccion")
             )
-        except (servicios.ArchivoDemasiadoGrande, servicios.CompletadaDemasiadoGrande) as error:
-            return _error(str(error))
-        except servicios.PlantillaNoReconocida as error:
-            return _error(str(error), ayuda_siagie=True)
-        except (
-            servicios.SinSeccionesDelGrado,
-            servicios.SeccionNoValida,
-            servicios.SinNotasEnElPeriodo,
-        ) as error:
-            return _error(str(error))
+        except servicios.ArchivoDemasiadoGrande:
+            return _error(servicios.siagie.DEMASIADO_GRANDE)
+        except servicios.CompletadaDemasiadoGrande:
+            return _error(servicios.COMPLETADA_GRANDE)
+        except servicios.PlantillaNoReconocida:
+            return _error(servicios.siagie.NO_ES_LA_PLANTILLA, ayuda_siagie=True)
+        except servicios.SinSeccionesDelGrado as error:
+            return _error(servicios.sin_secciones(error.grado, error.anio))
+        except servicios.SeccionNoValida:
+            return _error(servicios.SECCION_NO_VALIDA)
+        except servicios.SinNotasEnElPeriodo:
+            return _error(servicios.SIN_NOTAS)
         except servicios.EligeSeccion as eleccion:
             if not eleccion.opciones:
                 grado = eleccion.plantilla.grado
@@ -113,18 +116,19 @@ class BorrarEquivalenciaView(DireccionMixin, View):
     def post(self, request, equivalencia_id):
         try:
             equivalencia = servicios.borrar_equivalencia(request.user, equivalencia_id)
-        except servicios.EquivalenciaInexistente as error:
+        except servicios.EquivalenciaInexistente:
+            mensaje = servicios.EQUIVALENCIA_INEXISTENTE
             if not _es_js(request):
                 # Sin JS no hay panel que corregir: la página completa con el mensaje.
                 return _sin_cache(
                     render(
                         request,
                         "exportaciones/_equivalencia_inexistente.html",
-                        {"mensaje": str(error)},
+                        {"mensaje": mensaje},
                         status=404,
                     )
                 )
-            return _sin_cache(HttpResponse(str(error), content_type="text/plain", status=404))
+            return _sin_cache(HttpResponse(mensaje, content_type="text/plain", status=404))
         if not _es_js(request):
             return HttpResponseRedirect(reverse("direccion:inicio"), status=303)
         contexto = {"grado": equivalencia.grado, "nombre_siagie": equivalencia.nombre_siagie}

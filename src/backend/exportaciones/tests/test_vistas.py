@@ -197,6 +197,60 @@ def test_una_completada_que_no_cabe_en_la_respuesta_es_un_400(cliente, notas_b3,
     assert not completadas().exists()
 
 
+TRAZA = "Traceback (most recent call last): dato interno"
+
+
+def _con_traza(excepcion):
+    """La excepción con un texto que no es su mensaje: la vista no debe responderlo (CodeQL,
+    py/stack-trace-exposure)."""
+    excepcion.args = (TRAZA,)
+    return excepcion
+
+
+@pytest.mark.parametrize(
+    ("excepcion", "mensaje", "ayuda"),
+    [
+        (lambda: servicios.ArchivoDemasiadoGrande(), servicios.siagie.DEMASIADO_GRANDE, False),
+        (lambda: servicios.CompletadaDemasiadoGrande(), servicios.COMPLETADA_GRANDE, False),
+        (lambda: servicios.PlantillaNoReconocida(), servicios.siagie.NO_ES_LA_PLANTILLA, True),
+        (lambda: servicios.SeccionNoValida(), servicios.SECCION_NO_VALIDA, False),
+        (lambda: servicios.SinNotasEnElPeriodo(), servicios.SIN_NOTAS, False),
+        (
+            lambda: servicios.SinSeccionesDelGrado(2, 2027),
+            "Tu I.E. no tiene secciones de 2.º grado en 2027.",
+            False,
+        ),
+    ],
+    ids=["grande", "completada-grande", "no-reconocida", "no-valida", "sin-notas", "sin-secciones"],
+)
+def test_ningun_rechazo_responde_el_texto_de_la_excepcion(
+    cliente, notas_b3, monkeypatch, excepcion, mensaje, ayuda
+):
+    def falla(*_args):
+        raise _con_traza(excepcion())
+
+    monkeypatch.setattr(servicios, "completar_plantilla", falla)
+
+    respuesta = subir(cliente, plantilla())
+
+    assert TRAZA not in respuesta.content.decode()
+    assert error_de(respuesta) == {"error": mensaje, "ayuda_siagie": ayuda}
+
+
+@pytest.mark.parametrize("cabeceras", [{"HTTP_HX_REQUEST": "true"}, {}], ids=["js", "sin-js"])
+def test_el_404_del_borrado_no_responde_el_texto_de_la_excepcion(cliente, monkeypatch, cabeceras):
+    def falla(*_args):
+        raise _con_traza(servicios.EquivalenciaInexistente())
+
+    monkeypatch.setattr(servicios, "borrar_equivalencia", falla)
+
+    respuesta = cliente.post(reverse("plantilla_siagie:borrar", args=[1]), **cabeceras)
+
+    assert respuesta.status_code == 404
+    assert TRAZA not in respuesta.content.decode()
+    assert servicios.EQUIVALENCIA_INEXISTENTE in respuesta.content.decode()
+
+
 @pytest.mark.parametrize("contenido", [b"%PDF-1.4 no es un libro", b""])
 def test_un_archivo_que_no_es_la_plantilla_lleva_la_ayuda_del_siagie(cliente, notas_b3, contenido):
     cuerpo = error_de(subir(cliente, contenido))

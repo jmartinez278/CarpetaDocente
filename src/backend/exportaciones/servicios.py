@@ -47,7 +47,13 @@ class SinSeccionesDelGrado(Exception):
     """La institución no tiene secciones del grado en el año de la plantilla."""
 
     def __init__(self, grado, anio):
-        super().__init__(f"Tu I.E. no tiene secciones de {grado}.º grado en {anio}.")
+        super().__init__(sin_secciones(grado, anio))
+        self.grado = grado
+        self.anio = anio
+
+
+def sin_secciones(grado, anio):
+    return f"Tu I.E. no tiene secciones de {int(grado)}.º grado en {int(anio)}."
 
 
 class EligeSeccion(Exception):
