@@ -37,7 +37,7 @@ entre 700 y 960) con una sola tarjeta café; hasta 699 px, una columna con la ta
       <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Activa JavaScript para registrar la asistencia." %}</noscript>
       {% include "asistencia/_leyenda.html" with plegable=True %}
       <div class="hoja">
-        {% include "asistencia/_selector.html" with semana_activa=True %}
+        {% include "asistencia/_selector.html" %}
         <div class="hoja-cabecera"><span>{{ lista.total }} estudiante{{ lista.total|pluralize }} activo{{ lista.total|pluralize }}</span><span>Hoy</span></div>
         <ol class="filas-asistencia" aria-label="Asistencia de hoy">
           {% for fila in lista.filas %}<li class="fila-asistencia" id="fila-{{ fila.estudiante.pk }}" data-estudiante="{{ fila.estudiante.pk }}" data-estado="{{ fila.estado|default_if_none:"" }}">{% include "asistencia/_fila.html" %}</li>

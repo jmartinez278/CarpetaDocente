@@ -1,7 +1,7 @@
 """Rutas de la asistencia de una sección (design de US-030, D10).
 
 Se incluyen en ``config/urls.py`` bajo ``docente/secciones/<int:seccion_id>/asistencia/``. La fecha
-va en la ruta de los guardados para que US-031 abra otros días sin cambiarlas.
+va en la ruta de los guardados y, desde US-031, también en la de abrir un día.
 """
 
 import datetime
@@ -29,6 +29,7 @@ app_name = "asistencia"
 
 urlpatterns = [
     path("", views.HoyView.as_view(), name="hoy"),
+    path("<fecha:fecha>/", views.DiaView.as_view(), name="dia"),
     path(
         "<fecha:fecha>/estudiantes/<int:estudiante_id>/",
         views.MarcarView.as_view(),

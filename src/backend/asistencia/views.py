@@ -1,15 +1,16 @@
-"""Vistas de la asistencia de hoy (design de US-030, D3 y D10).
+"""Vistas de la asistencia de un día (design de US-030, D3 y D10; US-031, D2).
 
 Solo leen la petición y llaman a ``asistencia.servicios``. El acceso es el de la lista de
 estudiantes (``SeccionDocenteMixin``): sección ajena, inexistente o de un año CERRADO, o un
 estudiante de la ruta que no es de ella, 403 con registro (US-004); otro rol y sin sesión,
 ``RolRequeridoMixin``, con ``HX-Redirect`` cuando el guardado llega con ``HX-Request``.
 Los guardados responden sin cuerpo: 204 guardado, 400 estado o nota que no valen, 404 estudiante
-de la sección que no está activo y 409 fecha que no es hoy o no es día de clases (D3).
+de la sección que no está activo y 409 fecha que no se puede abrir (D3). Abrir una fecha que no
+se puede abrir da 404 (US-031, D2).
 """
 
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
@@ -25,28 +26,60 @@ def sin_cuerpo(status):
     return HttpResponse(status=status)
 
 
-class HoyView(SeccionDocenteMixin, View):
-    """La pantalla de la asistencia de hoy; abrirla no crea la jornada."""
+class AsistenciaDelDiaView(SeccionDocenteMixin, View):
+    """La pantalla de la asistencia de un día; abrirla no crea la jornada.
 
-    def get(self, request, seccion_id):
+    ``HoyView`` y ``DiaView`` comparten el contexto y solo cambian la fecha que abren.
+    """
+
+    def fecha_abierta(self, hoy):
+        raise NotImplementedError
+
+    def get(self, request, seccion_id, **kwargs):
         hoy = timezone.localdate()
+        fecha = self.fecha_abierta(hoy)
         seccion = self.seccion
-        dia_de_clases = servicios.es_dia_de_clases(hoy)
-        lista = servicios.lista_del_dia(seccion, hoy)
+        dia_de_clases = servicios.es_dia_de_clases(fecha)
+        lista = servicios.lista_del_dia(seccion, fecha)
+
+        def url_de(dia):
+            if dia == hoy:
+                return reverse("asistencia:hoy", args=[seccion.pk])
+            return reverse("asistencia:dia", args=[seccion.pk, dia])
+
+        inicio = servicios.inicio_del_anio(seccion.anio_escolar)
         contexto = {
             "seccion": seccion,
             "seccion_corta": texto_seccion_corto(seccion),
-            "fecha": hoy,
-            "texto_fecha": servicios.texto_fecha(hoy),
-            "semana": servicios.semana(hoy),
+            "fecha": fecha,
+            "hoy": hoy,
+            "texto_fecha": servicios.texto_fecha(fecha),
+            "semana": servicios.semana(fecha, hoy, inicio, url_de),
             "dia_de_clases": dia_de_clases,
             "lista": lista,
             "con_lista": dia_de_clases and bool(lista.filas),
             # El JS cambia el 0 por el id del estudiante de cada fila.
-            "url_marcar": reverse("asistencia:marcar", args=[seccion.pk, hoy, 0]),
-            "url_restantes": reverse("asistencia:restantes", args=[seccion.pk, hoy]),
+            "url_marcar": reverse("asistencia:marcar", args=[seccion.pk, fecha, 0]),
+            "url_restantes": reverse("asistencia:restantes", args=[seccion.pk, fecha]),
         }
         return render(request, "asistencia/hoy.html", contexto)
+
+
+class HoyView(AsistenciaDelDiaView):
+    """``asistencia/``: hoy, o el aviso de fin de semana."""
+
+    def fecha_abierta(self, hoy):
+        return hoy
+
+
+class DiaView(AsistenciaDelDiaView):
+    """``asistencia/<fecha>/``: lo mismo que hoy para un día que ``se_puede_abrir``, si no, 404."""
+
+    def fecha_abierta(self, hoy):
+        fecha = self.kwargs["fecha"]
+        if not servicios.se_puede_abrir(self.seccion, fecha, hoy):
+            raise Http404
+        return fecha
 
 
 class GuardadoMixin(SeccionDocenteMixin):

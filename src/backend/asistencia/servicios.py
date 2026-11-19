@@ -150,10 +150,13 @@ def texto_fecha(fecha):
 
 @dataclass
 class Dia:
-    """Un día del selector: solo hoy responde en US-030; los demás los abre US-031."""
+    """Un día del selector (US-031, D3): ``disponible`` si se abre y ``url`` si es un enlace."""
 
     fecha: datetime.date
     es_hoy: bool
+    elegido: bool = False
+    disponible: bool = False
+    url: str | None = None
 
     @property
     def abreviatura(self):
@@ -161,13 +164,25 @@ class Dia:
 
     @property
     def etiqueta(self):
-        estado = "hoy" if self.es_hoy else "no disponible"
-        return f"{self.abreviatura} {_dia_y_mes(self.fecha)}, {estado}"
+        """El nombre accesible: "Mié 28 de octubre, hoy"; "abierto" si es el elegido sin ser hoy."""
+        if self.es_hoy:
+            estado = ", hoy"
+        elif self.elegido:
+            estado = ", abierto"
+        elif self.disponible:
+            estado = ""
+        else:
+            estado = ", no disponible"
+        return f"{self.abreviatura} {_dia_y_mes(self.fecha)}{estado}"
 
 
 @dataclass
 class Semana:
+    """Lunes a viernes con las URL de las dos flechas (``None`` si no responden)."""
+
     dias: list[Dia]
+    anterior: str | None = None
+    siguiente: str | None = None
 
     @property
     def etiqueta(self):
@@ -181,15 +196,62 @@ def _dia_y_mes(fecha):
     return f"{fecha.day} de {MESES[fecha.month - 1]}"
 
 
-def semana(hoy):
-    """Lunes a viernes de la semana de hoy; el sábado y el domingo, la que acaba de pasar."""
-    lunes = hoy - datetime.timedelta(days=hoy.weekday())
+def _se_abre(fecha, hoy, inicio):
+    """La regla de ``se_puede_abrir`` sin la sección: la comparten el selector y la vista."""
+    if not es_dia_de_clases(fecha) or fecha > hoy:
+        return False
+    return fecha == hoy or inicio <= fecha
+
+
+def _primer_dia_de_clases(desde):
+    while not es_dia_de_clases(desde):
+        desde += datetime.timedelta(days=1)
+    return desde
+
+
+def semana(abierto, hoy, inicio, url_de=datetime.date.isoformat):
+    """El selector de la semana de ``abierto`` (US-031, D3); ``url_de(fecha)`` arma cada enlace.
+
+    Un sábado o domingo (``abierto`` es hoy y no hay clases) es la semana que acaba de pasar, sin
+    día elegido, y las flechas toman el viernes de esa semana como referencia.
+    """
+    lunes = abierto - datetime.timedelta(days=abierto.weekday())
+    dias = []
+    for n in range(5):
+        fecha = lunes + datetime.timedelta(days=n)
+        disponible = _se_abre(fecha, hoy, inicio)
+        dias.append(
+            Dia(
+                fecha=fecha,
+                es_hoy=fecha == hoy,
+                elegido=fecha == abierto,
+                disponible=disponible,
+                url=url_de(fecha) if disponible else None,
+            )
+        )
+    referencia = abierto if es_dia_de_clases(abierto) else lunes + datetime.timedelta(days=4)
     return Semana(
-        dias=[
-            Dia(fecha=fecha, es_hoy=fecha == hoy)
-            for fecha in (lunes + datetime.timedelta(days=n) for n in range(5))
-        ]
+        dias=dias,
+        anterior=_flecha_anterior(referencia, lunes, inicio, url_de),
+        siguiente=_flecha_siguiente(referencia, lunes, hoy, url_de),
     )
+
+
+def _flecha_anterior(referencia, lunes, inicio, url_de):
+    """El mismo día una semana antes; si cae antes del inicio, el primer día de clases del año."""
+    if lunes - datetime.timedelta(days=3) < inicio:
+        return None
+    destino = referencia - datetime.timedelta(days=7)
+    if destino < inicio:
+        destino = _primer_dia_de_clases(inicio)
+    return url_de(destino)
+
+
+def _flecha_siguiente(referencia, lunes, hoy, url_de):
+    """El mismo día una semana después, o hoy si se pasa; sin respuesta en la semana de hoy."""
+    if lunes >= hoy - datetime.timedelta(days=hoy.weekday()):
+        return None
+    return url_de(min(referencia + datetime.timedelta(days=7), hoy))
 
 
 def saludo(hora):
@@ -214,9 +276,7 @@ def se_puede_abrir(seccion, fecha, hoy=None):
     conserva la conducta de US-030. La vista (404) y los guardados (409) usan esta función.
     """
     hoy = hoy or timezone.localdate()
-    if not es_dia_de_clases(fecha) or fecha > hoy:
-        return False
-    return fecha == hoy or inicio_del_anio(seccion.anio_escolar) <= fecha
+    return _se_abre(fecha, hoy, inicio_del_anio(seccion.anio_escolar))
 
 
 def periodo_cerrado(seccion, fecha):

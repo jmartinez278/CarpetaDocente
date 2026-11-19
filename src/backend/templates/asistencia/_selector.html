@@ -1,11 +1,11 @@
-{% comment %}Selector de la semana en la cabecera de la hoja (rebrand-us-030, D1 y D4): solo hoy responde; los otros días y las
-flechas se ven atenuados y lo dicen con aria-disabled, sin salir del orden del teclado. Las flechas siguen siendo botones con
-su nombre. Sin hoy (fin de semana), muestra la semana que acaba de pasar.{% endcomment %}
+{% comment %}Selector de la semana en la cabecera de la hoja (US-031, D3; rebrand-us-030, D1 y D4): cada día que se puede abrir es
+un enlace; los demás se ven atenuados y lo dicen con aria-disabled, sin salir del orden del teclado. Hoy lleva aria-current y
+el día abierto, data-elegido (su resaltado). Las flechas son enlaces o, sin días que abrir, botones atenuados. Sin hoy (fin de
+semana), muestra la semana que acaba de pasar.{% endcomment %}
 <div class="selector-semana" role="group" aria-label="{{ semana.etiqueta }}">
   <div class="selector-semana__dias">
-    <button type="button" class="flecha" aria-disabled="true" aria-label="Semana anterior no disponible">{% include "iconos/chevron-left.svg" %}</button>
-    {% for dia in semana.dias %}<button type="button" class="dia" {% if dia.es_hoy %}aria-current="date"{% else %}aria-disabled="true"{% endif %} aria-label="{{ dia.etiqueta }}"><span>{{ dia.abreviatura }}</span> <strong>{{ dia.fecha.day }}</strong></button>
-    {% endfor %}<button type="button" class="flecha" aria-disabled="true" aria-label="Semana siguiente no disponible">{% include "iconos/chevron-right.svg" %}</button>
+    {% if semana.anterior %}<a class="flecha" href="{{ semana.anterior }}" aria-label="Semana anterior">{% include "iconos/chevron-left.svg" %}</a>{% else %}<button type="button" class="flecha" aria-disabled="true" aria-label="Semana anterior no disponible">{% include "iconos/chevron-left.svg" %}</button>{% endif %}
+    {% for dia in semana.dias %}{% if dia.disponible %}<a class="dia" href="{{ dia.url }}"{% if dia.es_hoy %} aria-current="date"{% endif %}{% if dia.elegido %} data-elegido{% endif %} aria-label="{{ dia.etiqueta }}"><span>{{ dia.abreviatura }}</span> <strong>{{ dia.fecha.day }}</strong></a>{% else %}<button type="button" class="dia" aria-disabled="true" aria-label="{{ dia.etiqueta }}"><span>{{ dia.abreviatura }}</span> <strong>{{ dia.fecha.day }}</strong></button>{% endif %}
+    {% endfor %}{% if semana.siguiente %}<a class="flecha" href="{{ semana.siguiente }}" aria-label="Semana siguiente">{% include "iconos/chevron-right.svg" %}</a>{% else %}<button type="button" class="flecha" aria-disabled="true" aria-label="Semana siguiente no disponible">{% include "iconos/chevron-right.svg" %}</button>{% endif %}
   </div>
-  {% if semana_activa %}<p class="selector-semana__ayuda">Solo puedes marcar hoy.</p>{% endif %}
 </div>

@@ -649,34 +649,137 @@ def test_saludo_segun_la_hora(hora, esperado):
     assert servicios.saludo(hora) == esperado
 
 
-# --- semana (selector de la pantalla) ---
+# --- semana (selector de la pantalla; US-031, D3) ---
 
 
-def test_semana_de_un_miercoles():
-    semana = servicios.semana(datetime.date(2026, 10, 28))
+def semana(abierto, hoy=JUEVES, inicio=INICIO):
+    """El selector con una URL reconocible: ``/AAAA-MM-DD`` para cada día."""
+    return servicios.semana(abierto, hoy, inicio, url_de=lambda fecha: f"/{fecha.isoformat()}")
 
-    assert semana.etiqueta == "Semana del 26 al 30 de octubre"
-    assert [d.abreviatura for d in semana.dias] == ["Lun", "Mar", "Mié", "Jue", "Vie"]
-    assert [d.fecha.day for d in semana.dias] == [26, 27, 28, 29, 30]
-    assert [d.es_hoy for d in semana.dias] == [False, False, True, False, False]
-    assert semana.dias[2].etiqueta == "Mié 28 de octubre, hoy"
-    assert semana.dias[0].etiqueta == "Lun 26 de octubre, no disponible"
+
+def fechas(dias):
+    return [d.fecha.day for d in dias]
+
+
+def test_selector_un_jueves():
+    """Escenario "Selector un jueves"."""
+    s = semana(JUEVES)
+
+    assert s.etiqueta == "Semana del 16 al 20 de noviembre"
+    assert [d.abreviatura for d in s.dias] == ["Lun", "Mar", "Mié", "Jue", "Vie"]
+    assert fechas(s.dias) == [16, 17, 18, 19, 20]
+    assert [d.es_hoy for d in s.dias] == [False, False, False, True, False]
+    assert [d.elegido for d in s.dias] == [False, False, False, True, False]
+    assert [d.disponible for d in s.dias] == [True, True, True, True, False]
+    assert [d.url for d in s.dias] == [
+        "/2026-11-16",
+        "/2026-11-17",
+        "/2026-11-18",
+        "/2026-11-19",
+        None,
+    ]
+    assert s.dias[3].etiqueta == "Jue 19 de noviembre, hoy"
+    assert s.dias[0].etiqueta == "Lun 16 de noviembre"
+    assert s.dias[4].etiqueta == "Vie 20 de noviembre, no disponible"
+    assert s.anterior == "/2026-11-12"
+    assert s.siguiente is None
+
+
+def test_selector_en_un_dia_pasado():
+    """Escenario "Selector en un día pasado": el miércoles de la semana anterior."""
+    s = semana(datetime.date(2026, 11, 11))
+
+    assert fechas(s.dias) == [9, 10, 11, 12, 13]
+    assert [d.elegido for d in s.dias] == [False, False, True, False, False]
+    assert not any(d.es_hoy for d in s.dias)
+    assert all(d.disponible for d in s.dias)
+    assert s.dias[2].etiqueta == "Mié 11 de noviembre, abierto"
+    assert s.dias[1].etiqueta == "Mar 10 de noviembre"
+    assert s.anterior == "/2026-11-04"
+    assert s.siguiente == "/2026-11-18"
+
+
+def test_selector_la_flecha_siguiente_no_pasa_de_hoy():
+    s = semana(datetime.date(2026, 11, 13))
+
+    assert s.siguiente == "/2026-11-19"
+
+
+def test_selector_la_flecha_siguiente_de_la_semana_de_hoy_no_responde():
+    for dia in (16, 17, 18, 19):
+        assert semana(datetime.date(2026, 11, dia)).siguiente is None
+
+
+def test_selector_primera_semana_del_ano():
+    """Escenario "Primera semana del año": empieza un miércoles."""
+    inicio = datetime.date(2026, 3, 11)
+
+    s = semana(inicio, hoy=datetime.date(2026, 3, 12), inicio=inicio)
+
+    assert fechas(s.dias) == [9, 10, 11, 12, 13]
+    assert [d.disponible for d in s.dias] == [False, False, True, True, False]
+    assert [d.url for d in s.dias][:2] == [None, None]
+    assert s.dias[0].etiqueta == "Lun 9 de marzo, no disponible"
+    assert s.dias[2].etiqueta == "Mié 11 de marzo, abierto"
+    assert s.anterior is None
+    assert s.siguiente is None
+
+
+def test_selector_la_flecha_anterior_cae_antes_del_inicio_y_abre_el_primer_dia():
+    inicio = datetime.date(2026, 11, 11)  # miércoles
+
+    s = semana(datetime.date(2026, 11, 17), inicio=inicio)
+
+    assert s.anterior == "/2026-11-11"
+
+
+def test_selector_la_flecha_anterior_sin_dias_en_la_semana_anterior_no_responde():
+    # El inicio es el sábado 14: la semana del 9 al 13 no tiene días que abrir.
+    s = semana(JUEVES, inicio=datetime.date(2026, 11, 14))
+
+    assert s.anterior is None
+
+
+def test_selector_el_inicio_un_viernes_deja_a_la_flecha_abrir_ese_viernes():
+    s = semana(JUEVES, inicio=datetime.date(2026, 11, 13))
+
+    assert s.anterior == "/2026-11-13"
+
+
+def test_selector_con_hoy_antes_del_inicio_solo_hoy_se_abre():
+    hoy = datetime.date(2026, 3, 5)
+
+    s = semana(hoy, hoy=hoy, inicio=datetime.date(2026, 3, 9))
+
+    assert [d.disponible for d in s.dias] == [False, False, False, True, False]
+    assert s.dias[3].etiqueta == "Jue 5 de marzo, hoy"
+    assert (s.anterior, s.siguiente) == (None, None)
+
+
+@pytest.mark.parametrize("dia", [21, 22], ids=["sabado", "domingo"])
+def test_en_fin_de_semana_es_la_semana_que_acaba_de_pasar_sin_elegido(dia):
+    hoy = datetime.date(2026, 11, dia)
+
+    s = semana(hoy, hoy=hoy)
+
+    assert s.etiqueta == "Semana del 16 al 20 de noviembre"
+    assert not any(d.es_hoy or d.elegido for d in s.dias)
+    assert all(d.disponible for d in s.dias)
+    assert s.anterior == "/2026-11-13", "el viernes de referencia, una semana antes"
+    assert s.siguiente is None
 
 
 def test_semana_que_cruza_de_mes():
-    semana = servicios.semana(datetime.date(2026, 10, 1))
+    s = semana(datetime.date(2026, 10, 1), hoy=datetime.date(2026, 10, 1))
 
-    assert semana.etiqueta == "Semana del 28 de septiembre al 2 de octubre"
+    assert s.etiqueta == "Semana del 28 de septiembre al 2 de octubre"
 
 
-@pytest.mark.parametrize("dia", [31, 1], ids=["sabado", "domingo"])
-def test_en_fin_de_semana_es_la_semana_que_acaba_de_pasar_sin_hoy(dia):
-    fecha = datetime.date(2026, 10, 31) if dia == 31 else datetime.date(2026, 11, 1)
+def test_las_urls_por_defecto_son_las_fechas():
+    s = servicios.semana(JUEVES, JUEVES, INICIO)
 
-    semana = servicios.semana(fecha)
-
-    assert semana.etiqueta == "Semana del 26 al 30 de octubre"
-    assert not any(d.es_hoy for d in semana.dias)
+    assert s.dias[0].url == "2026-11-16"
+    assert s.anterior == "2026-11-12"
 
 
 # --- lo que la pantalla lee de una fila y de la lista ---
