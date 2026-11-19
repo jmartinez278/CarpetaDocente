@@ -45,6 +45,7 @@ La operación de una entrada MUST ser una del catálogo; cada operación del cat
 | Notas | NOTAS_GUARDADAS | Sí |
 | Sesiones de aprendizaje | SESION_ENVIADA | Sí |
 | Sesiones de aprendizaje | SESION_VISTA, SESION_DESCARGADA, SESION_COMPARTIDA, SESION_DESCOMPARTIDA, SESION_ELIMINADA | No |
+| Material de referencia | SESION_REFERENCIA_CARGADA, SESION_REFERENCIA_EDITADA, SESION_REFERENCIA_ELIMINADA | No |
 | Catálogo y piloto | CATALOGO_EDITADO, DEMO_CARGADA, DEMO_QUITADA, SECCION_DESCARTADA | No |
 | Permisos | INTENTO_SIN_PERMISO | No |
 | Registro | REGISTRO_EXPORTADO | No |

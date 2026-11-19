@@ -1,0 +1,11 @@
+{% comment %}
+Panel «Archivo de salida» tras borrar la equivalencia (D13): el aviso y «Subir plantilla otra vez», sin descarga. Reemplaza
+al panel del resumen; plantilla-siagie.js le da el foco al aviso.
+{% endcomment %}
+<section class="resultado-panel descarga-panel" aria-labelledby="salida-titulo" data-panel-archivo>
+  <h2 id="salida-titulo">Archivo de salida</h2>
+  <p tabindex="-1" data-aviso>Quitamos la equivalencia. La próxima plantilla de {{ grado }}.º {{ nombre_siagie }} te pedirá elegir la sección.</p>
+  <div class="resultado-acciones">
+    <button class="btn btn--primary" type="button" data-subir-otra>Subir plantilla otra vez</button>
+  </div>
+</section>

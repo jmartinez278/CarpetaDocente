@@ -247,3 +247,42 @@ def test_docente_y_direccion_no_ven_las_secciones_ni_los_anios(client, request, 
 
     destino = "/docente/" if fixture == "docente" else "/direccion/"
     assert respuesta.redirect_chain[-1][0] == destino
+
+
+# --- Institución: anexo (US-024/025, design D2) ---
+
+
+def test_la_ficha_de_la_institucion_muestra_el_anexo_en_0(admin_client, institucion):
+    respuesta = admin_client.get(
+        reverse("admin:institucion_institucion_change", args=[institucion.pk])
+    )
+
+    campo = formulario(respuesta)["anexo"]
+    assert campo.value() == 0
+
+
+def test_cambiar_el_anexo_en_la_ficha_lo_guarda_y_lo_registra(admin_client, institucion):
+    from actividad.models import Operacion, RegistroActividad
+
+    respuesta = admin_client.post(
+        reverse("admin:institucion_institucion_change", args=[institucion.pk]),
+        {"nombre": institucion.nombre, "codigo_modular": "", "anexo": 1},
+    )
+
+    assert respuesta.status_code == 302
+    institucion.refresh_from_db()
+    assert institucion.anexo == 1
+    entrada = RegistroActividad.objects.get(operacion=Operacion.INSTITUCION_EDITADA)
+    assert entrada.detalle == {"campos": ["anexo"]}
+
+
+def test_anexo_10_en_la_ficha_muestra_el_error_y_no_guarda(admin_client, institucion):
+    respuesta = admin_client.post(
+        reverse("admin:institucion_institucion_change", args=[institucion.pk]),
+        {"nombre": institucion.nombre, "codigo_modular": "", "anexo": 10},
+    )
+
+    assert respuesta.status_code == 200
+    assert "anexo" in formulario(respuesta).errors
+    institucion.refresh_from_db()
+    assert institucion.anexo == 0

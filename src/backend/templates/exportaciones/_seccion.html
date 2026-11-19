@@ -1,0 +1,39 @@
+{% comment %}
+Paso «Elige la sección» (US-024/025, D3 y D10; boceto seccion-a.html). Fragmento que plantilla-siagie.js pone en lugar de
+la cabecera, el cuerpo y el pie del mismo <dialog>: la raíz es un formulario sin caja propia (dialog-paso) para que sus tres
+partes sigan siendo hijas de la columna del diálogo. La raíz lleva data-paso="seccion". Recibe: grado, nombre_siagie,
+periodo_texto y opciones (las secciones del grado sin otra equivalencia). El archivo no vuelve en este formulario: el
+navegador lo envía otra vez junto con la sección elegida (D3).
+{% endcomment %}
+<form class="dialog-paso" id="formulario-seccion" data-paso="seccion" novalidate>
+  <div class="dialog-cabecera">
+    <h2 id="plantilla-seccion-titulo" tabindex="-1">Elige la sección</h2>
+  </div>
+  <div class="dialog-cuerpo" tabindex="0" role="region" aria-labelledby="plantilla-seccion-titulo" data-cuerpo>
+    <div class="message message--error" data-error-paso role="alert" tabindex="-1" hidden>{% include "iconos/circle-alert.svg" with clase=None %}<div class="message-texto"><p class="message-titulo" data-error-titulo></p> <p data-error-detalle hidden></p></div></div>
+    <div class="origen-seccion">
+      {% include "iconos/file-text.svg" with clase=None %}
+      <div>
+        <p class="small">Sección en la plantilla del SIAGIE</p>
+        <p><strong>{{ grado }}.º {{ nombre_siagie }} · {{ periodo_texto }}</strong></p>
+      </div>
+    </div>
+    <fieldset aria-describedby="seccion-ayuda">
+      <legend>Sección de tu I.E.</legend>
+      <div class="secciones">
+        {% for seccion in opciones %}<label class="seccion-opcion"><input type="radio" name="seccion" value="{{ seccion.pk }}"><span>{{ seccion.grado }}.º {{ seccion.nombre }}</span></label>{% endfor %}
+      </div>
+    </fieldset>
+    <p class="small equivalencia-ayuda" id="seccion-ayuda">Guardaremos esta equivalencia para las próximas plantillas de {{ grado }}.º {{ nombre_siagie }}.</p>
+  </div>
+  <div class="dialog-pie">
+    <div class="progress" data-progreso hidden>
+      <p class="small" data-progreso-texto role="status">Procesando la plantilla…</p>
+      <progress max="100" aria-label="Avance de la plantilla" data-barra></progress>
+    </div>
+    <div class="dialog-acciones">
+      <button class="btn btn--primary" type="submit" data-enviar disabled>Guardar y completar</button>
+      <button class="btn btn--secondary" type="button" data-cancelar>Cancelar</button>
+    </div>
+  </div>
+</form>

@@ -25,6 +25,9 @@ class Institucion(models.Model):
     codigo_modular = models.CharField(
         "código modular", max_length=20, unique=True, null=True, blank=True
     )
+    # Con el código modular, reconoce la plantilla de notas del SIAGIE (US-024/025, design D2).
+    # ``db_default``: el despliegue anterior inserta sin la columna mientras Vercel migra.
+    anexo = models.PositiveSmallIntegerField("anexo", default=0, db_default=0)
     # Nullable como en el DDL del documento 11: NULL = aún no definida [DATO I.E. PENDIENTE].
     organizacion_periodos = models.CharField(  # noqa: DJ001
         "organización de periodos",
@@ -44,6 +47,9 @@ class Institucion(models.Model):
                 condition=Q(organizacion_periodos__in=["BIMESTRE", "TRIMESTRE"])
                 | Q(organizacion_periodos__isnull=True),
                 name="ck_institucion_organizacion_periodos",
+            ),
+            models.CheckConstraint(
+                condition=Q(anexo__gte=0, anexo__lte=9), name="ck_institucion_anexo"
             ),
         ]
 

@@ -1,0 +1,51 @@
+{% comment %}
+Resumen del llenado (US-024/025, D4, D8 y D13; boceto resumen-b.html, con «estudiantes encontrados» en vez de
+«completados»). Fragmento que plantilla-siagie.js pone en lugar del contenido de <main>; la raíz lleva
+data-paso="resumen". Recibe: resumen, archivo_base64, nombre_archivo y periodo_texto. Los nombres no encontrados van
+escapados por la plantilla y solo aquí: nunca se guardan. El enlace «Descargar plantilla» se completa en el navegador
+(Blob) con data-archivo.
+{% endcomment %}
+<div class="resultado-pagina" data-paso="resumen">
+  <header class="resultado-cabecera">
+    <a class="btn btn--text regresar" href="{% url 'direccion:inicio' %}">{% include "iconos/chevron-left.svg" with clase=None %} Inicio de dirección</a>
+    <h1 tabindex="-1">{{ resumen.titulo }}</h1>
+    <div class="resultado-seccion">
+      <p class="muted">Sección de la I.E. <strong>{{ resumen.seccion.grado }}.º {{ resumen.seccion.nombre }}</strong> · <span class="periodo-resultado">{{ periodo_texto }}</span></p>
+      {% if resumen.equivalencia_id %}
+      <form method="post" action="{% url 'plantilla_siagie:borrar' resumen.equivalencia_id %}" data-borrar-equivalencia>
+        {% csrf_token %}
+        <button class="btn btn--text" type="submit">¿No es esta sección?</button>
+      </form>
+      {% endif %}
+    </div>
+    <p class="muted">Sección en el SIAGIE <strong>{{ resumen.grado_siagie }}.º {{ resumen.nombre_siagie }}</strong></p>
+  </header>
+  <section class="resultado-panel" aria-labelledby="resultado-titulo">
+    <h2 id="resultado-titulo">Resultado del llenado</h2>
+    <ul class="resumen-metricas" role="list">
+      <li><span class="resumen-cifra">{{ resumen.encontrados }}</span><span>estudiantes encontrados</span></li>
+      <li><span class="resumen-cifra">{{ resumen.no_encontrados|length }}</span><span>no encontrados</span></li>
+      <li><span class="resumen-cifra"><span class="resumen-prefijo">Faltan</span> {{ resumen.faltantes }}</span><span>notas</span></li>
+      <li><span class="resumen-cifra">{{ resumen.reemplazadas }}</span><span>celdas reemplazadas</span></li>
+    </ul>
+  </section>
+  <div class="resultado-bajo{% if not resumen.no_encontrados %} resultado-bajo--limpio{% endif %}">
+    {% if resumen.no_encontrados %}
+    <section class="nombres" aria-labelledby="no-encontrados-titulo">
+      <h3 id="no-encontrados-titulo">{% include "iconos/circle-alert.svg" with clase=None %} Estudiantes no encontrados</h3>
+      <p>Sus filas quedaron intactas en la plantilla.</p>
+      <ul class="lista-nombres" role="list">
+        {% for nombre in resumen.no_encontrados %}<li>{{ nombre }}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    <section class="resultado-panel descarga-panel" aria-labelledby="salida-titulo" data-panel-archivo>
+      <h2 id="salida-titulo">Archivo de salida</h2>
+      <p>Plantilla de notas del SIAGIE (.xlsx)</p>
+      <div class="resultado-acciones">
+        <a class="btn btn--primary" href="#" data-archivo="{{ archivo_base64 }}" download="{{ nombre_archivo }}">{% include "iconos/download.svg" with clase=None %} Descargar plantilla</a>
+        <button class="btn btn--text" type="button" data-subir-otra>Subir otra plantilla {% include "iconos/arrow-right.svg" with clase=None %}</button>
+      </div>
+    </section>
+  </div>
+</div>
