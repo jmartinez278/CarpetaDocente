@@ -213,7 +213,7 @@ Cuando la sección del resumen salió de una equivalencia guardada (en ese llena
 - **THEN** va a su pantalla de inicio y la equivalencia sigue
 
 ### Requirement: El archivo no se guarda
-Ni la plantilla subida ni la completada MUST guardarse en la base de datos, en el almacén de archivos ni en el registro (Ley 29733): se procesan en memoria y se devuelven en la misma respuesta. De la plantilla solo se guarda la equivalencia de la sección (el código y el nombre de la sección del SIAGIE).
+Ni la plantilla subida ni la completada MUST guardarse en la base de datos, en el almacén de archivos ni en el registro (Ley 29733): se procesan durante la petición y se devuelven en la misma respuesta (al guardar el libro, openpyxl escribe cada hoja en un archivo temporal del servidor y lo borra al terminar; en Vercel, `/tmp` es efímero). De la plantilla solo se guarda la equivalencia de la sección (el código y el nombre de la sección del SIAGIE).
 
 #### Scenario: Después del llenado
 - **WHEN** la dirección completa una plantilla

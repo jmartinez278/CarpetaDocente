@@ -4,7 +4,8 @@
 // - «Subir plantilla» abre el diálogo; cada apertura es un formulario nuevo (se vuelve a pintar el marcado de origen).
 // - Envío con XMLHttpRequest (fetch no informa el avance de la subida): 200 trae el paso «Elige la sección» (que
 //   reemplaza el diálogo) o el resumen (que reemplaza el contenido de <main>); 400 trae {error, ayuda_siagie}; lo demás
-//   (red, 413, 5xx) es «Se cortó la conexión» y el archivo sigue elegido.
+//   (red, 413, 5xx, o sin respuesta en TIEMPO_MAXIMO) es «Se cortó la conexión» y el archivo sigue elegido. Con
+//   HX-Request, la sesión vencida o la falta de sesión responden con HX-Redirect: la página completa va al ingreso.
 // - El archivo no se guarda en el servidor entre pasos (D3): este script conserva el File y lo envía otra vez con la
 //   sección elegida.
 // - El archivo completado llega en base64 en data-archivo y aquí se vuelve un Blob con su URL (D4).
@@ -16,6 +17,8 @@
 
   const TAMANO_MAXIMO = 3 * 1024 * 1024;
   const TIPO_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  // 3 MB en Slow 4G suben en unos 40 s; con el llenado, 2 minutos sin respuesta es un corte.
+  const TIEMPO_MAXIMO = 120_000;
   const MENSAJES = {
     grande: "El archivo supera los 3 MB. Elige uno más pequeño.",
     corte: "Se cortó la conexión.",
@@ -179,6 +182,22 @@
 
   // --- Respuesta ---
 
+  function nuevaPeticion(url) {
+    const peticion = new XMLHttpRequest();
+    peticion.open("POST", url);
+    peticion.timeout = TIEMPO_MAXIMO;
+    peticion.setRequestHeader("X-CSRFToken", csrf);
+    peticion.setRequestHeader("HX-Request", "true");
+    return peticion;
+  }
+
+  // Sesión vencida, sin sesión u otro rol: la página completa va a donde dice el servidor.
+  function redirigido(peticion) {
+    const destino = peticion.getResponseHeader("HX-Redirect");
+    if (destino) location.assign(destino);
+    return Boolean(destino);
+  }
+
   function ponerPaso(fragmento) {
     dialogo.replaceChildren(fragmento);
     dialogo.setAttribute("aria-labelledby", "plantilla-seccion-titulo");
@@ -253,15 +272,13 @@
     bloquear(true);
     avance(0);
 
-    const peticion = new XMLHttpRequest();
-    peticion.open("POST", ruta);
-    peticion.setRequestHeader("X-CSRFToken", csrf);
-    peticion.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    const peticion = nuevaPeticion(ruta);
     peticion.upload.addEventListener("progress", (evento) => {
       if (evento.lengthComputable) avance(Math.floor((evento.loaded * 100) / evento.total));
     });
     peticion.upload.addEventListener("load", () => avance(null));
     peticion.addEventListener("load", () => {
+      if (redirigido(peticion)) return;
       if (peticion.status >= 200 && peticion.status < 300) respuesta200(peticion.responseText);
       else if (peticion.status === 400) respuesta400(peticion.responseText);
       else corte();
@@ -322,12 +339,9 @@
     boton.disabled = true;
     const panel = $("[data-panel-archivo]", principal);
 
-    const peticion = new XMLHttpRequest();
-    peticion.open("POST", formulario.action);
-    peticion.setRequestHeader("X-CSRFToken", csrf);
-    peticion.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    const peticion = nuevaPeticion(formulario.action);
     peticion.addEventListener("load", () => {
-      if (!panel.isConnected) return;
+      if (!panel.isConnected || redirigido(peticion)) return;
       if (peticion.status >= 200 && peticion.status < 300) {
         const plantilla = document.createElement("template");
         plantilla.innerHTML = peticion.responseText;

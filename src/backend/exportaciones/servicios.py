@@ -152,6 +152,8 @@ def _hojas_reconocidas(libro):
                 competencias={numero: area.activas[numero - 1] for numero in hoja.competencias},
             )
         )
+    if not any(reconocida.competencias for reconocida in reconocidas):
+        raise PlantillaNoReconocida  # Sin ninguna columna NL no hay nada que completar.
     return reconocidas
 
 

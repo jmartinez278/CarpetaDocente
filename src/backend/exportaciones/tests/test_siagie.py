@@ -186,6 +186,22 @@ def test_lee_hasta_60_filas():
     assert len(hoja.filas) == siagie.FILAS_MAXIMAS == 60
 
 
+def test_un_rango_combinado_enorme_no_se_reconoce_antes_de_abrir_el_libro():
+    """Hallazgo de Codex (cierre): openpyxl crea una celda por cada celda combinada al abrir."""
+    original = generar()
+    contenido = rehacer_zip(
+        original,
+        cambiar={
+            "xl/worksheets/sheet1.xml": lambda datos: datos.replace(
+                b'ref="B4:J4"', b'ref="B4:J20000"'
+            )
+        },
+    )
+    assert contenido != original
+
+    _no_se_reconoce(contenido)
+
+
 def test_un_libro_sin_hojas_de_area_se_abre_sin_hojas():
     assert siagie.abrir(generar(hojas={})).hojas == []
 
@@ -227,6 +243,29 @@ def test_escribir_dice_si_la_celda_tenia_otro_valor():
     assert libro.escribir("063-MATE", 3, 5, None) is True
     assert libro.escribir("063-MATE", 3, 10, "AD") is False
     assert libro.escribir("063-MATE", 3, 11, None) is False
+
+
+def _celda_guardada(libro, coordenada):
+    return load_workbook(io.BytesIO(libro.guardar()))["063-MATE"][coordenada]
+
+
+def test_una_conclusion_que_empieza_con_igual_se_escribe_como_texto():
+    """Hallazgo de Codex (cierre): openpyxl toma como fórmula un texto que empieza con «=»."""
+    libro = siagie.abrir(generar())
+    libro.escribir("063-MATE", 3, 5, "=SUMA(1;2) no es una fórmula.")
+
+    celda = _celda_guardada(libro, "E3")
+    assert celda.data_type == "s"
+    assert celda.value == "=SUMA(1;2) no es una fórmula."
+
+
+def test_una_conclusion_con_caracteres_de_control_se_escribe_sin_ellos():
+    """Hallazgo de Codex (cierre): Excel no admite caracteres de control; sin ellos, no hay 500."""
+    libro = siagie.abrir(generar())
+
+    assert libro.escribir("063-MATE", 3, 5, "Conclusión\x01 ficticia\x1f.") is False
+
+    assert _celda_guardada(libro, "E3").value == "Conclusión ficticia."
 
 
 def test_ida_y_vuelta_conserva_la_hoja_oculta_las_validaciones_y_lo_no_tocado():

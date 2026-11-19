@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 
 from defusedxml import ElementTree
 from openpyxl import load_workbook
-from openpyxl.cell.cell import MergedCell
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE, MergedCell
+from openpyxl.utils.cell import range_boundaries
 
 NO_ES_LA_PLANTILLA = "El archivo no corresponde a la plantilla de notas del SIAGIE"
 DEMASIADO_GRANDE = "El archivo supera los 3 MB. Elige uno más pequeño."
@@ -25,6 +26,9 @@ DEMASIADO_GRANDE = "El archivo supera los 3 MB. Elige uno más pequeño."
 LIMITE_BYTES = 3 * 1024 * 1024
 LIMITE_DESCOMPRIMIDO = 40 * 1024 * 1024
 LIMITE_PARTES = 300
+# openpyxl crea una celda por cada celda de un rango combinado al abrir el libro: sin este tope,
+# un rango enorme cabe en 3 MB y agota la memoria. La plantilla combina unas decenas.
+LIMITE_CELDAS_COMBINADAS = 10_000
 FILAS_MAXIMAS = 60
 PRIMERA_FILA = 3
 
@@ -133,6 +137,7 @@ def _revisar_paquete(contenido):
         if any(parte.filename.lower().endswith("vbaproject.bin") for parte in partes):
             raise PlantillaNoReconocida
         tipos = ElementTree.fromstring(paquete.read("[Content_Types].xml"))
+        _revisar_combinadas(paquete, partes)
     principales = [
         nodo.get("ContentType", "")
         for nodo in tipos.iter(f"{TIPOS_DE_CONTENIDO}Override")
@@ -140,6 +145,22 @@ def _revisar_paquete(contenido):
     ]
     if principales != [XLSX_MAIN]:
         raise PlantillaNoReconocida
+
+
+def _revisar_combinadas(paquete, partes):
+    """Suma las celdas de los ``mergeCell`` de todas las partes XML, sin cargar el libro."""
+    combinadas = 0
+    for parte in partes:
+        if not parte.filename.lower().endswith(".xml"):
+            continue
+        with paquete.open(parte) as datos:
+            for _evento, nodo in ElementTree.iterparse(datos):
+                if nodo.tag.rsplit("}", 1)[-1] == "mergeCell":
+                    columna_1, fila_1, columna_2, fila_2 = range_boundaries(nodo.get("ref", ""))
+                    combinadas += (columna_2 - columna_1 + 1) * (fila_2 - fila_1 + 1)
+                    if combinadas > LIMITE_CELDAS_COMBINADAS:
+                        raise PlantillaNoReconocida
+                nodo.clear()
 
 
 def _leer_parametros(ws):
@@ -215,12 +236,17 @@ class Libro:
 
     def escribir(self, hoja, fila, columna, valor):
         """Escribe ``valor`` (``None`` la vacía) y dice si la celda tenía otro valor no vacío,
-        también una fórmula (D8)."""
+        también una fórmula (D8). El texto va siempre como texto, nunca como fórmula, y sin los
+        caracteres de control que Excel no admite."""
         celda = self._wb[hoja].cell(fila, columna)
         if isinstance(celda, MergedCell):  # Solo lectura en openpyxl: no es la plantilla.
             raise PlantillaNoReconocida
         anterior = celda.value
+        if isinstance(valor, str):
+            valor = ILLEGAL_CHARACTERS_RE.sub("", valor)
         celda.value = valor
+        if isinstance(valor, str):
+            celda.data_type = "s"  # openpyxl tomaría «=…» como fórmula.
         return not _vacia(anterior) and anterior != valor
 
     def guardar(self):

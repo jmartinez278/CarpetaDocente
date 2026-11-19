@@ -8,12 +8,13 @@ corte de red, el resumen a 360 px y axe en ambos temas. ``plantilla-siagie.js`` 
 """
 
 import io
+import re
 
 import pytest
 from openpyxl import load_workbook
 from playwright.sync_api import expect
 
-from cuentas.tests.e2e import TEMAS, con_pantalla, ingresar, revisar_con_axe
+from cuentas.tests.e2e import TEMAS, con_pantalla, envejecer_sesion, ingresar, revisar_con_axe
 from exportaciones.models import EquivalenciaSeccion
 from exportaciones.tests.plantilla import generar
 
@@ -292,6 +293,65 @@ def test_el_corte_de_red_conserva_el_archivo_y_se_reintenta_sin_elegirlo(inicio)
     completar(page).click()
 
     expect(resumen(page)).to_be_visible()
+
+
+# El tope de espera de cada XMLHttpRequest se anota y se acorta a 500 ms: la prueba no espera
+# los dos minutos reales. Sin tope (0, el valor por omisión), la petición colgada nunca vence.
+ACORTAR_TOPE = """
+const propia = Object.getOwnPropertyDescriptor(XMLHttpRequest.prototype, "timeout");
+Object.defineProperty(XMLHttpRequest.prototype, "timeout", {
+  configurable: true,
+  get() { return propia.get.call(this); },
+  set(valor) {
+    window.__topePedido = valor;
+    propia.set.call(this, valor > 0 ? 500 : 0);
+  },
+});
+"""
+
+
+def test_una_respuesta_que_no_llega_vence_y_conserva_el_archivo(inicio):
+    """Hallazgo de Codex (cierre): «el servidor no responde» del requisito «Procesando»."""
+    page = inicio
+    page.add_init_script(ACORTAR_TOPE)
+    page.reload()
+    retenidas = []
+    page.route(URL_ENVIO, lambda ruta: retenidas.append(ruta))
+
+    completar_con(page, plantilla())
+
+    expect(page.locator("[data-error-red]")).to_be_visible()
+    expect(page.locator("[data-archivo-nombre]")).to_have_text(NOMBRE_ARCHIVO)
+    expect(completar(page)).to_be_enabled()
+    assert page.evaluate("window.__topePedido") >= 60_000
+
+
+def test_la_sesion_vencida_al_subir_lleva_la_pagina_a_ingresar(inicio):
+    """Hallazgo de Codex (cierre): antes, la página de ingreso daba «Se cortó la conexión»."""
+    page = inicio
+    abrir(page)
+    elegir(page, plantilla())
+    envejecer_sesion(page, 61)
+
+    completar(page).click()
+
+    expect(page).to_have_url(re.compile(r"/ingresar/\?next="))
+    expect(page.locator(".message--aviso")).to_contain_text("Tu sesión se cerró por inactividad.")
+
+
+def test_la_sesion_vencida_al_corregir_la_seccion_no_toca_el_panel_y_lleva_a_ingresar(inicio):
+    """Hallazgo de Codex (cierre): antes, la página de ingreso reemplazaba el panel del archivo."""
+    page = inicio
+    completar_con(page, plantilla(nombre_seccion="TRIUNFADORES"), "RegNotas_2_TRIUNFADORES_B3.xlsx")
+    dialogo(page).get_by_label("2.º B").check()
+    dialogo(page).get_by_role("button", name="Guardar y completar").click()
+    expect(resumen(page)).to_be_visible()
+    envejecer_sesion(page, 61)
+
+    page.get_by_role("button", name="¿No es esta sección?").click()
+
+    expect(page).to_have_url(re.compile(r"/ingresar/\?next="))
+    assert EquivalenciaSeccion.objects.exists()
 
 
 # --- 360 px y accesibilidad ---

@@ -110,6 +110,12 @@ def test_un_area_que_el_catalogo_no_tiene_no_se_reconoce(reconocer):
     _no_se_reconoce(reconocer, hojas={"063-MATE": 4, "0099-OTRA": 1})
 
 
+@pytest.mark.parametrize("hojas", [{}, {"063-MATE": []}], ids=["sin-hojas", "sin-competencias"])
+def test_un_libro_sin_celdas_de_notas_no_se_reconoce(reconocer, hojas):
+    """Hallazgo de Codex (cierre): sin ninguna columna NL, se daba por completada sin cambios."""
+    _no_se_reconoce(reconocer, hojas=hojas)
+
+
 def test_la_competencia_05_en_matematica_con_4_activas_no_se_reconoce(reconocer):
     _no_se_reconoce(reconocer, hojas={"063-MATE": 5})
 
