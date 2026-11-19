@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from actividad.models import Operacion, RegistroActividad
@@ -55,7 +56,11 @@ MESES = [
 
 
 class FechaNoValida(Exception):
-    """La fecha no es hoy o no es día de clases: no se guarda nada."""
+    """La fecha no se puede abrir (``se_puede_abrir``): no se guarda nada."""
+
+
+class PeriodoCerrado(FechaNoValida):
+    """El periodo del día está cerrado para correcciones (US-031, D6): el guardado da 409."""
 
 
 @dataclass
@@ -196,19 +201,63 @@ def saludo(hora):
     return "Buenas noches"
 
 
-def _validar_fecha(fecha, hoy):
-    if fecha != hoy or not es_dia_de_clases(fecha):
-        raise FechaNoValida
+def inicio_del_anio(anio_escolar):
+    """El inicio del periodo 1; sin periodos, el 1 de enero del año (US-031, D1)."""
+    periodo = anio_escolar.periodos.filter(numero=1).only("fecha_inicio").first()
+    return periodo.fecha_inicio if periodo else datetime.date(anio_escolar.anio, 1, 1)
 
 
-def _activos(seccion):
-    return seccion.estudiantes.filter(estado=Estudiante.Estado.ACTIVO)
+def se_puede_abrir(seccion, fecha, hoy=None):
+    """Hoy, o un día de clases anterior a hoy desde el inicio del año (US-031, D1).
 
-
-def lista_de_hoy(seccion, hoy=None):
-    """Activos ordenados y numerados, no activos aparte, avance y totales; no crea la jornada."""
+    Hoy se abre siempre que sea día de clases, aunque el año aún no empiece según sus periodos:
+    conserva la conducta de US-030. La vista (404) y los guardados (409) usan esta función.
+    """
     hoy = hoy or timezone.localdate()
-    jornada = Jornada.objects.filter(seccion=seccion, fecha=hoy).first()
+    if not es_dia_de_clases(fecha) or fecha > hoy:
+        return False
+    return fecha == hoy or inicio_del_anio(seccion.anio_escolar) <= fecha
+
+
+def periodo_cerrado(seccion, fecha):
+    """Enganche de US-026 (D6): mientras no exista el cierre por notas entregadas, ninguno."""
+    return False
+
+
+def _validar_fecha(seccion, fecha, hoy):
+    """``FechaNoValida`` si no se abre; ``PeriodoCerrado`` si su periodo está cerrado."""
+    if not se_puede_abrir(seccion, fecha, hoy):
+        raise FechaNoValida
+    if periodo_cerrado(seccion, fecha):
+        raise PeriodoCerrado
+
+
+NO_ACTIVOS = [Estudiante.Estado.TRASLADADO, Estudiante.Estado.RETIRADO]
+
+
+def activos_del_dia(seccion, fecha):
+    """Los activos hoy más los trasladados o retirados después de ``fecha`` (US-031, D4).
+
+    Un trasladado o retirado sin ``fecha_estado`` no es activo en ningún día.
+    """
+    return seccion.estudiantes.filter(
+        Q(estado=Estudiante.Estado.ACTIVO) | Q(estado__in=NO_ACTIVOS, fecha_estado__gt=fecha)
+    )
+
+
+def _activo_el(estudiante, fecha):
+    """La regla de ``activos_del_dia`` sobre un estudiante ya cargado."""
+    if estudiante.estado == Estudiante.Estado.ACTIVO:
+        return True
+    return estudiante.fecha_estado is not None and estudiante.fecha_estado > fecha
+
+
+def lista_del_dia(seccion, fecha):
+    """Activos del día ordenados y numerados, el resto aparte, avance y totales.
+
+    No crea la jornada (US-031, D4).
+    """
+    jornada = Jornada.objects.filter(seccion=seccion, fecha=fecha).first()
     asistencias = {}
     if jornada:
         asistencias = {a.estudiante_id: a for a in jornada.asistencias.all()}
@@ -216,7 +265,7 @@ def lista_de_hoy(seccion, hoy=None):
     filas = []
     no_activos = []
     for estudiante in estudiantes_ordenados(seccion):
-        if estudiante.estado != Estudiante.Estado.ACTIVO:
+        if not _activo_el(estudiante, fecha):
             no_activos.append(estudiante)
             continue
         asistencia = asistencias.get(estudiante.pk)
@@ -244,30 +293,31 @@ def pendiente_hoy(seccion, hoy=None):
     return not _completa_o_vacia(seccion, hoy)
 
 
-def _completa_o_vacia(seccion, hoy):
-    activos = _activos(seccion).count()
-    if activos == 0:
+def _completa_o_vacia(seccion, fecha):
+    """Sin activos de ese día, o todos ellos con estado en la jornada de ``fecha`` (D4)."""
+    activos = activos_del_dia(seccion, fecha)
+    total = activos.count()
+    if total == 0:
         return True
     marcados = Asistencia.objects.filter(
-        jornada__seccion=seccion,
-        jornada__fecha=hoy,
-        estudiante__estado=Estudiante.Estado.ACTIVO,
+        jornada__seccion=seccion, jornada__fecha=fecha, estudiante__in=activos
     ).count()
-    return marcados >= activos
+    return marcados >= total
 
 
 def marcar(seccion, estudiante_id, fecha, estado, nota, usuario, hoy=None):
-    """Guarda el estado de destino de un estudiante en la jornada de hoy (idempotente, D3).
+    """Guarda el estado de destino de un estudiante en la jornada de ``fecha`` (idempotente, D3).
 
-    La jornada nace con el primer toque. ``FechaNoValida`` si no es hoy o es fin de semana,
-    ``ValidationError`` si el estado o la nota no valen, ``Estudiante.DoesNotExist`` si no es
-    un estudiante activo de la sección. Con cualquier error no se crea nada.
+    La jornada nace con el primer toque. ``FechaNoValida`` si la fecha no se abre
+    (``PeriodoCerrado`` si su periodo está cerrado), ``ValidationError`` si el estado o la nota
+    no valen, ``Estudiante.DoesNotExist`` si no es un activo de la sección ese día (US-031, D4).
+    Con cualquier error no se crea nada.
 
     Deja ASISTENCIA_CAMBIADA con el estado anterior (leído con bloqueo antes del upsert), salvo
     en un reintento con el mismo estado y nota (US-008, D6).
     """
     hoy = hoy or timezone.localdate()
-    _validar_fecha(fecha, hoy)
+    _validar_fecha(seccion, fecha, hoy)
     if estado not in ESTADOS:
         raise ValidationError("Estado de asistencia no válido")
     nota = nota or ""
@@ -277,7 +327,7 @@ def marcar(seccion, estudiante_id, fecha, estado, nota, usuario, hoy=None):
         nota = ""
 
     with transaction.atomic():
-        estudiante = _activos(seccion).get(pk=estudiante_id)
+        estudiante = activos_del_dia(seccion, fecha).get(pk=estudiante_id)
         jornada = _jornada(seccion, fecha, usuario)
         anterior = (
             Asistencia.objects.select_for_update()
@@ -308,26 +358,27 @@ def marcar(seccion, estudiante_id, fecha, estado, nota, usuario, hoy=None):
                 estado_anterior,
                 estado,
                 "toque",
+                hoy,
                 nota_cambiada=nota != nota_anterior,
             )
         _registrar_si_completa(usuario, seccion, jornada)
 
 
 def marcar_restantes(seccion, estudiante_ids, fecha, usuario, hoy=None):
-    """Pone Asistió a los que aún no tienen estado hoy; nunca pisa uno ya puesto (decisión 3).
+    """Pone Asistió a los que aún no tienen estado ese día; nunca pisa uno ya puesto (decisión 3).
 
-    Un id que no es un estudiante activo de la sección hace fallar todo el lote
+    Un id que no es un activo de la sección ese día hace fallar todo el lote
     (``Estudiante.DoesNotExist``) sin guardar ninguno. Deja una ASISTENCIA_CAMBIADA con origen
     ``lote`` por cada estudiante que no tenía estado (US-008, D6).
     """
     hoy = hoy or timezone.localdate()
-    _validar_fecha(fecha, hoy)
+    _validar_fecha(seccion, fecha, hoy)
     ids = set(estudiante_ids)
     if not ids:
         return
 
     with transaction.atomic():
-        estudiantes = list(_activos(seccion).filter(pk__in=ids))
+        estudiantes = list(activos_del_dia(seccion, fecha).filter(pk__in=ids))
         if len(estudiantes) != len(ids):
             raise Estudiante.DoesNotExist
         jornada = _jornada(seccion, fecha, usuario)
@@ -346,7 +397,7 @@ def marcar_restantes(seccion, estudiante_ids, fecha, usuario, hoy=None):
         for estudiante in sorted(estudiantes, key=lambda e: e.pk):
             if estudiante.pk not in con_estado:
                 _registrar_cambio(
-                    usuario, jornada, estudiante, None, Asistencia.Estado.ASISTIO, "lote"
+                    usuario, jornada, estudiante, None, Asistencia.Estado.ASISTIO, "lote", hoy
                 )
         _registrar_si_completa(usuario, seccion, jornada)
 
@@ -372,26 +423,38 @@ def _jornada(seccion, fecha, usuario):
     return jornada
 
 
-def _registrar_cambio(usuario, jornada, estudiante, anterior, nuevo, origen, nota_cambiada=False):
-    """ASISTENCIA_CAMBIADA sin el texto de la nota, solo si cambió (RN-015)."""
+def _registrar_cambio(
+    usuario, jornada, estudiante, anterior, nuevo, origen, hoy, nota_cambiada=False
+):
+    """ASISTENCIA_CAMBIADA sin el texto de la nota, solo si cambió (RN-015).
+
+    Una jornada que no es de ``hoy`` suma ``correccion: True`` (US-031, D7); la de hoy no lleva
+    la clave.
+    """
+    detalle = {
+        "estudiante": estudiante.pk,
+        "anterior": anterior,
+        "nuevo": nuevo,
+        "nota_cambiada": nota_cambiada,
+        "origen": origen,
+    }
+    if jornada.fecha != hoy:
+        detalle["correccion"] = True
     registrar(
         usuario,
         Operacion.ASISTENCIA_CAMBIADA,
         entidad="asistencia",
         entidad_id=jornada,
-        detalle={
-            "estudiante": estudiante.pk,
-            "anterior": anterior,
-            "nuevo": nuevo,
-            "nota_cambiada": nota_cambiada,
-            "origen": origen,
-        },
+        detalle=detalle,
     )
 
 
 def _registrar_si_completa(usuario, seccion, jornada):
-    """JORNADA_COMPLETA la primera vez que todos los activos tienen estado, una sola vez."""
-    if not _completa_o_vacia(seccion, jornada.fecha) or not _activos(seccion).exists():
+    """JORNADA_COMPLETA la primera vez que todos los activos de ese día tienen estado, una vez."""
+    if (
+        not _completa_o_vacia(seccion, jornada.fecha)
+        or not activos_del_dia(seccion, jornada.fecha).exists()
+    ):
         return
     ya_registrada = RegistroActividad.objects.filter(
         operacion=Operacion.JORNADA_COMPLETA, entidad="jornada", entidad_id=str(jornada.pk)

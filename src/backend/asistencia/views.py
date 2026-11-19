@@ -32,7 +32,7 @@ class HoyView(SeccionDocenteMixin, View):
         hoy = timezone.localdate()
         seccion = self.seccion
         dia_de_clases = servicios.es_dia_de_clases(hoy)
-        lista = servicios.lista_de_hoy(seccion, hoy)
+        lista = servicios.lista_del_dia(seccion, hoy)
         contexto = {
             "seccion": seccion,
             "seccion_corta": texto_seccion_corto(seccion),

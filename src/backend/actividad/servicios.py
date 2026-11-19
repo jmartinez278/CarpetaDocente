@@ -42,8 +42,9 @@ DETALLE_PERMITIDO: dict[Operacion, frozenset[str]] = {
     Operacion.ESTUDIANTE_EDITADO: frozenset({"campos"}),
     Operacion.LISTA_VACIADA: frozenset({"cantidad"}),
     Operacion.REGISTRO_ASISTENCIA: frozenset({"seccion", "fecha"}),
+    # ``correccion`` solo en una jornada que no es de hoy (US-031, D7).
     Operacion.ASISTENCIA_CAMBIADA: frozenset(
-        {"estudiante", "anterior", "nuevo", "nota_cambiada", "origen"}
+        {"estudiante", "anterior", "nuevo", "nota_cambiada", "origen", "correccion"}
     ),
     Operacion.COMPETENCIAS_MARCADAS: frozenset({"periodo", "agregadas", "quitadas"}),
     # Código SIAGIE del área, número del periodo, cuántas se crearon y los pares
