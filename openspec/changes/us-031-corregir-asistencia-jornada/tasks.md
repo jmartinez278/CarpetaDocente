@@ -28,8 +28,8 @@ Razón: la fecha válida cruza día de semana, hoy de Lima, inicio del año (con
 
 ## 4. Cierre
 
-- [ ] 4.1 Recoger el resultado de Codex del grupo 2 y, como hay 3 grupos, correr `/codex:review --base main --background`; corregir sus Critical e Important con la prueba primero, en un commit corto. Verificar: `uv run python scripts/verificar.py --completo` y `-m e2e` completo, una sola vez, en verde
-- [ ] 4.2 Catálogo de rutas de `docs/03` con `docente/secciones/<id>/asistencia/<fecha>/`. `verificacion.md`: DoD 1 a 9 y los escenarios sin prueba con su motivo (el «Caso de error» real va con US-026). Verificar: el archivo existe y cada escenario sin prueba tiene motivo; commit
+- [x] 4.1 Recoger el resultado de Codex del grupo 2 y, como hay 3 grupos, correr `/codex:review --base main --background`; corregir sus Critical e Important con la prueba primero, en un commit corto. Verificar: `uv run python scripts/verificar.py --completo` y `-m e2e` completo, una sola vez, en verde
+- [x] 4.2 Catálogo de rutas de `docs/03` con `docente/secciones/<id>/asistencia/<fecha>/`. `verificacion.md`: DoD 1 a 9 y los escenarios sin prueba con su motivo (el «Caso de error» real va con US-026). Verificar: el archivo existe y cada escenario sin prueba tiene motivo; commit
 
 ## e2e a retirar
 
@@ -44,6 +44,8 @@ Para que Marco apruebe; no se borran sin su visto bueno. Retirar la variante de 
 - **(deuda, US-033)** Ingresos tardíos (RN-012, doc 09 §6): un estudiante agregado después aparece en días anteriores y deja esas jornadas incompletas. Codex (grupo 1, Minor): además se le puede guardar asistencia de esos días, por toque o con «Marcar los N restantes»; sin fecha de ingreso no se puede rechazar.
 - **(deuda, Codex grupo 1, Minor)** Un reintento pendiente que cruza la medianoche ahora se acepta (el día anterior se abre) y puede pisar una marca más nueva de otra pestaña: es el «gana el último» que ya existe en el mismo día. Rechazarlo exige una versión de la marca en cada guardado.
 - **(deuda, Codex grupo 2, Minor)** `se_puede_abrir` consulta el inicio del año (`inicio_del_anio`) en cada guardado de hoy aunque solo lo necesitan los días anteriores: una consulta de más por guardado. Hacerlo perezoso, solo para fechas anteriores a hoy.
+- **(deuda, Codex cierre, P2, decidido con Marco)** Una pestaña de «Asistencia de hoy» abierta antes de medianoche guarda en el día anterior si se marca después de las 00:00 (antes, US-030, el 409 la recargaba). Es la URL con fecha válida de D2. Arreglarlo: la página sin fecha manda `hoy` en cada guardado y el servicio rechaza si ya no lo es.
+- **(deuda, Codex cierre, P3, Minor)** Un día pasado en que todos los estudiantes ya estaban trasladados o retirados muestra solo «Tu sección aún no tiene estudiantes» y oculta «Fuera del registro» (`con_lista` falso aunque `no_activos` tenga filas). Mostrar la sección también sin activos.
 - **(deuda)** Marcas pendientes de un día pasado con la sesión vencida: se pierden si la docente no vuelve a ese mismo día (D8).
 - **(pulido final)** Deslizar entre días en el celular.
 - **(equipo)** Push y PR hacia `main` (`Closes #N` de US-031, verificando el número). En «Para quien revise»: hoy se abre aunque sea antes del inicio del año (D1) y el periodo cerrado es solo un enganche (D6).
