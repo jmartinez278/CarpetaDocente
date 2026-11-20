@@ -313,6 +313,24 @@ def test_el_enlace_n_sin_marcar_mide_44_y_no_se_cruza_con_el_guardado(
     assert separados, (enlace, guardado_caja)
 
 
+def test_los_controles_del_selector_miden_44_y_caben_a_360(abrir_asistencia):
+    """US-031, grupo 2 (A-01): las flechas y los días son enlaces y miden al menos 44 × 44 px;
+    los siete caben en la fila a 360 px, sin desbordar la ventana."""
+    page = abrir_asistencia()
+
+    cajas = [
+        control.bounding_box()
+        for control in page.locator(".selector-semana .flecha, .selector-semana .dia").all()
+    ]
+
+    assert len(cajas) == 7
+    for caja in cajas:
+        assert caja["width"] >= 44 and caja["height"] >= 44, caja
+        assert caja["x"] >= 0 and caja["x"] + caja["width"] <= 360, caja
+    for izquierda, derecha in zip(cajas, cajas[1:], strict=False):
+        assert izquierda["x"] + izquierda["width"] <= derecha["x"] + 0.5, (izquierda, derecha)
+
+
 def test_el_foco_no_queda_bajo_la_barra_deshacer(abrir_asistencia, veinticinco):
     """rebrand-ajustes-auditoria, D2 (A-14): a 360 px, con la cuenta pausada por el foco, ningún
     círculo que recibe el foco con Tab queda bajo la barra «Deshacer»."""

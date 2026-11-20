@@ -387,6 +387,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
     padding: var(--s-1) var(--s-2);
     background: transparent;
     border: 0;
