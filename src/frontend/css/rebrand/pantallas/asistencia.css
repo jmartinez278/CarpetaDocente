@@ -459,6 +459,22 @@
     border-bottom: 0;
   }
 
+  /* Periodo cerrado (US-031, D6): lista de lectura, sin la columna del círculo. */
+  .asistencia-cerrada {
+    display: grid;
+    gap: var(--s-5);
+  }
+
+  .fila-asistencia.fila-asistencia--cerrada {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .fila__nota {
+    margin-top: var(--s-1);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
   .fila__numero {
     color: var(--muted);
     font-size: 13px;
@@ -849,6 +865,10 @@
 
     .fila__numero {
       font-size: 12px;
+    }
+
+    .fila-asistencia.fila-asistencia--cerrada {
+      grid-template-columns: 16px minmax(0, 1fr);
     }
 
     .estudiante__nombre strong {

@@ -1,0 +1,18 @@
+{% comment %}Periodo cerrado para correcciones (spec «Periodo cerrado»; US-031, D6): la lista de lectura con el estado guardado en
+palabras y la nota, sin círculos, sin «Marcar los N restantes», sin campo de nota y sin asistencia.js. El aviso va arriba de la
+hoja; la regla que cierra el periodo llega con US-026.{% endcomment %}
+<div class="asistencia-cerrada">
+  {% include "rb/mensaje.html" with tipo="aviso" titulo="El periodo está cerrado. Solicita a la dirección que habilite la corrección" %}
+  <div class="hoja">
+    {% include "asistencia/_selector.html" %}
+    <div class="hoja-cabecera"><span>{{ lista.total }} estudiante{{ lista.total|pluralize }} activo{{ lista.total|pluralize }}</span><span>{% if es_hoy %}Hoy{% else %}{{ texto_dia_corto|capfirst }}{% endif %}</span></div>
+    <ol class="filas-asistencia" aria-label="Asistencia {% if es_hoy %}de hoy{% else %}del {{ texto_dia }}{% endif %}">
+      {% for fila in lista.filas %}<li class="fila-asistencia fila-asistencia--cerrada" id="fila-{{ fila.estudiante.pk }}">
+        <span class="fila__numero" aria-hidden="true">{{ fila.numero|stringformat:"02d" }}</span>
+        <div class="fila__texto"><span class="estudiante__nombre"><strong>{{ fila.estudiante.apellidos }},</strong> {{ fila.estudiante.nombres }}</span><span class="fila__estado">{{ fila.palabra }}</span>{% if fila.nota %}<p class="fila__nota small">Nota: {{ fila.nota }}</p>{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% include "asistencia/_fuera_registro.html" %}
+  </div>
+</div>

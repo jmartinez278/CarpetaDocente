@@ -7,13 +7,14 @@ Chromium: ``uv run pytest -m e2e --browser chromium``.
 """
 
 import re
-from datetime import datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 import pytest
 from playwright.sync_api import expect
 
 from actividad.tests.intentos import SIN_PERMISO, motivos, pasar_a_otra_docente
+from asistencia import servicios
 from asistencia.models import Asistencia, Jornada
 from cuentas.tests.e2e import (
     ANCHOS,
@@ -27,6 +28,7 @@ from cuentas.tests.e2e import (
     ingresar,
     revisar_con_axe,
 )
+from institucion.models import Estudiante
 
 pytestmark = pytest.mark.e2e
 
@@ -1074,3 +1076,108 @@ def test_marcar_en_una_seccion_que_ya_no_es_suya_lleva_a_sin_permiso(
     assert pendientes_de_la_seccion(page, seccion_de_ana) == []
     assert estados_en_la_base() == {veinticinco[0].pk: "ASISTIO"}
     assert motivos() == ["ajena"]
+
+
+# --- Un día anterior y el periodo cerrado (US-031, D5, D6 y D10) ---
+
+LUNES = date(2026, 10, 26)
+
+
+@pytest.fixture
+def anio_2026(seccion_de_ana):
+    """El año ABIERTO pasa a 2026, sin periodos: el lunes 26 de octubre se puede abrir (D1)."""
+    anio = seccion_de_ana.anio_escolar
+    anio.anio = 2026
+    anio.save()
+    return anio
+
+
+@pytest.fixture
+def periodo_cerrado(monkeypatch):
+    """El enganche de US-026 devuelve verdadero; el live_server comparte el proceso de la prueba."""
+    monkeypatch.setattr(servicios, "periodo_cerrado", lambda seccion, fecha: True)
+
+
+def poner_el_lunes(seccion, estudiantes, docente):
+    """La jornada del lunes con ``estudiantes`` ya en Asistió, salvo el último en Faltó."""
+    jornada = Jornada.objects.create(seccion=seccion, fecha=LUNES, registrado_por=docente)
+    for estudiante in estudiantes[:-1]:
+        Asistencia.objects.create(jornada=jornada, estudiante=estudiante, estado="ASISTIO")
+    Asistencia.objects.create(jornada=jornada, estudiante=estudiantes[-1], estado="FALTO")
+    return jornada
+
+
+def test_corregir_un_dia_pasado_desde_el_selector(
+    abrir_asistencia, live_server, seccion_de_ana, anio_2026, docente, veinticinco
+):
+    """ "Justificación que llega después" y "Cierre de un día pasado", de punta a punta."""
+    falto, ultimo = veinticinco[23], veinticinco[24]
+    jornada = poner_el_lunes(seccion_de_ana, veinticinco[:24], docente)
+    page = abrir_asistencia()
+
+    page.get_by_role("link", name="Lun 26 de octubre").click()
+
+    expect(page).to_have_url(f"{url_asistencia(live_server, seccion_de_ana)}2026-10-26/")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Asistencia del lunes 26 de octubre")
+    expect(etiqueta(page, falto)).to_have_text("Faltó")
+    tocar(page, falto, 2)  # Faltó → Tarde → Justificado
+    campo = page.locator(f"#nota-{falto.pk}")
+    campo.fill("Constancia entregada a la docente")
+    campo.press("Tab")
+    esperar_guardado(page)
+    expect(cierre(page)).to_have_count(0)
+
+    tocar(page, ultimo)
+    expect(cierre(page)).to_have_text("Asistencia del lunes 26 completa")
+    expect(anuncio(page)).to_have_text("Asistencia del lunes 26 completa")
+    esperar_guardado(page)
+
+    assert Jornada.objects.get().pk == jornada.pk, "solo la jornada del lunes, ninguna de hoy"
+    corregida = Asistencia.objects.get(jornada=jornada, estudiante=falto)
+    assert (corregida.estado, corregida.nota_justificacion) == (
+        "JUSTIFICADO",
+        "Constancia entregada a la docente",
+    )
+    assert Asistencia.objects.filter(jornada=jornada).count() == 25
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_un_dia_pasado_pasa_axe(
+    abrir_asistencia, live_server, seccion_de_ana, anio_2026, docente, veinticinco, ancho, tema
+):
+    poner_el_lunes(seccion_de_ana, veinticinco[:24], docente)
+    Estudiante.objects.create(
+        seccion=seccion_de_ana, apellidos="ESPINOZA VARGAS", nombres="RENATO", estado="RETIRADO"
+    )
+    page = abrir_asistencia(ancho, tema)
+
+    page.goto(f"{url_asistencia(live_server, seccion_de_ana)}2026-10-26/")
+    expect(page.get_by_text("Fuera del registro del lunes 26")).to_be_visible()
+
+    revisar_con_axe(page, f"asistencia-dia-pasado-{ancho}-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("ancho", ANCHOS)
+def test_el_periodo_cerrado_pasa_axe(
+    abrir_asistencia,
+    live_server,
+    seccion_de_ana,
+    anio_2026,
+    periodo_cerrado,
+    docente,
+    veinticinco,
+    ancho,
+    tema,
+):
+    poner_el_lunes(seccion_de_ana, veinticinco[:24], docente)
+    page = abrir_asistencia(ancho, tema)
+
+    page.goto(f"{url_asistencia(live_server, seccion_de_ana)}2026-10-26/")
+    expect(page.get_by_text("El periodo está cerrado")).to_be_visible()
+    expect(page.locator("[data-marcar]")).to_have_count(0)
+
+    revisar_con_axe(page, f"asistencia-periodo-cerrado-{ancho}-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= ancho

@@ -148,6 +148,16 @@ def texto_fecha(fecha):
     return f"{DIAS[fecha.weekday()]} {_dia_y_mes(fecha)}"
 
 
+def texto_dia(fecha):
+    """ "lunes 16 de noviembre": el día abierto en los títulos de un día pasado (US-031, D5)."""
+    return f"{DIAS[fecha.weekday()].lower()} {_dia_y_mes(fecha)}"
+
+
+def texto_dia_corto(fecha):
+    """ "lunes 16": el día en el cierre y en "Fuera del registro del lunes 16" (US-031, D5)."""
+    return f"{DIAS[fecha.weekday()].lower()} {fecha.day}"
+
+
 @dataclass
 class Dia:
     """Un día del selector (US-031, D3): ``disponible`` si se abre y ``url`` si es un enlace."""

@@ -41,6 +41,8 @@ class AsistenciaDelDiaView(SeccionDocenteMixin, View):
         seccion = self.seccion
         dia_de_clases = servicios.es_dia_de_clases(fecha)
         lista = servicios.lista_del_dia(seccion, fecha)
+        con_lista = dia_de_clases and bool(lista.filas)
+        cerrado = con_lista and servicios.periodo_cerrado(seccion, fecha)
 
         def url_de(dia):
             if dia == hoy:
@@ -54,10 +56,16 @@ class AsistenciaDelDiaView(SeccionDocenteMixin, View):
             "fecha": fecha,
             "hoy": hoy,
             "texto_fecha": servicios.texto_fecha(fecha),
+            "es_hoy": fecha == hoy,
+            "texto_dia": servicios.texto_dia(fecha),
+            "texto_dia_corto": servicios.texto_dia_corto(fecha),
             "semana": servicios.semana(fecha, hoy, inicio, url_de),
             "dia_de_clases": dia_de_clases,
             "lista": lista,
-            "con_lista": dia_de_clases and bool(lista.filas),
+            "con_lista": con_lista,
+            "periodo_cerrado": cerrado,
+            # Con el periodo cerrado la lista es de lectura: sin tarjeta, círculos ni script (D6).
+            "con_acciones": con_lista and not cerrado,
             # El JS cambia el 0 por el id del estudiante de cada fila.
             "url_marcar": reverse("asistencia:marcar", args=[seccion.pk, fecha, 0]),
             "url_restantes": reverse("asistencia:restantes", args=[seccion.pk, fecha]),

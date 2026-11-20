@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from actividad.tests.intentos import es_sin_permiso, intentos, motivos
+from asistencia import servicios
 from asistencia.models import Asistencia, Jornada
 from institucion.models import AnioEscolar, Estudiante, Periodo, Seccion
 
@@ -573,10 +574,10 @@ def lista(seccion_docente, veinticinco):
     return veinticinco
 
 
-def poner(seccion, estudiantes, estado, nota=""):
-    """Estados ya guardados hoy, sin pasar por la vista."""
+def poner(seccion, estudiantes, estado, nota="", fecha=MIERCOLES):
+    """Estados ya guardados (por defecto, hoy), sin pasar por la vista."""
     jornada, _ = Jornada.objects.get_or_create(
-        seccion=seccion, fecha=MIERCOLES, defaults={"registrado_por": seccion.docente}
+        seccion=seccion, fecha=fecha, defaults={"registrado_por": seccion.docente}
     )
     for estudiante in estudiantes:
         Asistencia.objects.create(
@@ -939,6 +940,157 @@ def test_la_semana_que_cruza_de_mes_lo_dice(cliente, seccion_docente, lista, hoy
 
     assert 'aria-label="Semana del 28 de septiembre al 2 de octubre"' in html
     assert 'aria-label="Jue 1 de octubre, hoy"' in html
+
+
+# --- Textos de un día pasado (spec «Textos de un día pasado»; US-031, D5) ---
+
+
+def test_titulo_de_un_dia_pasado(cliente, seccion_docente, lista, anio_2026):
+    """Escenario "Título de un día pasado"."""
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+    contenido = principal(html)
+
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == [
+        "Asistencia del lunes 26 de octubre"
+    ]
+    assert "<title>Asistencia del lunes 26 de octubre · 2.º A · CarpetaDocente</title>" in html
+    assert '<ol class="filas-asistencia" aria-label="Asistencia del lunes 26 de octubre">' in html
+    assert (
+        '<div class="hoja-cabecera"><span>25 estudiantes activos</span><span>Lunes 26</span></div>'
+        in contenido
+    )
+    assert '<time datetime="2026-10-26">Lunes 26 de octubre</time>' in contenido
+    assert "Asistencia de hoy" not in html
+    assert "<span>Hoy</span>" not in html
+
+
+def test_hoy_sigue_con_sus_textos(cliente, seccion_docente, lista, anio_2026):
+    html = abrir(cliente, seccion_docente)
+
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == ["Asistencia de hoy"]
+    assert '<ol class="filas-asistencia" aria-label="Asistencia de hoy">' in html
+    assert "<span>Hoy</span></div>" in html
+    assert 'data-texto-cierre="Asistencia de hoy completa"' in html
+    assert "Fuera del registro" not in html
+
+
+def test_abrir_hoy_con_su_fecha_lleva_los_textos_de_hoy(cliente, seccion_docente, lista, anio_2026):
+    html = abrir_dia(cliente, seccion_docente, MIERCOLES)
+
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == ["Asistencia de hoy"]
+    assert "<span>Hoy</span></div>" in html
+
+
+def test_fuera_del_registro_del_lunes(cliente, seccion_docente, lista, anio_2026):
+    """Escenario "Fuera del registro del lunes 16": un retirado sin fecha en un día pasado."""
+    Estudiante.objects.create(
+        seccion=seccion_docente, apellidos="ESPINOZA VARGAS", nombres="RENATO", estado="RETIRADO"
+    )
+
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+
+    assert re.search(r'<p class="fuera-registro__titulo">Fuera del registro del lunes 26</p>', html)
+    assert "Fuera del registro de hoy" not in html
+
+
+def test_el_cierre_de_un_dia_pasado_dice_el_dia(cliente, seccion_docente, lista, anio_2026):
+    """Escenario "Cierre de un día pasado", con la jornada ya completa."""
+    poner(seccion_docente, lista, "ASISTIO", fecha=LUNES)
+
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+    caja = tarjeta(html)
+
+    assert "jornada-completa" in html
+    assert re.search(
+        r"<p [^>]*data-cierre>.*?Asistencia del lunes 26 completa</p>", caja, re.DOTALL
+    )
+    assert "Asistencia de hoy completa" not in html
+    raiz = re.search(r"<div [^>]*data-asistencia[^>]*>", html).group(0)
+    assert 'data-texto-cierre="Asistencia del lunes 26 completa"' in raiz
+
+
+# --- Periodo cerrado (spec «Periodo cerrado»; US-031, D6) ---
+
+AVISO_CERRADO = "El periodo está cerrado. Solicita a la dirección que habilite la corrección"
+
+
+@pytest.fixture
+def periodo_cerrado(monkeypatch):
+    """El enganche de US-026 devuelve verdadero: la prueba real del cierre va con esa historia."""
+    monkeypatch.setattr(servicios, "periodo_cerrado", lambda seccion, fecha: True)
+
+
+def test_caso_de_error_el_periodo_cerrado_muestra_la_lista_sin_circulos(
+    cliente, seccion_docente, lista, anio_2026, periodo_cerrado
+):
+    """Escenario "Caso de error" del periodo cerrado."""
+    poner(seccion_docente, lista[:2], "FALTO", fecha=LUNES)
+    poner(seccion_docente, [lista[2]], "JUSTIFICADO", "Constancia entregada", fecha=LUNES)
+
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+    contenido = principal(html)
+
+    assert AVISO_CERRADO in contenido
+    assert len(re.findall(r'<li class="fila-asistencia[^"]*" id="fila-', contenido)) == 25
+    primera = texto(fila(html, lista[0]))
+    assert "01" in primera
+    assert nombre(lista[0]) in primera
+    assert "Faltó" in primera
+    justificado = texto(fila(html, lista[2]))
+    assert "Justificado" in justificado
+    assert "Constancia entregada" in justificado
+    assert "Sin marcar" in texto(fila(html, lista[3]))
+    for ausente in (
+        "data-asistencia",
+        "data-marcar",
+        "data-nota-campo",
+        "data-estado=",
+        "restantes como Asistió",
+        "estado--",
+        "asistencia.js",
+        "data-barra-deshacer",
+        '<button type="button" class="marcar"',
+    ):
+        assert ausente not in html, ausente
+    assert Jornada.objects.count() == 1, "abrirla no crea nada"
+
+
+def test_el_periodo_cerrado_conserva_el_selector_y_los_textos_del_dia(
+    cliente, seccion_docente, lista, anio_2026, periodo_cerrado
+):
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+
+    assert len(controles(html, "dia")) == 5
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == [
+        "Asistencia del lunes 26 de octubre"
+    ]
+    assert "<span>Lunes 26</span>" in html
+
+
+def test_los_guardados_de_un_periodo_cerrado_responden_409_sin_guardar(
+    cliente, seccion_docente, lista, anio_2026, periodo_cerrado
+):
+    """Escenario "Guardado en un periodo cerrado"."""
+    marcar = cliente.post(url_marcar(seccion_docente, lista[0], LUNES), {"estado": "FALTO"})
+    restantes = cliente.post(
+        url_restantes(seccion_docente, LUNES), {"estudiante": [lista[0].pk, lista[1].pk]}
+    )
+
+    assert marcar.status_code == 409
+    assert restantes.status_code == 409
+    assert not Jornada.objects.exists()
+    assert not Asistencia.objects.exists()
+
+
+def test_sin_cierre_de_periodos_se_ve_la_pantalla_para_marcar(
+    cliente, seccion_docente, lista, anio_2026
+):
+    """Escenario "Sin cierre de periodos": el enganche real devuelve falso."""
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+
+    assert "El periodo está cerrado" not in html
+    assert len(botones(html, "marcar")) == 25
+    assert "data-asistencia" in html
 
 
 # 1.5 Filas (D3)

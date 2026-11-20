@@ -1,0 +1,9 @@
+{% comment %}Los trasladados y retirados que no cuentan ese día (spec «Lista de la jornada»; US-031, D4 y D5): al final de la hoja,
+sin círculo. Lo usan la pantalla de marcar y la del periodo cerrado.{% endcomment %}
+{% if lista.no_activos %}
+<div class="fuera-registro" data-fuera-registro>
+  <p class="fuera-registro__titulo">Fuera del registro {% if es_hoy %}de hoy{% else %}del {{ texto_dia_corto }}{% endif %}</p>
+  <p class="small">No cuentan entre los {{ lista.total }} estudiantes.</p>
+  <ul>{% for estudiante in lista.no_activos %}<li><span class="estudiante__nombre"><strong>{{ estudiante.apellidos }},</strong> {{ estudiante.nombres }}</span><span class="marca-fuera" data-marca-fuera>{{ estudiante.estado }}</span></li>{% endfor %}</ul>
+</div>
+{% endif %}
