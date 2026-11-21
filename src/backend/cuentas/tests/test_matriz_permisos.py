@@ -93,6 +93,7 @@ FILAS = [
         lambda e: {"apellidos": "QUISPE HUAMÁN", "nombres": "ANA"},
     ),
     Fila("asistencia:hoy", "GET", _ruta("asistencia:hoy")),
+    Fila("asistencia:dia", "GET", _ruta("asistencia:dia", _hoy)),
     Fila(
         "asistencia:marcar",
         "POST",

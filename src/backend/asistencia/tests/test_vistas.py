@@ -15,14 +15,19 @@ from django.urls import reverse
 from django.utils import timezone
 
 from actividad.tests.intentos import es_sin_permiso, intentos, motivos
+from asistencia import servicios
 from asistencia.models import Asistencia, Jornada
-from institucion.models import AnioEscolar, Estudiante, Seccion
+from institucion.models import AnioEscolar, Estudiante, Periodo, Seccion
 
 pytestmark = pytest.mark.django_db
 
 HTMX = {"HTTP_HX_REQUEST": "true"}
 MIERCOLES = datetime.date(2026, 10, 28)
 SABADO = datetime.date(2026, 10, 31)
+LUNES = datetime.date(2026, 10, 26)
+VIERNES_ANTERIOR = datetime.date(2026, 10, 23)
+SABADO_ANTERIOR = datetime.date(2026, 10, 24)
+MANANA = datetime.date(2026, 10, 29)
 # La de Django, antes de que el fixture de abajo la reemplace.
 LOCALDATE = timezone.localdate
 
@@ -40,6 +45,15 @@ def seccion_docente(seccion, docente):
     seccion.docente = docente
     seccion.save()
     return seccion
+
+
+@pytest.fixture
+def anio_2026(seccion_docente):
+    """El año ABIERTO pasa a 2026, sin periodos: los días de octubre caen dentro (D1)."""
+    anio = seccion_docente.anio_escolar
+    anio.anio = 2026
+    anio.save()
+    return anio
 
 
 @pytest.fixture
@@ -269,10 +283,22 @@ def test_un_estudiante_retirado_responde_404(cliente, seccion_docente, estudiant
     assert intentos() == []
 
 
-def test_un_guardado_de_otro_dia_responde_409(cliente, seccion_docente, estudiante):
-    ayer = MIERCOLES - datetime.timedelta(days=1)
+def test_un_guardado_de_un_dia_anterior_responde_204(
+    cliente, seccion_docente, estudiante, anio_2026
+):
+    respuesta = cliente.post(url_marcar(seccion_docente, estudiante, LUNES), {"estado": "FALTO"})
 
-    respuesta = cliente.post(url_marcar(seccion_docente, estudiante, ayer), {"estado": "ASISTIO"})
+    assert respuesta.status_code == 204
+    assert respuesta.content == b""
+    assert Jornada.objects.get().fecha == LUNES
+    assert Asistencia.objects.get().estado == "FALTO"
+
+
+@pytest.mark.parametrize("fecha", [MANANA, SABADO_ANTERIOR], ids=["manana", "sabado"])
+def test_un_guardado_de_una_fecha_que_no_se_abre_responde_409(
+    cliente, seccion_docente, estudiante, anio_2026, fecha
+):
+    respuesta = cliente.post(url_marcar(seccion_docente, estudiante, fecha), {"estado": "ASISTIO"})
 
     assert respuesta.status_code == 409
     assert respuesta.content == b""
@@ -334,13 +360,148 @@ def test_restantes_con_un_id_que_no_es_numero_responde_400(cliente, seccion_doce
     assert not Asistencia.objects.exists()
 
 
-def test_restantes_de_otro_dia_responde_409(cliente, seccion_docente, tres):
-    ayer = MIERCOLES - datetime.timedelta(days=1)
+def test_restantes_de_un_dia_anterior_responde_204(cliente, seccion_docente, tres, anio_2026):
+    respuesta = cliente.post(
+        url_restantes(seccion_docente, LUNES), {"estudiante": [e.pk for e in tres]}
+    )
 
-    respuesta = cliente.post(url_restantes(seccion_docente, ayer), {"estudiante": [tres[0].pk]})
+    assert respuesta.status_code == 204
+    assert Jornada.objects.get().fecha == LUNES
+    assert Asistencia.objects.count() == 3
+
+
+@pytest.mark.parametrize("fecha", [MANANA, SABADO_ANTERIOR], ids=["manana", "sabado"])
+def test_restantes_de_una_fecha_que_no_se_abre_responde_409(
+    cliente, seccion_docente, tres, anio_2026, fecha
+):
+    respuesta = cliente.post(url_restantes(seccion_docente, fecha), {"estudiante": [tres[0].pk]})
 
     assert respuesta.status_code == 409
+    assert not Jornada.objects.exists()
     assert not Asistencia.objects.exists()
+
+
+# --- Abrir un día (US-031, D2) ---
+
+
+def url_dia(seccion, fecha):
+    return reverse("asistencia:dia", args=[seccion.pk, fecha])
+
+
+def test_la_ruta_de_un_dia_cuelga_de_la_asistencia(seccion_docente):
+    assert url_dia(seccion_docente, LUNES) == (
+        f"/docente/secciones/{seccion_docente.pk}/asistencia/2026-10-26/"
+    )
+
+
+def test_un_dia_anterior_responde_200_sin_crear_la_jornada(
+    cliente, seccion_docente, lista, anio_2026
+):
+    respuesta = cliente.get(url_dia(seccion_docente, LUNES))
+
+    assert respuesta.status_code == 200
+    assert not Jornada.objects.exists()
+    html = respuesta.content.decode()
+    assert html.count("data-estudiante=") == 25
+    assert 'data-fecha="2026-10-26"' in html
+
+
+def test_un_dia_anterior_muestra_lo_guardado_ese_dia(cliente, seccion_docente, lista, anio_2026):
+    jornada = Jornada.objects.create(
+        seccion=seccion_docente, fecha=LUNES, registrado_por=seccion_docente.docente
+    )
+    Asistencia.objects.create(jornada=jornada, estudiante=lista[0], estado="FALTO")
+
+    html = cliente.get(url_dia(seccion_docente, LUNES)).content.decode()
+
+    assert 'data-estado="FALTO"' in fila(html, lista[0])
+    assert "<strong data-marcados>1</strong>/25 marcados" in html
+
+
+@pytest.mark.parametrize(
+    "fecha",
+    [MANANA, SABADO_ANTERIOR, SABADO],
+    ids=["manana", "sabado-anterior", "sabado-de-la-semana-de-hoy"],
+)
+def test_una_fecha_que_no_se_abre_responde_404(cliente, seccion_docente, anio_2026, fecha):
+    assert cliente.get(url_dia(seccion_docente, fecha)).status_code == 404
+    assert not Jornada.objects.exists()
+
+
+def test_un_dia_antes_del_inicio_del_anio_responde_404(cliente, seccion_docente, anio_2026):
+    Periodo.objects.create(
+        anio_escolar=anio_2026, numero=1, fecha_inicio=LUNES, fecha_fin=datetime.date(2026, 12, 18)
+    )
+
+    assert cliente.get(url_dia(seccion_docente, VIERNES_ANTERIOR)).status_code == 404
+    assert cliente.get(url_dia(seccion_docente, LUNES)).status_code == 200
+
+
+def test_un_sabado_que_es_hoy_en_la_ruta_responde_404(
+    cliente, seccion_docente, anio_2026, hoy_miercoles
+):
+    hoy_miercoles["valor"] = SABADO
+
+    assert cliente.get(url_dia(seccion_docente, SABADO)).status_code == 404
+    assert cliente.get(url_hoy(seccion_docente)).status_code == 200
+
+
+def test_una_fecha_inexistente_responde_404(cliente, seccion_docente, anio_2026):
+    base = f"/docente/secciones/{seccion_docente.pk}/asistencia/"
+
+    assert cliente.get(f"{base}2026-02-30/").status_code == 404
+
+
+@pytest.mark.parametrize(
+    "fecha", [LUNES, MANANA, SABADO_ANTERIOR], ids=["pasado", "manana", "sabado"]
+)
+def test_otra_docente_recibe_403_en_cualquier_fecha(
+    entrar, otra_docente, seccion_docente, anio_2026, fecha
+):
+    cliente = entrar(otra_docente)
+    url = url_dia(seccion_docente, fecha)
+
+    respuesta = cliente.get(url)
+
+    assert es_sin_permiso(respuesta)
+    assert intentos() == [(str(seccion_docente.pk), url, "ajena")]
+
+
+def test_un_dia_anterior_de_un_anio_cerrado_da_403(entrar, docente, institucion):
+    anio = AnioEscolar.objects.create(institucion=institucion, anio=2026, estado="CERRADO")
+    cerrada = Seccion.objects.create(anio_escolar=anio, grado=2, nombre="A", docente=docente)
+
+    assert es_sin_permiso(entrar(docente).get(url_dia(cerrada, LUNES)))
+    assert motivos() == ["anio_cerrado"]
+
+
+def test_la_direccion_va_a_su_pantalla_desde_un_dia(entrar, direccion, seccion_docente):
+    assert entrar(direccion).get(url_dia(seccion_docente, LUNES)).url == "/direccion/"
+
+
+def test_abrir_hoy_con_su_fecha_es_lo_mismo_que_abrir_la_asistencia(
+    cliente, seccion_docente, lista, anio_2026
+):
+    poner(seccion_docente, lista[:3], "FALTO")
+
+    con_fecha = principal(cliente.get(url_dia(seccion_docente, MIERCOLES)).content.decode())
+    sin_fecha = principal(abrir(cliente, seccion_docente))
+
+    assert con_fecha == sin_fecha
+
+
+def test_los_guardados_del_dia_abierto_llevan_su_fecha(cliente, seccion_docente, lista, anio_2026):
+    html = cliente.get(url_dia(seccion_docente, LUNES)).content.decode()
+
+    plantilla = reverse("asistencia:marcar", args=[seccion_docente.pk, LUNES, 0])
+    assert f'data-url-marcar="{plantilla}"' in html
+    assert f'data-url-restantes="{url_restantes(seccion_docente, LUNES)}"' in html
+
+
+def test_hoy_lleva_los_guardados_de_hoy(cliente, seccion_docente, lista):
+    html = abrir(cliente, seccion_docente)
+
+    assert f'data-url-restantes="{url_restantes(seccion_docente, MIERCOLES)}"' in html
 
 
 # --- Enlace del aviso de éxito de la lista de estudiantes (spec estudiantes-seccion) ---
@@ -413,10 +574,10 @@ def lista(seccion_docente, veinticinco):
     return veinticinco
 
 
-def poner(seccion, estudiantes, estado, nota=""):
-    """Estados ya guardados hoy, sin pasar por la vista."""
+def poner(seccion, estudiantes, estado, nota="", fecha=MIERCOLES):
+    """Estados ya guardados (por defecto, hoy), sin pasar por la vista."""
     jornada, _ = Jornada.objects.get_or_create(
-        seccion=seccion, fecha=MIERCOLES, defaults={"registrado_por": seccion.docente}
+        seccion=seccion, fecha=fecha, defaults={"registrado_por": seccion.docente}
     )
     for estudiante in estudiantes:
         Asistencia.objects.create(
@@ -623,29 +784,153 @@ def test_el_selector_va_en_la_cabecera_de_la_hoja(cliente, seccion_docente, list
         '<div class="hoja-cabecera"><span>25 estudiantes activos</span><span>Hoy</span></div>'
     )
     assert hoja < selector < cabecera < html.index(LISTA)
-    assert html.count("Solo puedes marcar hoy.") == 1
-    assert selector < html.index("Solo puedes marcar hoy.") < cabecera
+    assert "Solo puedes marcar hoy." not in html
     assert html.index("data-sin-conexion") < hoja, "la tarjeta va antes de la hoja"
 
 
-def test_el_selector_tiene_hoy_como_unico_dia_activo(cliente, seccion_docente, lista):
+def controles(html, clase):
+    """Las etiquetas de apertura de los ``<a>`` o ``<button>`` del selector con esa clase."""
+    return re.findall(rf'<(?:a|button)\b[^>]*class="{clase}"[^>]*>', html)
+
+
+def href(etiqueta):
+    encontrado = re.search(r'href="([^"]+)"', etiqueta)
+    return encontrado.group(1) if encontrado else None
+
+
+def nombre_accesible(etiqueta):
+    return re.search(r'aria-label="([^"]+)"', etiqueta).group(1)
+
+
+def abrir_dia(cliente, seccion, fecha):
+    respuesta = cliente.get(url_dia(seccion, fecha))
+    assert respuesta.status_code == 200
+    return respuesta.content.decode()
+
+
+def test_selector_un_jueves(cliente, seccion_docente, lista, anio_2026, hoy_miercoles):
+    """Escenario "Selector un jueves": lunes a jueves son enlaces; el viernes, atenuado."""
+    jueves = datetime.date(2026, 10, 29)
+    hoy_miercoles["valor"] = jueves
+
     html = abrir(cliente, seccion_docente)
 
-    dias = botones(html, "dia")
+    dias = controles(html, "dia")
     assert len(dias) == 5, "un solo selector"
+    assert [d[1:2] for d in dias] == ["a", "a", "a", "a", "b"]
+    assert [href(d) for d in dias[:3]] == [
+        url_dia(seccion_docente, datetime.date(2026, 10, d)) for d in (26, 27, 28)
+    ]
+    assert href(dias[3]) == url_hoy(seccion_docente), "hoy se enlaza a asistencia/"
+    assert 'aria-current="date"' in dias[3]
+    assert "data-elegido" in dias[3]
+    assert nombre_accesible(dias[3]) == "Jue 29 de octubre, hoy"
+    assert nombre_accesible(dias[0]) == "Lun 26 de octubre"
+    assert 'aria-disabled="true"' in dias[4]
+    assert nombre_accesible(dias[4]) == "Vie 30 de octubre, no disponible"
+    assert sum('aria-current="date"' in d for d in dias) == 1
+    assert sum("data-elegido" in d for d in dias) == 1
+    anterior, siguiente = controles(html, "flecha")
+    assert href(anterior) == url_dia(seccion_docente, datetime.date(2026, 10, 22))
+    assert nombre_accesible(anterior) == "Semana anterior"
+    assert href(siguiente) is None
+    assert 'aria-disabled="true"' in siguiente
+    assert nombre_accesible(siguiente) == "Semana siguiente no disponible"
+    assert not re.search(r"<button[^>]* disabled[ >]", html), "aria-disabled, no disabled"
+
+
+def test_selector_en_un_dia_pasado(cliente, seccion_docente, lista, anio_2026):
+    """Escenario "Selector en un día pasado": el miércoles de la semana anterior."""
+    miercoles = datetime.date(2026, 10, 21)
+
+    html = abrir_dia(cliente, seccion_docente, miercoles)
+
+    dias = controles(html, "dia")
+    assert [d[1:2] for d in dias] == ["a"] * 5
+    elegido = dias[2]
+    assert "data-elegido" in elegido
+    assert nombre_accesible(elegido) == "Mié 21 de octubre, abierto"
+    assert sum("data-elegido" in d for d in dias) == 1
+    assert 'aria-current="date"' not in html, "ninguno de esos días es hoy"
+    assert href(elegido) == url_dia(seccion_docente, miercoles)
+    anterior, siguiente = controles(html, "flecha")
+    assert href(anterior) == url_dia(seccion_docente, datetime.date(2026, 10, 14))
+    assert href(siguiente) == url_hoy(seccion_docente), "el mismo día una semana después es hoy"
+
+
+def test_en_un_dia_pasado_hoy_conserva_su_marca_sin_ser_el_elegido(
+    cliente, seccion_docente, lista, anio_2026
+):
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+
+    dias = controles(html, "dia")
     hoy = [d for d in dias if 'aria-current="date"' in d]
     assert len(hoy) == 1
-    assert 'aria-label="Mié 28 de octubre, hoy"' in hoy[0]
-    assert "aria-disabled" not in hoy[0]
-    assert all('aria-disabled="true"' in d for d in dias if d not in hoy)
-    assert 'aria-label="Lun 26 de octubre, no disponible"' in html
-    assert 'aria-label="Vie 30 de octubre, no disponible"' in html
-    flechas = botones(html, "flecha")
-    assert len(flechas) == 2
-    assert all('aria-disabled="true"' in f for f in flechas)
-    assert 'aria-label="Semana anterior no disponible"' in html
-    assert 'aria-label="Semana siguiente no disponible"' in html
-    assert not re.search(r"<button[^>]* disabled[ >]", html), "aria-disabled, no disabled"
+    assert nombre_accesible(hoy[0]) == "Mié 28 de octubre, hoy"
+    assert "data-elegido" not in hoy[0]
+    assert href(hoy[0]) == url_hoy(seccion_docente)
+    assert nombre_accesible(dias[0]) == "Lun 26 de octubre, abierto"
+    assert "data-elegido" in dias[0]
+
+
+def test_selector_primera_semana_del_ano(cliente, seccion_docente, lista, anio_2026):
+    """Escenario "Primera semana del año": empieza un miércoles."""
+    miercoles = datetime.date(2026, 10, 21)
+    Periodo.objects.create(
+        anio_escolar=anio_2026,
+        numero=1,
+        fecha_inicio=miercoles,
+        fecha_fin=datetime.date(2026, 12, 18),
+    )
+
+    html = abrir_dia(cliente, seccion_docente, miercoles)
+
+    dias = controles(html, "dia")
+    assert [d[1:2] for d in dias] == ["b", "b", "a", "a", "a"]
+    assert nombre_accesible(dias[0]) == "Lun 19 de octubre, no disponible"
+    assert nombre_accesible(dias[1]) == "Mar 20 de octubre, no disponible"
+    assert all('aria-disabled="true"' in d for d in dias[:2])
+    anterior, siguiente = controles(html, "flecha")
+    assert href(anterior) is None
+    assert 'aria-disabled="true"' in anterior
+    assert nombre_accesible(anterior) == "Semana anterior no disponible"
+    assert href(siguiente) is not None
+
+
+def test_la_flecha_siguiente_vuelve_a_hoy_si_se_pasa(cliente, seccion_docente, lista, anio_2026):
+    viernes = datetime.date(2026, 10, 23)
+
+    html = abrir_dia(cliente, seccion_docente, viernes)
+
+    _, siguiente = controles(html, "flecha")
+    assert href(siguiente) == url_hoy(seccion_docente)
+
+
+def test_el_selector_de_un_dia_no_dice_solo_puedes_marcar_hoy(
+    cliente, seccion_docente, lista, anio_2026
+):
+    assert "Solo puedes marcar hoy." not in abrir_dia(cliente, seccion_docente, LUNES)
+
+
+def test_abrir_el_viernes_desde_el_sabado(
+    cliente, seccion_docente, lista, anio_2026, hoy_miercoles
+):
+    """Escenario "Abrir el viernes desde el sábado"."""
+    hoy_miercoles["valor"] = SABADO
+
+    sabado = abrir(cliente, seccion_docente)
+    dias = controles(sabado, "dia")
+    viernes = dias[4]
+    assert nombre_accesible(viernes) == "Vie 30 de octubre"
+    assert not any("data-elegido" in d or "aria-current" in d for d in dias)
+    assert "data-estudiante=" not in sabado
+
+    abierto = cliente.get(href(viernes))
+
+    assert abierto.status_code == 200
+    html = abierto.content.decode()
+    assert html.count("data-estudiante=") == 25
+    assert 'data-fecha="2026-10-30"' in html
 
 
 def test_la_semana_que_cruza_de_mes_lo_dice(cliente, seccion_docente, lista, hoy_miercoles):
@@ -655,6 +940,157 @@ def test_la_semana_que_cruza_de_mes_lo_dice(cliente, seccion_docente, lista, hoy
 
     assert 'aria-label="Semana del 28 de septiembre al 2 de octubre"' in html
     assert 'aria-label="Jue 1 de octubre, hoy"' in html
+
+
+# --- Textos de un día pasado (spec «Textos de un día pasado»; US-031, D5) ---
+
+
+def test_titulo_de_un_dia_pasado(cliente, seccion_docente, lista, anio_2026):
+    """Escenario "Título de un día pasado"."""
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+    contenido = principal(html)
+
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == [
+        "Asistencia del lunes 26 de octubre"
+    ]
+    assert "<title>Asistencia del lunes 26 de octubre · 2.º A · CarpetaDocente</title>" in html
+    assert '<ol class="filas-asistencia" aria-label="Asistencia del lunes 26 de octubre">' in html
+    assert (
+        '<div class="hoja-cabecera"><span>25 estudiantes activos</span><span>Lunes 26</span></div>'
+        in contenido
+    )
+    assert '<time datetime="2026-10-26">Lunes 26 de octubre</time>' in contenido
+    assert "Asistencia de hoy" not in html
+    assert "<span>Hoy</span>" not in html
+
+
+def test_hoy_sigue_con_sus_textos(cliente, seccion_docente, lista, anio_2026):
+    html = abrir(cliente, seccion_docente)
+
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == ["Asistencia de hoy"]
+    assert '<ol class="filas-asistencia" aria-label="Asistencia de hoy">' in html
+    assert "<span>Hoy</span></div>" in html
+    assert 'data-texto-cierre="Asistencia de hoy completa"' in html
+    assert "Fuera del registro" not in html
+
+
+def test_abrir_hoy_con_su_fecha_lleva_los_textos_de_hoy(cliente, seccion_docente, lista, anio_2026):
+    html = abrir_dia(cliente, seccion_docente, MIERCOLES)
+
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == ["Asistencia de hoy"]
+    assert "<span>Hoy</span></div>" in html
+
+
+def test_fuera_del_registro_del_lunes(cliente, seccion_docente, lista, anio_2026):
+    """Escenario "Fuera del registro del lunes 16": un retirado sin fecha en un día pasado."""
+    Estudiante.objects.create(
+        seccion=seccion_docente, apellidos="ESPINOZA VARGAS", nombres="RENATO", estado="RETIRADO"
+    )
+
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+
+    assert re.search(r'<p class="fuera-registro__titulo">Fuera del registro del lunes 26</p>', html)
+    assert "Fuera del registro de hoy" not in html
+
+
+def test_el_cierre_de_un_dia_pasado_dice_el_dia(cliente, seccion_docente, lista, anio_2026):
+    """Escenario "Cierre de un día pasado", con la jornada ya completa."""
+    poner(seccion_docente, lista, "ASISTIO", fecha=LUNES)
+
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+    caja = tarjeta(html)
+
+    assert "jornada-completa" in html
+    assert re.search(
+        r"<p [^>]*data-cierre>.*?Asistencia del lunes 26 completa</p>", caja, re.DOTALL
+    )
+    assert "Asistencia de hoy completa" not in html
+    raiz = re.search(r"<div [^>]*data-asistencia[^>]*>", html).group(0)
+    assert 'data-texto-cierre="Asistencia del lunes 26 completa"' in raiz
+
+
+# --- Periodo cerrado (spec «Periodo cerrado»; US-031, D6) ---
+
+AVISO_CERRADO = "El periodo está cerrado. Solicita a la dirección que habilite la corrección"
+
+
+@pytest.fixture
+def periodo_cerrado(monkeypatch):
+    """El enganche de US-026 devuelve verdadero: la prueba real del cierre va con esa historia."""
+    monkeypatch.setattr(servicios, "periodo_cerrado", lambda seccion, fecha: True)
+
+
+def test_caso_de_error_el_periodo_cerrado_muestra_la_lista_sin_circulos(
+    cliente, seccion_docente, lista, anio_2026, periodo_cerrado
+):
+    """Escenario "Caso de error" del periodo cerrado."""
+    poner(seccion_docente, lista[:2], "FALTO", fecha=LUNES)
+    poner(seccion_docente, [lista[2]], "JUSTIFICADO", "Constancia entregada", fecha=LUNES)
+
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+    contenido = principal(html)
+
+    assert AVISO_CERRADO in contenido
+    assert len(re.findall(r'<li class="fila-asistencia[^"]*" id="fila-', contenido)) == 25
+    primera = texto(fila(html, lista[0]))
+    assert "01" in primera
+    assert nombre(lista[0]) in primera
+    assert "Faltó" in primera
+    justificado = texto(fila(html, lista[2]))
+    assert "Justificado" in justificado
+    assert "Constancia entregada" in justificado
+    assert "Sin marcar" in texto(fila(html, lista[3]))
+    for ausente in (
+        "data-asistencia",
+        "data-marcar",
+        "data-nota-campo",
+        "data-estado=",
+        "restantes como Asistió",
+        "estado--",
+        "asistencia.js",
+        "data-barra-deshacer",
+        '<button type="button" class="marcar"',
+    ):
+        assert ausente not in html, ausente
+    assert Jornada.objects.count() == 1, "abrirla no crea nada"
+
+
+def test_el_periodo_cerrado_conserva_el_selector_y_los_textos_del_dia(
+    cliente, seccion_docente, lista, anio_2026, periodo_cerrado
+):
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+
+    assert len(controles(html, "dia")) == 5
+    assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.DOTALL) == [
+        "Asistencia del lunes 26 de octubre"
+    ]
+    assert "<span>Lunes 26</span>" in html
+
+
+def test_los_guardados_de_un_periodo_cerrado_responden_409_sin_guardar(
+    cliente, seccion_docente, lista, anio_2026, periodo_cerrado
+):
+    """Escenario "Guardado en un periodo cerrado"."""
+    marcar = cliente.post(url_marcar(seccion_docente, lista[0], LUNES), {"estado": "FALTO"})
+    restantes = cliente.post(
+        url_restantes(seccion_docente, LUNES), {"estudiante": [lista[0].pk, lista[1].pk]}
+    )
+
+    assert marcar.status_code == 409
+    assert restantes.status_code == 409
+    assert not Jornada.objects.exists()
+    assert not Asistencia.objects.exists()
+
+
+def test_sin_cierre_de_periodos_se_ve_la_pantalla_para_marcar(
+    cliente, seccion_docente, lista, anio_2026
+):
+    """Escenario "Sin cierre de periodos": el enganche real devuelve falso."""
+    html = abrir_dia(cliente, seccion_docente, LUNES)
+
+    assert "El periodo está cerrado" not in html
+    assert len(botones(html, "marcar")) == 25
+    assert "data-asistencia" in html
 
 
 # 1.5 Filas (D3)

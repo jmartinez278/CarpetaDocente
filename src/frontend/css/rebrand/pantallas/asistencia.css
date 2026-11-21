@@ -387,6 +387,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
     padding: var(--s-1) var(--s-2);
     background: transparent;
     border: 0;
@@ -411,19 +413,24 @@
     line-height: 1.2;
   }
 
-  .selector-semana .dia[aria-current] {
-    background: var(--folder);
+  .selector-semana a.flecha,
+  .selector-semana a.dia {
+    text-decoration: none;
+  }
+
+  /* Hoy (aria-current) y el día abierto (data-elegido) comparten el resaltado; hoy sin ser el abierto solo toma el color. */
+  .selector-semana .dia[aria-current],
+  .selector-semana .dia[data-elegido] {
     color: var(--action);
+  }
+
+  .selector-semana .dia[data-elegido] {
+    background: var(--folder);
   }
 
   .selector-semana [aria-disabled="true"] {
     opacity: 0.6;
     cursor: default;
-  }
-
-  .selector-semana__ayuda {
-    color: var(--muted);
-    font-size: var(--text-label);
   }
 
   .hoja-cabecera {
@@ -450,6 +457,22 @@
 
   .fila-asistencia:last-child {
     border-bottom: 0;
+  }
+
+  /* Periodo cerrado (US-031, D6): lista de lectura, sin la columna del círculo. */
+  .asistencia-cerrada {
+    display: grid;
+    gap: var(--s-5);
+  }
+
+  .fila-asistencia.fila-asistencia--cerrada {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .fila__nota {
+    margin-top: var(--s-1);
+    color: var(--muted);
+    overflow-wrap: anywhere;
   }
 
   .fila__numero {
@@ -828,11 +851,6 @@
       padding: var(--s-1);
     }
 
-    .selector-semana__ayuda {
-      flex-basis: 100%;
-      padding: var(--s-1) var(--s-3) 0;
-    }
-
     .hoja-cabecera {
       padding: 14px var(--s-4);
     }
@@ -847,6 +865,10 @@
 
     .fila__numero {
       font-size: 12px;
+    }
+
+    .fila-asistencia.fila-asistencia--cerrada {
+      grid-template-columns: 16px minmax(0, 1fr);
     }
 
     .estudiante__nombre strong {

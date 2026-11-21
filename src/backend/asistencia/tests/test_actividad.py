@@ -19,7 +19,10 @@ from institucion.models import Estudiante, Seccion
 pytestmark = pytest.mark.django_db
 
 HOY = datetime.date(2026, 10, 28)
-AYER = HOY - datetime.timedelta(days=1)
+MANANA = HOY + datetime.timedelta(days=1)
+# US-031: hoy jueves 19-11-2026, corrección del lunes 16.
+JUEVES = datetime.date(2026, 11, 19)
+LUNES_16 = datetime.date(2026, 11, 16)
 A = Asistencia.Estado
 
 
@@ -208,6 +211,71 @@ def test_un_estudiante_no_activo_no_impide_la_jornada_completa(seccion, lista, d
     assert len(entradas(Operacion.JORNADA_COMPLETA)) == 1
 
 
+# --- Corrección de un día anterior (US-031, D7) ---
+
+
+@pytest.fixture
+def anio_2026(seccion):
+    """El año ABIERTO de la sección pasa a 2026, así el lunes 16 de noviembre cae dentro."""
+    anio = seccion.anio_escolar
+    anio.anio = 2026
+    anio.save()
+    return anio
+
+
+def marcar_el(fecha, seccion, estudiante, estado, docente, nota="", hoy=JUEVES):
+    servicios.marcar(seccion, estudiante.pk, fecha, estado, nota, docente, hoy=hoy)
+
+
+def test_correccion_de_un_dia_anterior_lleva_correccion(seccion, lista, docente, anio_2026):
+    marcar_el(LUNES_16, seccion, lista[0], A.FALTO, docente)
+
+    marcar_el(LUNES_16, seccion, lista[0], A.JUSTIFICADO, docente)
+
+    assert cambios()[-1] == {
+        "estudiante": lista[0].pk,
+        "anterior": A.FALTO,
+        "nuevo": A.JUSTIFICADO,
+        "nota_cambiada": False,
+        "origen": "toque",
+        "correccion": True,
+    }
+
+
+def test_cambio_de_hoy_no_lleva_correccion(seccion, lista, docente, anio_2026):
+    marcar_el(JUEVES, seccion, lista[0], A.FALTO, docente)
+    marcar_el(JUEVES, seccion, lista[0], A.JUSTIFICADO, docente)
+
+    assert all("correccion" not in detalle for detalle in cambios())
+    assert len(cambios()) == 2
+
+
+def test_dia_anterior_olvidado_deja_registro_de_esa_fecha_y_correccion(
+    seccion, lista, docente, anio_2026
+):
+    marcar_el(LUNES_16, seccion, lista[0], A.ASISTIO, docente)
+
+    registro = entradas(Operacion.REGISTRO_ASISTENCIA)[0]
+    assert registro.detalle == {"seccion": seccion.pk, "fecha": "2026-11-16"}
+    assert cambios() == [
+        {
+            "estudiante": lista[0].pk,
+            "anterior": None,
+            "nuevo": A.ASISTIO,
+            "nota_cambiada": False,
+            "origen": "toque",
+            "correccion": True,
+        }
+    ]
+
+
+def test_lote_de_un_dia_anterior_lleva_correccion(seccion, lista, docente, anio_2026):
+    servicios.marcar_restantes(seccion, [e.pk for e in lista], LUNES_16, docente, hoy=JUEVES)
+
+    assert entradas(Operacion.REGISTRO_ASISTENCIA)[0].detalle["fecha"] == "2026-11-16"
+    assert [(d["origen"], d["correccion"]) for d in cambios()] == [("lote", True)] * 3
+
+
 # --- La operación falla: sin entrada ---
 
 
@@ -221,9 +289,9 @@ def test_toque_de_otra_seccion_no_deja_entrada(seccion, lista, docente):
     assert entradas() == []
 
 
-def test_toque_con_fecha_que_no_es_hoy_no_deja_entrada(seccion, lista, docente):
+def test_toque_con_fecha_que_no_se_abre_no_deja_entrada(seccion, lista, docente):
     with pytest.raises(servicios.FechaNoValida):
-        marcar(seccion, lista[0], A.ASISTIO, docente, fecha=AYER)
+        marcar(seccion, lista[0], A.ASISTIO, docente, fecha=MANANA)
 
     assert entradas() == []
 

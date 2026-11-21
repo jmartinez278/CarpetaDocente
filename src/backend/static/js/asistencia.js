@@ -232,7 +232,7 @@
     if (completa && !trazado) {
       trazado = true;
       setTimeout(() => {
-        if (cerrada) anunciar("Asistencia de hoy completa");
+        if (cerrada) anunciar(raiz.dataset.textoCierre);
       }, ESPERA_ANUNCIO_CIERRE);
     }
   }

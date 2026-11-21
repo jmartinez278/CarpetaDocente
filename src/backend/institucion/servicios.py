@@ -443,16 +443,17 @@ def importar_lista_sin_registro(seccion, texto):
     return len(filas), []
 
 
-def _guardar_estudiante(estudiante, existente=False):
+def _guardar_estudiante(estudiante, campos=None):
     """Valida (campos y ``uq_estudiante``) y guarda; un homónimo por carrera da el mismo error.
 
-    Con ``existente`` solo actualiza: si otra petición lo quitó entretanto, el ``save()`` normal
+    Con ``campos`` solo actualiza esos campos: una copia vieja no revierte ``estado`` ni
+    ``fecha_estado`` (US-031, D9), y si otra petición lo quitó entretanto, el ``save()`` normal
     lo volvería a crear con la misma PK; aquí lanza ``Estudiante.DoesNotExist``.
     """
     estudiante.full_clean()
     try:
         with transaction.atomic():
-            estudiante.save(force_update=existente)
+            estudiante.save(update_fields=campos)
     except IntegrityError:
         raise ValidationError(ESTUDIANTE_REPETIDO) from None
     except DatabaseError:
@@ -496,7 +497,7 @@ def editar_estudiante(estudiante, apellidos, nombres, usuario=None):
         if guardado is None:
             raise Estudiante.DoesNotExist
         campos = [campo for campo, valor in nuevos.items() if guardado[campo] != valor]
-        _guardar_estudiante(estudiante, existente=True)
+        _guardar_estudiante(estudiante, campos=list(nuevos))
         if campos:
             registrar(
                 usuario,

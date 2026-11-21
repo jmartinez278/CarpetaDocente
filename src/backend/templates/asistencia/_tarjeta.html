@@ -16,7 +16,7 @@ marcar». El conteo no se oculta nunca (A-02): con todos marcados dice «0 sin m
   </div>
   <progress max="{{ lista.total }}" value="{{ lista.marcados }}" aria-label="Estudiantes marcados" data-progreso></progress>
   <p class="sin-marcar--pc"><a class="sin-marcar"{% if not lista.completa %} href="#{{ lista.primera_sin_marcar }}"{% endif %} data-sin-marcar>{{ lista.sin_marcar }} sin marcar</a>{% include "iconos/arrow-right.svg" with clase="sin-marcar__flecha" %}</p>
-  <p class="cierre-jornada" data-cierre{% if not lista.completa %} hidden{% endif %}>{% include "iconos/check.svg" %}Asistencia de hoy completa</p>
+  <p class="cierre-jornada" data-cierre{% if not lista.completa %} hidden{% endif %}>{% include "iconos/check.svg" %}Asistencia {% if es_hoy %}de hoy{% else %}del {{ texto_dia_corto }}{% endif %} completa</p>
   <dl class="totales">{% for estado, palabra, total in lista.totales_en_orden %}<div class="total--{{ estado|lower }}"><dt>{{ palabra }}</dt><dd data-total="{{ estado }}">{{ total }}</dd></div>{% endfor %}</dl>
   <p class="small nombres-pendientes" data-nombres-pendientes hidden></p>
   {% include "asistencia/_marcar_todos.html" with variante="tarjeta" %}

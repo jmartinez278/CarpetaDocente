@@ -1,5 +1,7 @@
 """Pruebas de los servicios de la lista de estudiantes (spec estudiantes-seccion; D2 y D9)."""
 
+import datetime
+
 import pytest
 from django.core.exceptions import ValidationError
 
@@ -275,6 +277,34 @@ def test_editar_un_estudiante_ya_quitado_no_lo_vuelve_a_crear(seccion, borrar):
 
     with pytest.raises(Estudiante.DoesNotExist):
         servicios.editar_estudiante(cargado_en_editar, "quispe mamani", "ana lucía")
+
+    assert seccion.estudiantes.count() == 0
+
+
+def test_editar_una_copia_vieja_no_revierte_estado_ni_fecha_estado(seccion):
+    # US-031, D9: otra pestaña lo retiró después de cargar Editar; solo se guardan los nombres.
+    crear(seccion, "QUISPE MAMANI, ANA LUCIA")
+    copia_vieja = seccion.estudiantes.get()
+    Estudiante.objects.filter(pk=copia_vieja.pk).update(
+        estado=Estudiante.Estado.RETIRADO, fecha_estado=datetime.date(2026, 11, 18)
+    )
+
+    servicios.editar_estudiante(copia_vieja, "quispe mamani", "ana lucía")
+
+    guardado = Estudiante.objects.get(pk=copia_vieja.pk)
+    assert guardado.nombres == "ANA LUCÍA"
+    assert guardado.estado == Estudiante.Estado.RETIRADO
+    assert guardado.fecha_estado == datetime.date(2026, 11, 18)
+
+
+def test_guardar_solo_los_nombres_de_un_estudiante_borrado_no_lo_crea(seccion):
+    # El UPDATE con update_fields sin filas afectadas también se traduce a DoesNotExist (D9).
+    crear(seccion, "QUISPE MAMANI, ANA LUCIA")
+    copia = seccion.estudiantes.get()
+    Estudiante.objects.filter(pk=copia.pk).delete()
+
+    with pytest.raises(Estudiante.DoesNotExist):
+        servicios._guardar_estudiante(copia, campos=["apellidos", "nombres"])
 
     assert seccion.estudiantes.count() == 0
 

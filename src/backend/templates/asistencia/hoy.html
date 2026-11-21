@@ -8,16 +8,16 @@ asistencia.js agrega el toque, la cola de guardado, el lote y los avisos. El <ma
 entre 700 y 960) con una sola tarjeta café; hasta 699 px, una columna con la tarjeta como resumen fijo bajo la barra.
 {% endcomment %}
 
-{% block titulo %}Asistencia · {{ seccion_corta }} · CarpetaDocente{% endblock %}
+{% block titulo %}{% if es_hoy %}Asistencia{% else %}Asistencia del {{ texto_dia }}{% endif %} · {{ seccion_corta }} · CarpetaDocente{% endblock %}
 
 {% block titulo_barra %}Asistencia{% endblock %}
 
 {% block principal %}
-<div class="asistencia-hoy{% if con_lista and lista.completa %} jornada-completa{% endif %}" data-dimension="asistencia">
+<div class="asistencia-hoy{% if con_acciones and lista.completa %} jornada-completa{% endif %}" data-dimension="asistencia">
   <header class="page-heading asistencia-cabecera">
     <div>
       <p class="small">{{ seccion.grado }}.º grado, sección {{ seccion.nombre }} · {{ seccion.anio_escolar.anio }}</p>
-      <h1>Asistencia de hoy</h1>
+      <h1>{% if es_hoy %}Asistencia de hoy{% else %}Asistencia del {{ texto_dia }}{% endif %}</h1>
     </div>
     <p class="heading-meta"><time datetime="{{ fecha|date:'Y-m-d' }}">{{ texto_fecha }}</time></p>
   </header>
@@ -25,8 +25,10 @@ entre 700 y 960) con una sola tarjeta café; hasta 699 px, una columna con la ta
   {% include "asistencia/_fin_de_semana.html" %}
   {% elif not con_lista %}
   {% include "asistencia/_sin_estudiantes.html" %}
+  {% elif periodo_cerrado %}
+  {% include "asistencia/_periodo_cerrado.html" %}
   {% else %}
-  <div class="asistencia-rejilla" data-asistencia data-seccion="{{ seccion.pk }}" data-fecha="{{ fecha|date:'Y-m-d' }}" data-url-marcar="{{ url_marcar }}" data-url-restantes="{{ url_restantes }}">
+  <div class="asistencia-rejilla" data-asistencia data-seccion="{{ seccion.pk }}" data-fecha="{{ fecha|date:'Y-m-d' }}" data-url-marcar="{{ url_marcar }}" data-url-restantes="{{ url_restantes }}" data-texto-cierre="Asistencia {% if es_hoy %}de hoy{% else %}del {{ texto_dia_corto }}{% endif %} completa">
     <aside class="asistencia-lateral" aria-label="Avance de la jornada">
       {% include "asistencia/_tarjeta.html" %}
       <div class="aviso-conexion" data-sin-conexion hidden>{% include "rb/mensaje.html" with tipo="error" titulo="Sin conexión" texto="Tus marcas se guardarán cuando vuelva la señal. No cierres esta pantalla." %}</div>
@@ -37,25 +39,19 @@ entre 700 y 960) con una sola tarjeta café; hasta 699 px, una columna con la ta
       <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Activa JavaScript para registrar la asistencia." %}</noscript>
       {% include "asistencia/_leyenda.html" with plegable=True %}
       <div class="hoja">
-        {% include "asistencia/_selector.html" with semana_activa=True %}
-        <div class="hoja-cabecera"><span>{{ lista.total }} estudiante{{ lista.total|pluralize }} activo{{ lista.total|pluralize }}</span><span>Hoy</span></div>
-        <ol class="filas-asistencia" aria-label="Asistencia de hoy">
+        {% include "asistencia/_selector.html" %}
+        <div class="hoja-cabecera"><span>{{ lista.total }} estudiante{{ lista.total|pluralize }} activo{{ lista.total|pluralize }}</span><span>{% if es_hoy %}Hoy{% else %}{{ texto_dia_corto|capfirst }}{% endif %}</span></div>
+        <ol class="filas-asistencia" aria-label="Asistencia {% if es_hoy %}de hoy{% else %}del {{ texto_dia }}{% endif %}">
           {% for fila in lista.filas %}<li class="fila-asistencia" id="fila-{{ fila.estudiante.pk }}" data-estudiante="{{ fila.estudiante.pk }}" data-estado="{{ fila.estado|default_if_none:"" }}">{% include "asistencia/_fila.html" %}</li>
           {% endfor %}
         </ol>
-        {% if lista.no_activos %}
-        <div class="fuera-registro" data-fuera-registro>
-          <p class="fuera-registro__titulo">Fuera del registro de hoy</p>
-          <p class="small">No cuentan entre los {{ lista.total }} estudiantes.</p>
-          <ul>{% for estudiante in lista.no_activos %}<li><span class="estudiante__nombre"><strong>{{ estudiante.apellidos }},</strong> {{ estudiante.nombres }}</span><span class="marca-fuera" data-marca-fuera>{{ estudiante.estado }}</span></li>{% endfor %}</ul>
-        </div>
-        {% endif %}
+        {% include "asistencia/_fuera_registro.html" %}
       </div>
     </div>
   </div>
   {% endif %}
 </div>
-{% if con_lista %}
+{% if con_acciones %}
 <div class="barra-deshacer" data-barra-deshacer hidden><p data-deshacer-mensaje></p><button type="button" class="btn btn--text" data-deshacer>Deshacer <span data-segundos aria-hidden="true">(5)</span></button></div>
 <div id="anuncio" class="sr-only" role="status" aria-live="polite"></div>
 <script src="{% static 'js/asistencia.js' %}" defer></script>
