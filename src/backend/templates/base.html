@@ -10,6 +10,8 @@ fuentes de una sola pantalla: Besley, solo en el inicio de sesión (rebrand-us-0
   <link rel="preload" href="{% static 'dist/fuentes/instrument-sans-latin-400-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{% static 'dist/fuentes/instrument-sans-latin-500-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   {% block precargas %}{% endblock %}
+  {% comment %}Tema (T-04): bloqueante y antes de la hoja, para poner data-theme antes de pintar (sin destello).{% endcomment %}
+  <script src="{% static 'js/tema.js' %}"></script>
   <link rel="stylesheet" href="{% static 'dist/app.css' %}">
   {% block scripts %}{% endblock %}
 </head>

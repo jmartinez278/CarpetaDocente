@@ -309,9 +309,12 @@ def test_el_anuncio_del_envio_es_una_region_status_vacia_oculta_y_fuera_del_form
 def test_carga_ingresar_js_pero_no_alpine_ni_htmx(pagina):
     scripts = re.findall(r"<script\b[^>]*>", pagina, re.IGNORECASE)
 
-    assert len(scripts) == 1
-    assert "js/ingresar.js" in scripts[0]
-    assert "defer" in scripts[0]
+    # tema.js (T-04) va primero, en <head> y sin defer; ingresar.js, con defer.
+    assert len(scripts) == 2
+    assert "js/tema.js" in scripts[0]
+    assert "defer" not in scripts[0]
+    assert "js/ingresar.js" in scripts[1]
+    assert "defer" in scripts[1]
     assert "alpine" not in pagina.lower()
     assert "htmx" not in pagina.lower()
 
@@ -423,13 +426,15 @@ def test_la_portada_carga_sus_scripts_sin_alpine(portada):
     scripts = re.findall(r'<script src="([^"]+)"', portada)
 
     assert "alpine" not in portada.lower()
-    assert scripts[:3] == [
+    # tema.js (T-04) abre <head>, sin defer; después van los de la portada.
+    assert scripts[0] == "/static/js/tema.js"
+    assert scripts[1:4] == [
         "/static/js/portada.js",
         "/static/dist/vendor/htmx.min.js",
         "/static/js/estudiantes.js",
     ]
     # El resto es del marco: el menú de la cuenta (notas-borrador.js y menu.js), bfcache y marco.
-    assert sorted(scripts[3:]) == sorted(
+    assert sorted(scripts[4:]) == sorted(
         [
             "/static/js/notas-borrador.js",
             "/static/js/menu.js",
@@ -437,7 +442,9 @@ def test_la_portada_carga_sus_scripts_sin_alpine(portada):
             "/static/js/marco.js",
         ]
     )
-    assert all("defer" in s for s in re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE))
+    etiquetas = re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE)
+    assert "defer" not in etiquetas[0]
+    assert all("defer" in s for s in etiquetas[1:])
 
 
 def test_la_portada_tiene_un_solo_main(portada):
@@ -894,10 +901,11 @@ def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
 def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_portada_js(inicio_direccion):
     assert "<table" not in inicio_direccion
     assert "<article" not in inicio_direccion
-    # Solo los scripts del marco: la cuenta (notas-borrador.js y menu.js), bfcache y marco.
+    # Solo los scripts del marco: el tema, la cuenta (notas-borrador.js y menu.js), bfcache y marco.
     scripts = re.findall(r'<script src="([^"]+)"', inicio_direccion)
     assert sorted(scripts) == sorted(
         [
+            "/static/js/tema.js",
             "/static/js/notas-borrador.js",
             "/static/js/menu.js",
             "/static/js/plantilla-siagie.js",

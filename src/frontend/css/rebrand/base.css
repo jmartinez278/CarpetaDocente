@@ -2,7 +2,7 @@
    el preflight de Tailwind (rebrand-base, D1 y D3). */
 
 /* Instrument Sans 400 y 500 latinas, de @fontsource/instrument-sans (las copia copiar-vendor.mjs a
-   dist/fuentes/). Sin Besley: solo la usa el inicio de sesión. */
+   dist/fuentes/). Besley se declara aparte, en pantallas/ingreso.css. */
 @font-face {
   font-family: "Instrument Sans";
   font-style: normal;

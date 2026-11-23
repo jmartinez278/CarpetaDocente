@@ -76,6 +76,9 @@ def test_los_iconos_de_d9_estan_y_llevan_el_aviso_isc():
         "search",
         "sliders-horizontal",
         "trash-2",
+        # Botón de tema (T-04, US-040): la luna en claro y el sol en oscuro.
+        "sun",
+        "moon",
     }
     assert "ISC License" in (CARPETA_ICONOS / "LICENSE-lucide.txt").read_text(encoding="utf-8")
 
@@ -99,3 +102,71 @@ def test_cada_include_de_icono_resuelve_un_archivo():
 
     faltan = {ruta for ruta in includes if not (RAIZ_BACKEND / "templates" / ruta).is_file()}
     assert faltan == set()
+
+
+# Botón de tema (T-04; spec pantallas-de-inicio «Temas claro y oscuro»; US-040, D1).
+def _html(respuesta):
+    assert respuesta.status_code == 200
+    return respuesta.content.decode()
+
+
+def _etiqueta_del_script_de_tema(html):
+    cabeza = re.search(r"<head\b.*?</head>", html, re.DOTALL)
+    assert cabeza, "la página no tiene <head>"
+    scripts = re.findall(r"<script\b[^>]*js/tema\.js[^>]*>", cabeza.group(0))
+    assert len(scripts) == 1, "tema.js debe cargarse una sola vez, dentro de <head>"
+    return cabeza.group(0), scripts[0]
+
+
+def test_base_carga_tema_js_en_el_head_antes_de_la_hoja_y_sin_defer():
+    from django.template.loader import render_to_string
+
+    cabeza, etiqueta = _etiqueta_del_script_de_tema(render_to_string("base.html"))
+
+    assert cabeza.index(etiqueta) < cabeza.index("dist/app.css")
+    assert "defer" not in etiqueta
+    assert "async" not in etiqueta
+    assert 'type="module"' not in etiqueta
+
+
+def test_marco_pinta_el_boton_de_tema_antes_del_menu_de_la_cuenta(client, docente):
+    client.force_login(docente)
+
+    html = _html(client.get("/docente/sin-permiso/"))
+
+    botones = re.findall(r"<button\b[^>]*\bdata-tema\b[^>]*>", html)
+    assert len(botones) == 1
+    assert 'aria-label="Cambiar a tema oscuro"' in botones[0]
+    assert 'type="button"' in botones[0]
+    barra = re.search(r"<header\b.*?</header>", html, re.DOTALL).group(0)
+    assert barra.index("data-tema") < barra.index("data-menu-cuenta")
+
+
+def test_el_boton_de_tema_lleva_sol_y_luna_decorativos(client, docente):
+    client.force_login(docente)
+
+    html = _html(client.get("/docente/sin-permiso/"))
+
+    boton = re.search(r"<button\b[^>]*\bdata-tema\b.*?</button>", html, re.DOTALL).group(0)
+    assert boton.count("<svg") == 2
+    assert boton.count('aria-hidden="true"') == 2
+    assert "data-icono-luna" in boton
+    assert "data-icono-sol" in boton
+
+
+def test_el_ingreso_lleva_el_boton_de_tema(client):
+    html = _html(client.get("/ingresar/"))
+
+    _etiqueta_del_script_de_tema(html)
+    botones = re.findall(r"<button\b[^>]*\bdata-tema\b[^>]*>", html)
+    assert len(botones) == 1
+    assert 'aria-label="Cambiar a tema oscuro"' in botones[0]
+
+
+def test_el_panel_de_administracion_no_lleva_boton_de_tema(client, administrador):
+    client.force_login(administrador)
+
+    html = _html(client.get("/admin/"))
+
+    assert "data-tema" not in html
+    assert "js/tema.js" not in html

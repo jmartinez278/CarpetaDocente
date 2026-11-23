@@ -2,8 +2,8 @@
    propuesta D): pantalla centrada sin barra, la identidad de la I.E., los mensajes y la ficha con el
    formulario. */
 
-/* Besley 600 latina, solo para el nombre de la I.E. (excepción de DESIGN.md). optional: sin cambio
-   de letra a media carga; la precarga va solo en ingresar.html (D5). */
+/* Besley 600 latina, solo en los cuatro lugares de DESIGN.md 1.2 (--tipografia-nombre). optional: sin cambio
+   de letra a media carga; la precarga va solo en las pantallas que la usan (D5). */
 @font-face {
   font-family: "Besley";
   font-style: normal;
@@ -30,6 +30,14 @@
     text-align: center;
   }
 
+  /* Botón de tema (T-04): arriba a la derecha de la pantalla, en el margen --gut. */
+  .login-tema {
+    position: absolute;
+    top: var(--s-4);
+    right: var(--gut);
+    z-index: 10;
+  }
+
   /* Espacio del escudo: reservado y vacío hasta tener autorización de uso. */
   .login-escudo {
     width: 56px;
@@ -39,7 +47,7 @@
 
   .login-ie {
     color: var(--action);
-    font-family: "Besley", Georgia, serif;
+    font-family: var(--tipografia-nombre);
     font-weight: 600;
     font-size: 40px;
     line-height: 1.12;

@@ -1,0 +1,9 @@
+{% comment %}
+Botón de tema (T-04, US-040 D1; DESIGN.md 1.2 «Botón de tema»). Solo ícono: la luna en claro y el sol en oscuro, que
+muestra el CSS según el tema. El nombre accesible dice el tema al que cambia; tema.js lo mantiene al día y alterna el
+tema. Sin elección sigue prefers-color-scheme. Sin JavaScript no hace nada: el tema del sistema ya se aplica.
+{% endcomment %}
+<button class="btn icon-button tema-boton" type="button" data-tema aria-label="Cambiar a tema oscuro">
+  <span class="tema-icono" data-icono-luna>{% include "iconos/moon.svg" %}</span>
+  <span class="tema-icono" data-icono-sol>{% include "iconos/sun.svg" %}</span>
+</button>

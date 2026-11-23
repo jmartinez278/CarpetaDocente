@@ -1,4 +1,4 @@
-/* Tokens del rebrand: Quick Start de DESIGN.md 1.1, copiado tal cual (rebrand-base, D3).
+/* Tokens del rebrand: Quick Start de DESIGN.md 1.2, copiado tal cual (rebrand-base, D3).
    Es el único archivo del marco nuevo con hex. */
 
 /* static: se emiten todos, se usen o no en utilidades; los componentes copiados del prototipo
@@ -51,7 +51,8 @@
   --error-ink: #8C1D18;
   --changed: #76543E;
 
-  /* Papel de miniaturas: fijo en claro y oscuro. */
+  /* Papel claro de miniaturas y vistas previas. En oscuro lleva el papel atenuado de Pizarra neutra (1.2), limitado
+     a esos selectores al final de este archivo; estos tokens no cambian. */
   --preview-paper: #FAF6EF;
   --preview-card: #FEFCF9;
   --preview-ink: #30271F;
@@ -62,6 +63,7 @@
 
   --font-text: 'Instrument Sans', Arial, sans-serif;
   --font-display: var(--font-text);
+  --tipografia-nombre: 'Besley', Georgia, serif;
   --weight-body: 400;
   --display-weight: 500;
   --text-home: 42px;
@@ -166,27 +168,27 @@
 
   html[data-theme=dark] {
     color-scheme: dark;
-    --g-main: #202020;
-    --g-alt: #202020;
-    --card: #342D27;
+    --g-main: #20201F;
+    --g-alt: #20201F;
+    --card: #2C2B28;
     --folder: #4C4033;
     --ink: #F4EDE4;
     --muted: #D1C2AD;
     --action: #E0BF9C;
-    --action-ink: #202020;
+    --action-ink: #20201F;
     --line: #65584A;
     --line-strong: #9D8A73;
     --gold-ink: #E9B70B;
-    --cocoa: #574A3E;
-    --cocoa-line: #9D8A73;
-    --cocoa-ink: #F4EDE4;
-    --cocoa-muted: #E3D6C4;
+    --cocoa: #493B34;
+    --cocoa-line: #838578;
+    --cocoa-ink: #FFF2DD;
+    --cocoa-muted: #E1D2BE;
     --asistio: #5CB87F;
     --asistio-ink: #0E2016;
     --falto: #EE8379;
     --falto-ink: #2A0B08;
     --grid-line: #4B4138;
-    --grid-head: #3D352E;
+    --grid-head: #37342F;
     --grid-hatch: #433A32;
     --row-hover: #3A312A;
     --sel-bg: #463B31;
@@ -202,27 +204,27 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme=light]) {
       color-scheme: dark;
-      --g-main: #202020;
-      --g-alt: #202020;
-      --card: #342D27;
+      --g-main: #20201F;
+      --g-alt: #20201F;
+      --card: #2C2B28;
       --folder: #4C4033;
       --ink: #F4EDE4;
       --muted: #D1C2AD;
       --action: #E0BF9C;
-      --action-ink: #202020;
+      --action-ink: #20201F;
       --line: #65584A;
       --line-strong: #9D8A73;
       --gold-ink: #E9B70B;
-      --cocoa: #574A3E;
-      --cocoa-line: #9D8A73;
-      --cocoa-ink: #F4EDE4;
-      --cocoa-muted: #E3D6C4;
+      --cocoa: #493B34;
+      --cocoa-line: #838578;
+      --cocoa-ink: #FFF2DD;
+      --cocoa-muted: #E1D2BE;
       --asistio: #5CB87F;
       --asistio-ink: #0E2016;
       --falto: #EE8379;
       --falto-ink: #2A0B08;
       --grid-line: #4B4138;
-      --grid-head: #3D352E;
+      --grid-head: #37342F;
       --grid-hatch: #433A32;
       --row-hover: #3A312A;
       --sel-bg: #463B31;
@@ -233,6 +235,42 @@
       --error-ink: #FFDAD5;
       --changed: #E0BF9C;
       --shadow-editor: 0 16px 40px rgb(0 0 0 / .45);
+    }
+  }
+
+  /* Pizarra neutra (1.2): papel atenuado solo en las miniaturas y las vistas previas de Sesiones; los tokens
+     globales no cambian. Con la elección «oscuro» y con el oscuro del sistema. */
+  html[data-theme=dark] :is(.miniatura--sesiones, .miniatura--notas, .sesion-hoja) {
+    --preview-line: #A38B69;
+    --preview-action: #5B3D28;
+  }
+
+  html[data-theme=dark] :is(.miniatura--sesiones, .miniatura--notas) {
+    --preview-paper: #D9C9AC;
+    --preview-card: #D9C9AC;
+    --preview-sand: #AA9270;
+  }
+
+  html[data-theme=dark] .sesion-hoja {
+    --preview-paper: #E8DDCA;
+    --preview-sand: #C5AD88;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme=light]) :is(.miniatura--sesiones, .miniatura--notas, .sesion-hoja) {
+      --preview-line: #A38B69;
+      --preview-action: #5B3D28;
+    }
+
+    :root:not([data-theme=light]) :is(.miniatura--sesiones, .miniatura--notas) {
+      --preview-paper: #D9C9AC;
+      --preview-card: #D9C9AC;
+      --preview-sand: #AA9270;
+    }
+
+    :root:not([data-theme=light]) .sesion-hoja {
+      --preview-paper: #E8DDCA;
+      --preview-sand: #C5AD88;
     }
   }
 

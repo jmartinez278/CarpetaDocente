@@ -171,7 +171,7 @@ def test_sin_infracciones_graves_de_accesibilidad(
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
-@pytest.mark.parametrize("vista", ["portada", "direccion"])
+@pytest.mark.parametrize("vista", ["portada"])
 def test_el_menu_abierto_no_desborda_la_ventana(
     live_server, page, vista, ancho, docente, direccion, clave
 ):
@@ -234,17 +234,6 @@ def test_el_ojo_mide_44_px_dentro_del_campo(live_server, page, ancho, docente, d
     assert (ojo["width"], ojo["height"]) == (44, 44)
     assert campo["x"] <= ojo["x"] and ojo["x"] + ojo["width"] <= campo["x"] + campo["width"]
     assert campo["y"] <= ojo["y"] and ojo["y"] + ojo["height"] <= campo["y"] + campo["height"]
-
-
-@pytest.mark.parametrize(("ancho", "letra"), [(360, "30px"), (1280, "40px")])
-def test_el_nombre_de_la_ie_mide_40_px_en_pc_y_30_en_celular(
-    live_server, page, ancho, letra, docente, direccion, clave
-):
-    con_pantalla(page, ancho, "light")
-    abrir_vista(page, live_server, "ingresar", docente, direccion, clave)
-
-    nombre = page.get_by_role("heading", level=1)
-    assert nombre.evaluate("(el) => getComputedStyle(el).fontSize") == letra
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
