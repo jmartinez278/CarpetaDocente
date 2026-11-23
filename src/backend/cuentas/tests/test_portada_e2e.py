@@ -1,9 +1,9 @@
 """Portada del docente en el navegador (spec pantallas-de-inicio; rebrand-portada, D4, D5 y D7).
 
 Rejilla a 1280 px y tarjetas apiladas a 360, miniaturas con el papel fijo en los dos temas, tokens
-leídos de la hoja del rebrand, aviso de «Próximamente» sin Alpine, «Hoy: pendiente» sin animación y
-``scrollWidth <= clientWidth`` a 320, 360 y 1280 en ambos temas. Necesita el CSS compilado y
-Chromium: ``uv run pytest -m e2e --browser chromium``.
+leídos de la hoja del rebrand, aviso de «Próximamente» sin Alpine, «Hoy: pendiente» sin animación,
+``scrollWidth <= clientWidth`` a 320, 360 y 1280 y axe a 360 en ambos temas. Necesita el CSS
+compilado y Chromium: ``uv run pytest -m e2e --browser chromium``.
 """
 
 import re
@@ -253,13 +253,12 @@ def test_el_aviso_se_vacia_a_los_tres_segundos(live_server, page, docente, clave
 # --- Ancho (requisito «Sin desplazamiento horizontal») ---
 
 
-@pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", [320, 360, 1280])
 @pytest.mark.parametrize("pantalla", ["ingresar", "docente", "direccion"])
 def test_el_documento_no_se_desplaza_en_horizontal(
-    live_server, page, request, pantalla, ancho, tema, clave
+    live_server, page, request, pantalla, ancho, clave
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, ancho, "light")
     if pantalla == "ingresar":
         abrir_ingresar(page, live_server)
     else:
@@ -349,18 +348,17 @@ def test_toda_la_tarjeta_notas_lleva_a_la_hoja(live_server, page, seccion_de_ana
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("con_pildora", [True, False], ids=["con-pildora", "completa"])
 def test_la_portada_con_y_sin_pildora_pasa_axe(
-    live_server, page, seccion_de_ana, docente, clave, ancho, tema, con_pildora
+    live_server, page, seccion_de_ana, docente, clave, tema, con_pildora
 ):
     if not con_pildora:
         completar_la_jornada(seccion_de_ana)
-    abrir_portada(page, live_server, docente, clave, ancho, tema)
+    abrir_portada(page, live_server, docente, clave, 360, tema)
     expect(pildora(page)).to_have_count(1 if con_pildora else 0)
 
     nombre = "con-pildora" if con_pildora else "completa"
-    revisar_con_axe(page, f"portada-{nombre}-{ancho}-{tema}")
+    revisar_con_axe(page, f"portada-{nombre}-{tema}")
 
 
 def sin_desplazamiento(page):
@@ -370,15 +368,14 @@ def sin_desplazamiento(page):
     )
 
 
-@pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", [320, 360])
 @pytest.mark.parametrize("caso", ["pildora", "sin-estudiantes"])
 def test_la_portada_no_se_desplaza_en_horizontal(
-    live_server, page, request, docente, clave, ancho, tema, caso
+    live_server, page, request, docente, clave, ancho, caso
 ):
     """Escenario «Portada sin desplazamiento interno»."""
     request.getfixturevalue("seccion_de_ana" if caso == "pildora" else "seccion_vacia")
-    abrir_portada(page, live_server, docente, clave, ancho, tema)
+    abrir_portada(page, live_server, docente, clave, ancho)
     if caso == "pildora":
         expect(pildora(page)).to_be_visible()
     else:

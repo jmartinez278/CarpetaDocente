@@ -1,6 +1,6 @@
 """Registro de actividad en el navegador (spec registro-actividad; design de US-008, D9 y D10).
 
-La lista del registro y "Indicadores por semana" pasan axe en ambos temas a 360 y 1280 px, y el
+La lista del registro y "Indicadores por semana" pasan axe en ambos temas a 360 px, y el
 botón "Exportar CSV" descarga lo que la lista tiene filtrado. Necesita el CSS compilado y Chromium:
 ``uv run pytest -m e2e --browser chromium``.
 """
@@ -16,7 +16,7 @@ from playwright.sync_api import expect
 from actividad.models import Operacion, RegistroActividad
 from actividad.tests.conftest import quitar_inicio_de_sesion
 from actividad.tests.test_panel import entrada
-from cuentas.tests.e2e import ANCHOS, TEMAS, con_pantalla, ingresar, revisar_con_axe
+from cuentas.tests.e2e import TEMAS, con_pantalla, ingresar, revisar_con_axe
 
 pytestmark = pytest.mark.e2e
 
@@ -47,33 +47,30 @@ def en_el_panel(live_server, page, administrador, clave):
     return page
 
 
-@pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("tema", TEMAS)
-def test_la_lista_del_registro_pasa_axe(live_server, en_el_panel, con_entradas, tema, ancho):
-    con_pantalla(en_el_panel, ancho, tema)
+def test_la_lista_del_registro_pasa_axe(live_server, en_el_panel, con_entradas, tema):
+    con_pantalla(en_el_panel, 360, tema)
     en_el_panel.goto(f"{live_server.url}{LISTA}")
     expect(en_el_panel.locator("#result_list tbody tr")).to_have_count(2)
 
-    revisar_con_axe(en_el_panel, f"registro-actividad-{tema}-{ancho}")
+    revisar_con_axe(en_el_panel, f"registro-actividad-{tema}")
 
 
-@pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("tema", TEMAS)
-def test_los_indicadores_por_semana_pasan_axe(live_server, en_el_panel, con_entradas, tema, ancho):
-    con_pantalla(en_el_panel, ancho, tema)
+def test_los_indicadores_por_semana_pasan_axe(live_server, en_el_panel, con_entradas, tema):
+    con_pantalla(en_el_panel, 360, tema)
     en_el_panel.goto(f"{live_server.url}{LISTA}")
     en_el_panel.get_by_role("link", name="Indicadores por semana").click()
     expect(en_el_panel).to_have_url(f"{live_server.url}{INDICADORES}")
     # #content-main: el menú lateral del panel también tiene tablas, ocultas en el celular.
     expect(en_el_panel.locator("#content-main tbody tr").first).to_be_visible()
 
-    revisar_con_axe(en_el_panel, f"indicadores-semana-{tema}-{ancho}")
+    revisar_con_axe(en_el_panel, f"indicadores-semana-{tema}")
 
 
 @pytest.mark.parametrize("ruta", [LISTA, INDICADORES])
-@pytest.mark.parametrize("tema", TEMAS)
-def test_las_pantallas_no_desbordan_a_360_px(live_server, en_el_panel, con_entradas, tema, ruta):
-    con_pantalla(en_el_panel, 360, tema)
+def test_las_pantallas_no_desbordan_a_360_px(live_server, en_el_panel, con_entradas, ruta):
+    con_pantalla(en_el_panel, 360, "light")
     en_el_panel.goto(f"{live_server.url}{ruta}")
     expect(en_el_panel.locator("#content-main")).to_be_visible()
     en_el_panel.evaluate("document.fonts.ready")

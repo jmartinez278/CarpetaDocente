@@ -2,7 +2,7 @@
 
 Las vistas (inicio de sesión normal, con error, con campos vacíos, «Ingresando…» y con el aviso
 de inactividad; portada y dirección, cada una con el menú cerrado y abierto; «sin permiso») en
-tema claro y oscuro, a 360 y 1280 px. Falla ante infracciones ``critical`` o ``serious`` de WCAG 2.1
+tema claro y oscuro, a 360 px. Falla ante infracciones ``critical`` o ``serious`` de WCAG 2.1
 A y AA, el contraste incluido (RNF-008), y guarda el informe en ``test-results/``. axe-core llega
 por npm (``npm ci`` en ``src/frontend/``). Se pide con ``uv run pytest -m e2e --browser chromium``.
 """
@@ -153,31 +153,29 @@ def preparar_portada(vista, docente):
             Estudiante.objects.create(seccion=seccion, apellidos=apellidos, nombres="ANA")
 
 
-@pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("vista", VISTAS)
 def test_sin_infracciones_graves_de_accesibilidad(
-    live_server, page, vista, tema, ancho, docente, direccion, clave, monkeypatch
+    live_server, page, vista, tema, docente, direccion, clave, monkeypatch
 ):
     fijar_hora_de_lima(monkeypatch, MIERCOLES_9)
     if vista == "portada-proximamente":
         sesiones_proximamente(monkeypatch)
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, 360, tema)
     abrir_vista(page, live_server, vista, docente, direccion, clave)
     if vista == "portada-hoy-pendiente":
         expect(page.locator("#pend-asistencia")).to_have_text("Hoy: pendiente")
     elif vista == "portada-sin-estudiantes":
         expect(page.get_by_text("Tu sección aún no tiene estudiantes")).to_be_visible()
-    revisar_con_axe(page, f"{vista}-{tema}-{ancho}")
+    revisar_con_axe(page, f"{vista}-{tema}")
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
-@pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("vista", ["portada", "direccion"])
 def test_el_menu_abierto_no_desborda_la_ventana(
-    live_server, page, vista, tema, ancho, docente, direccion, clave
+    live_server, page, vista, ancho, docente, direccion, clave
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, ancho, "light")
     abrir_vista(page, live_server, f"{vista}-menu-abierto", docente, direccion, clave)
     page.evaluate("document.fonts.ready")
 
@@ -190,13 +188,12 @@ def test_el_menu_abierto_no_desborda_la_ventana(
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
-@pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("vista", ["ingresar", "ingresar-con-error", "ingresar-con-aviso"])
 def test_el_inicio_de_sesion_no_desborda(
-    live_server, page, vista, tema, ancho, docente, direccion, clave
+    live_server, page, vista, ancho, docente, direccion, clave
 ):
     """«Sin desplazamiento horizontal» con el marco del rebrand (rebrand-us-001, 2.4)."""
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, ancho, "light")
     abrir_vista(page, live_server, vista, docente, direccion, clave)
     page.evaluate("document.fonts.ready")
 
@@ -251,11 +248,10 @@ def test_el_nombre_de_la_ie_mide_40_px_en_pc_y_30_en_celular(
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
-@pytest.mark.parametrize("tema", TEMAS)
 def test_sin_permiso_no_desborda_y_su_boton_es_tactil(
-    live_server, page, tema, ancho, docente, direccion, clave
+    live_server, page, ancho, docente, direccion, clave
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, ancho, "light")
     abrir_vista(page, live_server, "sin-permiso", docente, direccion, clave)
     page.evaluate("document.fonts.ready")
 

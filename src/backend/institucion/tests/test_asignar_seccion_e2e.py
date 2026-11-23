@@ -2,7 +2,8 @@
 
 El Administrador asigna "2.º grado, sección A" en la ficha de la sección, la docente la ve bajo el
 saludo y luego la misma sección no se puede asignar a otra docente. La portada con la línea de la
-sección pasa axe en ambos temas y no desborda a 320 px. Necesita el CSS compilado y Chromium; se
+sección no desborda a 320 px; su axe va en la vista ``portada-una-seccion`` de
+``test_accesibilidad_e2e``. Necesita el CSS compilado y Chromium; se
 pide con ``uv run pytest -m e2e --browser chromium``.
 """
 
@@ -11,7 +12,7 @@ import re
 import pytest
 from playwright.sync_api import expect
 
-from cuentas.tests.e2e import TEMAS, con_pantalla, ingresar, revisar_con_axe
+from cuentas.tests.e2e import con_pantalla, ingresar
 
 pytestmark = pytest.mark.e2e
 
@@ -60,20 +61,10 @@ def docente_con_seccion(seccion, docente):
     return docente
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-def test_la_portada_con_la_seccion_pasa_axe(live_server, page, tema, docente_con_seccion, clave):
-    con_pantalla(page, 360, tema)
-    ingresar(page, live_server, docente_con_seccion, clave)
-    expect(page.locator(".seccion-entrada p")).to_have_text(LINEA)
-
-    revisar_con_axe(page, f"portada-con-seccion-{tema}")
-
-
-@pytest.mark.parametrize("tema", TEMAS)
 def test_la_portada_con_la_seccion_no_desborda_a_320_px(
-    live_server, page, tema, docente_con_seccion, clave
+    live_server, page, docente_con_seccion, clave
 ):
-    con_pantalla(page, 320, tema)
+    con_pantalla(page, 320, "light")
     ingresar(page, live_server, docente_con_seccion, clave)
     expect(page.locator(".seccion-entrada p")).to_have_text(LINEA)
     page.evaluate("document.fonts.ready")

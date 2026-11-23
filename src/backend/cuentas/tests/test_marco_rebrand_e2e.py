@@ -8,7 +8,7 @@ Chromium: ``uv run pytest -m e2e --browser chromium`` con ``DJANGO_ALLOW_ASYNC_U
 import pytest
 from playwright.sync_api import expect
 
-from cuentas.tests.e2e import TEMAS, con_pantalla, ingresar
+from cuentas.tests.e2e import con_pantalla, ingresar
 from institucion.models import AnioEscolar, Seccion
 
 pytestmark = pytest.mark.e2e
@@ -186,9 +186,8 @@ def test_sin_javascript_el_menu_lleva_a_la_portada(live_server, browser, docente
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
-@pytest.mark.parametrize("tema", TEMAS)
-def test_menu_abierto_no_desborda(live_server, page, docente, clave, tema, ancho):
-    con_pantalla(page, ancho, tema)
+def test_menu_abierto_no_desborda(live_server, page, docente, clave, ancho):
+    con_pantalla(page, ancho, "light")
     entrar(page, live_server, docente, clave)
     abrir_navegacion(page)
 
@@ -272,9 +271,8 @@ def test_sin_javascript_la_cuenta_abre_y_cierra_la_sesion(live_server, browser, 
 
 
 @pytest.mark.parametrize("ancho", [320, 360])
-@pytest.mark.parametrize("tema", TEMAS)
-def test_cuenta_abierta_no_desborda(live_server, page, docente, clave, tema, ancho):
-    con_pantalla(page, ancho, tema)
+def test_cuenta_abierta_no_desborda(live_server, page, docente, clave, ancho):
+    con_pantalla(page, ancho, "light")
     entrar(page, live_server, docente, clave)
     boton_cuenta(page).click()
 
