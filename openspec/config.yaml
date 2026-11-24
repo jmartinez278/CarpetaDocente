@@ -39,7 +39,7 @@ rules:
     - 'Al tocar una pantalla, las e2e existentes que no cumplen estas reglas se listan en tasks.md como "e2e a retirar" para que Marco las apruebe; no se borran por cuenta propia.'
     - 'Durante las tareas se corre solo el archivo e2e tocado. `-m e2e` completo, una vez, en el cierre.'
     - Un commit por grupo, nunca por tarea; la casilla va en ese commit.
-    - 'Al final, el grupo de cierre: `-m e2e` completo una vez, verificacion.md y, solo si la historia tiene 3 grupos o más, un /codex:review normal.'
+    - 'Al final, el grupo de cierre: `-m e2e` completo una vez, verificacion.md y el revisor solo sobre `views.py`, `urls.py` y `servicios.py` de los grupos sin revisor, buscando permisos.'
     - 'En los cambios de rebrand, las tareas no incluyen auditoría visual por pantalla: va una sola, al terminar todas las pantallas del rebrand.'
     - 'Cambios rebrand-*: un solo grupo "[riesgo: bajo]", salvo que toquen algo de riesgo medio o alto; eso va en su propio grupo.'
     - Al final, "Workflow follow-up" con la deuda.
@@ -50,8 +50,8 @@ operations:
     guidance:
       - Pruebas primero; ante una falla inesperada, depuración sistemática.
       - Antes de usar una API de Django, HTMX, Tailwind o Playwright que el repo aún no usa, consulta su documentación actual (Context7). Si ya se usa en el repo, sigue ese código.
-      - 'Revisión al cerrar cada grupo, en background y con base en el commit del grupo anterior (main en el primero): riesgo alto, /codex:adversarial-review; riesgo medio, /codex:review; riesgo bajo, sin revisor (verificar.py y las pruebas). El grupo siguiente empieza mientras Codex revisa.'
-      - 'Hallazgos de Codex: Critical e Important se corrigen, con la prueba primero, en el commit del grupo siguiente (o en un commit corto si era el último); los Minor, una línea cada uno, al "Workflow follow-up" de tasks.md, que pasa a "## Deuda" del PR; los de diseño se consultan al equipo antes de tocar nada. Sin re-revisión del arreglo.'
+      - 'Revisión al cerrar cada grupo, sin Codex: el subagente revisor (`.claude/agents/revisor.md`, contexto limpio) sobre el commit del grupo (`<commit del grupo anterior>..HEAD`; main en el primero), solo en los grupos que tocan modelos o migraciones, permisos y roles, o datos personales (RN-015). Los demás grupos, solo verificar.py y las pruebas. En el cierre, el revisor solo sobre `views.py`, `urls.py` y `servicios.py` de los grupos sin revisor, buscando permisos. El revisor corre en la sesión del grupo, antes del /clear: ahí se clasifican sus hallazgos y los Critical e Important quedan en el "Workflow follow-up" de tasks.md hasta corregirse.'
+      - 'Hallazgos del revisor: Critical e Important se corrigen, con la prueba primero, en el commit del grupo siguiente (o en un commit corto si era el último); los Minor, una línea cada uno, al "Workflow follow-up" de tasks.md, que pasa a "## Deuda" del PR; los de diseño se consultan al equipo antes de tocar nada. Sin re-revisión del arreglo.'
       - Durante las tareas se corren solo las pruebas de la app tocada; la suite completa, con la cobertura mínima de 80 %, la corre `uv run python scripts/verificar.py --completo` en el cierre.
       - Antes de proponer un commit, lo que entra va al índice y se corre `uv run python scripts/verificar.py --antes-del-commit` (Ruff y las pruebas de las apps del índice; si cambia algo compartido, toda la suite; sin cobertura). Commit solo con aprobación.
       - verificacion.md se escribe una vez, en el cierre, y corta - DoD 1 a 9 en una línea cada una y los escenarios del spec sin prueba con su motivo. Sin tabla escenario → prueba, sin evidencia por commit ni commits solo de docs.
