@@ -309,9 +309,12 @@ def test_el_anuncio_del_envio_es_una_region_status_vacia_oculta_y_fuera_del_form
 def test_carga_ingresar_js_pero_no_alpine_ni_htmx(pagina):
     scripts = re.findall(r"<script\b[^>]*>", pagina, re.IGNORECASE)
 
-    assert len(scripts) == 1
-    assert "js/ingresar.js" in scripts[0]
-    assert "defer" in scripts[0]
+    # tema.js (T-04) va primero, en <head> y sin defer; ingresar.js, con defer.
+    assert len(scripts) == 2
+    assert "js/tema.js" in scripts[0]
+    assert "defer" not in scripts[0]
+    assert "js/ingresar.js" in scripts[1]
+    assert "defer" in scripts[1]
     assert "alpine" not in pagina.lower()
     assert "htmx" not in pagina.lower()
 
@@ -332,7 +335,6 @@ FRASES = [
     "Envía tu sesión a la dirección y compártela con tus colegas.",
     "Registra tus notas por competencia para el SIAGIE.",
 ]
-VACIO_DIRECCION = "Los consolidados de notas y asistencia estarán aquí en una próxima versión."
 
 
 @pytest.fixture
@@ -423,13 +425,15 @@ def test_la_portada_carga_sus_scripts_sin_alpine(portada):
     scripts = re.findall(r'<script src="([^"]+)"', portada)
 
     assert "alpine" not in portada.lower()
-    assert scripts[:3] == [
+    # tema.js (T-04) abre <head>, sin defer; después van los de la portada.
+    assert scripts[0] == "/static/js/tema.js"
+    assert scripts[1:4] == [
         "/static/js/portada.js",
         "/static/dist/vendor/htmx.min.js",
         "/static/js/estudiantes.js",
     ]
     # El resto es del marco: el menú de la cuenta (notas-borrador.js y menu.js), bfcache y marco.
-    assert sorted(scripts[3:]) == sorted(
+    assert sorted(scripts[4:]) == sorted(
         [
             "/static/js/notas-borrador.js",
             "/static/js/menu.js",
@@ -437,7 +441,9 @@ def test_la_portada_carga_sus_scripts_sin_alpine(portada):
             "/static/js/marco.js",
         ]
     )
-    assert all("defer" in s for s in re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE))
+    etiquetas = re.findall(r"<script\b[^>]*>", portada, re.IGNORECASE)
+    assert "defer" not in etiquetas[0]
+    assert all("defer" in s for s in etiquetas[1:])
 
 
 def test_la_portada_tiene_un_solo_main(portada):
@@ -513,7 +519,8 @@ def test_tres_tarjetas_en_orden_con_su_frase_y_sin_subtitulo_formal(portada):
             rf'<h2\b[^>]*id="dim-{clave}"[^>]*>.*?>{titulo}</(?:button|a)></h2>', t, re.DOTALL
         )
         assert f">{frase}</p>" in t
-        assert re.search(r'<div class="miniatura[^"]*" aria-hidden="true">', t)
+        # La de Asistencia es el calendario: dice la fecha al lector, así que no va oculta (US-040).
+        assert re.search(r'<div class="miniatura[^"]*"( aria-hidden="true")?>', t)
     for subtitulo in SUBTITULOS:
         assert subtitulo not in portada
 
@@ -556,21 +563,18 @@ def miniatura(t):
     return encontrada.group(0)
 
 
-def test_cada_miniatura_es_esquematica_y_oculta_al_lector(portada):
-    for t, clave in zip(tarjetas(portada), ORDEN, strict=True):
-        dibujo = miniatura(t)
+def test_las_miniaturas_de_sesiones_y_notas_son_esquematicas_y_ocultas_al_lector(portada):
+    for clave in ("sesiones", "notas"):
+        dibujo = miniatura(tarjeta(portada, clave))
         assert f"miniatura--{clave}" in dibujo
         # Sin nombres, fechas ni cifras que se lean como registros del docente.
         assert not re.search(r"\d", texto(dibujo))
         assert "Matemática" not in dibujo
 
 
-def test_las_miniaturas_dicen_solo_su_esquema(portada):
-    asistencia, sesiones, notas = (texto(miniatura(t)) for t in tarjetas(portada))
-
-    assert asistencia == "Asistió Tarde Faltó Justificado"
-    assert sesiones == ""
-    assert notas == "AD A B C"
+def test_las_miniaturas_de_sesiones_y_notas_dicen_solo_su_esquema(portada):
+    assert texto(miniatura(tarjeta(portada, "sesiones"))) == ""
+    assert texto(miniatura(tarjeta(portada, "notas"))) == "AD A B C"
 
 
 SIN_SECCION = "Tu sección aparecerá cuando el administrador la asigne."
@@ -603,24 +607,24 @@ def portada_con(client, docente):
 def test_la_portada_muestra_la_seccion_bajo_el_saludo_y_fuera_del_h1(portada_con):
     html = portada_con((2, "A"))
 
-    assert linea_de_secciones(html) == f"{HOY} · 2.º grado, sección A"
+    assert linea_de_secciones(html) == "2.º grado, sección A"
     assert saludos(html) == ["Buenos días, Ana Quispe"]
 
 
 def test_la_portada_ordena_las_secciones_por_grado_y_nombre(portada_con):
     html = portada_con((3, "B"), (2, "A"))
 
-    assert linea_de_secciones(html) == f"{HOY} · 2.º grado, sección A · 3.º grado, sección B"
+    assert linea_de_secciones(html) == "2.º grado, sección A · 3.º grado, sección B"
 
 
 def test_la_portada_sin_seccion_dice_que_aparecera(portada):
-    assert linea_de_secciones(portada) == f"{HOY} · {SIN_SECCION}"
+    assert linea_de_secciones(portada) == SIN_SECCION
 
 
 def test_la_portada_con_la_unica_seccion_en_un_anio_cerrado(portada_con):
     html = portada_con((2, "A"), estado="CERRADO")
 
-    assert linea_de_secciones(html) == f"{HOY} · {SIN_SECCION}"
+    assert linea_de_secciones(html) == SIN_SECCION
 
 
 def test_la_linea_de_secciones_no_cambia_las_tarjetas(portada_con):
@@ -871,33 +875,131 @@ def test_la_jornada_de_otro_dia_no_completa_la_de_hoy(con_estudiantes):
     assert pildora(tarjeta_asistencia(con_estudiantes(cantidad=2, marcados=2, dia=ayer)))
 
 
-# --- Inicio de la dirección ---
+# --- Miniatura calendario de Asistencia (US-040; spec pantallas-de-inicio, D10) ---
+
+LUNES = date(2026, 11, 23)
 
 
-def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
-    assert saludos(inicio_direccion) == ["Hola, Rosa Huamán"]
-    assert re.search(r'<span class="saludo">Hola,</span>', inicio_direccion)
-    assert re.search(r'<span class="docente">Rosa Huamán</span>', inicio_direccion)
-    assert re.search(r"<p>Dirección</p>", inicio_direccion)
-    seccion = re.search(
-        r'<section\b[^>]*aria-labelledby="consolidados-titulo".*?</section>',
-        inicio_direccion,
-        re.DOTALL,
+def calendario(t):
+    """El ``div.miniatura--calendario`` de la tarjeta Asistencia, con su fecha y su registro."""
+    encontrada = re.search(
+        r'<div class="miniatura miniatura--asistencia miniatura--calendario">.*', t, re.DOTALL
     )
-    assert seccion, "no hay sección de consolidados"
-    assert re.search(r"<h2\b[^>]*>Consolidados</h2>", seccion.group(0))
-    assert re.search(r'<div class="empty">', seccion.group(0))
-    assert VACIO_DIRECCION in seccion.group(0)
-    assert re.search(r'<svg\b[^>]*aria-hidden="true"', seccion.group(0))
+    assert encontrada, "la tarjeta no lleva la miniatura calendario"
+    return encontrada.group(0)
 
 
-def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_portada_js(inicio_direccion):
+def test_la_miniatura_dice_el_dia_el_numero_y_el_mes_y_la_fecha_completa_una_sola_vez(
+    con_estudiantes, hora_de_lima
+):
+    """Escenario «Calendario con avance»: lo visible va en aria-hidden; el lector oye una fecha."""
+    hora_de_lima(dia=LUNES)
+    t = tarjeta_asistencia(con_estudiantes(cantidad=25, marcados=18, dia=LUNES))
+    cal = calendario(t)
+
+    assert re.search(r'<time class="calendario-fecha" datetime="2026-11-23">', cal)
+    assert re.search(r'<span aria-hidden="true">Lunes</span>', cal)
+    assert re.search(r'<strong aria-hidden="true">23</strong>', cal)
+    assert re.search(r'<span aria-hidden="true">noviembre</span>', cal)
+    assert cal.count("Lunes 23 de noviembre") == 1
+    assert 'class="calendario-fecha-completa">Lunes 23 de noviembre<' in cal
+    assert "aria-hidden" not in etiqueta(cal, 'class="miniatura miniatura--asistencia')
+
+
+def test_la_miniatura_dice_cuantos_estudiantes_van_marcados_con_su_barra(
+    con_estudiantes, hora_de_lima
+):
+    hora_de_lima(dia=LUNES)
+    cal = calendario(tarjeta_asistencia(con_estudiantes(cantidad=25, marcados=18, dia=LUNES)))
+
+    assert "18 de 25 estudiantes marcados" in texto(cal)
+    barra_de_avance = etiqueta(cal, 'class="avance-registro-barra"')
+    assert 'max="25"' in barra_de_avance
+    assert 'value="18"' in barra_de_avance
+    assert 'aria-hidden="true"' in barra_de_avance
+
+
+def test_el_avance_cuenta_solo_los_activos_de_hoy(con_estudiantes, hora_de_lima):
+    hora_de_lima(dia=LUNES)
+    cal = calendario(
+        tarjeta_asistencia(con_estudiantes(cantidad=3, marcados=1, retirados=2, dia=LUNES))
+    )
+
+    assert "1 de 3 estudiantes marcados" in texto(cal)
+
+
+def test_sin_marcar_a_nadie_el_avance_es_cero(con_estudiantes, hora_de_lima):
+    hora_de_lima(dia=LUNES)
+    cal = calendario(tarjeta_asistencia(con_estudiantes(cantidad=4, dia=LUNES)))
+
+    assert "0 de 4 estudiantes marcados" in texto(cal)
+    assert 'value="0"' in etiqueta(cal, 'class="avance-registro-barra"')
+
+
+@pytest.mark.parametrize("dia", [SABADO, date(2026, 11, 22)], ids=["sabado", "domingo"])
+def test_el_fin_de_semana_la_miniatura_dice_dia_sin_clases(con_estudiantes, hora_de_lima, dia):
+    """Escenario «Calendario sin registro»: la fecha sigue y no hay barra."""
+    hora_de_lima(dia=dia)
+    cal = calendario(tarjeta_asistencia(con_estudiantes(cantidad=2, dia=dia)))
+
+    assert "Día sin clases" in texto(cal)
+    assert "<progress" not in cal
+    assert "estudiantes marcados" not in cal
+    assert f'datetime="{dia.isoformat()}"' in cal
+
+
+def test_la_seccion_sin_estudiantes_dice_sin_estudiantes(con_estudiantes, hora_de_lima):
+    hora_de_lima(dia=LUNES)
+    cal = calendario(tarjeta_asistencia(con_estudiantes(cantidad=0, dia=LUNES)))
+
+    assert "Sin estudiantes" in texto(cal)
+    assert "<progress" not in cal
+
+
+@pytest.mark.parametrize("secciones", [[], [(2, "A"), (3, "B")]], ids=["sin-seccion", "dos"])
+def test_sin_seccion_unica_la_miniatura_dice_registro_no_disponible(
+    portada_con, hora_de_lima, secciones
+):
+    hora_de_lima(dia=LUNES)
+    cal = calendario(tarjeta_asistencia(portada_con(*secciones)))
+
+    assert "Registro no disponible" in texto(cal)
+    assert "<progress" not in cal
+    assert cal.count("Lunes 23 de noviembre") == 1
+
+
+def test_la_miniatura_de_asistencia_ya_no_lleva_la_clave_de_estados(portada):
+    t = tarjeta_asistencia(portada)
+
+    for palabra in ("Asistió", "Tarde", "Faltó", "Justificado"):
+        assert palabra not in calendario(t)
+    assert "hoja-asistencia" not in t
+
+
+def test_la_portada_precarga_besley_para_el_nombre(portada):
+    """Besley 600 va en el nombre del saludo (DESIGN.md 1.2): la portada lo precarga (D1)."""
+    assert re.search(r'<link rel="preload"[^>]*besley-latin-600-normal[^>]*as="font"', portada)
+    assert re.search(r'<span class="docente">Ana Quispe</span>', portada)
+
+
+def test_la_linea_de_la_seccion_no_lleva_la_fecha(portada_con, hora_de_lima):
+    hora_de_lima(dia=LUNES)
+    html = portada_con((2, "A"))
+
+    assert "23 de noviembre" not in entrada(html)
+    assert "Lunes" not in entrada(html)
+
+
+# --- Inicio de la dirección (el contenido de la portada está en direccion/tests/test_vistas.py) ---
+
+
+def test_la_direccion_no_muestra_tablas_ni_carga_htmx_ni_portada_js(inicio_direccion):
     assert "<table" not in inicio_direccion
-    assert "<article" not in inicio_direccion
-    # Solo los scripts del marco: la cuenta (notas-borrador.js y menu.js), bfcache y marco.
+    # Solo los scripts del marco: el tema, la cuenta (notas-borrador.js y menu.js), bfcache y marco.
     scripts = re.findall(r'<script src="([^"]+)"', inicio_direccion)
     assert sorted(scripts) == sorted(
         [
+            "/static/js/tema.js",
             "/static/js/notas-borrador.js",
             "/static/js/menu.js",
             "/static/js/plantilla-siagie.js",
@@ -906,30 +1008,6 @@ def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_portada_js(inicio_direcci
         ]
     )
     assert "htmx" not in inicio_direccion.lower()
-
-
-def test_la_direccion_ve_la_plantilla_del_siagie_entre_el_saludo_y_los_consolidados(
-    inicio_direccion,
-):
-    """Spec pantallas-de-inicio, «Acceso a la plantilla del SIAGIE»."""
-    bloque = re.search(
-        r'<section\b[^>]*aria-labelledby="plantilla-titulo-inicio".*?</section>',
-        inicio_direccion,
-        re.DOTALL,
-    )
-    assert bloque, "no hay bloque de la plantilla del SIAGIE"
-    assert re.search(r"<h2\b[^>]*>Plantilla de notas del SIAGIE</h2>", bloque.group(0))
-    assert "Completa la plantilla de una sección con las notas de CarpetaDocente." in texto(
-        bloque.group(0)
-    )
-    boton = re.search(
-        r"<button\b[^>]*data-abrir-plantilla[^>]*>(.*?)</button>", bloque.group(0), re.DOTALL
-    )
-    assert boton, "«Subir plantilla» es un botón que abre el diálogo"
-    assert texto(boton.group(1)) == "Subir plantilla"
-    saludo = inicio_direccion.index('<span class="saludo">')
-    consolidados = inicio_direccion.index('id="consolidados-titulo"')
-    assert saludo < inicio_direccion.index(bloque.group(0)) < consolidados
 
 
 def test_el_inicio_de_la_direccion_trae_el_dialogo_de_subida_cerrado(inicio_direccion):

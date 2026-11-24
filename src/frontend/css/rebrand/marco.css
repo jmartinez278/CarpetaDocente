@@ -355,6 +355,59 @@
     }
   }
 
+  /* Botón de tema (T-04, DESIGN.md 1.2): solo ícono, sin fondo ni borde y redondo. El fondo entra al pasar el mouse
+     (--sel-bg) y al pulsar (--folder); no sube. El foco usa el anillo estándar pegado al botón, para no tocar la
+     cuenta vecina. La luna se ve en claro y el sol en oscuro, con la elección «oscuro» y con el oscuro del sistema. */
+  .tema-boton {
+    border: 0;
+    border-radius: var(--r-round);
+    color: var(--ink);
+  }
+
+  .tema-boton:focus-visible {
+    outline-offset: 0;
+  }
+
+  .tema-icono {
+    display: grid;
+    place-items: center;
+  }
+
+  .tema-icono[data-icono-sol] {
+    display: none;
+  }
+
+  html[data-theme=dark] .tema-icono[data-icono-sol] {
+    display: grid;
+  }
+
+  html[data-theme=dark] .tema-icono[data-icono-luna] {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme=light]) .tema-icono[data-icono-sol] {
+      display: grid;
+    }
+
+    :root:not([data-theme=light]) .tema-icono[data-icono-luna] {
+      display: none;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tema-boton:hover {
+      background: var(--sel-bg);
+      transform: none;
+    }
+  }
+
+  .tema-boton:active,
+  .tema-boton[data-pointer]:active {
+    background: var(--folder);
+    transform: none;
+  }
+
   /* Movimiento reducido: el ☰ abre y cierra sin desplazarse (marco.js cierra de inmediato). */
   @media (prefers-reduced-motion: reduce) {
     .drawer,

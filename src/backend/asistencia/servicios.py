@@ -6,10 +6,11 @@ fecha de Lima) para que las pruebas fijen el día sin tocar el reloj.
 
 import datetime
 from dataclasses import dataclass, field
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from actividad.models import Operacion, RegistroActividad
@@ -353,6 +354,213 @@ def lista_del_dia(seccion, fecha):
         if fila.estado is not None:
             totales[fila.estado] += 1
     return ListaDeHoy(jornada=jornada, filas=filas, no_activos=no_activos, totales=totales)
+
+
+@dataclass
+class MiniaturaDelDia:
+    """Lo que dice la miniatura calendario de Asistencia en la portada (US-040, D10).
+
+    ``estado`` es ``avance`` (con ``marcados`` de ``total``), ``sin_clases`` (sábado o domingo),
+    ``sin_estudiantes`` o ``no_disponible`` (sin sección única).
+    """
+
+    fecha: datetime.date
+    estado: str
+    marcados: int = 0
+    total: int = 0
+
+    @property
+    def dia_semana(self):
+        return DIAS[self.fecha.weekday()]
+
+    @property
+    def mes(self):
+        return MESES[self.fecha.month - 1]
+
+    @property
+    def fecha_completa(self):
+        return texto_fecha(self.fecha)
+
+
+def miniatura_del_dia(seccion, hoy):
+    """La fecha de hoy y, con una sección única en un día de clases, el avance de la jornada.
+
+    ``seccion`` es ``None`` sin sección única. El fin de semana manda sobre «Sin estudiantes».
+    """
+    if seccion is None:
+        return MiniaturaDelDia(hoy, "no_disponible")
+    if not es_dia_de_clases(hoy):
+        return MiniaturaDelDia(hoy, "sin_clases")
+    lista = lista_del_dia(seccion, hoy)
+    if lista.total == 0:
+        return MiniaturaDelDia(hoy, "sin_estudiantes")
+    return MiniaturaDelDia(hoy, "avance", marcados=lista.marcados, total=lista.total)
+
+
+# --- US-040, D5. Asistencia por periodo (US-033 la reutiliza) ---
+
+
+def dias_de_clase(periodo, hasta):
+    """Los días de lunes a viernes desde el inicio de ``periodo`` hasta ``hasta`` o su fin."""
+    fin = min(periodo.fecha_fin, hasta)
+    dias = []
+    dia = periodo.fecha_inicio
+    while dia <= fin:
+        if es_dia_de_clases(dia):
+            dias.append(dia)
+        dia += datetime.timedelta(days=1)
+    return dias
+
+
+def dias_sin_completar_por_seccion(secciones, periodo, hoy):
+    """Por id de sección, sus días de clase del periodo hasta ayer sin completar (D5).
+
+    Un día cuenta si hay activos ese día (``_activo_el``) y alguno no tiene marca en su
+    jornada, o no hay jornada. Hoy no cuenta: la jornada se toma durante la mañana. Dos
+    consultas para todas las secciones; el resto en Python.
+    """
+    ids = [getattr(s, "pk", s) for s in secciones]
+    dias = dias_de_clase(periodo, hoy - datetime.timedelta(days=1))
+    resultado = dict.fromkeys(ids, 0)
+    if not dias:
+        return resultado
+    estudiantes = {}
+    for estudiante in Estudiante.objects.filter(seccion_id__in=ids).only(
+        "pk", "seccion_id", "estado", "fecha_estado"
+    ):
+        estudiantes.setdefault(estudiante.seccion_id, []).append(estudiante)
+    marcas = set(
+        Asistencia.objects.filter(
+            jornada__seccion_id__in=ids, jornada__fecha__range=(dias[0], dias[-1])
+        ).values_list("jornada__seccion_id", "jornada__fecha", "estudiante_id")
+    )
+    for seccion_id, lista in estudiantes.items():
+        resultado[seccion_id] = sum(
+            any(
+                _activo_el(estudiante, dia) and (seccion_id, dia, estudiante.pk) not in marcas
+                for estudiante in lista
+            )
+            for dia in dias
+        )
+    return resultado
+
+
+@dataclass(frozen=True)
+class Totales:
+    """Las marcas de un estudiante o de una sección en un periodo, por estado."""
+
+    asistio: int = 0
+    tarde: int = 0
+    falto: int = 0
+    justificado: int = 0
+
+    @property
+    def marcas(self):
+        return self.asistio + self.tarde + self.falto + self.justificado
+
+    @property
+    def porcentaje(self):
+        """(Asistió + Tarde) / marcas, a un decimal y mitad hacia arriba; sin marcas, None."""
+        if not self.marcas:
+            return None
+        return _a_un_decimal(Decimal(100 * (self.asistio + self.tarde)) / self.marcas)
+
+    @property
+    def texto_porcentaje(self):
+        return texto_porcentaje(self.porcentaje)
+
+
+@dataclass
+class TotalesDelEstudiante:
+    estudiante: Estudiante
+    totales: Totales
+
+
+_CAMPOS_TOTALES = {
+    Asistencia.Estado.ASISTIO: "asistio",
+    Asistencia.Estado.TARDE: "tarde",
+    Asistencia.Estado.FALTO: "falto",
+    Asistencia.Estado.JUSTIFICADO: "justificado",
+}
+
+
+def _a_un_decimal(valor):
+    return valor.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+
+
+def texto_porcentaje(valor):
+    """«72,7 %» con coma decimal; sin valor, «—»."""
+    if valor is None:
+        return "—"
+    return f"{valor:.1f} %".replace(".", ",")
+
+
+def _marcas_del_periodo(periodo, hoy):
+    """Las marcas de las jornadas de ``periodo`` desde su inicio hasta hoy o su fin."""
+    return Asistencia.objects.filter(
+        jornada__fecha__gte=periodo.fecha_inicio,
+        jornada__fecha__lte=min(periodo.fecha_fin, hoy),
+    )
+
+
+def _agrupar(filas):
+    """``{clave: Totales}`` desde filas ``(clave, estado, n)``."""
+    conteos = {}
+    for clave, estado, n in filas:
+        conteos.setdefault(clave, {})[_CAMPOS_TOTALES[estado]] = n
+    return {clave: Totales(**campos) for clave, campos in conteos.items()}
+
+
+def totales_por_seccion(secciones, periodo, hoy):
+    """Por id de sección, los ``Totales`` de todas sus marcas del periodo hasta hoy. Una
+    consulta. Cuentan las marcas de quien ya no está activo (D5)."""
+    ids = [getattr(s, "pk", s) for s in secciones]
+    filas = (
+        _marcas_del_periodo(periodo, hoy)
+        .filter(jornada__seccion_id__in=ids)
+        .order_by()
+        .values_list("jornada__seccion_id", "estado")
+        .annotate(n=Count("pk"))
+    )
+    agrupados = _agrupar(filas)
+    return {i: agrupados.get(i, Totales()) for i in ids}
+
+
+def totales_de_la_seccion(seccion, periodo, hoy):
+    """Los ``Totales`` de la sección: la misma cifra que ``totales_por_seccion`` (RNF-017)."""
+    return totales_por_seccion([seccion], periodo, hoy)[seccion.pk]
+
+
+def totales_por_estudiante(seccion, periodo, hoy):
+    """Por estudiante activo hoy, en orden de lista, sus ``Totales`` del periodo hasta hoy.
+
+    Un trasladado sale de la tabla aunque sus marcas cuenten en la sección (deuda a US-033).
+    """
+    filas = (
+        _marcas_del_periodo(periodo, hoy)
+        .filter(jornada__seccion=seccion)
+        .order_by()
+        .values_list("estudiante_id", "estado")
+        .annotate(n=Count("pk"))
+    )
+    agrupados = _agrupar(filas)
+    return [
+        TotalesDelEstudiante(estudiante, agrupados.get(estudiante.pk, Totales()))
+        for estudiante in estudiantes_ordenados(seccion)
+        if estudiante.estado == Estudiante.Estado.ACTIVO
+    ]
+
+
+def promedio_ponderado(pares):
+    """El promedio de los porcentajes ``(estudiantes, porcentaje)`` ponderado por estudiantes.
+
+    Los pares sin porcentaje (sin marcas) o sin estudiantes no entran; sin ninguno, None.
+    """
+    validos = [(n, p) for n, p in pares if p is not None and n]
+    if not validos:
+        return None
+    total = sum(n for n, _ in validos)
+    return _a_un_decimal(sum(n * p for n, p in validos) / total)
 
 
 def pendiente_hoy(seccion, hoy=None):

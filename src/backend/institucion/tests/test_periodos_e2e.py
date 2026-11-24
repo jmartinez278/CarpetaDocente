@@ -1,16 +1,17 @@
 """Periodos en la ficha del año, en el navegador (spec periodos-anio-escolar; design de US-028, D5).
 
-El Administrador llena los 4 bimestres y guarda; un cruce se muestra junto a la fila; la ficha con
-filas vacías, con el error y de solo lectura (año CERRADO) pasa axe en ambos temas a 360 y 1280 px
-y no se desplaza en horizontal a 360 px. Necesita el CSS compilado y Chromium; se pide con
-``uv run pytest -m e2e --browser chromium`` y ``DJANGO_ALLOW_ASYNC_UNSAFE=true``.
+El Administrador llena los 4 bimestres y guarda; la ficha con filas vacías, con el error de un
+cruce y de solo lectura (año CERRADO) pasa axe en ambos temas a 360 px y no se desplaza en
+horizontal a 360 px. El mensaje del cruce junto a la fila lo cubre ``test_admin_periodos.py``.
+Necesita el CSS compilado y Chromium; se pide con ``uv run pytest -m e2e --browser chromium`` y
+``DJANGO_ALLOW_ASYNC_UNSAFE=true``.
 """
 
 import pytest
 from playwright.sync_api import expect
 
-from cuentas.tests.e2e import ANCHOS, TEMAS, con_pantalla, ingresar, revisar_con_axe
-from institucion.models import MENSAJE_CRUCE, AnioEscolar, Institucion, Periodo
+from cuentas.tests.e2e import TEMAS, con_pantalla, ingresar, revisar_con_axe
+from institucion.models import AnioEscolar, Institucion, Periodo
 
 pytestmark = pytest.mark.e2e
 
@@ -68,60 +69,42 @@ def test_el_administrador_llena_los_cuatro_bimestres_y_guarda(
     assert anio.periodos.count() == 4
 
 
-def test_un_cruce_muestra_el_mensaje_junto_a_la_fila(live_server, page, administrador, anio, clave):
-    ingresar(page, live_server, administrador, clave)
-    abrir_ficha(page, live_server, anio)
-    cruzados = [BIMESTRES[0], ("2027-05-01", "2027-07-24"), *BIMESTRES[2:]]
-
-    llenar(page, cruzados)
-    guardar(page)
-
-    expect(page.locator("#periodos-group .errorlist")).to_contain_text(MENSAJE_CRUCE)
-    assert not anio.periodos.exists()
-
-
-@pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("tema", TEMAS)
-def test_la_ficha_con_filas_vacias_pasa_axe(
-    live_server, page, administrador, anio, clave, ancho, tema
-):
-    con_pantalla(page, ancho, tema)
+def test_la_ficha_con_filas_vacias_pasa_axe(live_server, page, administrador, anio, clave, tema):
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, administrador, clave)
     abrir_ficha(page, live_server, anio)
 
-    revisar_con_axe(page, f"periodos-vacios-{ancho}-{tema}")
+    revisar_con_axe(page, f"periodos-vacios-{tema}")
 
 
-@pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("tema", TEMAS)
-def test_la_ficha_con_el_error_pasa_axe(live_server, page, administrador, anio, clave, ancho, tema):
-    con_pantalla(page, ancho, tema)
+def test_la_ficha_con_el_error_pasa_axe(live_server, page, administrador, anio, clave, tema):
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, administrador, clave)
     abrir_ficha(page, live_server, anio)
     llenar(page, [BIMESTRES[0], ("2027-05-01", "2027-07-24"), *BIMESTRES[2:]])
     guardar(page)
     expect(page.locator("#periodos-group .errorlist")).to_be_visible()
 
-    revisar_con_axe(page, f"periodos-error-{ancho}-{tema}")
+    revisar_con_axe(page, f"periodos-error-{tema}")
 
 
-@pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("tema", TEMAS)
 def test_la_ficha_de_un_anio_cerrado_pasa_axe(
-    live_server, page, administrador, anio_cerrado, clave, ancho, tema
+    live_server, page, administrador, anio_cerrado, clave, tema
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, administrador, clave)
     abrir_ficha(page, live_server, anio_cerrado)
 
-    revisar_con_axe(page, f"periodos-cerrado-{ancho}-{tema}")
+    revisar_con_axe(page, f"periodos-cerrado-{tema}")
 
 
-@pytest.mark.parametrize("tema", TEMAS)
 def test_a_360_px_la_ficha_no_se_desplaza_en_horizontal(
-    live_server, page, administrador, anio, clave, tema
+    live_server, page, administrador, anio, clave
 ):
-    con_pantalla(page, 360, tema)
+    con_pantalla(page, 360, "light")
     ingresar(page, live_server, administrador, clave)
     abrir_ficha(page, live_server, anio)
 

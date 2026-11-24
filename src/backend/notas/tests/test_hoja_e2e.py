@@ -15,8 +15,6 @@ from playwright.sync_api import expect
 
 from actividad.tests.intentos import SIN_PERMISO, motivos, pasar_a_otra_docente
 from cuentas.tests.e2e import (
-    ANCHOS,
-    TEMAS,
     con_pantalla,
     envejecer_sesion,
     fijar_hora_de_lima,
@@ -788,8 +786,8 @@ def sin_desplazamiento_horizontal(page):
     )
 
 
-@pytest.mark.parametrize("ancho", ANCHOS)
-@pytest.mark.parametrize("tema", TEMAS)
+# El DOM cambia con el ancho (rejilla en la PC, panel en el celular): un tema en cada uno.
+@pytest.mark.parametrize(("ancho", "tema"), [(360, "dark"), (1280, "light")])
 def test_axe_con_notas_errores_filtro_y_dialogo(abrir_hoja, estudiantes, hoja_lista, ancho, tema):
     """Escenario "Axe en ambos temas": con notas, errores, panel o recuadro, vista previa (PC),
     filtro y los diálogos de «Rellenar vacías» y de salida."""

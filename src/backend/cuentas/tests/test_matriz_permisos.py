@@ -19,12 +19,19 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
+from actividad.models import Operacion, RegistroActividad
 from actividad.tests.intentos import es_sin_permiso, intentos
 from asistencia.models import Asistencia
+from cuentas.models import Usuario
 from institucion.models import Estudiante
 from notas.models import Calificacion, CompetenciaPeriodo
 from notas.tests.conftest import *  # noqa: F403 - fixtures compartidas
 from notas.tests.conftest import MATEMATICA, competencia, crear_estudiantes, ids_de, marcar
+from repositorio.tests.conftest import (  # noqa: F401 - fixtures compartidas
+    comunicacion,
+    con_archivo,
+    crear_sesion,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -214,3 +221,147 @@ def test_la_matriz_cubre_las_rutas_de_seccion():
         "estudiantes:vaciar",
         "asistencia:restantes",
     }
+
+
+# --- Rutas de la dirección (US-040; spec acceso-secciones, «Matriz de la dirección») ---
+
+
+@dataclass(frozen=True)
+class FilaDeLaDireccion:
+    """Una ruta de la dirección, solo lectura. ``del_recurso``: depende de la sección o la sesión
+    que se pide, así que otra institución no la ve."""
+
+    nombre: str
+    url: Callable
+    del_recurso: bool = True
+    es_sesion: bool = False
+    descarga: bool = False
+
+
+def _de_la_seccion(nombre):
+    return FilaDeLaDireccion(nombre, lambda e: reverse(nombre, args=[e["seccion"].pk]))
+
+
+def _de_la_sesion(nombre, descarga=False):
+    return FilaDeLaDireccion(
+        nombre, lambda e: reverse(nombre, args=[e["sesion"].pk]), True, True, descarga
+    )
+
+
+FILAS_DE_LA_DIRECCION = [
+    FilaDeLaDireccion("direccion:consolidados", lambda e: reverse("direccion:consolidados"), False),
+    _de_la_seccion("direccion:notas"),
+    _de_la_seccion("direccion:asistencia"),
+    _de_la_seccion("direccion:sesiones"),
+    _de_la_sesion("direccion:sesion"),
+    _de_la_sesion("direccion:descargar", descarga=True),
+    _de_la_sesion("direccion:ver", descarga=True),
+]
+
+NOMBRES_DE_LA_DIRECCION = [f.nombre for f in FILAS_DE_LA_DIRECCION]
+PERFILES_DE_LA_DIRECCION = ["propia", "otra_ie", "docente", "administrador", "anonimo"]
+NO_DISPONIBLE = "La sesión ya no está disponible"
+
+
+@pytest.fixture
+def escenario_de_la_direccion(
+    seccion_tutora,
+    bimestres,
+    otra_docente,
+    direccion,
+    administrador,
+    con_archivo,  # noqa: F811
+    docente,
+    crear_usuario,
+    otra_institucion,
+):
+    """La sección de la docente con una estudiante y una sesión suya sin compartir, con archivo."""
+    (ana,) = crear_estudiantes(seccion_tutora, "QUISPE, ANA")
+    return {
+        "seccion": seccion_tutora,
+        "estudiante": ana,
+        "sesion": con_archivo(docente, compartida=False),
+        "propia": direccion,
+        "otra_ie": crear_usuario("dir.otra", Usuario.Rol.DIRECCION, institucion=otra_institucion),
+        "docente": docente,
+        "administrador": administrador,
+        "anonimo": None,
+    }
+
+
+def _descargas():
+    return RegistroActividad.objects.filter(operacion=Operacion.SESION_DESCARGADA).count()
+
+
+@pytest.mark.parametrize("perfil", PERFILES_DE_LA_DIRECCION)
+@pytest.mark.parametrize("fila", FILAS_DE_LA_DIRECCION, ids=NOMBRES_DE_LA_DIRECCION)
+def test_matriz_de_la_direccion(client, escenario_de_la_direccion, fila, perfil):
+    escenario = escenario_de_la_direccion
+    if escenario[perfil] is not None:
+        client.force_login(escenario[perfil])
+    antes = datos_de_la_seccion()
+    intentos_antes = len(intentos())
+    descargas_antes = _descargas()
+    url = fila.url(escenario)
+
+    respuesta = client.get(url)
+
+    assert datos_de_la_seccion() == antes
+    assert len(intentos()) == intentos_antes
+    entra = perfil == "propia" or (perfil == "otra_ie" and not fila.del_recurso)
+    assert _descargas() == descargas_antes + (1 if entra and fila.descarga else 0)
+    if entra:
+        assert respuesta.status_code == 200
+    elif perfil == "otra_ie":
+        assert respuesta.status_code == 404
+        assert (NO_DISPONIBLE in respuesta.content.decode()) == fila.es_sesion
+        assert "Quispe" not in respuesta.content.decode()
+    else:
+        assert respuesta.status_code == 302
+        if perfil == "anonimo":
+            assert respuesta.url == f"{reverse('ingresar')}?next={url}"
+        else:
+            inicio = "docente:portada" if perfil == "docente" else "admin:index"
+            assert respuesta.url == reverse(inicio)
+
+
+@pytest.mark.parametrize("fila", FILAS_DE_LA_DIRECCION, ids=NOMBRES_DE_LA_DIRECCION)
+def test_la_direccion_solo_lee_en_sus_rutas(client, escenario_de_la_direccion, fila):
+    client.force_login(escenario_de_la_direccion["propia"])
+    antes = datos_de_la_seccion()
+
+    respuesta = client.post(fila.url(escenario_de_la_direccion), {"estado": "ASISTIO"})
+
+    assert respuesta.status_code == 405
+    assert datos_de_la_seccion() == antes
+    assert _descargas() == 0
+
+
+def test_la_matriz_cubre_las_rutas_de_la_direccion():
+    """Cada ruta con nombre de ``direccion`` tiene su fila, salvo la portada."""
+    from django.urls import get_resolver
+
+    construidas = {
+        f"direccion:{nombre}"
+        for nombre in get_resolver().namespace_dict["direccion"][1].reverse_dict
+        if isinstance(nombre, str)
+    }
+    sin_fila = construidas - {f.nombre for f in FILAS_DE_LA_DIRECCION}
+    assert sin_fila == {"direccion:inicio"}
+
+
+GUARDADOS_DE_LA_DOCENTE = {"notas:guardar", "competencias:guardar", "asistencia:marcar"}
+
+
+@pytest.mark.parametrize(
+    "fila", [f for f in FILAS if f.nombre in GUARDADOS_DE_LA_DOCENTE], ids=lambda f: f.nombre
+)
+def test_los_guardados_de_la_direccion_no_guardan_nada(client, escenario, fila):
+    """Escenario «Caso de error (US-040)»: la hoja o la jornada enviadas por la dirección."""
+    client.force_login(escenario["direccion"])
+    antes = datos_de_la_seccion()
+
+    url, respuesta = pedir(client, fila, escenario)
+
+    assert respuesta.status_code == 302 and respuesta.url == reverse("direccion:inicio")
+    assert datos_de_la_seccion() == antes

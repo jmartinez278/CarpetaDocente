@@ -1,0 +1,82 @@
+{% extends "direccion/seccion.html" %}
+{% comment %}
+Pestaña Sesiones del detalle de una sección (US-040, D6; spec consolidados-direccion, «Pestaña Sesiones» y «Docentes de curso del
+grado»): la semana con flechas y sus cinco días con el número de sesiones de la sección, las tarjetas de US-011 del día elegido
+(enlazan a la página de la dirección) y, aparte, el bloque de los docentes de curso del grado, que no se atribuye a la sección. El
+recuadro café resume solo a la tutora. Recibe sesiones (direccion.servicios.SesionesDelDetalle). Solo lectura; sin chips.
+{% endcomment %}
+
+{% block cafe %}
+{% if not detalle.estudiantes %}
+<p class="cafe__aviso">{% include "iconos/circle-alert.svg" %}Sin estudiantes: no hay notas ni asistencia que sumar.</p>
+{% endif %}
+<div class="cafe__bloque">
+  <h3>Sesiones</h3>
+  <dl class="dir-ses-docentes">
+    {% if detalle.tutora %}
+    <div>
+      <dt>{{ detalle.tutora.get_full_name }}<span>Tutora</span></dt>
+      <dd><strong>{{ sesiones.sesiones.dias_con_sesion }} de {{ sesiones.dias_de_clase }}</strong> días con sesión{% if sesiones.dias_de_clase %}<progress class="cafe__barra" max="{{ sesiones.dias_de_clase }}" value="{{ sesiones.sesiones.dias_con_sesion }}" aria-hidden="true"></progress>{% endif %}</dd>
+    </div>
+    {% else %}
+    <div>
+      <dt>Sin docente<span>Tutora</span></dt>
+      <dd>No hay sesiones que sumar.</dd>
+    </div>
+    {% endif %}
+  </dl>
+</div>
+{% endblock %}
+
+{% block pestana %}
+{% if not sesiones.hay_sesiones %}
+<div class="empty dir-vacio">{% include "iconos/file-text.svg" with clase="empty-icono" %}<p class="empty-titulo">Sin sesiones en el {{ datos.elegido.nombre_romano }}</p><p>Las docentes de {{ detalle.corta }} aún no han subido sesiones en este {{ datos.elegido.palabra }}.</p></div>
+{% else %}
+<section class="det-bloque dir-ses-bloque" aria-labelledby="dir-ses-ses">
+  <header class="det-bloque__cabecera">
+    <h2 id="dir-ses-ses">Sesiones</h2>
+    <p class="small">Por día de envío</p>
+  </header>
+  <div class="dir-ses-cuerpo">
+    <div class="dir-ses-semana">
+      {% if sesiones.semana.anterior %}<a class="btn icon-button" href="{{ sesiones.semana.anterior }}" aria-label="Semana anterior">{% include "iconos/chevron-left.svg" %}</a>{% else %}<a class="btn icon-button" role="link" aria-disabled="true" aria-label="Semana anterior, no disponible">{% include "iconos/chevron-left.svg" %}</a>{% endif %}
+      <h3 class="dir-ses-semana__t">{{ sesiones.semana.etiqueta }}</h3>
+      {% if sesiones.semana.siguiente %}<a class="btn icon-button" href="{{ sesiones.semana.siguiente }}" aria-label="Semana siguiente">{% include "iconos/chevron-right.svg" %}</a>{% else %}<a class="btn icon-button" role="link" aria-disabled="true" aria-label="Semana siguiente, no disponible">{% include "iconos/chevron-right.svg" %}</a>{% endif %}
+    </div>
+    <ul class="dir-ses-dias" role="list">
+      {% for d in sesiones.semana.dias %}<li>{% if d.url %}<a class="dir-ses-dia{% if not d.numero %} dir-ses-dia--sin{% endif %}" href="{{ d.url }}"{% if d.elegido %} aria-current="true"{% endif %}>{% else %}<span class="dir-ses-dia dir-ses-dia--no" aria-disabled="true">{% endif %}<span>{{ d.abreviatura }}</span><strong>{{ d.fecha.day }}</strong><span class="dir-ses-dia__n">{% if not d.disponible %}<span aria-hidden="true">—</span><span class="sr-only">no disponible</span>{% elif d.numero %}{{ d.numero }}<span class="sr-only"> {% if d.numero == 1 %}sesión{% else %}sesiones{% endif %}</span>{% else %}<span aria-hidden="true">—</span><span class="sr-only">sin sesiones</span>{% endif %}</span>{% if d.url %}</a>{% else %}</span>{% endif %}</li>{% endfor %}
+    </ul>
+    <h3 class="dir-ses-dia-titulo">{{ sesiones.titulo_del_dia }}</h3>
+    {% if sesiones.tarjetas %}
+    {% include "repositorio/_lista.html" with sesiones=sesiones.tarjetas mis=False para_direccion=True %}
+    {% else %}
+    <p class="det-ninguna">{% include "iconos/file-text.svg" %}La tutora no envió sesiones este día.</p>
+    {% endif %}
+  </div>
+</section>
+
+{% if sesiones.cursos %}
+<section class="det-bloque dir-ses-bloque" aria-labelledby="dir-curso">
+  <header class="det-bloque__cabecera">
+    <h2 id="dir-curso">{{ sesiones.titulo_de_curso }}</h2>
+    <p class="small">No se atribuye a la sección</p>
+  </header>
+  <div class="dir-ses-cuerpo">
+    {% for curso in sesiones.cursos %}
+    <div class="det-docente">
+      <div class="det-docente__cabecera">
+        <h3>{{ curso.docente.autor.get_full_name }}</h3>
+        <p class="small">{{ curso.docente.area.nombre }} · {{ curso.docente.texto_dias }}</p>
+      </div>
+      {% if curso.tarjetas %}
+      {% include "repositorio/_lista.html" with sesiones=curso.tarjetas mis=False para_direccion=True %}
+      {% else %}
+      <p class="det-ninguna">{% include "iconos/file-text.svg" %}Sin sesiones este día.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

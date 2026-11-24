@@ -546,6 +546,22 @@ def test_la_pagina_de_una_sesion_propia_muestra_sus_datos_y_migas_a_mis_sesiones
     assert f'href="{URL_INICIO}"' in html
 
 
+def test_la_pagina_de_la_docente_usa_la_parcial_que_comparte_con_la_direccion(
+    cliente, crear_sesion, docente, otra_docente
+):
+    """Los datos salen de una plantilla; las acciones de la autora, solo de la de la docente."""
+    propia = crear_sesion(docente, compartida=True)
+    ajena = crear_sesion(otra_docente, compartida=True)
+
+    en_propia = cliente.get(url_de(propia))
+    en_ajena = cliente.get(url_de(ajena))
+
+    for respuesta in (en_propia, en_ajena):
+        assert "repositorio/_pagina_sesion.html" in [t.name for t in respuesta.templates]
+    assert 'class="sesion-tuya"' in en_propia.content.decode()
+    assert 'class="sesion-tuya"' not in en_ajena.content.decode()
+
+
 def test_la_pagina_de_una_ajena_compartida_lleva_las_migas_al_repositorio(
     cliente, crear_sesion, otra_docente
 ):

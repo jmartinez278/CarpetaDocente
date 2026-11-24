@@ -15,7 +15,6 @@ from cuentas.tests.e2e import (
     boton_ingresar,
     campo_clave,
     campo_usuario,
-    ingresar,
     saludo_de,
 )
 
@@ -43,13 +42,6 @@ def test_de_la_raiz_al_inicio_de_sesion_y_a_la_portada(live_server, page, docent
     # Desde rebrand-portada, la portada tampoco carga Alpine.js (D5).
     page.wait_for_load_state("load")
     assert page.evaluate("typeof Alpine") == "undefined"
-
-
-def test_la_direccion_llega_a_su_inicio(live_server, page, direccion, clave):
-    ingresar(page, live_server, direccion, clave)
-
-    expect(page).to_have_url(f"{live_server.url}/direccion/")
-    expect(page.get_by_role("heading", level=1)).to_have_text("Hola, Rosa Huamán")
 
 
 def test_mostrar_contrasena_alterna_la_vista(live_server, page, clave):

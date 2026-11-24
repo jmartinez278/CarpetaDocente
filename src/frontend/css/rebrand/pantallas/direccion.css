@@ -1,0 +1,542 @@
+/* Portada de la dirección (US-040, D9; DESIGN.md 1.2; boceto prototipos-cd/US-040-final/direccion.css). Prefijo dir-.
+   Besley 600 en el nombre de la directora y en el día de la miniatura (como la portada de la docente). Un solo café por
+   pantalla (la banda de Consolidados). Sin líneas verticales: solo espacio y divisiones horizontales. La miniatura usa
+   el papel de las vistas previas; en oscuro, el papel atenuado (tokens.css, Pizarra neutra). Consolidados y el detalle
+   de la sección suman aquí sus estilos en los grupos 6 y 7. */
+
+@layer components {
+  /* --- Comunes --- */
+
+  .dir-contexto {
+    margin-top: var(--s-2);
+    color: var(--muted);
+  }
+
+  .btn.dir-siagie {
+    flex: none;
+    width: auto;
+    padding-inline: var(--s-3);
+    background: var(--card);
+    font-size: var(--text-label);
+  }
+
+  .dir-siagie .icono {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* --- Portada: mismo ritmo que la bienvenida de la docente (portada.css) --- */
+
+  .page:has(> .dir-portada) {
+    padding-top: 28px;
+    padding-bottom: 56px;
+  }
+
+  .dir-cabeza {
+    margin-bottom: 36px;
+  }
+
+  .dir-saludo {
+    font-size: var(--text-home);
+    line-height: var(--leading-home);
+    letter-spacing: var(--tracking-page);
+    font-weight: var(--display-weight);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .dir-saludo .saludo {
+    display: block;
+    margin-bottom: var(--s-2);
+    color: var(--muted);
+    font-size: var(--text-greeting);
+    line-height: var(--leading-greeting);
+    letter-spacing: var(--tracking-subsection);
+    font-weight: var(--weight-body);
+  }
+
+  .dir-saludo .docente {
+    font-family: var(--tipografia-nombre);
+    font-weight: 600;
+    letter-spacing: -.025em;
+  }
+
+  .dir-cabeza .dir-contexto {
+    margin-top: 20px;
+  }
+
+  /* Acceso: tarjeta enlazada entera */
+
+  .dir-acceso {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 132px;
+    gap: 20px;
+    min-width: 0;
+    padding: var(--s-5);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    color: var(--ink);
+  }
+
+  .dir-acceso__copia {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .dir-acceso__cab {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  .dir .dir-acceso__icono {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    color: var(--action);
+  }
+
+  .dir-acceso__titulo {
+    min-width: 0;
+    font-size: 26px;
+    line-height: 1.3;
+    font-weight: var(--display-weight);
+    letter-spacing: -.02em;
+  }
+
+  .dir-acceso__enlace {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .dir-acceso__enlace::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: var(--r-lg);
+  }
+
+  .dir-acceso__enlace:focus-visible {
+    outline: none;
+  }
+
+  .dir-acceso:has(.dir-acceso__enlace:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 4px;
+  }
+
+  .dir-acceso__frase {
+    max-width: 36ch;
+    margin-top: var(--s-2);
+  }
+
+  /* Banda café de Consolidados: la copia a la izquierda, la miniatura (fecha y mapa) a la derecha */
+
+  .dir-acceso--banda {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--s-7);
+    align-items: center;
+    margin-bottom: var(--s-5);
+    padding: 28px;
+    background: var(--cocoa);
+    border-color: var(--cocoa-line);
+    color: var(--cocoa-ink);
+  }
+
+  .dir-acceso--banda .dir-acceso__copia {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .dir-acceso--banda .dir-mini {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .dir-acceso--banda .dir-acceso__icono {
+    width: 30px;
+    height: 30px;
+    color: var(--cocoa-ink);
+  }
+
+  .dir-acceso--banda .dir-acceso__titulo {
+    font-size: 32px;
+    letter-spacing: -.03em;
+  }
+
+  .dir-acceso--banda .dir-acceso__frase {
+    max-width: 75ch;
+    color: var(--cocoa-muted);
+    text-wrap: pretty;
+  }
+
+  .dir-acceso__accion {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    align-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-4);
+    min-height: var(--touch-min);
+    margin-top: var(--s-5);
+    padding: 10px var(--s-4);
+    background: var(--cocoa-ink);
+    color: var(--cocoa);
+    border-radius: var(--r-btn);
+    font-weight: var(--display-weight);
+  }
+
+  .dir-acceso__accion .icono {
+    width: 20px;
+    height: 20px;
+    transition: transform var(--m-out) var(--m-ease);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dir-acceso:has(.dir-acceso__enlace:hover) .dir-acceso__accion .icono {
+      transform: translateX(3px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dir-acceso__accion .icono {
+      transition: none;
+      transform: none !important;
+    }
+  }
+
+  .dir-pendiente {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    margin-top: var(--s-4);
+    padding: var(--s-1) var(--s-2);
+    background: var(--gold);
+    color: var(--preview-ink);
+    border-radius: 6px;
+    font-size: var(--text-label);
+    font-weight: var(--display-weight);
+    line-height: 1.4;
+  }
+
+  .dir .dir-pendiente .icono {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Miniatura de papel: la fecha (el día en Besley) y el mapa de las secciones */
+
+  .dir-mini {
+    display: grid;
+    grid-template-columns: 132px auto;
+    min-width: 0;
+    margin-right: 6px;
+    overflow: hidden;
+    background: var(--preview-paper);
+    border: 1px solid var(--preview-card);
+    border-radius: var(--r-sm);
+    box-shadow: 4px 4px 0 var(--preview-sand);
+    color: var(--preview-ink);
+  }
+
+  .dir-mini--solo-fecha {
+    grid-template-columns: 132px;
+  }
+
+  .dir-fecha {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    row-gap: var(--s-1);
+    padding: var(--s-3) var(--s-2);
+    background: var(--preview-fecha);
+    color: var(--preview-action);
+    font-size: var(--text-label);
+    line-height: 1.25;
+  }
+
+  .dir-fecha strong {
+    color: var(--preview-ink);
+    font-family: var(--tipografia-nombre);
+    font-weight: 600;
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: -.025em;
+  }
+
+  .dir-mapita {
+    display: grid;
+    grid-template-columns: auto repeat(4, 30px);
+    align-items: center;
+    align-content: center;
+    gap: 6px 8px;
+    padding: var(--s-4) var(--s-5) var(--s-4) var(--s-4);
+  }
+
+  .dir-mapita__g {
+    padding-right: var(--s-1);
+    color: var(--preview-action);
+    font-size: var(--text-support);
+    font-weight: var(--display-weight);
+  }
+
+  .dir-mapita__c {
+    display: block;
+    height: 18px;
+    background: var(--preview-card);
+    border: 1px solid var(--preview-line);
+    border-radius: 3px;
+  }
+
+  /* Atrasada */
+  .dir-mapita__c--x {
+    background: var(--gold);
+    border-color: var(--gold-ink);
+  }
+
+  /* Sin docente o sin estudiantes */
+  .dir-mapita__c--s {
+    background: transparent;
+    border-style: dashed;
+  }
+
+  /* Lugar sin sección: mantiene alineada la rejilla de 6 × 4 */
+  .dir-mapita__c--v {
+    visibility: hidden;
+  }
+
+  /* --- Fila de abajo: Entregas (próximamente) y el cierre con el SIAGIE --- */
+
+  .dir-fila {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--s-5);
+    align-items: center;
+  }
+
+  .dir-acceso--proxima {
+    border-style: dashed;
+    border-color: var(--line-strong);
+  }
+
+  .dir-acceso--proxima .dir-acceso__icono {
+    color: var(--muted);
+  }
+
+  .dir-proxima {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: var(--s-4);
+    padding: 2px var(--s-2);
+    background: var(--folder);
+    color: var(--ink);
+    border-radius: var(--r-pill);
+    font-size: var(--text-label);
+    font-weight: var(--display-weight);
+  }
+
+  .dir-pila-mini {
+    position: relative;
+    align-self: center;
+    width: 132px;
+    height: 132px;
+  }
+
+  .dir-pila {
+    position: absolute;
+    display: block;
+    background: var(--preview-paper);
+    border: 1px solid var(--preview-line);
+    border-radius: var(--r-sm);
+  }
+
+  .dir-pila--3 {
+    inset: 0 0 16px 18px;
+  }
+
+  .dir-pila--2 {
+    inset: 8px 8px 8px 9px;
+  }
+
+  .dir-pila--1 {
+    inset: 16px 16px 0 0;
+    display: grid;
+    align-content: start;
+    gap: 9px;
+    padding: 12px;
+    overflow: hidden;
+    background: var(--preview-card);
+    box-shadow: 4px 4px 0 var(--preview-sand);
+  }
+
+  .dir-pila__fila {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .dir-pila__fila .tinta {
+    flex: 1;
+  }
+
+  .dir-casilla {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--preview-line);
+    border-radius: 3px;
+  }
+
+  .dir-casilla--si {
+    background: var(--preview-action);
+    border-color: var(--preview-action);
+  }
+
+  .dir-casilla .icono {
+    width: 11px;
+    height: 11px;
+    color: var(--preview-card);
+    stroke-width: 2.4;
+  }
+
+  .dir-cierre {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-2);
+    padding-inline: var(--s-2);
+  }
+
+  .dir-cierre__titulo {
+    font-size: var(--text-subsection);
+    line-height: var(--leading-subsection);
+    letter-spacing: var(--tracking-subsection);
+    font-weight: var(--display-weight);
+  }
+
+  .dir-cierre .dir-siagie {
+    margin-top: var(--s-2);
+  }
+
+  /* --- Tableta y celular --- */
+
+  @media (max-width: 899px) {
+    .page:has(> .dir-portada) {
+      padding-top: 20px;
+      padding-bottom: 40px;
+    }
+
+    .dir-cabeza {
+      margin-bottom: 28px;
+    }
+
+    .dir-fila {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dir-acceso--banda {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dir-acceso--banda .dir-mini {
+      grid-column: 1;
+      grid-row: 2;
+      justify-self: start;
+      margin-top: var(--s-5);
+    }
+
+    .dir-acceso__accion {
+      grid-row: 3;
+    }
+  }
+
+  @media (max-width: 699px) {
+    .page:has(> .dir-portada) {
+      padding-top: var(--s-3);
+    }
+
+    .dir-cabeza {
+      margin-bottom: var(--s-5);
+    }
+
+    .dir-cabeza .dir-contexto {
+      margin-top: var(--s-4);
+      font-size: var(--text-label);
+      line-height: 1.6;
+    }
+
+    .dir-acceso {
+      grid-template-columns: minmax(0, 1fr) 96px;
+      gap: var(--s-3);
+      padding: 20px var(--s-4);
+    }
+
+    .dir-acceso--banda {
+      grid-template-columns: minmax(0, 1fr);
+      padding: var(--s-5);
+    }
+
+    .dir-acceso__titulo {
+      font-size: 24px;
+    }
+
+    .dir-acceso--banda .dir-acceso__titulo {
+      font-size: 30px;
+    }
+
+    .dir-mini {
+      grid-template-columns: 88px auto;
+    }
+
+    .dir-mini--solo-fecha {
+      grid-template-columns: 88px;
+    }
+
+    .dir-fecha {
+      font-size: var(--text-support);
+    }
+
+    .dir-fecha strong {
+      font-size: 46px;
+    }
+
+    .dir-mapita {
+      grid-template-columns: auto repeat(4, 24px);
+      gap: 5px 6px;
+      padding: var(--s-3);
+    }
+
+    .dir-mapita__c {
+      height: 14px;
+    }
+
+    .dir-pila-mini {
+      width: 96px;
+      height: 104px;
+    }
+
+    .dir-pila--1 {
+      gap: 7px;
+      padding: 9px;
+    }
+
+    .btn.dir-siagie {
+      width: 100%;
+    }
+
+    .dir-cierre {
+      padding-inline: 0;
+      justify-items: stretch;
+    }
+  }
+}

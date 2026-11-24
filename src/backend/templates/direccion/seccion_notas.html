@@ -1,0 +1,106 @@
+{% extends "direccion/seccion.html" %}
+{% comment %}
+Pestaña Notas del detalle de una sección (US-040, D3; spec consolidados-direccion, «Pestaña Notas»): la tabla de niveles por área,
+la tira de áreas (enlaces GET) y la hoja del área elegida en solo lectura, con el filtro «Todos / Pendientes N». Recibe notas
+(direccion.servicios.NotasDelDetalle). Sin campos, sin «Guardar» ni borradores. El recuadro café dice las notas que faltan.
+{% endcomment %}
+
+{% block cafe %}
+<div class="cafe__bloque">
+  <h3>Notas</h3>
+  <p class="cafe__cifra"><strong>{{ notas.conteo.faltan }}</strong> <span>notas faltan</span></p>
+  {% if notas.conteo.total %}
+  <progress class="cafe__barra" max="{{ notas.conteo.total }}" value="{{ notas.conteo.registradas }}" aria-hidden="true"></progress>
+  <p class="cafe__apoyo">{{ notas.conteo.registradas }} de {{ notas.conteo.total }} registradas</p>
+  {% else %}
+  <p class="cafe__apoyo">Sin competencias marcadas</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block pestana %}
+{% if not seccion.docente %}
+{% include "rb/estado_vacio.html" with icono="inbox" titulo="Sin docente" texto="Esta sección no tiene docente: no hay notas que mostrar." %}
+{% elif not notas.hay_marcas %}
+<div class="empty dir-vacio">{% include "iconos/list-checks.svg" with clase="empty-icono" %}<p class="empty-titulo">Sin competencias marcadas en el {{ datos.elegido.nombre_romano }}</p><p>La docente aún no marca competencias en este {{ datos.elegido.palabra }}.</p></div>
+{% else %}
+<section class="det-bloque" aria-labelledby="areas-titulo">
+  <header class="det-bloque__cabecera">
+    <h2 id="areas-titulo">Notas por área</h2>
+    <p class="small">Solo competencias marcadas en el {{ datos.elegido.nombre_romano }}</p>
+  </header>
+  <table class="con-tabla">
+    <caption class="sr-only">Notas de {{ detalle.corta }} por área, {{ datos.elegido.nombre_romano }}: cuántos AD, A, B y C, y cuántas notas faltan</caption>
+    <colgroup><col><col><col><col><col><col></colgroup>
+    <thead>
+      <tr><th scope="col">Área</th><th scope="col">AD</th><th scope="col">A</th><th scope="col">B</th><th scope="col">C</th><th scope="col">Faltan</th></tr>
+    </thead>
+    <tbody>
+      {% for a in notas.areas %}
+      {% if a.sin_marcas %}
+      <tr class="con-area--sin"><th scope="row">{{ a.nombre }}</th><td colspan="5" class="con-sin-marcar">Sin competencias marcadas</td></tr>
+      {% else %}
+      <tr><th scope="row">{{ a.nombre }}</th><td>{{ a.conteos.AD }}</td><td>{{ a.conteos.A }}</td><td>{{ a.conteos.B }}</td><td>{{ a.conteos.C }}</td>{% if a.faltan %}<td class="con-faltan con-faltan--si">{{ a.faltan }}</td>{% else %}<td class="con-faltan">{% include "iconos/check.svg" %}<span class="sr-only">Ninguna</span></td>{% endif %}</tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<nav class="hn-tira det-tira" aria-label="Áreas del {{ datos.elegido.nombre_romano }}">
+  <div class="hn-tira__lista">
+    {% for a in notas.areas %}<a class="hn-pildora" href="{{ url_base }}?periodo={{ datos.elegido.numero }}&amp;area={{ a.codigo }}#hoja"{% if a == notas.elegida %} aria-current="page"{% endif %}>{{ a.nombre }}</a>{% endfor %}
+  </div>
+</nav>
+
+{% with a=notas.elegida %}
+<section class="hn-hoja det-hoja" id="hoja" aria-labelledby="titulo-area">
+  <header class="hn-hoja__cabecera">
+    <div>
+      <h2 id="titulo-area">{% if notas.solo_pendientes %}Pendientes · {% endif %}{{ a.nombre }}</h2>
+      {% if not a.sin_marcas %}<p class="hn-hoja__detalle">{{ notas.detalle_de_la_hoja }}</p>{% endif %}
+    </div>
+    {% if not a.sin_marcas %}
+    <nav class="det-filtro" aria-label="Estudiantes de la hoja">
+      <a href="{{ url_base }}?periodo={{ datos.elegido.numero }}&amp;area={{ a.codigo }}#hoja"{% if not notas.solo_pendientes %} aria-current="page"{% endif %}>Todos</a>
+      <a href="{{ url_base }}?periodo={{ datos.elegido.numero }}&amp;area={{ a.codigo }}&amp;filtro=pendientes#hoja"{% if notas.solo_pendientes %} aria-current="page"{% endif %}>Pendientes <span class="det-filtro__n">{{ notas.pendientes }}</span></a>
+    </nav>
+    {% endif %}
+  </header>
+  {% if a.sin_marcas %}
+  <p class="det-aviso">Sin competencias marcadas en el {{ datos.elegido.nombre_romano }}.</p>
+  {% elif not notas.filas %}
+  <p class="det-aviso">Ningún estudiante tiene notas pendientes en {{ a.nombre }}.</p>
+  {% else %}
+  <div class="hn-superficie">
+    <div class="hn-columnas">
+      <table class="hn-tabla" role="grid" aria-readonly="true" aria-label="Notas de {{ a.nombre }}, {{ datos.elegido.nombre_romano }}, solo lectura{% if notas.solo_pendientes %}, solo pendientes{% endif %}" data-columnas="{{ a.hoja.columnas|length }}">
+        <colgroup><col>{% for c in a.hoja.columnas %}<col>{% endfor %}</colgroup>
+        <thead>
+          <tr>
+            <th scope="col" class="hn-th-est">Apellidos y nombres</th>
+            {% for c in a.hoja.columnas %}<th scope="col" class="hn-comp"><span class="hn-comp__boton" title="{{ c.etiqueta }}: {{ c.competencia.nombre }}"><span aria-hidden="true">{{ c.etiqueta }}</span><span class="sr-only">{{ c.etiqueta }}: {{ c.competencia.nombre }}</span></span></th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in notas.filas %}
+          <tr>
+            <th scope="row" class="hn-nombre"><span class="hn-nombre__texto"><span class="hn-numero" aria-hidden="true">{{ f.numero|stringformat:"02d" }}</span><span><span class="hn-apellidos">{{ f.estudiante.apellidos }},</span> {{ f.estudiante.nombres }}</span></span></th>
+            {% for c, nivel in f.celdas %}<td role="gridcell" aria-readonly="true"><span class="sr-only">{{ f.estudiante.apellidos }}, {{ f.estudiante.nombres }}, {{ c.etiqueta }}: {% if nivel %}{{ nivel }}{% else %}sin nota{% endif %}</span><div class="hn-celda"><span class="hn-nivel det-nivel" aria-hidden="true">{{ nivel|default:"—" }}</span><span class="hn-celda-movil" aria-hidden="true">{{ nivel|default:"—" }}</span></div></td>{% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% if not a.sin_marcas and notas.filas %}
+<div class="hn-leyenda det-leyenda">
+  <p>— Nota que falta.</p>
+  {% for c in a.hoja.columnas %}<p>{{ c.etiqueta }} · {{ c.competencia.nombre }}</p>{% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{% endif %}
+{% endblock %}

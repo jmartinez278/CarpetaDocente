@@ -1,0 +1,53 @@
+{% extends "marco.html" %}
+{% comment %}
+Consolidados de la dirección (US-040, D3 y D4; spec consolidados-direccion; boceto prototipos-cd/US-040-final/consolidados.html):
+título y bimestre elegido, la tira de bimestres (enlaces GET), el mapa de las secciones por grado (cada celda dice su estado con
+texto e ícono y enlaza al detalle) y el resumen de la I.E. en el único recuadro café. Recibe datos (direccion.servicios.Consolidados),
+institucion y url_base. Solo lectura. Sin periodo que mostrar solo hay el estado vacío; en celular el resumen va arriba del mapa.
+{% endcomment %}
+
+{% block titulo %}Consolidados · CarpetaDocente{% endblock %}
+
+{% block titulo_barra %}Consolidados{% endblock %}
+
+{% block principal %}
+<div class="dir dir-consolidados">
+  <div class="det-cabecera">
+    <div>
+      <h1>Consolidados</h1>
+      <p class="dir-contexto">{% if datos.elegido %}{{ datos.linea }}{% else %}Dirección · {{ institucion.nombre }}{% endif %}</p>
+    </div>
+    {% if datos.hay_periodos %}{% include "direccion/_periodos.html" %}{% endif %}
+  </div>
+  {% if not datos.elegido %}
+  {% include "direccion/_sin_periodo.html" %}
+  {% elif not datos.estados %}
+  {% include "rb/estado_vacio.html" with icono="inbox" titulo="Aún no hay secciones" texto="Las secciones aparecerán cuando el administrador las registre." %}
+  {% else %}
+  <div class="dir-dos">
+    <section class="dir-mapa" aria-labelledby="c-mapa">
+      <div class="dir-mapa__cab">
+        <h2 class="dir-h2" id="c-mapa">{{ datos.titulo_del_mapa }}</h2>
+        <ul class="dir-leyenda" role="list"><li><span class="dir-muestra"></span>Al día</li><li><span class="dir-muestra dir-muestra--atrasada"></span>Atrasada</li><li><span class="dir-muestra dir-muestra--sin"></span>Sin docente o sin estudiantes</li></ul>
+      </div>
+      <div class="dir-mapa__grados">{% for g in datos.grados %}<section class="dir-mapa__grado" aria-label="{{ g.nombre_largo }}"><h3 class="dir-mapa__nombre">{{ g.nombre }}</h3><ul class="dir-mapa__celdas" role="list">{% for e in g.celdas %}<li>{% if e.destino %}<a class="dir-celda dir-celda--{{ e.clase }}" href="{% url e.destino e.seccion.pk %}?periodo={{ datos.elegido.numero }}">{% else %}<div class="dir-celda dir-celda--{{ e.clase }}">{% endif %}<span class="dir-celda__letra">{{ e.seccion.nombre }}<span class="sr-only">{{ e.lector }}</span>{% if e.estado == "ATRASADA" %}{% include "iconos/circle-alert.svg" with clase="dir-alerta" %}{% endif %}</span>{% if e.estado == "AL_DIA" %}<span class="dir-celda__estado dir-celda__estado--ok">{% include "iconos/check.svg" with clase="dir-ok" %}Al día</span>{% elif e.estado == "ATRASADA" %}{% if e.texto_notas %}<span class="dir-celda__estado">{{ e.texto_notas }}</span>{% endif %}{% if e.texto_dias %}<span class="dir-celda__estado">{{ e.texto_dias }}</span>{% endif %}{% elif e.estado == "SIN_DOCENTE" %}<span class="dir-celda__estado">Sin docente</span>{% else %}<span class="dir-celda__estado">Sin estudiantes</span>{% endif %}{% if e.destino %}</a>{% else %}</div>{% endif %}</li>{% endfor %}</ul></section>{% endfor %}</div>
+    </section>
+    <aside class="cafe dir-resumen" aria-labelledby="c-cafe">
+      <div>
+        <h2 id="c-cafe">Resumen de la I.E.</h2>
+        <p class="cafe__apoyo">{% if datos.resumen.terminado %}Terminado · {{ datos.resumen.fecha_fin|date:"j \d\e F" }}{% else %}{{ datos.resumen.texto_cierre }}{% endif %}</p>
+      </div>
+      <p class="cafe__conteo"><strong>{{ datos.resumen.al_dia }} de {{ datos.resumen.consideradas }}</strong><span>secciones al día</span></p>
+      {% if datos.resumen.consideradas %}<progress class="cafe__barra" max="{{ datos.resumen.consideradas }}" value="{{ datos.resumen.al_dia }}" aria-hidden="true"></progress>{% endif %}
+      <dl class="cafe__datos">
+        <div><dt>Notas que faltan</dt><dd>{{ datos.resumen.notas_faltan }}</dd></div>
+        <div><dt>Días sin completar</dt><dd>{{ datos.resumen.dias_sin_completar }}</dd></div>
+        <div><dt>Asistencia</dt><dd>{{ datos.resumen.texto_porcentaje }}</dd></div>
+        <div><dt>Sesiones</dt><dd>{{ datos.resumen.sesiones }}</dd></div>
+      </dl>
+      <p class="cafe__nota">{{ datos.resumen.nota_del_pie }}</p>
+    </aside>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

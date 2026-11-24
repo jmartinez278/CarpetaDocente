@@ -1,0 +1,16 @@
+{% extends "marco.html" %}
+{% comment %}
+Página de una sesión para la dirección (US-040, D2 y D7; spec detalle-sesion, «Sesión abierta por la dirección»): el cuerpo de la
+sesión que comparte con la de la docente (repositorio/_pagina_sesion.html), con el ☰ de la dirección. Sin migas hacia Sesiones, sin
+tarjeta «Tu sesión» ni diálogos ni total de vistas. Recibe sesion, grado, url_descargar y url_ver.
+{% endcomment %}
+
+{% block titulo %}{{ sesion.titulo }} · CarpetaDocente{% endblock %}
+
+{% block titulo_barra %}Consolidados{% endblock %}
+
+{% block principal %}
+<div class="sesion" data-dimension="sesiones">
+  {% include "repositorio/_pagina_sesion.html" %}
+</div>
+{% endblock %}

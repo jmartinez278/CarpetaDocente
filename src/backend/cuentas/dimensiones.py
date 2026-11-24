@@ -128,3 +128,23 @@ def navegacion_docente(seccion, vista_actual, dimensiones=DIMENSIONES):
         for t in (tarjetas[clave] for clave in ORDEN_NAVEGACION)
     ]
     return tuple(replace(d, actual=d.url is not None and d.clave == actual) for d in destinos)
+
+
+def navegacion_direccion(vista_actual):
+    """Destinos del ☰ de la dirección: Inicio, Consolidados y Entregas (US-040, D8).
+
+    Consolidados es el actual en cualquier vista ``direccion:*`` salvo el inicio: el detalle y la
+    página de una sesión cuelgan de él. Entregas no tiene enlace hasta US-042: se ve con
+    «Próximamente» y nunca es la actual.
+    """
+    espacio, _, nombre = (vista_actual or "").partition(":")
+    if espacio != "direccion":
+        actual = None
+    else:
+        actual = "inicio" if nombre == "inicio" else "consolidados"
+    destinos = (
+        Destino("inicio", "Inicio", "house", reverse("direccion:inicio")),
+        Destino("consolidados", "Consolidados", "list-checks", reverse("direccion:consolidados")),
+        Destino("entregas", "Entregas", "inbox", None),
+    )
+    return tuple(replace(d, actual=d.url is not None and d.clave == actual) for d in destinos)

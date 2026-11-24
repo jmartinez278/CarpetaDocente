@@ -1,0 +1,11 @@
+{% comment %}
+Tarjeta café «Tu sesión» de la autora (design de US-011, D8): compartir o dejar de compartir, eliminar y cuántas colegas la vieron.
+Solo la incluye la página de la docente (``lateral``); la de la dirección no lleva acciones. Los diálogos van en sesion.html.
+{% endcomment %}
+<aside class="sesion-tuya" aria-labelledby="tu-sesion">
+  <h2 id="tu-sesion">Tu sesión</h2>
+  <p class="small">{% if sesion.compartida %}Compartida con tus colegas y enviada a la dirección.{% else %}Enviada a la dirección. Solo tú y la dirección la ven.{% endif %}</p>
+  {% if sesion.compartida %}<form method="post" action="{% url "sesiones:dejar_de_compartir" sesion.pk %}">{% csrf_token %}<button class="btn btn--primary" type="submit">Dejar de compartir</button></form>{% else %}<button class="btn btn--primary" type="button" data-abrir-terminos>Compartir</button>{% endif %}
+  <div class="sesion-peligro"><button class="btn btn--secondary" type="button" data-abrir-eliminar>{% include "iconos/trash-2.svg" with clase=None %}Eliminar</button><p class="small">También se retira de la dirección.</p></div>
+  {% if vistas_total %}<p class="sesion-vistas">{% include "iconos/eye.svg" with clase=None %}{% if vistas_total == 1 %}La vio 1 colega{% else %}La vieron {{ vistas_total }} colegas{% endif %}</p>{% endif %}
+</aside>

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Exists, F, Max, OuterRef, Prefetch
+from django.db.models import Count, Exists, F, Max, OuterRef, Prefetch, Q, Subquery
 from django.utils import timezone
 
 from actividad.models import Operacion
@@ -153,9 +153,14 @@ class PeriodoDeLaSeccion:
         return NUMEROS_ROMANOS[self.periodo.numero]
 
     @property
+    def palabra(self):
+        """«bimestre» o «trimestre» (sale de ``nombre_largo``)."""
+        return self.nombre_largo.split()[0].lower()
+
+    @property
     def nombre_romano(self):
-        """«IV bimestre» o «III trimestre» (la palabra sale de ``nombre_largo``)."""
-        return f"{self.romano} {self.nombre_largo.split()[0].lower()}"
+        """«IV bimestre» o «III trimestre»."""
+        return f"{self.romano} {self.palabra}"
 
     @property
     def fecha_inicio(self):
@@ -172,8 +177,13 @@ def periodos_de_la_seccion(seccion, hoy=None):
     VIGENTE es el de ``periodo_vigente``; ANTERIOR, el que terminó; FUTURO, el que aún no
     empieza. Se marca el que ya empezó, solo con el año ABIERTO. Sin periodos, lista vacía.
     """
+    return periodos_del_anio_escolar(seccion.anio_escolar, hoy)
+
+
+def periodos_del_anio_escolar(anio, hoy=None):
+    """La regla de ``periodos_de_la_seccion`` sobre el año escolar (la dirección no tiene una
+    sección; US-040, D3)."""
     hoy = hoy or timezone.localdate()
-    anio = seccion.anio_escolar
     periodos = list(Periodo.objects.filter(anio_escolar_id=anio.pk).order_by("numero"))
     if not periodos:
         return []
@@ -401,6 +411,98 @@ def notas_faltantes(usuario, seccion, periodo, area_institucion):
         .values_list("estudiante_id", "competencia_id")
     )
     return list(filas)
+
+
+# --- US-040, D3. Notas por lote para la dirección ---
+
+
+@dataclass
+class ConteoDeNotas:
+    """Las celdas de la hoja de una sección en un periodo: las que faltan y el total."""
+
+    faltan: int = 0
+    total: int = 0
+
+    @property
+    def registradas(self):
+        return self.total - self.faltan
+
+
+def _celdas_de_la_hoja(periodo):
+    """Las marcas del periodo que son columnas de la hoja de la tutora, una fila por activo.
+
+    La regla de ``notas_faltantes`` sin el usuario: la sección tiene docente (``puede_marcar``)
+    y el área se trabaja en su institución y no está a cargo del docente de curso. Cada fila
+    lleva ``estudiante_id``: las anotaciones comparten un solo JOIN a los estudiantes.
+    """
+    area_de_la_tutora = InstitucionArea.objects.filter(
+        institucion_id=OuterRef("seccion__anio_escolar__institucion_id"),
+        area_id=OuterRef("competencia__area_id"),
+        se_trabaja=True,
+        a_cargo_docente_curso=False,
+    )
+    return (
+        CompetenciaPeriodo.objects.filter(
+            periodo=periodo, competencia__activa=True, seccion__docente__isnull=False
+        )
+        .filter(Exists(area_de_la_tutora))
+        .annotate(
+            estudiante_id=F("seccion__estudiantes__id"),
+            estado_estudiante=F("seccion__estudiantes__estado"),
+        )
+        .filter(estado_estudiante=Estudiante.Estado.ACTIVO)
+    )
+
+
+def faltantes_por_seccion(secciones, periodo):
+    """Por id de sección, sus ``ConteoDeNotas`` en ``periodo`` (US-040, D3). Una consulta.
+
+    Es la suma de ``notas_faltantes`` de la tutora en cada área, sin consultar por sección ni
+    por área; una prueba compara las dos. Sin docente, ``ConteoDeNotas(0, 0)``.
+    """
+    conteos = {getattr(s, "pk", s): ConteoDeNotas() for s in secciones}
+    con_nota = Calificacion.objects.filter(
+        estudiante_id=OuterRef("estudiante_id"),
+        competencia_id=OuterRef("competencia_id"),
+        periodo_id=OuterRef("periodo_id"),
+    )
+    filas = (
+        _celdas_de_la_hoja(periodo)
+        .filter(seccion_id__in=list(conteos))
+        .annotate(tiene_nota=Exists(con_nota))
+        .order_by()
+        .values("seccion_id")
+        .annotate(total=Count("pk"), faltan=Count("pk", filter=Q(tiene_nota=False)))
+    )
+    for fila in filas:
+        conteos[fila["seccion_id"]] = ConteoDeNotas(faltan=fila["faltan"], total=fila["total"])
+    return conteos
+
+
+def niveles_por_area(seccion, periodo):
+    """Por id de área de la tutora, cuántos AD, A, B y C hay en las celdas de su hoja (D3).
+
+    Las mismas celdas que ``faltantes_por_seccion``: activos y competencias activas marcadas
+    de las áreas que no son del docente de curso. Un área sin notas va con ceros; un área sin
+    marcas no va. Una consulta.
+    """
+    nivel = Calificacion.objects.filter(
+        estudiante_id=OuterRef("estudiante_id"),
+        competencia_id=OuterRef("competencia_id"),
+        periodo_id=OuterRef("periodo_id"),
+    ).values("nivel")[:1]
+    filas = (
+        _celdas_de_la_hoja(periodo)
+        .filter(seccion=seccion)
+        .annotate(area_id=F("competencia__area_id"), nivel=Subquery(nivel))
+        .values_list("area_id", "nivel")
+    )
+    niveles = {}
+    for area_id, valor in filas:
+        conteo = niveles.setdefault(area_id, dict.fromkeys(Calificacion.Nivel.values, 0))
+        if valor is not None:
+            conteo[valor] += 1
+    return niveles
 
 
 # --- D5. Guardado ---

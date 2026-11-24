@@ -1,0 +1,12 @@
+{% comment %}
+Tira de bimestres de Consolidados y del detalle de una sección (US-040, D2 y D4; spec consolidados-direccion, «Bimestre de los
+consolidados»): un enlace GET por periodo anterior o vigente a url_base?periodo=N, con el romano y su estado; las fechas van solo en
+el nombre accesible. El elegido lleva aria-current="page". El futuro no se elige: es un span con aria-disabled, sin enlace.
+Recibe datos (direccion.servicios.Consolidados) y url_base.
+{% endcomment %}
+<nav class="hn-periodos con-periodos" aria-label="{{ datos.primero.palabra|capfirst }}s de {{ datos.anio }}">
+  <ul>
+    {% for p in datos.periodos %}<li>{% if p.estado != "FUTURO" %}<a class="hn-periodo" href="{{ url_base }}?periodo={{ p.numero }}"{% if p.numero == datos.elegido.numero %} aria-current="page"{% endif %}>{% else %}<span class="hn-periodo" aria-disabled="true">{% endif %}<strong>{{ p.romano }}</strong><span class="sr-only"> {{ p.palabra }},</span> <span class="hn-periodo__estado">{% if p.estado == "VIGENTE" %}Vigente{% elif p.estado == "ANTERIOR" %}Anterior{% else %}Futuro{% endif %}</span><span class="sr-only">, del {{ p.fecha_inicio|date:"j \d\e F" }} al {{ p.fecha_fin|date:"j \d\e F" }}</span>{% if p.estado != "FUTURO" %}</a>{% else %}</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</nav>

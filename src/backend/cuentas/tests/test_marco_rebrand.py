@@ -179,6 +179,77 @@ def test_desde_sin_permiso_ningun_destino_es_el_actual(html_de, docente, con_sec
     assert "aria-current" not in dialogo(html_de(docente))
 
 
+# --- ☰ de la dirección (spec pantallas-de-inicio, «Navegación de la dirección»; US-040, D8) ---
+
+CONSOLIDADOS = "/direccion/consolidados/"
+
+
+def test_el_menu_de_un_interior_de_la_direccion_enlaza_sin_js_a_su_portada(html_de, direccion):
+    """Escenario «Sin JavaScript en la dirección»."""
+    barra = cabecera(html_de(direccion, CONSOLIDADOS))
+
+    menu = re.search(r"<a\b[^>]*data-menu-navegacion[^>]*>", barra)
+    assert menu, "sin JS el ☰ es un enlace"
+    assert 'href="/direccion/"' in menu.group(0)
+    assert 'aria-label="Inicio"' in menu.group(0)
+
+
+def test_la_barra_de_un_interior_de_la_direccion_lleva_menu_titulo_tema_y_cuenta(
+    html_de, direccion
+):
+    """Escenario «Barra de un interior de la dirección»: sin enlace de regreso sobre el título."""
+    html = html_de(direccion, CONSOLIDADOS)
+    barra = cabecera(html)
+
+    titulo = re.search(r'<span class="bar-title">\s*Consolidados\s*</span>', barra)
+    assert titulo
+    posiciones = [
+        barra.index("data-menu-navegacion"),
+        titulo.start(),
+        barra.index("data-tema"),
+        barra.index("data-menu-cuenta"),
+    ]
+    assert posiciones == sorted(posiciones)
+    assert "‹" not in html and "Volver" not in html
+
+
+def test_el_menu_de_la_direccion_lista_inicio_consolidados_y_entregas(html_de, direccion):
+    """Escenario «Abrir el ☰ de la dirección»."""
+    assert destinos(html_de(direccion, CONSOLIDADOS)) == [
+        ("Inicio", "/direccion/"),
+        ("Consolidados", CONSOLIDADOS),
+        ("Entregas Próximamente", None),
+    ]
+
+
+def test_en_consolidados_solo_consolidados_es_la_pantalla_actual(html_de, direccion):
+    """Escenario «Ubicación actual en el detalle»."""
+    actuales = re.findall(
+        r'<a\b[^>]*aria-current="page"[^>]*>(.*?)</a>',
+        dialogo(html_de(direccion, CONSOLIDADOS)),
+        re.DOTALL,
+    )
+
+    assert [re.sub(r"<[^>]+>|\s+", "", a) for a in actuales] == ["Consolidados"]
+
+
+def test_el_menu_de_la_direccion_trae_su_panel_cerrado_y_con_su_titulo(html_de, direccion):
+    panel = dialogo(html_de(direccion, CONSOLIDADOS))
+
+    apertura = re.match(r"<dialog\b[^>]*>", panel).group(0)
+    assert " open" not in apertura
+    assert 'aria-labelledby="navegacion-titulo"' in apertura
+    assert 'aria-label="Navegación principal"' in panel
+
+
+def test_la_docente_no_entra_a_consolidados(client, docente):
+    client.force_login(docente)
+
+    respuesta = client.get(CONSOLIDADOS)
+
+    assert (respuesta.status_code, respuesta.url) == (302, "/docente/")
+
+
 # --- Cuenta (spec cierre-sesion, «Menú de la cuenta»; D7) ---
 
 

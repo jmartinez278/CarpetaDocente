@@ -39,9 +39,14 @@ class DocenteMixin(RolRequeridoMixin):
     rol_requerido = Usuario.Rol.DOCENTE
 
 
-def no_disponible(request):
-    """404 «La sesión ya no está disponible»: igual si no existe, si es ajena o de otra I.E."""
-    return render(request, PLANTILLA_NO_DISPONIBLE, status=404)
+def no_disponible(request, volver=None):
+    """404 «La sesión ya no está disponible»: igual si no existe, si es ajena o de otra I.E.
+
+    ``volver`` es ``(texto de la barra, texto del botón, dirección)``; sin él, el de la docente:
+    «Volver a Sesiones». La dirección usa el suyo (US-040, D7).
+    """
+    contexto = {"volver": volver} if volver else {}
+    return render(request, PLANTILLA_NO_DISPONIBLE, contexto, status=404)
 
 
 def _url_repositorio(q="", grado=None, area=None, pagina=None):
@@ -174,16 +179,26 @@ class SesionView(DocenteMixin, View):
         return render(request, "repositorio/sesion.html", contexto)
 
 
-class EntregarView(DocenteMixin, View):
-    """«Descargar» o «Ver»: el enlace firmado de R2 o el archivo, sin caché (D7)."""
+class EntregaBase(View):
+    """«Descargar» o «Ver»: el enlace firmado de R2 o el archivo, sin caché (D7).
+
+    No fija el rol: lo ponen ``EntregarView`` (la docente) y la de la dirección, cada una con su
+    puerta de visibilidad (``visible``) y su respuesta de «no disponible».
+    """
 
     modo = "descargar"
+    visible = staticmethod(servicios.sesion_visible)
+
+    def no_disponible(self, request):
+        return no_disponible(request)
 
     def get(self, request, id_sesion):
         try:
-            entrega = servicios.entregar_archivo(request.user, id_sesion, self.modo)
+            entrega = servicios.entregar_archivo(
+                request.user, id_sesion, self.modo, visible=self.visible
+            )
         except servicios.SesionNoDisponible:
-            return no_disponible(request)
+            return self.no_disponible(request)
         if entrega.url is not None:
             respuesta = HttpResponseRedirect(entrega.url)
         else:
@@ -192,6 +207,10 @@ class EntregarView(DocenteMixin, View):
             respuesta["X-Content-Type-Options"] = "nosniff"
         patch_cache_control(respuesta, no_store=True)
         return respuesta
+
+
+class EntregarView(DocenteMixin, EntregaBase):
+    """La descarga y la vista de la docente."""
 
 
 class _EscrituraDeLaAutoraView(DocenteMixin, View):

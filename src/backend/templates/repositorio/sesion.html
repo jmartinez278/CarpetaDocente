@@ -1,11 +1,10 @@
 {% extends "marco.html" %}
-{% load static sesiones %}
+{% load static %}
 {% comment %}
-Página de una sesión (spec detalle-sesion; design de US-011, D5 a D8 y D10). Migas a «Mis sesiones» o al «Repositorio», el
-formato y el título con «Descargar» y, en un PDF, «Ver» (enlaces del aplicativo, nunca de R2), los chips, la ficha, el
-propósito y la vista previa del texto. En una propia, la tarjeta café «Tu sesión» (compartir o dejar de compartir, eliminar y
-cuántas colegas la vieron) y sus dos diálogos; detalle.js los abre. En el material de referencia (US-018, D6), sin autora:
-«Fecha de carga» y la tarjeta café «Material de referencia» con la fuente y el permiso de uso, sin acciones. Todo pasa por el autoescape; el texto va en un <pre>.
+Página de una sesión de la docente (spec detalle-sesion; design de US-011, D5 a D8 y D10). Migas a «Mis sesiones» o al «Repositorio» y el
+cuerpo de la sesión, que comparte con la página de la dirección (repositorio/_pagina_sesion.html). En una propia, la tarjeta café «Tu sesión»
+(compartir o dejar de compartir, eliminar y cuántas colegas la vieron) y sus dos diálogos; detalle.js los abre. En el material de referencia
+(US-018, D6), sin autora, la tarjeta café «Material de referencia» sin acciones. El contexto trae ``lateral``, la que corresponda.
 {% endcomment %}
 
 {% block titulo %}{{ sesion.titulo }} · CarpetaDocente{% endblock %}
@@ -17,43 +16,8 @@ cuántas colegas la vieron) y sus dos diálogos; detalle.js los abre. En el mate
 <div class="sesion" data-dimension="sesiones">
   <nav class="migas" aria-label="Migas"><a href="{{ miga.1 }}">{% include "iconos/chevron-left.svg" with clase=None %}{{ miga.0 }}</a></nav>
   {% include "repositorio/_mensajes.html" %}
-  <header class="sesion-cabecera">
-    <div class="sesion-titular"><p class="small">Sesión de aprendizaje · {{ sesion.tipo_corto }}</p><h1>{{ sesion.titulo }}</h1></div>
-    <div class="sesion-archivo-acciones">{% url "sesiones:descargar" sesion.pk as url_descargar %}{% include "rb/boton.html" with texto="Descargar" href=url_descargar variante="principal" icono="download" %}{% if sesion.tipo_corto == "PDF" %}<a class="btn btn--secondary" href="{% url "sesiones:ver" sesion.pk %}" target="_blank" rel="noopener">{% include "iconos/external-link.svg" with clase=None %}Ver</a>{% endif %}</div>
-  </header>
-  <div class="sesion-rejilla">
-    <section class="sesion-info" aria-label="Datos de la sesión">
-      <p class="sesion-chips"><span class="chip">{{ grado }}</span><span class="chip">{{ sesion.area.nombre }}</span>{% if referencia %}<span class="chip">Material de referencia</span>{% elif sesion.compartida %}<span class="chip">Compartida</span>{% endif %}</p>
-      <dl class="sesion-ficha">
-        {% if not referencia %}<div><dt>Autora</dt><dd>{{ sesion.autor.get_full_name }}</dd></div>{% endif %}
-        <div><dt>{% if referencia %}Fecha de carga{% else %}Fecha de envío{% endif %}</dt><dd>{{ sesion.creado_en|date:"j \d\e F \d\e Y" }}</dd></div>
-        <div><dt>Formato</dt><dd>{{ sesion.tipo_corto }}</dd></div>
-        <div><dt>Tamaño del archivo</dt><dd>{{ sesion.tamano_bytes|tamano }}</dd></div>
-      </dl>
-      {% if sesion.proposito %}<div class="sesion-proposito"><h2>Propósito</h2><p>{{ sesion.proposito }}</p></div>{% endif %}
-    </section>
-    {% if propia %}
-    <aside class="sesion-tuya" aria-labelledby="tu-sesion">
-      <h2 id="tu-sesion">Tu sesión</h2>
-      <p class="small">{% if sesion.compartida %}Compartida con tus colegas y enviada a la dirección.{% else %}Enviada a la dirección. Solo tú y la dirección la ven.{% endif %}</p>
-      {% if sesion.compartida %}<form method="post" action="{% url "sesiones:dejar_de_compartir" sesion.pk %}">{% csrf_token %}<button class="btn btn--primary" type="submit">Dejar de compartir</button></form>{% else %}<button class="btn btn--primary" type="button" data-abrir-terminos>Compartir</button>{% endif %}
-      <div class="sesion-peligro"><button class="btn btn--secondary" type="button" data-abrir-eliminar>{% include "iconos/trash-2.svg" with clase=None %}Eliminar</button><p class="small">También se retira de la dirección.</p></div>
-      {% if vistas_total %}<p class="sesion-vistas">{% include "iconos/eye.svg" with clase=None %}{% if vistas_total == 1 %}La vio 1 colega{% else %}La vieron {{ vistas_total }} colegas{% endif %}</p>{% endif %}
-    </aside>
-    {% elif referencia %}
-    <aside class="sesion-tuya" aria-labelledby="material-referencia">
-      <h2 id="material-referencia">Material de referencia</h2>
-      <dl class="sesion-referencia">
-        <div><dt class="small">Fuente</dt><dd>{{ sesion.fuente }}</dd></div>
-        <div><dt class="small">Permiso de uso</dt><dd>{{ sesion.permiso_uso }}</dd></div>
-      </dl>
-    </aside>
-    {% endif %}
-    <article class="sesion-vista" aria-labelledby="vista-previa">
-      <div class="sesion-vista-cabecera">{% include "iconos/file-text.svg" with clase=None %}<div><h2 id="vista-previa">Vista previa del texto</h2>{% if sesion.texto %}<p class="small">Texto sin formato. Descarga el archivo para verlo tal como es.</p>{% endif %}</div></div>
-      {% if sesion.texto %}<pre class="sesion-texto">{{ sesion.texto }}</pre>{% else %}<p class="sesion-sin-texto">La vista previa no está disponible. Puedes descargar el archivo.</p>{% endif %}
-    </article>
-  </div>
+  {% url "sesiones:descargar" sesion.pk as url_descargar %}{% url "sesiones:ver" sesion.pk as url_ver %}
+  {% include "repositorio/_pagina_sesion.html" %}
 </div>
 {% if propia %}{% include "repositorio/_eliminar.html" %}{% if not sesion.compartida %}{% include "repositorio/_compartir.html" %}{% endif %}{% endif %}
 {% endblock %}

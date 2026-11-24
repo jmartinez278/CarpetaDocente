@@ -24,6 +24,11 @@
     text-wrap: balance;
   }
 
+  .bienvenida .docente {
+    font-family: var(--tipografia-nombre);
+    font-weight: 600;
+  }
+
   .bienvenida .saludo {
     display: block;
     margin-bottom: var(--s-2);
@@ -332,71 +337,115 @@
     width: 42%;
   }
 
-  /* Asistencia: la clave de estados y tres filas. */
+  /* Asistencia: miniatura calendario (US-040, D10): la fecha de hoy y, con sección única, el avance de la jornada. */
   .miniatura--asistencia {
     align-self: flex-start;
     width: calc(100% - 6px);
     height: 184px;
     margin-top: var(--s-5);
     margin-right: 6px;
-    padding: var(--s-4) 20px;
+    padding: 0;
     border-color: var(--preview-card);
-    box-shadow: var(--shadow-preview);
+    box-shadow: 4px 4px 0 var(--preview-sand);
   }
 
-  .hoja-asistencia-clave {
+  .miniatura--calendario {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--s-1);
-    margin-bottom: 10px;
-    padding-left: calc(25% + var(--s-4));
-    color: var(--preview-action);
-    font-size: 12px;
-    font-weight: var(--display-weight);
-    line-height: 18px;
-    text-align: center;
+    grid-template-columns: 132px minmax(0, 1fr);
   }
 
-  .hoja-asistencia-clave span:last-child {
-    font-size: 11px;
-  }
-
-  .hoja-asistencia-fila {
-    display: flex;
-    align-items: center;
-    gap: var(--s-4);
-    height: 38px;
-    border-top: 1px solid var(--preview-line);
-  }
-
-  .hoja-asistencia-fila > .tinta {
-    flex: none;
-    width: 25%;
-    height: 5px;
-  }
-
-  .hoja-asistencia-fila > div {
-    flex: 1;
+  .calendario-fecha {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    align-content: center;
     justify-items: center;
+    row-gap: 4px;
+    padding: 12px 8px;
+    background: var(--preview-fecha);
+    color: var(--preview-action);
+    font-size: 14px;
+    line-height: 1.25;
   }
 
-  .marca {
-    width: 18px;
-    height: 18px;
-    border: 1px solid var(--justificado-line);
-    border-radius: var(--r-round);
+  .calendario-fecha strong {
+    color: var(--preview-ink);
+    font-family: var(--tipografia-nombre);
+    font-weight: 600;
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: -.025em;
   }
 
-  .marca--asistio {
-    background: var(--asistio);
-    border-color: var(--asistio);
+  /* La fecha completa solo para el lector de pantalla; lo visible va en aria-hidden. */
+  .calendario-fecha-completa {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
-  .marca--falto {
-    background: var(--falto);
-    border-color: var(--falto);
+  .calendario-registro {
+    display: grid;
+    align-content: center;
+    gap: 14px;
+    padding: 18px 22px;
+  }
+
+  .calendario-aviso {
+    margin: 0;
+    color: var(--preview-action);
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .avance-registro-lectura {
+    display: flex;
+    align-items: baseline;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .avance-registro-lectura strong {
+    font-size: 40px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.035em;
+    line-height: 1;
+  }
+
+  .avance-registro-lectura strong span {
+    color: var(--preview-action);
+    font-size: .52em;
+    letter-spacing: 0;
+  }
+
+  .avance-registro-barra {
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 10px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 2px;
+    background: var(--preview-barra);
+    color: var(--preview-action);
+  }
+
+  .avance-registro-barra::-webkit-progress-bar {
+    background: var(--preview-barra);
+  }
+
+  .avance-registro-barra::-webkit-progress-value {
+    background: var(--preview-action);
+  }
+
+  .avance-registro-barra::-moz-progress-bar {
+    background: var(--preview-action);
   }
 
   /* Sesiones: hoja con líneas y el lápiz. */
@@ -689,28 +738,32 @@
     .miniatura--asistencia {
       height: 146px;
       margin-top: 20px;
-      padding: var(--s-3);
     }
 
-    .hoja-asistencia-clave {
-      margin-bottom: var(--s-2);
-      padding-left: calc(25% + var(--s-3));
-      font-size: 10px;
-      line-height: 16px;
+    .miniatura--calendario {
+      grid-template-columns: 88px minmax(0, 1fr);
     }
 
-    .hoja-asistencia-clave span:last-child {
-      font-size: 9px;
+    .calendario-fecha {
+      font-size: 13px;
     }
 
-    .hoja-asistencia-fila {
-      gap: var(--s-3);
-      height: 30px;
+    .calendario-fecha strong {
+      font-size: 46px;
     }
 
-    .marca {
-      width: 16px;
-      height: 16px;
+    .calendario-registro {
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .calendario-aviso,
+    .avance-registro-lectura {
+      font-size: 14px;
+    }
+
+    .avance-registro-lectura strong {
+      font-size: 30px;
     }
   }
 

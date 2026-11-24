@@ -2,11 +2,13 @@
 {% load static %}
 {% comment %}
 Portada del docente en el marco del rebrand (spec pantallas-de-inicio, «Portada del docente»; rebrand-portada, D1).
-Barra sin ☰ ni título y sin fijar; el saludo y el nombre en el mismo <h1>; la línea de fecha y secciones fuera de él;
+Barra sin ☰ ni título y sin fijar; el saludo y el nombre en el mismo <h1>; la línea de secciones (sin fecha: va en la miniatura de Asistencia) fuera de él;
 «Ver estudiantes» y el aviso solo con una sección; las tarjetas en «Tus accesos», en el orden de lectura.
 {% endcomment %}
 
 {% block titulo %}Inicio · CarpetaDocente{% endblock %}
+
+{% block precargas %}<link rel="preload" href="{% static 'dist/fuentes/besley-latin-600-normal.woff2' %}" as="font" type="font/woff2" crossorigin>{% endblock %}
 
 {% block scripts %}<script src="{% static 'js/portada.js' %}" defer></script>
 <script src="{% static 'dist/vendor/htmx.min.js' %}" defer></script>
@@ -20,7 +22,7 @@ Barra sin ☰ ni título y sin fijar; el saludo y el nombre en el mismo <h1>; la
 <div class="bienvenida">
   <h1><span class="saludo">{{ saludo }},</span> <span class="docente">{{ user.get_full_name|default:user.username }}</span></h1>
   <div class="seccion-entrada">
-    <p>{{ fecha }} · {{ secciones }}</p>
+    <p>{{ secciones }}</p>
     {% if entrada %}{% url 'estudiantes:lista' entrada.pk as url_lista %}<a class="entrada-estudiantes" id="ver-estudiantes" href="{{ url_lista }}" hx-get="{{ url_lista }}" hx-target="#estudiantes" hx-swap="innerHTML" data-abrir-estudiantes>Ver estudiantes{% include "iconos/arrow-right.svg" %}</a>{% endif %}
   </div>
 </div>

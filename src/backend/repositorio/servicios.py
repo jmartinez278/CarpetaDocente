@@ -788,6 +788,31 @@ def sesion_visible(usuario, id_sesion, con_texto=True):
     compartida. Es la única puerta de la página, la descarga, la vista y las escrituras: lo no
     visible es igual a lo inexistente. Un ``id`` que no es UUID tampoco es visible.
     """
+    return _una_sesion(
+        id_sesion,
+        con_texto,
+        Q(autor_id=usuario.pk) | Q(compartida=True, institucion_id=usuario.institucion_id),
+    )
+
+
+def sesion_visible_direccion(usuario, id_sesion, con_texto=True):
+    """La sesión ``id_sesion`` si ``usuario`` es la dirección que puede verla; si no, ``None``.
+
+    La dirección ve cualquier sesión enviada por una docente de su institución, compartida o
+    no, y no el material de referencia (RN-019, D7). Es la puerta aparte de las rutas de la
+    dirección: ``sesion_visible`` no cambia, y una cuenta que no es Dirección no ve nada aquí.
+    """
+    if usuario.rol != Usuario.Rol.DIRECCION or usuario.institucion_id is None:
+        return None
+    return _una_sesion(
+        id_sesion,
+        con_texto,
+        Q(institucion_id=usuario.institucion_id, origen=Sesion.Origen.PROPIA),
+    )
+
+
+def _una_sesion(id_sesion, con_texto, condicion):
+    """La sesión de ``id_sesion`` que cumple ``condicion``; un id que no es UUID no es visible."""
     if not isinstance(id_sesion, uuid.UUID):
         id_sesion = _uuid(str(id_sesion or ""))
         if id_sesion is None:
@@ -795,12 +820,7 @@ def sesion_visible(usuario, id_sesion, con_texto=True):
     consulta = Sesion.objects.all()
     if not con_texto:
         consulta = consulta.defer("texto", "texto_busqueda")
-    return (
-        consulta.filter(pk=id_sesion)
-        .filter(Q(autor_id=usuario.pk) | Q(compartida=True, institucion_id=usuario.institucion_id))
-        .select_related("area", "autor")
-        .first()
-    )
+    return consulta.filter(pk=id_sesion).filter(condicion).select_related("area", "autor").first()
 
 
 @dataclass(frozen=True)
@@ -905,6 +925,22 @@ def _del_grado(consulta, grado):
     """
     sin_final = Q(grado_hasta__isnull=True, grado=grado)  # fila del código anterior
     return consulta.filter(Q(grado__lte=grado, grado_hasta__gte=grado) | sin_final)
+
+
+def sesiones_propias_del_grado(institucion_id, grado, desde, hasta):
+    """Las sesiones de las docentes de la institución para ``grado`` enviadas entre ``desde`` y
+    ``hasta`` (fecha de envío en Lima), compartidas o no y sin el material de referencia (D6).
+
+    Con lo que necesita una tarjeta, de la más reciente a la más antigua. La usa la dirección
+    para el detalle de una sección: no filtra por visibilidad, quien la llame debe ser la dirección.
+    """
+    consulta = Sesion.objects.filter(
+        institucion_id=institucion_id,
+        origen=Sesion.Origen.PROPIA,
+        creado_en__date__gte=desde,
+        creado_en__date__lte=hasta,
+    )
+    return _tarjetas(_del_grado(consulta, grado))
 
 
 def _areas_trabajadas(usuario):
@@ -1028,17 +1064,18 @@ class Entrega:
     disposicion: str
 
 
-def entregar_archivo(usuario, id_sesion, modo):
+def entregar_archivo(usuario, id_sesion, modo, visible=sesion_visible):
     """El archivo de la sesión para ``modo`` («descargar» o «ver»), con su SESION_DESCARGADA.
 
-    El permiso se revisa en cada petición (``sesion_visible``). «Ver» solo existe para el PDF.
+    El permiso se revisa en cada petición con la puerta ``visible`` (``sesion_visible``; la
+    dirección pasa ``sesion_visible_direccion``). «Ver» solo existe para el PDF.
     Si no está disponible, ``SesionNoDisponible`` sin entrada. Con ``S3Storage`` devuelve un
     enlace firmado de 60 s que fija el nombre original y el modo; con otro almacén, el archivo
     abierto. Si no se puede firmar ni abrir, no queda la entrada (D7).
     """
     if modo not in _MODOS:
         raise ValueError(f"Modo de entrega desconocido: {modo!r}")
-    sesion = sesion_visible(usuario, id_sesion, con_texto=False)
+    sesion = visible(usuario, id_sesion, con_texto=False)
     if sesion is None or (modo == "ver" and sesion.tipo_mime != TIPO_PDF):
         raise SesionNoDisponible
     disposicion = content_disposition_header(_MODOS[modo], sesion.archivo_nombre)
@@ -1222,17 +1259,22 @@ def datos_de_la_pagina(usuario, sesion):
 
     Las migas llevan a «Mis sesiones» si es suya y al «Repositorio» si es de una colega o
     material de referencia (sin autora, nunca es propia). El total de colegas que la vieron solo
-    se da a la autora.
+    se da a la autora. ``lateral`` es la tarjeta café de la página: «Tu sesión», «Material de
+    referencia» o ninguna.
     """
     propia = sesion.autor_id == usuario.pk
+    referencia = sesion.origen == Sesion.Origen.REFERENCIA
     if propia:
         miga = ("Mis sesiones", reverse("sesiones:inicio"))
+        lateral = "repositorio/_sesion_tuya.html"
     else:
         miga = ("Repositorio", reverse("sesiones:repositorio"))
+        lateral = "repositorio/_sesion_referencia.html" if referencia else None
     return {
         "sesion": sesion,
         "propia": propia,
-        "referencia": sesion.origen == Sesion.Origen.REFERENCIA,
+        "referencia": referencia,
+        "lateral": lateral,
         "miga": miga,
         "grado": sesion.grados_texto,
         "vistas_total": sesion.vistas.count() if propia else None,

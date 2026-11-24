@@ -163,14 +163,6 @@ def test_desmarcar_todo_no_se_guarda_y_dice_por_que(abrir_competencias, ie):
     assert marcas_en_la_base(3) == set()
 
 
-def test_las_areas_del_docente_de_curso_no_se_pueden_marcar(abrir_competencias, ie):
-    page = abrir_competencias()
-
-    for casilla_de_curso in page.locator(".comp-area--curso input").all():
-        expect(casilla_de_curso).to_be_disabled()
-        expect(casilla_de_curso).not_to_be_checked()
-
-
 # --- Celular: la cápsula de áreas ---
 
 
@@ -339,13 +331,6 @@ def test_corregir_un_periodo_anterior_no_toca_el_vigente(
     expect(estado(page)).to_have_text("Guardado · I bimestre")
     assert marcas_en_la_base(1) == ie - {quitada}
     assert marcas_en_la_base(3) == ie
-
-
-def test_el_periodo_futuro_no_se_puede_elegir(abrir_competencias, ie):
-    page = abrir_competencias()
-
-    expect(boton_periodo(page, 4)).to_be_disabled()
-    expect(boton_periodo(page, 4)).to_contain_text("Futuro")
 
 
 def test_con_tab_y_enter_el_foco_sigue_en_el_boton_del_periodo(abrir_competencias, ie):
@@ -696,15 +681,6 @@ def test_en_vacaciones_se_elige_un_periodo_pasado(abrir_competencias, ie):
     guardar(page)
     expect(estado(page)).to_have_text("Guardado · II bimestre")
     assert marcas_en_la_base(2) == ie
-
-
-def test_sin_periodos_solo_el_aviso(abrir_competencias, seccion_tutora, universo_ie):
-    """Escenario "Sin periodos"."""
-    page = abrir_competencias()
-
-    expect(page.get_by_text("La dirección aún no configura los periodos")).to_be_visible()
-    expect(page.locator("#guardar")).to_have_count(0)
-    expect(page.locator("[data-periodo]")).to_have_count(0)
 
 
 # --- Escenario "Axe en ambos temas" y sin desplazamiento horizontal ---

@@ -4,6 +4,7 @@ Todas fijan ``hoy``: ninguna depende del reloj. El 28-10-2026 es miércoles.
 """
 
 import datetime
+from decimal import Decimal
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -824,3 +825,204 @@ def test_el_texto_de_marcar_los_restantes(sin_marcar, texto):
     lista = servicios.ListaDeHoy(jornada=None, filas=filas, no_activos=[])
 
     assert lista.texto_marcar_restantes == texto
+
+
+# --- US-040, D5. Asistencia por periodo ---
+
+# El IV bimestre de 2027 va del lunes 8 de noviembre al viernes 17 de diciembre; hoy es el
+# lunes 22 de noviembre: 11 días de clase hasta hoy y 10 hasta ayer.
+IV_INICIO = datetime.date(2027, 11, 8)
+IV_FIN = datetime.date(2027, 12, 17)
+HOY_IV = datetime.date(2027, 11, 22)
+MARTES_16 = datetime.date(2027, 11, 16)
+MIERCOLES_17 = datetime.date(2027, 11, 17)
+DESPUES_DEL_IV = datetime.date(2028, 1, 10)
+
+A, T, F, J = (
+    Asistencia.Estado.ASISTIO,
+    Asistencia.Estado.TARDE,
+    Asistencia.Estado.FALTO,
+    Asistencia.Estado.JUSTIFICADO,
+)
+
+
+@pytest.fixture
+def cuarto(anio_abierto):
+    return Periodo.objects.create(
+        anio_escolar=anio_abierto, numero=4, fecha_inicio=IV_INICIO, fecha_fin=IV_FIN
+    )
+
+
+def tomar(seccion, fecha, marcas, usuario):
+    """La jornada de ``fecha`` con ``marcas`` (estudiante → estado), directo en la base."""
+    jornada = Jornada.objects.create(seccion=seccion, fecha=fecha, registrado_por=usuario)
+    Asistencia.objects.bulk_create(
+        Asistencia(jornada=jornada, estudiante=estudiante, estado=estado)
+        for estudiante, estado in marcas.items()
+    )
+    return jornada
+
+
+def test_dias_de_clase_de_lunes_a_viernes_hasta_la_fecha(cuarto):
+    dias = servicios.dias_de_clase(cuarto, HOY_IV)
+
+    assert len(dias) == 11
+    assert (dias[0], dias[-1]) == (IV_INICIO, HOY_IV)
+    assert all(dia.weekday() < 5 for dia in dias)
+
+
+def test_dias_de_clase_terminan_con_el_periodo_y_no_empiezan_antes(cuarto):
+    dias = servicios.dias_de_clase(cuarto, DESPUES_DEL_IV)
+
+    assert (len(dias), dias[-1]) == (30, IV_FIN)
+    assert servicios.dias_de_clase(cuarto, IV_INICIO - datetime.timedelta(days=1)) == []
+
+
+def test_dias_sin_completar(seccion, docente, cuarto):
+    """Sin jornada el 16, incompleta el 17, completas el resto; hoy incompleta no cuenta.
+
+    La retirada el 10, sin marcas desde ese día, no deja días sin completar.
+    """
+    ana = Estudiante.objects.create(seccion=seccion, apellidos="AAA", nombres="ANA")
+    beto = Estudiante.objects.create(seccion=seccion, apellidos="BBB", nombres="BETO")
+    retirada = Estudiante.objects.create(
+        seccion=seccion,
+        apellidos="CCC",
+        nombres="CARLA",
+        estado=Estudiante.Estado.RETIRADO,
+        fecha_estado=datetime.date(2027, 11, 10),
+    )
+    for dia in servicios.dias_de_clase(cuarto, HOY_IV - datetime.timedelta(days=1)):
+        if dia == MARTES_16:
+            continue
+        marcas = {ana: A} if dia == MIERCOLES_17 else {ana: A, beto: F}
+        if dia < datetime.date(2027, 11, 10):
+            marcas[retirada] = A
+        tomar(seccion, dia, marcas, docente)
+    tomar(seccion, HOY_IV, {ana: A}, docente)
+
+    dias = servicios.dias_sin_completar_por_seccion([seccion], cuarto, HOY_IV)
+
+    assert dias == {seccion.pk: 2}
+
+
+def test_dias_sin_completar_de_un_periodo_terminado(seccion, cuarto):
+    """Ya terminó: cuentan sus 30 días hasta el fin; una sección vacía no tiene ninguno."""
+    Estudiante.objects.create(seccion=seccion, apellidos="AAA", nombres="ANA")
+    vacia = Seccion.objects.create(anio_escolar=seccion.anio_escolar, grado=3, nombre="B")
+
+    dias = servicios.dias_sin_completar_por_seccion([seccion, vacia], cuarto, DESPUES_DEL_IV)
+
+    assert dias == {seccion.pk: 30, vacia.pk: 0}
+
+
+def test_dias_sin_completar_en_dos_consultas(seccion, cuarto, django_assert_num_queries):
+    otras = [
+        Seccion.objects.create(anio_escolar=seccion.anio_escolar, grado=g, nombre="B")
+        for g in (3, 4, 5)
+    ]
+    for s in [seccion, *otras]:
+        Estudiante.objects.create(seccion=s, apellidos="AAA", nombres="ANA")
+
+    with django_assert_num_queries(2):
+        dias = servicios.dias_sin_completar_por_seccion([seccion, *otras], cuarto, HOY_IV)
+
+    assert set(dias.values()) == {10}
+
+
+@pytest.fixture
+def once_jornadas(seccion, docente, cuarto):
+    """Ana: 8 Asistió, 2 Faltó y 1 Justificado en los 11 días; Beto sin marcas; un trasladado
+    con 3 Asistió."""
+    ana = Estudiante.objects.create(seccion=seccion, apellidos="AAA", nombres="ANA")
+    beto = Estudiante.objects.create(seccion=seccion, apellidos="BBB", nombres="BETO")
+    trasladado = Estudiante.objects.create(
+        seccion=seccion,
+        apellidos="TTT",
+        nombres="TOMÁS",
+        estado=Estudiante.Estado.TRASLADADO,
+        fecha_estado=datetime.date(2027, 11, 11),
+    )
+    estados = [A] * 8 + [F, F, J]
+    for n, dia in enumerate(servicios.dias_de_clase(cuarto, HOY_IV)):
+        marcas = {ana: estados[n]}
+        if n < 3:
+            marcas[trasladado] = A
+        tomar(seccion, dia, marcas, docente)
+    return ana, beto, trasladado
+
+
+def test_totales_por_estudiante(seccion, cuarto, once_jornadas):
+    """Escenario «Totales de un estudiante»: 8, 0, 2, 1 y «72,7 %»; sin marcas, «—»."""
+    ana, beto, _ = once_jornadas
+
+    filas = servicios.totales_por_estudiante(seccion, cuarto, HOY_IV)
+
+    assert [fila.estudiante for fila in filas] == [ana, beto]
+    de_ana, de_beto = (fila.totales for fila in filas)
+    assert (de_ana.asistio, de_ana.tarde, de_ana.falto, de_ana.justificado) == (8, 0, 2, 1)
+    assert de_ana.texto_porcentaje == "72,7 %"
+    assert de_beto.marcas == 0
+    assert de_beto.porcentaje is None
+    assert de_beto.texto_porcentaje == "—"
+
+
+def test_los_totales_de_la_seccion_suman_todas_sus_marcas(seccion, cuarto, once_jornadas):
+    """Las marcas del trasladado cuentan en la sección aunque no esté en la tabla (D5)."""
+    totales = servicios.totales_de_la_seccion(seccion, cuarto, HOY_IV)
+
+    assert (totales.asistio, totales.tarde, totales.falto, totales.justificado) == (11, 0, 2, 1)
+    assert totales.texto_porcentaje == "78,6 %"
+
+
+def test_los_totales_no_salen_del_periodo(seccion, docente, cuarto):
+    ana = Estudiante.objects.create(seccion=seccion, apellidos="AAA", nombres="ANA")
+    tomar(seccion, IV_INICIO - datetime.timedelta(days=3), {ana: F}, docente)
+    tomar(seccion, IV_INICIO, {ana: A}, docente)
+
+    totales = servicios.totales_de_la_seccion(seccion, cuarto, HOY_IV)
+
+    assert (totales.asistio, totales.falto) == (1, 0)
+
+
+def test_promedio_ponderado_por_estudiantes():
+    """Escenario «Promedio ponderado»: 25 × 90,0 y 15 × 100,0 dan 93,8; sin marcas no entra."""
+    promedio = servicios.promedio_ponderado(
+        [(25, Decimal("90.0")), (15, Decimal("100.0")), (30, None)]
+    )
+
+    assert promedio == Decimal("93.8")
+    assert servicios.texto_porcentaje(promedio) == "93,8 %"
+    assert servicios.promedio_ponderado([(30, None)]) is None
+
+
+def test_totales_exactos_con_tres_secciones(seccion, docente, cuarto):
+    """Escenario «Totales exactos (RNF-017)»: un periodo completo comparado con las filas."""
+    # Un estado distinto por estudiante, día y sección, sin azar: 4 no divide a 7 ni a 3.
+    estados = [A, T, F, J]
+    secciones = [seccion] + [
+        Seccion.objects.create(anio_escolar=seccion.anio_escolar, grado=g, nombre="A")
+        for g in (3, 4)
+    ]
+    for s in secciones:
+        estudiantes = [
+            Estudiante.objects.create(seccion=s, apellidos=f"APELLIDO {n}", nombres="NOMBRE")
+            for n in range(6)
+        ]
+        for d, dia in enumerate(servicios.dias_de_clase(cuarto, IV_FIN)):
+            marcas = {e: estados[(7 * n + 3 * d + s.grado) % 4] for n, e in enumerate(estudiantes)}
+            tomar(s, dia, marcas, docente)
+
+    por_seccion = servicios.totales_por_seccion(secciones, cuarto, DESPUES_DEL_IV)
+
+    for s in secciones:
+        filas = Asistencia.objects.filter(jornada__seccion=s)
+        totales = servicios.totales_de_la_seccion(s, cuarto, DESPUES_DEL_IV)
+        assert por_seccion[s.pk] == totales
+        assert totales.marcas == filas.count() == 30 * 6
+        assert totales.asistio == filas.filter(estado=A).count()
+        assert totales.tarde == filas.filter(estado=T).count()
+        assert totales.falto == filas.filter(estado=F).count()
+        assert totales.justificado == filas.filter(estado=J).count()
+        de_estudiantes = servicios.totales_por_estudiante(s, cuarto, DESPUES_DEL_IV)
+        assert sum(fila.totales.marcas for fila in de_estudiantes) == totales.marcas

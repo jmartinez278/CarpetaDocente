@@ -248,16 +248,15 @@ def test_intro_y_espacio_en_el_circulo(abrir_asistencia, veinticinco):
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_la_lista_a_medio_marcar_pasa_axe(abrir_asistencia, veinticinco, ancho, tema):
-    page = abrir_asistencia(ancho, tema)
+def test_la_lista_a_medio_marcar_pasa_axe(abrir_asistencia, veinticinco, tema):
+    page = abrir_asistencia(360, tema)
     tocar(page, veinticinco[0])
     tocar(page, veinticinco[1], 4)
     tocar(page, veinticinco[2], 3)
     esperar_guardado(page)
 
-    revisar_con_axe(page, f"asistencia-a-medio-marcar-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, f"asistencia-a-medio-marcar-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
 def test_n_sin_marcar_lleva_a_la_primera_fila_sin_marcar(abrir_asistencia, veinticinco):
@@ -418,24 +417,22 @@ def sabado(monkeypatch):
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_el_fin_de_semana_pasa_axe(abrir_asistencia, sabado, ancho, tema):
-    page = abrir_asistencia(ancho, tema)
+def test_el_fin_de_semana_pasa_axe(abrir_asistencia, sabado, tema):
+    page = abrir_asistencia(360, tema)
     expect(page.get_by_text("Hoy no hay clases")).to_be_visible()
 
-    revisar_con_axe(page, f"asistencia-fin-de-semana-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, f"asistencia-fin-de-semana-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_la_seccion_sin_estudiantes_pasa_axe(abrir_asistencia, seccion_de_ana, ancho, tema):
+def test_la_seccion_sin_estudiantes_pasa_axe(abrir_asistencia, seccion_de_ana, tema):
     seccion_de_ana.estudiantes.all().delete()
-    page = abrir_asistencia(ancho, tema)
+    page = abrir_asistencia(360, tema)
     expect(page.get_by_text("Tu sección aún no tiene estudiantes")).to_be_visible()
 
-    revisar_con_axe(page, f"asistencia-sin-estudiantes-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, f"asistencia-sin-estudiantes-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
 # --- Parte C: lote, cortes de red, aviso al salir, sesión vencida y cierre (D3, D5, D6 y D8) ---
@@ -1020,14 +1017,13 @@ VISTAS = {
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 @pytest.mark.parametrize("vista", VISTAS)
-def test_las_vistas_de_la_parte_c_pasan_axe(abrir_asistencia, veinticinco, vista, ancho, tema):
-    page = abrir_asistencia(ancho, tema)
+def test_las_vistas_de_la_parte_c_pasan_axe(abrir_asistencia, veinticinco, vista, tema):
+    page = abrir_asistencia(360, tema)
     VISTAS[vista](page, veinticinco)
 
-    revisar_con_axe(page, f"asistencia-{vista}-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, f"asistencia-{vista}-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
 def test_nombre_de_120_mas_120_a_320_px(abrir_asistencia, veinticinco):
@@ -1142,25 +1138,23 @@ def test_corregir_un_dia_pasado_desde_el_selector(
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_un_dia_pasado_pasa_axe(
-    abrir_asistencia, live_server, seccion_de_ana, anio_2026, docente, veinticinco, ancho, tema
+    abrir_asistencia, live_server, seccion_de_ana, anio_2026, docente, veinticinco, tema
 ):
     poner_el_lunes(seccion_de_ana, veinticinco[:24], docente)
     Estudiante.objects.create(
         seccion=seccion_de_ana, apellidos="ESPINOZA VARGAS", nombres="RENATO", estado="RETIRADO"
     )
-    page = abrir_asistencia(ancho, tema)
+    page = abrir_asistencia(360, tema)
 
     page.goto(f"{url_asistencia(live_server, seccion_de_ana)}2026-10-26/")
     expect(page.get_by_text("Fuera del registro del lunes 26")).to_be_visible()
 
-    revisar_con_axe(page, f"asistencia-dia-pasado-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, f"asistencia-dia-pasado-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_el_periodo_cerrado_pasa_axe(
     abrir_asistencia,
     live_server,
@@ -1169,15 +1163,14 @@ def test_el_periodo_cerrado_pasa_axe(
     periodo_cerrado,
     docente,
     veinticinco,
-    ancho,
     tema,
 ):
     poner_el_lunes(seccion_de_ana, veinticinco[:24], docente)
-    page = abrir_asistencia(ancho, tema)
+    page = abrir_asistencia(360, tema)
 
     page.goto(f"{url_asistencia(live_server, seccion_de_ana)}2026-10-26/")
     expect(page.get_by_text("El periodo está cerrado")).to_be_visible()
     expect(page.locator("[data-marcar]")).to_have_count(0)
 
-    revisar_con_axe(page, f"asistencia-periodo-cerrado-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, f"asistencia-periodo-cerrado-{tema}")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360

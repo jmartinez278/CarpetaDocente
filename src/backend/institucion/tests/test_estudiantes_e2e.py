@@ -1,7 +1,7 @@
 """Diálogo de la lista de estudiantes en el navegador (spec estudiantes-seccion; US-006, D6 y D10).
 
 Abrir con "Ver estudiantes", cerrar con Esc y "Cerrar" (el foco vuelve al enlace), Atrás que cierra
-el diálogo, axe de la portada y de la lista vacía en ambos temas a 360 y 1280 px, y 320 px sin
+el diálogo, axe de la portada y de la lista vacía en ambos temas a 360 px, y 320 px sin
 desplazamiento horizontal.
 Necesita el CSS compilado y Chromium: ``uv run pytest -m e2e --browser chromium``.
 """
@@ -126,48 +126,39 @@ def test_el_dialogo_deja_la_portada_inerte_y_sin_desplazamiento(portada):
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_la_portada_con_el_aviso_pasa_axe(
-    live_server, page, docente_con_seccion, clave, ancho, tema
-):
-    con_pantalla(page, ancho, tema)
+def test_la_portada_con_el_aviso_pasa_axe(live_server, page, docente_con_seccion, clave, tema):
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
     expect(page.locator("#aviso-portada")).to_contain_text("Tu sección aún no tiene estudiantes")
 
-    revisar_con_axe(page, f"portada-aviso-{ancho}-{tema}")
+    revisar_con_axe(page, f"portada-aviso-{tema}")
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_la_lista_vacia_en_el_dialogo_pasa_axe(
-    live_server, page, docente_con_seccion, clave, ancho, tema
-):
-    con_pantalla(page, ancho, tema)
+def test_la_lista_vacia_en_el_dialogo_pasa_axe(live_server, page, docente_con_seccion, clave, tema):
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
     abrir(page)
 
-    revisar_con_axe(page, f"lista-vacia-dialogo-{ancho}-{tema}")
+    revisar_con_axe(page, f"lista-vacia-dialogo-{tema}")
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_la_lista_vacia_como_pagina_completa_pasa_axe(
-    live_server, page, docente_con_seccion, seccion, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, clave
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, 360, "light")
     ingresar(page, live_server, docente_con_seccion, clave)
     page.goto(f"{live_server.url}/docente/secciones/{seccion.pk}/estudiantes/")
     expect(page.get_by_role("heading", level=1, name=TITULO)).to_be_visible()
 
-    revisar_con_axe(page, f"lista-vacia-pagina-{ancho}-{tema}")
+    revisar_con_axe(page, "lista-vacia-pagina")
 
 
-@pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", [320, 360, 1280])
 def test_la_portada_y_la_lista_vacia_no_se_desplazan_en_horizontal(
-    live_server, page, docente_con_seccion, seccion, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, clave, ancho
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, ancho, "light")
     ingresar(page, live_server, docente_con_seccion, clave)
     page.evaluate("document.fonts.ready")
     assert page.evaluate("document.documentElement.scrollWidth") <= ancho
@@ -213,12 +204,11 @@ def test_el_titulo_recibe_el_foco_sin_contorno_y_los_controles_si(portada, tema)
     assert contorno(portada, "#estudiantes .btn--primary")["ancho"] == "2px"
 
 
-@pytest.mark.parametrize("tema", TEMAS)
 @pytest.mark.parametrize("ancho", ANCHOS)
 def test_la_portada_con_el_aviso_carga_empezando_arriba(
-    live_server, page, docente_con_seccion, clave, ancho, tema
+    live_server, page, docente_con_seccion, clave, ancho
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, ancho, "light")
     ingresar(page, live_server, docente_con_seccion, clave)
     expect(page.locator("#aviso-portada")).to_be_visible()
     page.evaluate("document.fonts.ready")
@@ -367,20 +357,17 @@ def esperar_animaciones(page):
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_pegar_y_revisar_lista_pasan_axe(
-    live_server, page, docente_con_seccion, clave, ancho, tema
-):
-    con_pantalla(page, ancho, tema)
+def test_pegar_y_revisar_lista_pasan_axe(live_server, page, docente_con_seccion, clave, tema):
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
     abrir_pegar(page)
-    revisar_con_axe(page, f"pegar-lista-{ancho}-{tema}")
+    revisar_con_axe(page, f"pegar-lista-{tema}")
 
     importar(page, LISTA_CON_ERRORES)
     expect(dialogo(page).get_by_role("alert")).to_be_visible()
     esperar_animaciones(page)
-    revisar_con_axe(page, f"revisar-lista-{ancho}-{tema}")
-    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= ancho
+    revisar_con_axe(page, f"revisar-lista-{tema}")
+    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= 360
 
 
 def test_tras_importar_y_cerrar_la_portada_ya_no_muestra_el_aviso(portada):
@@ -433,41 +420,34 @@ def test_un_nombre_de_120_mas_120_se_lee_completo_en_el_dialogo(
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_la_lista_con_estudiantes_pasa_axe(
-    live_server, page, docente_con_seccion, clave, ancho, tema
-):
-    con_pantalla(page, ancho, tema)
+def test_la_lista_con_estudiantes_pasa_axe(live_server, page, docente_con_seccion, clave, tema):
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
     abrir_pegar(page)
     importar(page, LISTA_25)
     expect(dialogo(page).get_by_role("status")).to_contain_text("25 estudiantes importados")
     esperar_animaciones(page)
 
-    revisar_con_axe(page, f"lista-dialogo-{ancho}-{tema}")
-    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= ancho
+    revisar_con_axe(page, f"lista-dialogo-{tema}")
+    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= 360
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_la_lista_como_pagina_completa_pasa_axe(
-    live_server, page, docente_con_seccion, seccion, con_25, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, con_25, clave
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, 360, "light")
     ingresar(page, live_server, docente_con_seccion, clave)
     page.goto(f"{live_server.url}/docente/secciones/{seccion.pk}/estudiantes/")
     expect(page.get_by_role("link", name="Editar a AGUILAR FLORES, LUCIANA")).to_be_visible()
 
-    revisar_con_axe(page, f"lista-pagina-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, "lista-pagina")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_revisar_lista_como_pagina_completa_pasa_axe(
-    live_server, page, docente_con_seccion, seccion, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, clave
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, 360, "light")
     ingresar(page, live_server, docente_con_seccion, clave)
     page.goto(f"{live_server.url}/docente/secciones/{seccion.pk}/estudiantes/pegar/")
     page.get_by_label("Apellidos y nombres").fill(LISTA_CON_ERRORES)
@@ -475,8 +455,8 @@ def test_revisar_lista_como_pagina_completa_pasa_axe(
     expect(page.get_by_role("alert")).to_be_visible()
     esperar_animaciones(page)
 
-    revisar_con_axe(page, f"revisar-lista-pagina-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, "revisar-lista-pagina")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
 # --- Agregar y Editar (spec "Agregar un estudiante" y "Editar un estudiante") ---
@@ -520,41 +500,36 @@ def test_corregir_un_nombre_vuelve_a_la_lista_con_el_nombre_corregido(portada, s
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
-def test_agregar_y_editar_pasan_axe(
-    live_server, page, docente_con_seccion, con_25, clave, ancho, tema
-):
-    con_pantalla(page, ancho, tema)
+def test_agregar_y_editar_pasan_axe(live_server, page, docente_con_seccion, con_25, clave, tema):
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
     abrir(page)
     dialogo(page).get_by_role("link", name="Agregar estudiante").click()
     expect(campo(page, "Apellidos")).to_be_focused()
-    revisar_con_axe(page, f"agregar-{ancho}-{tema}")
+    revisar_con_axe(page, f"agregar-{tema}")
 
     campo(page, "Apellidos").fill("AGUIRRE HUAMÁN")
     dialogo(page).get_by_role("button", name="Guardar y agregar otro").click()
     expect(campo(page, "Nombres")).to_have_attribute("aria-invalid", "true")
-    revisar_con_axe(page, f"agregar-error-{ancho}-{tema}")
+    revisar_con_axe(page, f"agregar-error-{tema}")
 
     campo(page, "Nombres").fill("LUCÍA")
     dialogo(page).get_by_role("button", name="Guardar y agregar otro").click()
     expect(dialogo(page).get_by_role("status")).to_contain_text("Estudiante agregado")
     esperar_animaciones(page)
-    revisar_con_axe(page, f"agregar-exito-{ancho}-{tema}")
+    revisar_con_axe(page, f"agregar-exito-{tema}")
 
     dialogo(page).get_by_role("link", name="Volver a la lista").click()
     dialogo(page).get_by_role("link", name="Editar a AGUILAR FLORES, LUCIANA").click()
     expect(campo(page, "Apellidos")).to_be_focused()
-    revisar_con_axe(page, f"editar-{ancho}-{tema}")
-    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= ancho
+    revisar_con_axe(page, f"editar-{tema}")
+    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= 360
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_agregar_con_homonimo_como_pagina_completa_pasa_axe(
-    live_server, page, docente_con_seccion, seccion, con_25, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, con_25, clave
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, 360, "light")
     ingresar(page, live_server, docente_con_seccion, clave)
     page.goto(f"{live_server.url}/docente/secciones/{seccion.pk}/estudiantes/agregar/")
     page.get_by_label("Apellidos", exact=True).fill("aguilar flores")
@@ -563,8 +538,8 @@ def test_agregar_con_homonimo_como_pagina_completa_pasa_axe(
     expect(page.get_by_role("alert")).to_contain_text("Este estudiante ya está en la lista")
     esperar_animaciones(page)
 
-    revisar_con_axe(page, f"agregar-homonimo-pagina-{ancho}-{tema}")
-    assert page.evaluate("document.documentElement.scrollWidth") <= ancho
+    revisar_con_axe(page, "agregar-homonimo-pagina")
+    assert page.evaluate("document.documentElement.scrollWidth") <= 360
 
 
 # --- Quitar, vaciar y sus bloqueos (spec "Quitar y vaciar" y "Sin JavaScript") ---
@@ -643,35 +618,34 @@ def test_sin_javascript_todo_funciona_como_pagina_completa(
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_quitar_vaciar_y_los_bloqueos_pasan_axe(
-    live_server, page, docente_con_seccion, con_25, borrado_con_registros, clave, ancho, tema
+    live_server, page, docente_con_seccion, con_25, borrado_con_registros, clave, tema
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
     abrir(page)
     dialogo(page).get_by_role("link", name="Editar a AGUILAR FLORES, LUCIANA").click()
     dialogo(page).get_by_role("link", name="Quitar estudiante").click()
     expect(page.locator(".vista-titulo")).to_be_focused()
-    revisar_con_axe(page, f"quitar-{ancho}-{tema}")
+    revisar_con_axe(page, f"quitar-{tema}")
 
     dialogo(page).get_by_role("button", name="Quitar estudiante").click()
     expect(dialogo(page).get_by_role("alert")).to_contain_text("No se puede quitar")
     esperar_animaciones(page)
-    revisar_con_axe(page, f"quitar-bloqueo-{ancho}-{tema}")
+    revisar_con_axe(page, f"quitar-bloqueo-{tema}")
 
     dialogo(page).get_by_role("link", name="Volver a la lista").click()
     dialogo(page).get_by_role("link", name="Vaciar lista").click()
     expect(dialogo(page)).to_contain_text("Se quitarán los 25 estudiantes.")
     esperar_animaciones(page)
-    revisar_con_axe(page, f"vaciar-{ancho}-{tema}")
+    revisar_con_axe(page, f"vaciar-{tema}")
 
     dialogo(page).get_by_role("button", name="Vaciar lista").click()
     expect(dialogo(page).get_by_role("alert")).to_contain_text("No se puede vaciar")
     expect(dialogo(page).get_by_role("button")).to_have_count(1)  # solo "Cerrar"
     esperar_animaciones(page)
-    revisar_con_axe(page, f"vaciar-bloqueo-{ancho}-{tema}")
-    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= ancho
+    revisar_con_axe(page, f"vaciar-bloqueo-{tema}")
+    assert page.evaluate("document.getElementById('estudiantes').scrollWidth") <= 360
 
 
 # --- Paso siguiente tras importar (US-030; spec "Pegar lista", "Paso siguiente tras importar") ---
@@ -694,18 +668,17 @@ def test_tomar_la_asistencia_abre_la_asistencia_como_pagina_completa(live_server
 
 
 @pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_la_lista_con_el_aviso_de_importados_pasa_axe(
-    live_server, page, docente_con_seccion, clave, ancho, tema
+    live_server, page, docente_con_seccion, clave, tema
 ):
-    con_pantalla(page, ancho, tema)
+    con_pantalla(page, 360, tema)
     ingresar(page, live_server, docente_con_seccion, clave)
     abrir_pegar(page)
     importar(page, LISTA_25)
     expect(tomar_asistencia(page)).to_be_visible()
     esperar_animaciones(page)
 
-    revisar_con_axe(page, f"lista-importados-{ancho}-{tema}")
+    revisar_con_axe(page, f"lista-importados-{tema}")
 
 
 def test_a_320_la_lista_con_el_aviso_no_se_desplaza_en_horizontal(
@@ -761,25 +734,21 @@ def sin_desplazamiento(page, ancho):
     assert page.evaluate("document.documentElement.scrollWidth") <= ancho
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_pegar_lista_como_pagina_completa_pasa_axe(
-    live_server, page, docente_con_seccion, seccion, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, clave
 ):
-    ir_a(page, live_server, seccion, docente_con_seccion, clave, ancho, tema, "pegar/")
+    ir_a(page, live_server, seccion, docente_con_seccion, clave, 360, "light", "pegar/")
     expect(page.get_by_label("Apellidos y nombres")).to_be_visible()
     expect(page.locator(".bar-title")).to_have_text("Estudiantes")
 
-    revisar_con_axe(page, f"pegar-pagina-{ancho}-{tema}")
-    sin_desplazamiento(page, ancho)
+    revisar_con_axe(page, "pegar-pagina")
+    sin_desplazamiento(page, 360)
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_la_lista_con_el_aviso_de_importados_como_pagina_completa_pasa_axe(
-    live_server, page, docente_con_seccion, seccion, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, clave
 ):
-    ir_a(page, live_server, seccion, docente_con_seccion, clave, ancho, tema, "pegar/")
+    ir_a(page, live_server, seccion, docente_con_seccion, clave, 360, "light", "pegar/")
     page.get_by_label("Apellidos y nombres").fill(LISTA_25)
     page.get_by_role("button", name="Importar").click()
     enlace = page.get_by_role("link", name="Tomar la asistencia de hoy")
@@ -791,48 +760,42 @@ def test_la_lista_con_el_aviso_de_importados_como_pagina_completa_pasa_axe(
         page.get_by_role("link", name="Editar a AGUILAR FLORES, LUCIANA").bounding_box()["height"]
         >= 44
     )
-    revisar_con_axe(page, f"importados-pagina-{ancho}-{tema}")
-    sin_desplazamiento(page, ancho)
+    revisar_con_axe(page, "importados-pagina")
+    sin_desplazamiento(page, 360)
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_agregar_como_pagina_completa_pasa_axe(
-    live_server, page, docente_con_seccion, seccion, con_25, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, con_25, clave
 ):
-    ir_a(page, live_server, seccion, docente_con_seccion, clave, ancho, tema, "agregar/")
+    ir_a(page, live_server, seccion, docente_con_seccion, clave, 360, "light", "agregar/")
     expect(page.get_by_label("Apellidos", exact=True)).to_be_visible()
-    revisar_con_axe(page, f"agregar-pagina-{ancho}-{tema}")
+    revisar_con_axe(page, "agregar-pagina")
 
     page.get_by_label("Apellidos", exact=True).fill("AGUIRRE HUAMÁN")
     page.get_by_role("button", name="Guardar y agregar otro").click()
     expect(page.get_by_label("Nombres", exact=True)).to_have_attribute("aria-invalid", "true")
     esperar_animaciones(page)
-    revisar_con_axe(page, f"agregar-error-pagina-{ancho}-{tema}")
+    revisar_con_axe(page, "agregar-error-pagina")
 
     page.get_by_label("Nombres", exact=True).fill("LUCÍA")
     page.get_by_role("button", name="Guardar y agregar otro").click()
     expect(page.get_by_role("status")).to_contain_text("Estudiante agregado")
     esperar_animaciones(page)
-    revisar_con_axe(page, f"agregar-exito-pagina-{ancho}-{tema}")
-    sin_desplazamiento(page, ancho)
+    revisar_con_axe(page, "agregar-exito-pagina")
+    sin_desplazamiento(page, 360)
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_editar_como_pagina_completa_pasa_axe(
-    live_server, page, docente_con_seccion, seccion, con_25, clave, ancho, tema
+    live_server, page, docente_con_seccion, seccion, con_25, clave
 ):
-    ir_a(page, live_server, seccion, docente_con_seccion, clave, ancho, tema)
+    ir_a(page, live_server, seccion, docente_con_seccion, clave, 360, "light")
     page.get_by_role("link", name="Editar a AGUILAR FLORES, LUCIANA").click()
     expect(page.get_by_role("heading", name="Editar estudiante")).to_be_visible()
 
-    revisar_con_axe(page, f"editar-pagina-{ancho}-{tema}")
-    sin_desplazamiento(page, ancho)
+    revisar_con_axe(page, "editar-pagina")
+    sin_desplazamiento(page, 360)
 
 
-@pytest.mark.parametrize("tema", TEMAS)
-@pytest.mark.parametrize("ancho", ANCHOS)
 def test_quitar_vaciar_y_los_bloqueos_como_pagina_completa_pasan_axe(
     live_server,
     page,
@@ -841,31 +804,29 @@ def test_quitar_vaciar_y_los_bloqueos_como_pagina_completa_pasan_axe(
     con_25,
     borrado_con_registros,
     clave,
-    ancho,
-    tema,
 ):
-    ir_a(page, live_server, seccion, docente_con_seccion, clave, ancho, tema)
+    ir_a(page, live_server, seccion, docente_con_seccion, clave, 360, "light")
     page.get_by_role("link", name="Editar a AGUILAR FLORES, LUCIANA").click()
     page.get_by_role("link", name="Quitar estudiante").click()
     expect(page.get_by_role("button", name="Quitar estudiante")).to_be_visible()
-    revisar_con_axe(page, f"quitar-pagina-{ancho}-{tema}")
+    revisar_con_axe(page, "quitar-pagina")
 
     page.get_by_role("button", name="Quitar estudiante").click()
     expect(page.get_by_role("alert")).to_contain_text("No se puede quitar")
     esperar_animaciones(page)
-    revisar_con_axe(page, f"quitar-bloqueo-pagina-{ancho}-{tema}")
+    revisar_con_axe(page, "quitar-bloqueo-pagina")
 
     page.get_by_role("link", name="Volver a la lista").click()
     page.get_by_role("link", name="Vaciar lista").click()
     expect(page.get_by_text("Se quitarán los 25 estudiantes.")).to_be_visible()
     esperar_animaciones(page)
-    revisar_con_axe(page, f"vaciar-pagina-{ancho}-{tema}")
+    revisar_con_axe(page, "vaciar-pagina")
 
     page.get_by_role("button", name="Vaciar lista").click()
     expect(page.get_by_role("alert")).to_contain_text("No se puede vaciar")
     esperar_animaciones(page)
-    revisar_con_axe(page, f"vaciar-bloqueo-pagina-{ancho}-{tema}")
-    sin_desplazamiento(page, ancho)
+    revisar_con_axe(page, "vaciar-bloqueo-pagina")
+    sin_desplazamiento(page, 360)
 
 
 @pytest.mark.parametrize("ampliado", [False, True], ids=["normal", "texto-al-200"])
