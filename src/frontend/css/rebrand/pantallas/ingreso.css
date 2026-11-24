@@ -38,11 +38,17 @@
     z-index: 10;
   }
 
-  /* Espacio del escudo: reservado y vacío hasta tener autorización de uso. */
+  /* Escudo de la I.E., decorativo: cabe entero en la caja de 96 px (72 px en celular), sin recorte. */
   .login-escudo {
-    width: 56px;
-    height: 56px;
+    width: 96px;
+    height: 96px;
     margin-bottom: var(--s-5);
+  }
+
+  .login-escudo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 
   .login-ie {
@@ -134,15 +140,15 @@
     border-style: dotted;
   }
 
-  /* Celular: nombre a 30 px, escudo de 48 px y la ficha con menos relleno. */
+  /* Celular: nombre a 30 px, escudo de 72 px y la ficha con menos relleno. */
   @media (max-width: 699px) {
     .login {
       padding-block: var(--s-7) var(--s-4);
     }
 
     .login-escudo {
-      width: 48px;
-      height: 48px;
+      width: 72px;
+      height: 72px;
       margin-bottom: var(--s-4);
     }
 

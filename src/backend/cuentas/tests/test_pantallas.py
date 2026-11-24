@@ -109,8 +109,8 @@ def test_el_nombre_de_la_ie_es_el_unico_h1(pagina):
     assert re.findall(r"<h1\b[^>]*>(.*?)</h1>", pagina, re.DOTALL) == ["I.E. Virgen del Carmen"]
 
 
-def test_sin_escudo_ni_menu_ni_enlaces(pagina):
-    assert "<img" not in pagina
+def test_sin_menu_ni_enlaces(pagina):
+    assert pagina.count("<img") == 1, "la única imagen es el escudo"
     assert "<nav" not in pagina
     assert 'class="barra' not in pagina
     # Marco del rebrand sin barra ni ☰ (rebrand-us-001, D1).
@@ -144,10 +144,16 @@ def test_la_base_del_rebrand_no_precarga_besley_sin_el_bloque_precargas():
     assert "besley" not in render_to_string("base.html").lower()
 
 
-def test_el_espacio_del_escudo_va_vacio_y_oculto_antes_del_nombre(pagina):
-    escudo = re.search(r'<div class="login-escudo" aria-hidden="true"></div>', pagina)
+def test_el_escudo_es_decorativo_y_va_antes_del_nombre(pagina):
+    escudo = re.search(
+        r'<div class="login-escudo" aria-hidden="true"><img src="[^"]*/escudo-ie\.webp" alt=""'
+        r' width="216" height="240"></div>',
+        pagina,
+    )
 
-    assert escudo, "el espacio del escudo se reserva vacío y oculto al lector"
+    assert escudo, (
+        "el escudo va oculto al lector, con alt vacío y su tamaño para no mover la página"
+    )
     assert escudo.start() < pagina.index("<h1")
 
 

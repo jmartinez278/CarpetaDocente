@@ -6,11 +6,11 @@ Define lo que ve cada rol al entrar: la pantalla de inicio de sesión, la portad
 ## Requirements
 
 ### Requirement: Pantalla de inicio de sesión
-La pantalla de inicio de sesión SHALL mostrar, en este orden, el nombre "I.E. Virgen del Carmen", "Huayucachi", "Sesiones · Notas · Asistencia", el formulario con Usuario, Contraseña, el botón "Ingresar" y la ayuda "Si olvidaste tu contraseña, pide al administrador que la restablezca.", y al final el pie "CarpetaDocente · 2026". No muestra logo ni escudo, ni enlaces a funciones que no existen. Desde US-003 el campo Usuario lleva debajo la pista de una línea "Ejemplo: jperez (inicial y apellido)", asociada al campo para el lector de pantalla. Desde el rebrand, tras un ingreso rechazado el mensaje de error MUST recibir el foco al cargar la página y el lector de pantalla MUST anunciarlo una sola vez.
+La pantalla de inicio de sesión SHALL mostrar, en este orden, el nombre "I.E. Virgen del Carmen", "Huayucachi", "Sesiones · Notas · Asistencia", el formulario con Usuario, Contraseña, el botón "Ingresar" y la ayuda "Si olvidaste tu contraseña, pide al administrador que la restablezca.", y al final el pie "CarpetaDocente · 2026". Sobre el nombre va el escudo de la I.E., decorativo y oculto al lector de pantalla (uso autorizado por la I.E.); no muestra otro logo ni enlaces a funciones que no existen. Desde US-003 el campo Usuario lleva debajo la pista de una línea "Ejemplo: jperez (inicial y apellido)", asociada al campo para el lector de pantalla. Desde el rebrand, tras un ingreso rechazado el mensaje de error MUST recibir el foco al cargar la página y el lector de pantalla MUST anunciarlo una sola vez.
 
 #### Scenario: Contenido de la pantalla
 - **WHEN** alguien sin sesión abre `/ingresar/`
-- **THEN** ve el nombre de la I.E., el lugar, las tres dimensiones, el formulario con su ayuda y el pie, sin escudo, sin menú y sin un enlace para recuperar la contraseña
+- **THEN** ve el nombre de la I.E., el lugar, las tres dimensiones, el formulario con su ayuda y el pie, con el escudo decorativo sobre el nombre, sin menú y sin un enlace para recuperar la contraseña
 
 #### Scenario: Pista del campo Usuario
 - **WHEN** alguien sin sesión abre `/ingresar/`

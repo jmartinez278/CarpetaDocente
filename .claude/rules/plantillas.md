@@ -16,5 +16,5 @@ paths:
 - **Temas claro y oscuro** con los mismos tokens: siguen `prefers-color-scheme` y el CSS ya responde a `data-theme`. Marco revisa cada pantalla en ambos temas, a 360 y 1280 px, en la pantalla misma; las e2e siguen las reglas de `openspec/config.yaml` (rules de tasks). El botón de tema (T-04) ya existe en todas las barras con sesión y arriba a la derecha del ingreso; no va en `/admin/`. El oscuro es Pizarra neutra (1.2): el papel atenuado solo en miniaturas y vistas previas.
 - Accesibilidad: sin infracciones graves de axe-core en ambos temas; áreas táctiles de al menos 44 × 44 px en la caja real del control (A-01).
 - Movimiento: solo el de la sección Movimiento de `DESIGN.md`, con su versión para movimiento reducido. No se anima lo que se hace con el teclado ni `width`/`height`.
-- Sin logo ni escudo de la I.E. hasta tener su autorización; el nombre va en texto. En el inicio de sesión se reserva su espacio, vacío.
+- El escudo de la I.E. (uso autorizado) va solo en el inicio de sesión, decorativo (`static/img/escudo-ie.webp`); en el resto, el nombre va en texto y sin logo.
 - `PRODUCT.md` es local y no entra al repo hasta que el equipo lo revise.
