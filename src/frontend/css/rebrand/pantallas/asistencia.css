@@ -724,9 +724,11 @@
       text-align: left;
     }
 
+    /* stretch: el align-items: start de la rejilla de PC encogería cada hijo a su contenido. */
     .asistencia-rejilla {
       display: flex;
       flex-direction: column;
+      align-items: stretch;
       gap: var(--s-4);
     }
 

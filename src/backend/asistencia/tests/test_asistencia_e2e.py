@@ -332,6 +332,18 @@ def test_los_controles_del_selector_miden_44_y_caben_a_360(abrir_asistencia):
         assert izquierda["x"] + izquierda["width"] <= derecha["x"] + 0.5, (izquierda, derecha)
 
 
+def test_la_columna_queda_centrada_a_360(abrir_asistencia, veinticinco):
+    """RNF-005: a 360 px el resumen, el botón de los restantes y la hoja dejan el mismo margen
+    a la izquierda y a la derecha; nada queda corrido hacia un lado."""
+    page = abrir_asistencia()
+
+    for selector in (".tarjeta-jornada", ".marcar-todos--debajo", ".hoja"):
+        caja = page.locator(selector).bounding_box()
+        izquierda = caja["x"]
+        derecha = 360 - (caja["x"] + caja["width"])
+        assert abs(izquierda - derecha) <= 1, (selector, izquierda, derecha)
+
+
 def test_el_foco_no_queda_bajo_la_barra_deshacer(abrir_asistencia, veinticinco):
     """rebrand-ajustes-auditoria, D2 (A-14): a 360 px, con la cuenta pausada por el foco, ningún
     círculo que recibe el foco con Tab queda bajo la barra «Deshacer»."""
