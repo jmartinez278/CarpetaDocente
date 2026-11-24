@@ -8,8 +8,8 @@
 | **Producto** | CarpetaDocente (nombre temporal) |
 | **Integrantes** | Cuicapuza Remigio Nayely Nilda · Martinez Llanos Marco Jhair · Vera Zea Jhoanna Hade |
 | **Asesor** | Ing. Elvis Wilfredo Carmen Delgadillo |
-| **Fecha** | 25/10/2026 |
-| **Versión** | 1.5.0 |
+| **Fecha** | 24/11/2026 |
+| **Versión** | 1.6.0 |
 
 ---
 
@@ -27,23 +27,23 @@ La línea base de requisitos de `docs/01 Inicio/` se transforma en trabajo ágil
 
 | ID | Épica | Requisitos funcionales | Historias |
 |---|---|---|---|
-| EP-01 | Usuarios y acceso (transversal) | RF-001 a RF-009 | 9 |
-| EP-02 | Repositorio de sesiones (dimensión 1: planificación de sesiones de aprendizaje) | RF-010 a RF-014, RF-016 a RF-018 | 8 |
+| EP-01 | Usuarios y acceso (transversal) | RF-001 a RF-009, RF-036 | 10 (con US-036) |
+| EP-02 | Repositorio de sesiones (dimensión 1: planificación de sesiones de aprendizaje) | RF-010 a RF-016, RF-018 | 8 |
 | EP-03 | Registro y control de notas (dimensión 2) | RF-020 a RF-029, RF-035 | 11 |
 | EP-04 | Control de asistencia (dimensión 3) | RF-030 a RF-034 | 5 |
 | EP-05 | Dirección (consolidados de las tres dimensiones) | RF-040 a RF-042 | 3 |
-| | **Total** | | **36** |
+| | **Total** | | **37** |
 
-RF-015 se retiró en la versión 1.2.0 del documento 06 y no genera historia.
+RF-015 se retiró en la versión 1.2.0 del documento 06 y se repuso en la 1.7.0, con su historia US-015. RF-017 se retiró en la 1.7.0 y su historia US-017 queda como retirada. Dos excepciones a la regla «mismo número»: RF-036 (cambiar el tema) se implementó dentro de US-040 y no tiene historia propia, y US-036 (docentes de curso) todavía no tiene RF.
 
 ## 3. Transformación de los requisitos no funcionales
 
 | RNF | Destino | Dónde |
 |---|---|---|
 | RNF-001, RNF-002, RNF-003 (rendimiento) | Enabler | EN-07 |
-| RNF-004 (archivos de hasta 10 MB) | Enabler | EN-03 |
+| RNF-004 (archivos de hasta 4 MB) | Enabler | EN-03 |
 | RNF-005 (navegadores y celulares) | Enabler | EN-07 |
-| RNF-006 (archivos que abren en Excel y LibreOffice) | Criterio de aceptación | US-024, US-034, US-041 |
+| RNF-006 (archivos que abren en Excel y LibreOffice) | Criterio de aceptación | US-024, US-025, US-034, US-041 |
 | RNF-007 (aprendizaje en ≤ 30 min) | Criterio de aceptación | Demo del Sprint 1 y piloto |
 | RNF-008 (accesibilidad AA) | DoD y enabler | DoD 7; EN-07 |
 | RNF-009 (disponibilidad) | Enabler | EN-02 |
@@ -68,20 +68,22 @@ RF-015 se retiró en la versión 1.2.0 del documento 06 y no genera historia.
 | US-007 | Restablecer la contraseña de un usuario | EP-01 | RF-007 | Media |
 | US-008 | Registrar la actividad de los usuarios | EP-01 | RF-008 | Media |
 | US-009 | Cerrar el año escolar | EP-01 | RF-009 | Baja |
-| US-010 | Subir una sesión al repositorio | EP-02 | RF-010 | Alta |
+| US-036 | Trabajar como docente de curso | EP-01 | Sin RF todavía | Por definir (equipo) |
+| US-010 | Enviar una sesión a la dirección | EP-02 | RF-010 | Alta |
 | US-011 | Buscar y filtrar sesiones | EP-02 | RF-011 | Alta |
 | US-012 | Descargar una sesión | EP-02 | RF-012 | Alta |
 | US-013 | Subir una versión adaptada de una sesión | EP-02 | RF-013 | Media |
 | US-014 | Aceptar los términos de publicación | EP-02 | RF-014 | Alta |
+| US-015 | Dejar de compartir una sesión | EP-02 | RF-015 | Media |
 | US-016 | Eliminar una sesión propia | EP-02 | RF-016 | Media |
-| US-017 | Subir sesiones entregadas por docentes | EP-02 | RF-017 | Media |
+| US-017 | *Retirada* (RF-017 retirado: el docente envía cada sesión a la dirección) | EP-02 | — | — |
 | US-018 | Cargar sesiones del repositorio inicial | EP-02 | RF-018 | Media |
 | US-020 | Registrar el nivel de logro | EP-03 | RF-020 | Alta |
-| US-021 | Exigir la conclusión descriptiva en el nivel C | EP-03 | RF-021 | Alta |
+| US-021 | Exigir la conclusión descriptiva en los niveles B y C | EP-03 | RF-021 | Alta |
 | US-022 | Validar la escala y la completitud de las notas | EP-03 | RF-022 | Alta |
 | US-023 | Consultar el registro de notas | EP-03 | RF-023 | Alta |
-| US-024 | Exportar las notas a hoja de cálculo | EP-03 | RF-024 | Alta |
-| US-025 | Completar el formato de notas de la UGEL | EP-03 | RF-025 | Media (por validar: depende de SUP-12 del documento 04) |
+| US-024 | Completar la plantilla de notas del SIAGIE | EP-03 | RF-024 | Alta |
+| US-025 | Reconocer la plantilla del SIAGIE y a sus estudiantes | EP-03 | RF-025 | Media (se hizo junto con US-024) |
 | US-026 | Marcar las notas del periodo como entregadas | EP-03 | RF-026 | Media |
 | US-027 | Mantener el catálogo de áreas y competencias | EP-03 | RF-027 | Alta |
 | US-028 | Configurar los periodos del año escolar | EP-03 | RF-028 | Alta |
@@ -93,9 +95,9 @@ RF-015 se retiró en la versión 1.2.0 del documento 06 y no genera historia.
 | US-033 | Consultar el historial de asistencia | EP-04 | RF-033 | Alta |
 | US-034 | Exportar la asistencia a hoja de cálculo | EP-04 | RF-034 | Alta |
 | US-040 | Consultar los consolidados | EP-05 | RF-040 | Alta |
-| US-041 | Descargar los consolidados en el formato de la dirección | EP-05 | RF-041 | Media (el formato depende de SUP-13 del documento 04) |
+| US-041 | Descargar los consolidados en el formato de la dirección | EP-05 | RF-041 | Media (el formato de la dirección es [DATO I.E. PENDIENTE]) |
 | US-042 | Ver el estado de entrega por docente | EP-05 | RF-042 | Media |
-Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selección final y la estimación en puntos de historia se hacen en el tablero de GitHub Projects (documento 02).
+Las historias de prioridad Alta forman el incremento funcional del piloto. La selección por sprint y la estimación en puntos de historia se hacen en el tablero de GitHub Projects; el detalle de cada historia terminada está en `openspec/changes/archive/`.
 
 ## 5. Historias de usuario
 
@@ -220,14 +222,14 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces el sistema muestra solo las notas de los estudiantes de esa sección
 
   Escenario: Flujo alternativo válido
-    Dado un usuario de la dirección
-    Cuando consulta las notas
-    Entonces el sistema muestra los consolidados de todas las secciones en modo de solo lectura
+    Dado un usuario de la dirección o el administrador
+    Cuando abre una pantalla de sección de la docente
+    Entonces el sistema lo lleva a su propia pantalla de inicio, sin datos de la sección (la dirección consulta las notas en los consolidados, US-040)
 
   Escenario: Caso de error
     Dado un docente asignado a "3.° grado, sección A"
     Cuando intenta abrir las notas de "4.° grado, sección B"
-    Entonces el sistema niega el acceso, muestra el mensaje "No tiene permiso para ver esta sección" y registra el intento (RF-008)
+    Entonces el sistema niega el acceso (403), muestra el mensaje "No tienes permiso para ver esta sección" y registra el intento (RF-008)
 ```
 
 #### US-005: Asignar grado y sección a un docente
@@ -271,14 +273,14 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 | **Requisito de origen** | RF-006 |
 | **Prioridad** | Alta |
 
-**Redacción:** Como **docente**, quiero **importar una sola vez la lista de estudiantes de mi sección desde una hoja de cálculo**, para **no volver a escribir sus nombres en cada registro**.
+**Redacción:** Como **docente**, quiero **pegar una sola vez la lista de estudiantes de mi sección, copiada de una hoja de cálculo**, para **no volver a escribir sus nombres en cada registro**.
 
 **Criterios de aceptación:**
 
 ```gherkin
   Escenario: Camino ideal
     Dado un docente con una sección asignada y sin estudiantes registrados
-    Cuando importa una hoja de cálculo con 25 filas que tienen apellidos y nombres completos
+    Cuando pega las filas copiadas de una hoja de cálculo, 25 líneas "APELLIDOS, NOMBRES", y toca "Importar"
     Entonces el sistema registra los 25 estudiantes en la sección y muestra el mensaje "25 estudiantes importados"
 
   Escenario: Flujo alternativo válido
@@ -287,9 +289,9 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces el sistema registra al estudiante en la sección
 
   Escenario: Caso de error
-    Dado una hoja de cálculo con filas sin apellidos o con estudiantes repetidos
-    Cuando el docente la importa
-    Entonces el sistema no importa ninguna fila y muestra la lista de filas con error y el motivo de cada una, para que el docente las corrija
+    Dado un texto pegado con una línea sin apellidos y dos líneas con el mismo estudiante
+    Cuando el docente toca "Importar"
+    Entonces el sistema no importa ninguna línea, muestra "No se guardó ningún estudiante" con cada línea con error y su motivo, y conserva el texto pegado
 ```
 
 #### US-007: Restablecer la contraseña de un usuario
@@ -346,7 +348,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
   Escenario: Flujo alternativo válido
     Dado el administrador
     Cuando consulta la actividad de un periodo
-    Entonces el sistema muestra el número de docentes activos por semana (con al menos un uso en la semana, KPI-01), de sesiones cargadas, de jornadas registradas y de secciones con notas registradas (KPIs del documento 03)
+    Entonces el sistema muestra el número de docentes activos por semana (con al menos un uso en la semana, KPI-01), de sesiones cargadas, de jornadas registradas y de secciones con notas registradas (KPI, documento 07, sección 5)
 
   Escenario: Caso de error
     Dado un docente o un usuario de la dirección
@@ -386,37 +388,70 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 ```
 
 
+#### US-036: Trabajar como docente de curso
+
+| Campo | Detalle |
+|---|---|
+| **ID** | US-036 |
+| **Título** | Trabajar como docente de curso |
+| **Épica relacionada** | EP-01 Usuarios y acceso |
+| **Requisito de origen** | Sin RF todavía: se redacta en el documento 06 cuando el equipo la priorice |
+| **Prioridad** | Por definir (equipo) |
+
+**Redacción:** Como **docente de curso** (por ejemplo, Educación Física o Inglés), quiero **que el administrador me asigne mi área en varias secciones**, para **registrar las notas de mi área y enviar mis sesiones sin depender de la tutora**.
+
+Datos de la I.E. que faltan: cuántos docentes de curso hay, qué áreas dictan, si llevan asistencia y dónde van las notas de Computación, que no es un área del SIAGIE [DATO I.E. PENDIENTE].
+
+**Criterios de aceptación:**
+
+```gherkin
+  Escenario: Camino ideal
+    Dado un docente de curso al que el administrador asignó Inglés en "2.º A" y "2.º B"
+    Cuando inicia sesión
+    Entonces el sistema le muestra esas secciones con su área, sin la tarjeta de asistencia, y la lista de estudiantes en solo lectura
+
+  Escenario: Flujo alternativo válido
+    Dado un área marcada "a cargo del docente de curso" en la institución
+    Cuando el docente de curso abre las competencias de una de sus secciones
+    Entonces puede marcar las competencias de su área, y la tutora de la sección ya no puede marcarlas
+
+  Escenario: Caso de error
+    Dado un docente de curso
+    Cuando intenta abrir las notas de un área que no tiene asignada
+    Entonces el sistema niega el acceso (403) y registra el intento (RF-008)
+```
+
 ### EP-02: Repositorio de sesiones (D1)
 
-#### US-010: Subir una sesión al repositorio
+#### US-010: Enviar una sesión a la dirección
 
 | Campo | Detalle |
 |---|---|
 | **ID** | US-010 |
-| **Título** | Subir una sesión al repositorio |
+| **Título** | Enviar una sesión a la dirección |
 | **Épica relacionada** | EP-02 Repositorio de sesiones (D1) |
 | **Requisito de origen** | RF-010 |
 | **Prioridad** | Alta |
 
-**Redacción:** Como **docente**, quiero **subir una sesión al repositorio indicando grado, área y título**, para **tenerla guardada y que otros docentes puedan reutilizarla**.
+**Redacción:** Como **docente**, quiero **enviar mis sesiones a la dirección indicando grado, área y título, y si quiero compartirlas en el repositorio**, para **entregarlas sin papel y que otros docentes puedan reutilizarlas**.
 
 **Criterios de aceptación:**
 
 ```gherkin
   Escenario: Camino ideal
     Dado un docente con la sesión iniciada
-    Cuando adjunta el archivo de una sesión e ingresa "3.° grado", "Matemática" y el título "Resolvemos problemas de suma"
-    Entonces el sistema le pide aceptar los términos de publicación (RF-014) y, una vez aceptados, publica la sesión en el repositorio y muestra el mensaje "Sesión publicada"
+    Cuando adjunta el archivo de una sesión, ingresa "3.º grado", "Matemática" y el título "Resolvemos problemas de suma" y toca "Enviar a la dirección" sin marcar la casilla de compartir
+    Entonces el sistema guarda la sesión, que solo ven el docente y la dirección, y muestra el mensaje "Sesión enviada a la dirección"
 
   Escenario: Flujo alternativo válido
-    Dado un docente que sube una sesión
-    Cuando además ingresa la competencia y el propósito de aprendizaje, que son datos opcionales
-    Entonces el sistema guarda la sesión con esos datos, que luego sirven para buscarla
+    Dado un docente que envía una sesión
+    Cuando marca "Compartir también en el repositorio" y acepta los términos de publicación (RF-014)
+    Entonces el sistema guarda la sesión compartida y muestra "Sesión enviada a la dirección y compartida en el repositorio"
 
   Escenario: Caso de error
-    Dado un docente que adjunta un archivo de un tipo no permitido o de un tamaño mayor al definido en el documento 07, o que deja vacío el grado, el área o el título
-    Cuando intenta guardar la sesión
-    Entonces el sistema no la guarda y muestra el motivo, por ejemplo "Falta indicar el área"
+    Dado un docente que adjunta un archivo que no es PDF ni Word (.docx) o que pesa más de 4 MB, o que deja vacío el grado, el área o el título
+    Cuando intenta enviar la sesión
+    Entonces el sistema no la guarda y muestra el motivo en cada campo, por ejemplo "Falta indicar el área."
 ```
 
 #### US-011: Buscar y filtrar sesiones
@@ -522,25 +557,56 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 | **Requisito de origen** | RF-014 |
 | **Prioridad** | Alta |
 
-**Redacción:** Como **docente**, quiero **aceptar los términos de publicación al subir una sesión**, para **saber con claridad qué autorizo al compartirla**.
+**Redacción:** Como **docente**, quiero **aceptar los términos de publicación cuando comparto una sesión en el repositorio**, para **saber con claridad qué autorizo al compartirla**.
 
 **Criterios de aceptación:**
 
 ```gherkin
   Escenario: Camino ideal
-    Dado un docente que completó los datos de una sesión para subirla (RF-010 o RF-013)
-    Cuando marca "Acepto los términos de publicación" y confirma
-    Entonces el sistema publica la sesión, guarda la fecha y la hora de la aceptación y la muestra en las búsquedas del repositorio
+    Dado un docente que completó los datos de una sesión y marcó "Compartir también en el repositorio" (RF-010 o RF-013)
+    Cuando toca "Enviar a la dirección" y luego "Acepto y envío" en los términos
+    Entonces el sistema envía la sesión, la comparte, guarda la fecha y la hora de la aceptación y la muestra en las búsquedas del repositorio
 
   Escenario: Flujo alternativo válido
-    Dado un docente que quiere leer los términos antes de aceptarlos
-    Cuando abre la opción "Ver términos"
-    Entonces el sistema muestra el texto completo y, al cerrarlo, conserva los datos de la sesión que el docente ya ingresó
+    Dado un docente con una sesión enviada que no compartió
+    Cuando toca "Compartir" en la página de la sesión y luego "Acepto y comparto"
+    Entonces el sistema la comparte con la fecha y la hora de esa aceptación y muestra "Sesión compartida en el repositorio"
 
   Escenario: Caso de error
     Dado un docente que completó los datos de una sesión
-    Cuando cancela o no acepta los términos de publicación
-    Entonces el sistema no guarda el archivo ni sus datos y muestra el mensaje "La sesión no se subió: para publicarla en el repositorio debe aceptar los términos"
+    Cuando pide compartirla sin aceptar los términos de publicación
+    Entonces el sistema no guarda la sesión ni el archivo y responde "Para compartirla en el repositorio debes aceptar los términos."; si toca "Volver", los términos se cierran y el formulario conserva sus datos
+```
+
+#### US-015: Dejar de compartir una sesión
+
+| Campo | Detalle |
+|---|---|
+| **ID** | US-015 |
+| **Título** | Dejar de compartir una sesión |
+| **Épica relacionada** | EP-02 Repositorio de sesiones (D1) |
+| **Requisito de origen** | RF-015 (repuesto en el documento 06, V_1_7_0) |
+| **Prioridad** | Media (se implementó junto con US-011, US-012 y US-016) |
+
+**Redacción:** Como **docente**, quiero **dejar de compartir una sesión sin quitársela a la dirección**, para **decidir qué sesiones ven mis colegas**.
+
+**Criterios de aceptación:**
+
+```gherkin
+  Escenario: Camino ideal
+    Dado una sesión propia compartida en el repositorio
+    Cuando el docente toca "Dejar de compartir"
+    Entonces el sistema la saca del repositorio, la sesión sigue enviada a la dirección y la página muestra "Dejaste de compartir la sesión"
+
+  Escenario: Flujo alternativo válido
+    Dado una sesión que su autor dejó de compartir
+    Cuando vuelve a tocar "Compartir" y acepta los términos (RF-014)
+    Entonces el sistema la vuelve a mostrar en el repositorio
+
+  Escenario: Caso de error
+    Dado una sesión compartida de otro docente
+    Cuando un docente intenta dejar de compartirla
+    Entonces el sistema no lo permite y registra el intento sin permiso (RF-008)
 ```
 
 #### US-016: Eliminar una sesión propia
@@ -553,7 +619,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 | **Requisito de origen** | RF-016 |
 | **Prioridad** | Media |
 
-**Redacción:** Como **docente**, quiero **eliminar una sesión que subí**, para **retirarla del repositorio cuando ya no quiera compartirla**.
+**Redacción:** Como **docente**, quiero **eliminar una sesión que envié**, para **quitarla del sistema, también para la dirección y el repositorio**.
 
 **Criterios de aceptación:**
 
@@ -561,7 +627,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
   Escenario: Camino ideal
     Dado una sesión propia
     Cuando el docente elige eliminarla y confirma la acción
-    Entonces el sistema la retira del repositorio y muestra el mensaje "Sesión eliminada"
+    Entonces el sistema la elimina con su archivo para todos, también para la dirección, y muestra el mensaje "Sesión eliminada"
 
   Escenario: Flujo alternativo válido
     Dado un docente que elige eliminar una sesión
@@ -574,36 +640,9 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces el sistema no lo permite y muestra el mensaje "Solo el autor puede eliminar esta sesión"
 ```
 
-#### US-017: Subir sesiones entregadas por docentes
+#### US-017: Retirada
 
-| Campo | Detalle |
-|---|---|
-| **ID** | US-017 |
-| **Título** | Subir sesiones entregadas por docentes |
-| **Épica relacionada** | EP-02 Repositorio de sesiones (D1) |
-| **Requisito de origen** | RF-017 |
-| **Prioridad** | Media |
-
-**Redacción:** Como **dirección**, quiero **subir a nombre de un docente las sesiones que me entregó, con su consentimiento**, para **que formen parte del repositorio**.
-
-**Criterios de aceptación:**
-
-```gherkin
-  Escenario: Camino ideal
-    Dado una sesión que un docente entregó a la dirección
-    Cuando la dirección la sube, indica el docente autor y registra que este aceptó los términos de publicación
-    Entonces el sistema publica la sesión con ese docente como autor
-
-  Escenario: Flujo alternativo válido
-    Dado una sesión que la dirección publicó a nombre de un docente
-    Cuando ese docente revisa sus sesiones
-    Entonces el sistema la muestra como propia y el docente puede eliminarla (RF-016)
-
-  Escenario: Caso de error
-    Dado una sesión que la dirección intenta subir
-    Cuando no indica qué docente es el autor o no registra su aceptación de los términos
-    Entonces el sistema no la guarda y muestra el mensaje "Indique el docente autor y registre su aceptación de los términos de publicación"
-```
+Esta historia ("Subir sesiones entregadas por docentes") se retiró junto con RF-017 (documento 06, V_1_7_0): el docente envía cada sesión directamente a la dirección (US-010), así que la dirección ya no las sube por él. El identificador no se reutiliza.
 
 #### US-018: Cargar sesiones del repositorio inicial
 
@@ -622,8 +661,8 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 ```gherkin
   Escenario: Camino ideal
     Dado una sesión cuyo uso está permitido
-    Cuando el administrador la sube con grado, área, título, fuente y tipo de permiso
-    Entonces el sistema la guarda como "Material de referencia", visible para todos los docentes
+    Cuando el administrador la sube con el grado inicial y el final (puede abarcar varios grados), el área, el título, la fuente y el permiso de uso, escrito como texto libre
+    Entonces el sistema la guarda como "Material de referencia", visible para todos los docentes de la institución
 
   Escenario: Flujo alternativo válido
     Dado una sesión elaborada por el propio equipo del proyecto
@@ -667,20 +706,20 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
   Escenario: Caso de error
     Dado un docente que registra notas
     Cuando se interrumpe la conexión antes de confirmar el guardado
-    Entonces el sistema no guarda registros parciales y muestra el mensaje "No se pudo guardar. Revise su conexión e intente de nuevo", sin perder los datos que aún no se guardaron en la pantalla
+    Entonces el sistema no guarda registros parciales y muestra "No se pudo guardar" con "Revisa tu conexión y reintenta. Tus datos siguen en pantalla y el borrador queda en este dispositivo. No se guardó nada."; el botón "Guardar" cambia a "Reintentar"
 ```
 
-#### US-021: Exigir la conclusión descriptiva en el nivel C
+#### US-021: Exigir la conclusión descriptiva en los niveles B y C
 
 | Campo | Detalle |
 |---|---|
 | **ID** | US-021 |
-| **Título** | Exigir la conclusión descriptiva en el nivel C |
+| **Título** | Exigir la conclusión descriptiva en los niveles B y C |
 | **Épica relacionada** | EP-03 Registro y control de notas (D2) |
 | **Requisito de origen** | RF-021 |
 | **Prioridad** | Alta |
 
-**Redacción:** Como **docente**, quiero **que el sistema me pida la conclusión descriptiva cuando registro el nivel C**, para **cumplir la norma de evaluación sin olvidarla**.
+**Redacción:** Como **docente**, quiero **que el sistema me pida la conclusión descriptiva cuando registro el nivel B o C**, para **cumplir la norma de evaluación y la práctica de la I.E. sin olvidarla** (RN-003).
 
 **Criterios de aceptación:**
 
@@ -691,14 +730,14 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces el sistema guarda el nivel y la conclusión
 
   Escenario: Flujo alternativo válido
-    Dado un docente que registra el nivel "B", "A" o "AD"
-    Cuando decide agregar una conclusión descriptiva
-    Entonces el sistema la guarda como opcional
+    Dado un docente que cambia un nivel de "B" a "A" o "AD"
+    Cuando guarda la hoja del área
+    Entonces el sistema guarda el nivel y borra la conclusión, que en A y AD no se registra
 
   Escenario: Caso de error
     Dado un docente que registra el nivel "C"
     Cuando intenta guardar sin conclusión descriptiva
-    Entonces el sistema no guarda la nota y muestra el mensaje "El nivel C requiere una conclusión descriptiva"
+    Entonces el sistema no guarda ninguna nota de la hoja, marca la celda con "Falta conclusión" y muestra "No se guardó nada"
 ```
 
 #### US-022: Validar la escala y la completitud de las notas
@@ -763,66 +802,66 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces el sistema muestra el mensaje "No hay notas registradas en este periodo"
 ```
 
-#### US-024: Exportar las notas a hoja de cálculo
+#### US-024: Completar la plantilla de notas del SIAGIE
 
 | Campo | Detalle |
 |---|---|
 | **ID** | US-024 |
-| **Título** | Exportar las notas a hoja de cálculo |
+| **Título** | Completar la plantilla de notas del SIAGIE |
 | **Épica relacionada** | EP-03 Registro y control de notas (D2) |
 | **Requisito de origen** | RF-024 |
 | **Prioridad** | Alta |
 
-**Redacción:** Como **docente**, quiero **exportar las notas del periodo a una hoja de cálculo**, para **entregarlas a la dirección o usarlas para cargar el SIAGIE**.
+**Redacción:** Como **dirección**, quiero **subir la plantilla de notas que descargo del SIAGIE y recibirla llena con las notas registradas**, para **cargarla en el SIAGIE sin volver a digitar las notas**.
 
 **Criterios de aceptación:**
 
 ```gherkin
   Escenario: Camino ideal
-    Dado un docente con las notas del periodo registradas
-    Cuando elige exportarlas
-    Entonces el sistema genera una hoja de cálculo con estudiantes, competencias, niveles de logro y conclusiones descriptivas, identificada con la sección y el periodo
+    Dado un usuario de la dirección y una sección con las notas del periodo registradas
+    Cuando sube la plantilla de notas del SIAGIE de esa sección y ese periodo
+    Entonces el sistema devuelve el mismo archivo con el nivel de logro y la conclusión de cada estudiante en cada competencia, y un resumen con los encontrados, los no encontrados, las notas faltantes y las celdas reemplazadas
 
   Escenario: Flujo alternativo válido
-    Dado un docente con notas incompletas
-    Cuando elige exportarlas
-    Entonces el sistema genera la hoja de cálculo y marca las celdas sin nivel registrado como "Pendiente"
+    Dado una sección con estudiantes sin nivel en alguna competencia del periodo
+    Cuando la dirección sube la plantilla
+    Entonces el sistema completa lo registrado, deja esas celdas como venían y titula el resumen "Plantilla completada con observaciones"
 
   Escenario: Caso de error
-    Dado un periodo sin notas registradas
-    Cuando el docente intenta exportarlo
-    Entonces el sistema no genera el archivo y muestra el mensaje "No hay notas para exportar en este periodo"
+    Dado un docente o el administrador
+    Cuando intenta subir una plantilla del SIAGIE
+    Entonces el sistema lo lleva a su pantalla de inicio y no procesa nada
 ```
 
-#### US-025: Completar el formato de notas de la UGEL
+#### US-025: Reconocer la plantilla del SIAGIE y a sus estudiantes
 
 | Campo | Detalle |
 |---|---|
 | **ID** | US-025 |
-| **Título** | Completar el formato de notas de la UGEL |
+| **Título** | Reconocer la plantilla del SIAGIE y a sus estudiantes |
 | **Épica relacionada** | EP-03 Registro y control de notas (D2) |
 | **Requisito de origen** | RF-025 |
-| **Prioridad** | Media (por validar: depende de SUP-12 del documento 04) |
+| **Prioridad** | Media (se hizo junto con US-024) |
 
-**Redacción:** Como **docente**, quiero **subir el formato de notas de la UGEL y recibirlo completado**, para **no volver a digitar las notas**.
+**Redacción:** Como **dirección**, quiero **que el sistema reconozca la sección y a los estudiantes de la plantilla del SIAGIE**, para **no tener que emparejarlos a mano**.
 
 **Criterios de aceptación:**
 
 ```gherkin
   Escenario: Camino ideal
-    Dado un docente con las notas del periodo registradas y el formato de notas que entrega la UGEL
-    Cuando sube el formato al sistema
-    Entonces el sistema devuelve el mismo formato con los niveles de logro de cada estudiante completados
+    Dado una plantilla con el código modular y el anexo de la institución, y una sola sección de ese grado en la I.E.
+    Cuando la dirección la sube
+    Entonces el sistema la completa con esa sección sin preguntar
 
   Escenario: Flujo alternativo válido
-    Dado un formato que contiene estudiantes que no están en la lista de la sección
-    Cuando el docente lo sube
-    Entonces el sistema completa los estudiantes que coinciden y lista los que no encontró, para que el docente los revise
+    Dado una plantilla cuya sección del SIAGIE no se reconoce sola y un grado con varias secciones en la I.E.
+    Cuando la dirección elige la sección en el diálogo
+    Entonces el sistema guarda esa equivalencia para el año, completa la plantilla en el mismo paso y la próxima vez no vuelve a preguntar
 
   Escenario: Caso de error
-    Dado un archivo que no corresponde al formato de la UGEL reconocido por el sistema
-    Cuando el docente lo sube
-    Entonces el sistema no lo procesa y muestra el mensaje "El archivo no corresponde al formato de notas de la UGEL"
+    Dado un archivo que no es la plantilla del SIAGIE, o de otra institución, año o periodo
+    Cuando la dirección lo sube
+    Entonces el sistema no lo procesa y muestra "El archivo no corresponde a la plantilla de notas del SIAGIE"
 ```
 
 #### US-026: Marcar las notas del periodo como entregadas
@@ -936,11 +975,11 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
   Escenario: Camino ideal
     Dado un docente con un periodo abierto
     Cuando marca las competencias de Matemática y de Comunicación que trabajó en el periodo
-    Entonces el sistema habilita el registro de notas solo para esas competencias en ese periodo
+    Entonces el sistema habilita el registro de notas solo para esas competencias en ese periodo; las áreas a cargo del docente de curso no se pueden marcar
 
   Escenario: Flujo alternativo válido
     Dado un docente en el último periodo del año escolar
-    Cuando abre el registro de notas
+    Cuando abre las competencias de ese periodo
     Entonces el sistema marca como desarrolladas todas las competencias que aún no tienen nivel en ningún periodo, para que todas terminen el año con un nivel de logro
 
   Escenario: Caso de error
@@ -1005,7 +1044,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 
   Escenario: Flujo alternativo válido
     Dado un docente que registra la asistencia
-    Cuando usa "Marcar todos como Asistió" y luego toca solo a las excepciones
+    Cuando toca primero a las excepciones y luego usa "Marcar los N restantes como Asistió"
     Entonces el sistema guarda los estados resultantes
 
   Escenario: Caso de error
@@ -1180,7 +1219,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 | **Título** | Descargar los consolidados en el formato de la dirección |
 | **Épica relacionada** | EP-05 Dirección |
 | **Requisito de origen** | RF-041 |
-| **Prioridad** | Media (el formato depende de SUP-13 del documento 04) |
+| **Prioridad** | Media (el formato de la dirección es [DATO I.E. PENDIENTE]) |
 
 **Redacción:** Como **dirección**, quiero **descargar los consolidados en mi formato**, para **preparar la carga en el SIAGIE**.
 
@@ -1287,32 +1326,34 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces la versión publicada anterior sigue en línea y el Pull Request muestra el error
 ```
 
-#### EN-03: Subida directa a R2 con enlaces firmados
+#### EN-03: Archivos de sesiones en R2
 
 | Campo | Detalle |
 |---|---|
 | **ID** | EN-03 |
-| **Título** | Subida y descarga de archivos con enlaces firmados |
+| **Título** | Subida de archivos por el servidor a R2 y descarga con enlaces firmados |
 | **Épica relacionada** | EP-02 Repositorio de sesiones |
 | **Origen** | RNF-004; documento 12, sección 5 |
 
-**Redacción:** Como **equipo de desarrollo**, queremos **que el navegador suba y descargue los archivos directo de R2 con enlaces firmados**, para **aceptar sesiones de hasta 10 MB pese al límite de 4,5 MB de las funciones**.
+**Redacción:** Como **equipo de desarrollo**, queremos **que el servidor guarde en R2 los archivos de sesión de hasta 4 MB y que la descarga use enlaces firmados de corta duración**, para **caber en el límite de 4,5 MB de las funciones de Vercel sin dejar el bucket público**.
+
+El diseño original (subida directa del navegador a R2 con enlace firmado, hasta 10 MB) se cambió en US-010 (decisión 7): el tope bajó a 4 MB y el archivo pasa por el servidor.
 
 ```gherkin
-  Escenario: Subida de un archivo de 9 MB
-    Dado un docente que aceptó los términos de publicación
-    Cuando sube un archivo PDF de 9 MB
+  Escenario: Subida de un archivo de 4 MB
+    Dado un docente que envía una sesión con un PDF de 4 194 304 bytes en la vista previa, con el perfil Slow 4G
+    Cuando el servidor la recibe
     Entonces el archivo llega a R2 y la sesión queda registrada con su tamaño
 
-  Escenario: Enlace vencido
-    Dado un enlace firmado de subida que ya venció
-    Cuando el navegador intenta usarlo
-    Entonces R2 rechaza la subida y la sesión no se registra
+  Escenario: Enlace de descarga vencido
+    Dado un enlace firmado de descarga de R2 emitido hace más de 60 segundos
+    Cuando alguien intenta usarlo
+    Entonces R2 no entrega el archivo
 
-  Escenario: Archivo mayor a 10 MB
-    Dado un docente que elige un archivo de 12 MB
-    Cuando pide subirlo
-    Entonces el sistema no genera el enlace y muestra el límite permitido
+  Escenario: Archivo mayor a 4 MB
+    Dado un docente que elige un archivo de 4 194 305 bytes
+    Cuando intenta enviarlo
+    Entonces el campo dice "El archivo supera los 4 MB. Elige uno más pequeño." y no se envía
 ```
 
 #### EN-04: Seguridad de acceso
@@ -1344,6 +1385,7 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
     Entonces la siguiente solicitud lo redirige a la pantalla de inicio de sesión
 
   Escenario: Intento de abrir una sección ajena
+    # Ya se cubre en US-004 (escenario "Caso de error"), con el 403 y el registro del intento.
     Dado un docente que solo tiene asignada una sección
     Cuando cambia en la dirección del navegador el identificador por el de otra sección
     Entonces el sistema niega el acceso, no muestra ningún dato de esa sección y registra el intento
@@ -1391,13 +1433,13 @@ Las 24 historias de prioridad Alta forman el candidato al Sprint 1. La selecció
 | **Épica relacionada** | EP-03 Registro y control de notas |
 | **Origen** | RN-007, RN-018; documento 11, sección 6 |
 
-**Redacción:** Como **equipo de desarrollo**, queremos **cargar con un comando el catálogo del Anexo 03 y un juego de datos ficticios**, para **probar con datos realistas sin usar datos de estudiantes reales**.
+**Redacción:** Como **equipo de desarrollo**, queremos **cargar el catálogo del registro de notas del SIAGIE con una migración y un juego de datos ficticios con un comando (`cargar_demo`)**, para **probar con datos realistas sin usar datos de estudiantes reales**.
 
 ```gherkin
   Escenario: Catálogo cargado
     Dado una base de datos recién migrada
-    Cuando se ejecuta la carga de datos iniciales
-    Entonces existen las áreas y competencias del documento 09, sección 3, con Educación Religiosa y Educación Física marcadas como exonerables
+    Cuando se aplica la migración catalogo/0002
+    Entonces existen las 11 áreas y competencias del documento 09, sección 3, con Educación Religiosa y Educación Física marcadas como exonerables
 
   Escenario: Sin datos reales
     Dado el juego de datos de prueba
@@ -1515,5 +1557,6 @@ Una historia de usuario o un enabler está **terminado** solo si cumple los 9 cr
 | 1.3.0 | 19/10/2026 | Equipo del proyecto | US-001: escenario de cuenta bloqueada tras 5 intentos (RN-024), con el mismo mensaje genérico; EN-04 remite a él. US-030 y US-031 según RF-030 y RF-031 del documento 06 (V_1_4_0); mensaje de US-031 en tuteo. US-028: la I.E. organiza el año en bimestres (RN-006). EN-02 sin R2 en el título (R2 es EN-03). EN-07: perfil Slow 4G (RNF-002). EN-08, escenario 4, y DoD 1 y 2: puerta de calidad Sonar way. Sección 7: CodeQL con la configuración por defecto de GitHub. |
 | 1.4.0 | 21/10/2026 | Equipo del proyecto | US-001: en los escenarios Caso de error y Cuenta bloqueada, el mensaje suma la indicación "Revisa tus datos. Si el problema sigue, pide ayuda al administrador." (revisión del prototipo de US-001, heurística 9 de Nielsen). |
 | 1.5.0 | 25/10/2026 | Equipo del proyecto | EN-01, escenario 2: tablas de usuario e institución; las demás con su historia (desviación aprobada). Historia del administrador: docentes activos por semana, como el KPI-01. |
+| 1.6.0 | 24/11/2026 | Equipo del proyecto | Pasada de docs: historias según los RF del documento 06 V_1_7_0 (US-004 en tuteo y con 403, US-006, US-010, US-014, US-016, US-018, US-020, US-021, US-024, US-025, US-029, US-030); nueva US-015 (dejar de compartir); US-017 retirada; nueva US-036 (docente de curso, sin RF todavía); EN-03 con subida por el servidor y 4 MB; EN-04 remite a US-004; EN-06 con la migración del catálogo del SIAGIE; épicas y resumen al día. |
 
 [← Volver al README Principal](../../README.md)

@@ -4,7 +4,7 @@ context: |
   Sistema web de gestión y planificación pedagógica para primaria (EBR), I.E. Virgen del Carmen - Huayucachi. Proyecto de tesis de 3 integrantes: el equipo decide.
   - Escribe todos los artefactos en español.
   - Si existe insumos/<ID>/decisiones.md (por ejemplo, insumos/US-030/decisiones.md), es la fuente de las decisiones de esta historia: aplícalas sin reabrirlas. Sus bocetos, si los hay, están en la ruta de su sección "Bocetos".
-  - openspec/specs/ manda sobre el comportamiento. docs/01 Inicio y docs/02 Planificación están congelados: de ahí salen los criterios de aceptación, RF, RN, RNF y el modelo de datos, pero no se editan. Un choque con OpenSpec o con decisiones.md va a la deuda de tasks.md.
+  - openspec/specs/ manda sobre el comportamiento. De docs/01 Inicio y docs/02 Planificación salen los criterios de aceptación, RF, RN, RNF, el modelo de datos y la arquitectura; desde el 24/11/2026 se mantienen al día con el sistema. Un choque con OpenSpec o con decisiones.md va a tasks.md con la marca «(docs)» y se corrige en el documento en el cierre de la historia, subiendo su versión con scripts/subir_version.py.
   - Solo datos ficticios. Un dato de la I.E. no confirmado se marca [DATO I.E. PENDIENTE].
   - Las reglas de negocio van en servicios.py; las vistas no escriben directo en la base de datos.
   - Interfaz: tokens de DESIGN.md, sin repetir DESIGN.md en los artefactos. Temas claro y oscuro, 360 px, sin desplazamiento horizontal, red Slow 4G (RNF-002).

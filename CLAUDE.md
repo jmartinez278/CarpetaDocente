@@ -11,7 +11,7 @@ Enfoque descartado: aula virtual / LMS con IA y analítica. No reintroducirlo.
 ## Fuente de verdad
 
 - **OpenSpec manda** sobre el comportamiento: `openspec/specs/` (vigente) y `openspec/changes/` (en curso). Las reglas para escribir sus artefactos están en `openspec/config.yaml`.
-- `docs/01 Inicio/` y `docs/02 Planificación/` son la referencia de lo que se pidió (requisitos 06 y 07, usuarios 08, reglas de negocio 09, stack 10, base de datos 11, C4 12, historias 02/01). Están **congelados**: se leen, no se editan ni se regeneran. Si chocan con OpenSpec, manda OpenSpec y el choque va a la deuda del cambio. Solo se edita un documento si el equipo cambia un requisito, subiendo versión con `scripts/subir_version.py`.
+- `docs/01 Inicio/` y `docs/02 Planificación/` describen el sistema (requisitos 06 y 07 con los KPI, usuarios 08, reglas de negocio 09, stack 10, base de datos 11, C4 12, historias 02/01) y son la base de la tesis. Desde el 24/11/2026 **no están congelados**: se mantienen al día. Si chocan con OpenSpec, manda OpenSpec; el choque va a `tasks.md` con la marca «(docs)» y se corrige en el documento en el cierre de la historia, subiendo su versión con `scripts/subir_version.py`. Los entregables de gestión del curso (acta, visión, riesgos, presupuesto, informes) salieron de `docs/` y siguen en el historial de git.
 - Alcance: las historias y enablers del Sprint 1, en el orden del tablero (GitHub Projects).
 - El equipo (3 integrantes) decide; Claude propone.
 

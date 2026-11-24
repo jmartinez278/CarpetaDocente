@@ -9,7 +9,7 @@ El sistema cubre tres dimensiones de la gestión pedagógica del docente de prim
 
 Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de diseño y alcance las toma el equipo.
 
-**Stack:** Django · PostgreSQL · HTMX · Tailwind CSS · Alpine.js ([ver justificación](<docs/01 Inicio/10. Stack tecnológico V_1_3_0.md>))
+**Stack:** Django · PostgreSQL · HTMX · Tailwind CSS · Alpine.js ([ver justificación](<docs/01 Inicio/10. Stack tecnológico V_1_4_0.md>))
 
 **Equipo:** Martinez Llanos Marco Jhair (Director de Proyecto) · Cuicapuza Remigio Nayely Nilda · Vera Zea Jhoanna Hade
 **Asesor:** Ing. Elvis Wilfredo Carmen Delgadillo
@@ -27,16 +27,16 @@ Este proyecto se desarrolla con asistencia de Claude Code; las decisiones de dis
 Los documentos de `docs/` describen el sistema tal como está: requisitos, reglas, datos, arquitectura y backlog. El comportamiento detallado de cada pantalla está en `openspec/specs/`. Los entregables de gestión del curso (acta, visión, interesados, riesgos, presupuesto e informes del Sprint 1) salieron de `docs/` el 24/11/2026 y siguen en el historial de git.
 
 ### Fase 01: Inicio
-- 06\. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_6_0.md>)
-- 07\. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_3_0.md>)
-- 08\. [Usuarios](<docs/01 Inicio/08. Usuarios V_1_1_0.md>)
-- 09\. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_1_0.md>)
-- 10\. [Stack tecnológico](<docs/01 Inicio/10. Stack tecnológico V_1_3_0.md>)
-- 11\. [Base de datos](<docs/01 Inicio/11. Base de datos V_1_3_0.md>)
-- 12\. [Modelo C4](<docs/01 Inicio/12. Modelo C4 V_1_1_0.md>)
+- 06\. [Requisitos funcionales](<docs/01 Inicio/06. Requisitos funcionales V_1_7_0.md>)
+- 07\. [Requisitos no funcionales](<docs/01 Inicio/07. Requisitos no funcionales V_1_4_0.md>)
+- 08\. [Usuarios](<docs/01 Inicio/08. Usuarios V_1_2_0.md>)
+- 09\. [Reglas de negocio](<docs/01 Inicio/09. Reglas de negocio V_1_2_0.md>)
+- 10\. [Stack tecnológico](<docs/01 Inicio/10. Stack tecnológico V_1_4_0.md>)
+- 11\. [Base de datos](<docs/01 Inicio/11. Base de datos V_1_4_0.md>)
+- 12\. [Modelo C4](<docs/01 Inicio/12. Modelo C4 V_1_2_0.md>)
 
 ### Fase 02: Planificación
-- 01\. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_5_0.md>) (épicas, historias, enablers y DoD)
+- 01\. [Transformando a ágil](<docs/02 Planificación/01 Transformando a ágil V_1_6_0.md>) (épicas, historias, enablers y DoD)
 - Tablero en GitHub Projects
 
 ### Fase 03: Implementación
