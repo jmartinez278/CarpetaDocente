@@ -7,11 +7,17 @@ Comprueban el HTML que sale del servidor, sin JavaScript. El día es el lunes 22
 
 import datetime
 import re
+import uuid
 
 import pytest
+from django.urls import reverse
 from django.utils import timezone
 
+from actividad.models import Operacion, RegistroActividad
+from cuentas.models import Usuario
 from direccion.tests.conftest import HOY, completar_asistencia, crear_seccion
+from institucion.models import AnioEscolar
+from repositorio.models import TIPO_DOCX, SesionVista
 
 pytestmark = pytest.mark.django_db
 
@@ -391,3 +397,293 @@ def test_la_portada_no_crece_en_consultas_con_24_secciones(
 
     with django_assert_max_num_queries(12):
         assert client.get(INICIO).status_code == 200
+
+
+# --- Acceso a las secciones y a las sesiones de la dirección (D2 y D7; spec acceso-secciones) ---
+
+RUTAS_DE_SECCION = ["direccion:notas", "direccion:asistencia", "direccion:sesiones"]
+NO_DISPONIBLE = "La sesión ya no está disponible"
+
+
+@pytest.fixture
+def dos_a(anio_abierto, docente, bimestres):
+    return crear_seccion(anio_abierto, 2, "A", docente=docente, estudiantes=2)
+
+
+@pytest.fixture
+def otra_direccion(crear_usuario, otra_institucion):
+    return crear_usuario(
+        "dir.otra", Usuario.Rol.DIRECCION, institucion=otra_institucion, first_name="Rita"
+    )
+
+
+@pytest.fixture
+def entrar_como_direccion(client, direccion):
+    client.force_login(direccion)
+    return client
+
+
+def entradas_de_lectura():
+    """Lo que dejaría abrir o descargar una sesión (el ingreso de la prueba no cuenta)."""
+    return RegistroActividad.objects.filter(
+        operacion__in=[
+            Operacion.SESION_VISTA,
+            Operacion.SESION_DESCARGADA,
+            Operacion.INTENTO_SIN_PERMISO,
+        ]
+    )
+
+
+def ruta(nombre, objeto):
+    return reverse(nombre, args=[objeto.pk])
+
+
+@pytest.mark.parametrize("nombre", RUTAS_DE_SECCION)
+def test_la_direccion_abre_las_secciones_de_su_institucion(entrar_como_direccion, dos_a, nombre):
+    respuesta = entrar_como_direccion.get(ruta(nombre, dos_a))
+
+    assert respuesta.status_code == 200
+
+
+@pytest.mark.parametrize("nombre", RUTAS_DE_SECCION)
+def test_la_direccion_de_otra_institucion_recibe_pagina_no_encontrada(
+    client, otra_direccion, dos_a, nombre
+):
+    client.force_login(otra_direccion)
+
+    respuesta = client.get(ruta(nombre, dos_a))
+
+    assert respuesta.status_code == 404
+    assert "2.º" not in respuesta.content.decode()
+
+
+@pytest.mark.parametrize("nombre", RUTAS_DE_SECCION)
+def test_una_seccion_de_un_anio_cerrado_o_inexistente_es_pagina_no_encontrada(
+    entrar_como_direccion, institucion, docente, nombre
+):
+    anio = AnioEscolar.objects.create(
+        institucion=institucion, anio=2026, estado=AnioEscolar.Estado.CERRADO
+    )
+    cerrada = crear_seccion(anio, 2, "A", docente=docente, estudiantes=1)
+
+    assert entrar_como_direccion.get(ruta(nombre, cerrada)).status_code == 404
+    assert entrar_como_direccion.get(reverse(nombre, args=[cerrada.pk + 1000])).status_code == 404
+
+
+@pytest.mark.parametrize("nombre", ["direccion:consolidados", *RUTAS_DE_SECCION])
+def test_las_rutas_de_la_direccion_solo_leen(entrar_como_direccion, dos_a, nombre):
+    url = reverse(nombre, args=[dos_a.pk] if nombre in RUTAS_DE_SECCION else [])
+
+    for metodo in ("post", "put", "patch", "delete"):
+        assert getattr(entrar_como_direccion, metodo)(url).status_code == 405
+
+
+def test_una_ruta_con_un_id_que_no_es_numerico_no_llega_a_la_vista(entrar_como_direccion):
+    assert (
+        entrar_como_direccion.get("/direccion/consolidados/secciones/abc/notas/").status_code == 404
+    )
+
+
+# --- Página de una sesión en la dirección ---
+
+
+def pagina_de_la_sesion(cliente, sesion):
+    respuesta = cliente.get(ruta("direccion:sesion", sesion))
+    assert respuesta.status_code == 200
+    return respuesta, respuesta.content.decode()
+
+
+def test_la_direccion_abre_una_sesion_no_compartida_de_su_institucion(
+    entrar_como_direccion, crear_sesion, docente
+):
+    """Escenario «Abrir y descargar desde Consolidados»: la página sin acciones de la autora."""
+    sesion = crear_sesion(
+        docente,
+        titulo="Leemos un cuento",
+        proposito="Que comenten.",
+        texto="Inicio",
+        compartida=False,
+    )
+
+    respuesta, html = pagina_de_la_sesion(entrar_como_direccion, sesion)
+    plano = texto(html)
+
+    assert "repositorio/_pagina_sesion.html" in [t.name for t in respuesta.templates]
+    for dato in [
+        "Leemos un cuento",
+        "Que comenten.",
+        "Inicio",
+        "Comunicación",
+        "Ana Quispe",
+        "PDF",
+    ]:
+        assert dato in plano, dato
+    assert "Sesión de aprendizaje · PDF" in plano
+    assert re.search(rf'href="{ruta("direccion:descargar", sesion)}"', html)
+    assert re.search(rf'href="{ruta("direccion:ver", sesion)}"[^>]*target="_blank"', html)
+    for ausente in [
+        "Eliminar",
+        "Compartir",
+        "Dejar de compartir",
+        "Tu sesión",
+        "Mis sesiones",
+        "Repositorio",
+        "colega",
+        "/docente/sesiones/",
+    ]:
+        assert ausente not in plano and ausente not in html, ausente
+    # El único <dialog> es el ☰ del marco: no están los de compartir y eliminar.
+    assert "<dialog" not in bloque(html, r"<main[^>]*>.*?</main>")
+
+
+def test_una_sesion_compartida_lleva_su_chip_para_la_direccion(
+    entrar_como_direccion, crear_sesion, docente
+):
+    _, html = pagina_de_la_sesion(entrar_como_direccion, crear_sesion(docente, compartida=True))
+
+    assert '<span class="chip">Compartida</span>' in html
+
+
+def test_una_sesion_en_word_no_ofrece_ver(entrar_como_direccion, crear_sesion, docente):
+    sesion = crear_sesion(docente, tipo_mime=TIPO_DOCX)
+
+    _, html = pagina_de_la_sesion(entrar_como_direccion, sesion)
+
+    assert "/descargar/" in html and "/ver/" not in html
+    assert "Sesión de aprendizaje · Word" in texto(html)
+
+
+def test_la_pagina_de_la_direccion_lleva_el_menu_de_la_direccion(
+    entrar_como_direccion, crear_sesion, docente
+):
+    _, html = pagina_de_la_sesion(entrar_como_direccion, crear_sesion(docente))
+
+    menu = bloque(html, r"<nav[^>]*>.*?</nav>")
+    assert "Consolidados" in texto(menu) and 'aria-current="page"' in menu
+    assert "Entregas" in texto(menu)
+
+
+def test_abrir_la_pagina_no_cuenta_una_vista_ni_deja_entrada(
+    entrar_como_direccion, crear_sesion, docente
+):
+    sesion = crear_sesion(docente, compartida=True)
+
+    pagina_de_la_sesion(entrar_como_direccion, sesion)
+    pagina_de_la_sesion(entrar_como_direccion, sesion)
+
+    assert not SesionVista.objects.filter(sesion=sesion).exists()
+    assert not entradas_de_lectura()
+
+
+@pytest.mark.parametrize("caso", ["otra institución", "referencia", "inexistente"])
+def test_una_sesion_que_la_direccion_no_ve_es_la_misma_pagina_con_volver_a_consolidados(
+    entrar_como_direccion, crear_sesion, colega_de_otra, material_de_referencia, caso
+):
+    sesion = {
+        "otra institución": lambda: crear_sesion(colega_de_otra, titulo="Secreta", compartida=True),
+        "referencia": lambda: material_de_referencia(titulo="Secreta"),
+    }.get(caso, lambda: None)()
+    url = (
+        ruta("direccion:sesion", sesion)
+        if sesion
+        else reverse("direccion:sesion", args=[uuid.uuid4()])
+    )
+
+    respuesta = entrar_como_direccion.get(url)
+    html = respuesta.content.decode()
+
+    assert respuesta.status_code == 404
+    assert NO_DISPONIBLE in html and "Secreta" not in html
+    assert "Volver a Consolidados" in html and "Volver a Sesiones" not in html
+    assert f'href="{reverse("direccion:consolidados")}"' in html
+
+
+def test_la_pagina_de_la_docente_sigue_diciendo_volver_a_sesiones(
+    client, docente, crear_sesion, otra_docente
+):
+    client.force_login(docente)
+
+    html = client.get(ruta("sesiones:detalle", crear_sesion(otra_docente))).content.decode()
+
+    assert NO_DISPONIBLE in html and "Volver a Sesiones" in html
+    assert "Volver a Consolidados" not in html
+
+
+def test_un_id_que_no_es_uuid_no_llega_a_la_vista_de_la_sesion(entrar_como_direccion):
+    assert entrar_como_direccion.get("/direccion/sesiones/no-es-un-uuid/").status_code == 404
+
+
+# --- Descargar y ver en la dirección ---
+
+
+def test_la_direccion_descarga_una_sesion_no_compartida_y_queda_la_entrada(
+    entrar_como_direccion, con_archivo, docente, direccion
+):
+    """Escenario «Abrir y descargar desde Consolidados»."""
+    sesion = con_archivo(docente, archivo_nombre="cuento.pdf")
+
+    respuesta = entrar_como_direccion.get(ruta("direccion:descargar", sesion))
+
+    assert respuesta.status_code == 200
+    assert b"".join(respuesta.streaming_content) == b"%PDF-1.4 cuerpo"
+    assert respuesta["Content-Disposition"] == 'attachment; filename="cuento.pdf"'
+    assert "no-store" in respuesta["Cache-Control"]
+    (entrada,) = RegistroActividad.objects.filter(operacion=Operacion.SESION_DESCARGADA)
+    assert (entrada.usuario_id, entrada.entidad_id) == (direccion.pk, str(sesion.pk))
+    assert entrada.detalle == {"modo": "descargar", "propia": False}
+
+
+def test_la_direccion_ve_el_pdf_en_linea(entrar_como_direccion, con_archivo, docente):
+    sesion = con_archivo(docente, archivo_nombre="cuento.pdf")
+
+    respuesta = entrar_como_direccion.get(ruta("direccion:ver", sesion))
+
+    assert respuesta.status_code == 200
+    assert respuesta["Content-Disposition"].startswith("inline")
+
+
+def test_ver_un_word_no_entrega_el_archivo(entrar_como_direccion, con_archivo, docente):
+    sesion = con_archivo(docente, tipo_mime=TIPO_DOCX, archivo_nombre="a.docx")
+
+    respuesta = entrar_como_direccion.get(ruta("direccion:ver", sesion))
+
+    assert respuesta.status_code == 404
+    assert not entradas_de_lectura()
+
+
+@pytest.mark.parametrize("nombre", ["direccion:descargar", "direccion:ver"])
+def test_la_direccion_no_recibe_el_archivo_de_otra_institucion(
+    entrar_como_direccion, con_archivo, colega_de_otra, nombre
+):
+    sesion = con_archivo(colega_de_otra, compartida=True)
+
+    respuesta = entrar_como_direccion.get(ruta(nombre, sesion))
+
+    assert respuesta.status_code == 404
+    assert NO_DISPONIBLE in respuesta.content.decode()
+    assert "Volver a Consolidados" in respuesta.content.decode()
+    assert not entradas_de_lectura()
+
+
+# --- Otros roles ---
+
+
+@pytest.mark.parametrize(
+    "nombre", ["direccion:consolidados", "direccion:notas", "direccion:sesion", "direccion:ver"]
+)
+def test_una_docente_va_a_su_inicio_sin_ver_ni_registrar_nada(
+    client, docente, dos_a, con_archivo, nombre
+):
+    sesion = con_archivo(docente)
+    client.force_login(docente)
+    args = {
+        "direccion:consolidados": [],
+        "direccion:notas": [dos_a.pk],
+        "direccion:sesion": [sesion.pk],
+        "direccion:ver": [sesion.pk],
+    }[nombre]
+
+    respuesta = client.get(reverse(nombre, args=args))
+
+    assert respuesta.status_code == 302 and respuesta.url == reverse("docente:portada")
+    assert not entradas_de_lectura()

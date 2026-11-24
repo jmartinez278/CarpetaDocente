@@ -9,7 +9,9 @@ from asistencia.servicios import dias_de_clase
 from institucion.models import Estudiante, Seccion
 from notas.tests.conftest import *  # noqa: F403 - fixtures compartidas
 from repositorio.tests.conftest import (  # noqa: F401 - fixtures compartidas
+    colega_de_otra,
     comunicacion,
+    con_archivo,
     crear_sesion,
     material_de_referencia,
 )

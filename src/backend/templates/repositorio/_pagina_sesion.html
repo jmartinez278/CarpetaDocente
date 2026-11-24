@@ -1,0 +1,29 @@
+{% load sesiones %}
+{% comment %}
+Cuerpo de la página de una sesión, compartido por la de la docente y la de la dirección (spec detalle-sesion; design de US-011, D5 y de
+US-040, D2): el formato y el título con «Descargar» y, en un PDF, «Ver» (enlaces del aplicativo, nunca de R2), los chips, la ficha, el
+propósito y la vista previa del texto. Recibe sesion, grado, referencia, url_descargar y url_ver; ``lateral`` es la plantilla de la tarjeta
+café que va entre la ficha y la vista previa (la docente pone «Tu sesión» o «Material de referencia»; la dirección, ninguna). Las migas, los
+mensajes y los diálogos son de cada página. Todo pasa por el autoescape; el texto va en un <pre>.
+{% endcomment %}
+  <header class="sesion-cabecera">
+    <div class="sesion-titular"><p class="small">Sesión de aprendizaje · {{ sesion.tipo_corto }}</p><h1>{{ sesion.titulo }}</h1></div>
+    <div class="sesion-archivo-acciones">{% include "rb/boton.html" with texto="Descargar" href=url_descargar variante="principal" icono="download" %}{% if sesion.tipo_corto == "PDF" %}<a class="btn btn--secondary" href="{{ url_ver }}" target="_blank" rel="noopener">{% include "iconos/external-link.svg" with clase=None %}Ver</a>{% endif %}</div>
+  </header>
+  <div class="sesion-rejilla">
+    <section class="sesion-info" aria-label="Datos de la sesión">
+      <p class="sesion-chips"><span class="chip">{{ grado }}</span><span class="chip">{{ sesion.area.nombre }}</span>{% if referencia %}<span class="chip">Material de referencia</span>{% elif sesion.compartida %}<span class="chip">Compartida</span>{% endif %}</p>
+      <dl class="sesion-ficha">
+        {% if not referencia %}<div><dt>Autora</dt><dd>{{ sesion.autor.get_full_name }}</dd></div>{% endif %}
+        <div><dt>{% if referencia %}Fecha de carga{% else %}Fecha de envío{% endif %}</dt><dd>{{ sesion.creado_en|date:"j \d\e F \d\e Y" }}</dd></div>
+        <div><dt>Formato</dt><dd>{{ sesion.tipo_corto }}</dd></div>
+        <div><dt>Tamaño del archivo</dt><dd>{{ sesion.tamano_bytes|tamano }}</dd></div>
+      </dl>
+      {% if sesion.proposito %}<div class="sesion-proposito"><h2>Propósito</h2><p>{{ sesion.proposito }}</p></div>{% endif %}
+    </section>
+    {% if lateral %}{% include lateral %}{% endif %}
+    <article class="sesion-vista" aria-labelledby="vista-previa">
+      <div class="sesion-vista-cabecera">{% include "iconos/file-text.svg" with clase=None %}<div><h2 id="vista-previa">Vista previa del texto</h2>{% if sesion.texto %}<p class="small">Texto sin formato. Descarga el archivo para verlo tal como es.</p>{% endif %}</div></div>
+      {% if sesion.texto %}<pre class="sesion-texto">{{ sesion.texto }}</pre>{% else %}<p class="sesion-sin-texto">La vista previa no está disponible. Puedes descargar el archivo.</p>{% endif %}
+    </article>
+  </div>

@@ -1,0 +1,13 @@
+{% extends "marco.html" %}
+{% comment %}
+Detalle de una sección de la dirección (US-040, D2). Por ahora solo el título: las pestañas Notas, Asistencia y Sesiones llegan en
+los grupos 6 y 7. Recibe seccion, titulo_seccion y pestana.
+{% endcomment %}
+
+{% block titulo %}{{ titulo_seccion }} · CarpetaDocente{% endblock %}
+
+{% block titulo_barra %}Consolidados{% endblock %}
+
+{% block principal %}
+<h1>{{ titulo_seccion }}</h1>
+{% endblock %}

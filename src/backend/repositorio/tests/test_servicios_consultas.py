@@ -75,6 +75,68 @@ def test_la_misma_docente_de_otra_institucion_no_ve_su_sesion_por_la_institucion
     assert servicios.sesion_visible(otra_docente, sesion.pk) is not None
 
 
+# --- Quién ve una sesión: la dirección (US-040, D7) ------------------------------------------
+
+
+@pytest.mark.parametrize("compartida", [True, False])
+def test_la_direccion_ve_la_propia_de_su_institucion_compartida_o_no(
+    crear_sesion, docente, direccion, compartida
+):
+    sesion = crear_sesion(docente, compartida=compartida)
+
+    assert servicios.sesion_visible_direccion(direccion, sesion.pk) == sesion
+
+
+def test_la_direccion_no_ve_la_sesion_de_otra_institucion(crear_sesion, colega_de_otra, direccion):
+    sesion = crear_sesion(colega_de_otra, compartida=True)
+
+    assert servicios.sesion_visible_direccion(direccion, sesion.pk) is None
+
+
+def test_la_direccion_no_ve_el_material_de_referencia(material_de_referencia, direccion):
+    referencia = material_de_referencia()
+
+    assert servicios.sesion_visible_direccion(direccion, referencia.pk) is None
+
+
+@pytest.mark.parametrize("id_sesion", [uuid.uuid4(), str(uuid.uuid4()), "no-es-un-uuid", None])
+def test_la_direccion_no_ve_una_inexistente_o_mal_formada(direccion, id_sesion):
+    assert servicios.sesion_visible_direccion(direccion, id_sesion) is None
+
+
+def test_una_docente_con_la_puerta_de_la_direccion_no_ve_nada(crear_sesion, docente, otra_docente):
+    propia = crear_sesion(docente)
+    de_colega = crear_sesion(otra_docente, compartida=True)
+
+    assert servicios.sesion_visible_direccion(docente, propia.pk) is None
+    assert servicios.sesion_visible_direccion(docente, de_colega.pk) is None
+
+
+def test_el_administrador_con_la_puerta_de_la_direccion_no_ve_nada(
+    crear_sesion, docente, administrador
+):
+    sesion = crear_sesion(docente, compartida=True)
+
+    assert servicios.sesion_visible_direccion(administrador, sesion.pk) is None
+
+
+def test_la_puerta_de_la_docente_sigue_negando_a_la_direccion(crear_sesion, docente, direccion):
+    compartida = crear_sesion(docente, compartida=True)
+    sin_compartir = crear_sesion(docente, compartida=False)
+
+    assert servicios.sesion_visible(direccion, compartida.pk) is not None
+    assert servicios.sesion_visible(direccion, sin_compartir.pk) is None
+
+
+def test_sin_texto_la_direccion_no_carga_el_texto(crear_sesion, docente, direccion):
+    sesion = crear_sesion(docente, texto="Contenido largo de la sesión")
+
+    leida = servicios.sesion_visible_direccion(direccion, sesion.pk, con_texto=False)
+
+    assert leida.pk == sesion.pk
+    assert "texto" in leida.get_deferred_fields()
+
+
 # --- Mis sesiones (D5) -----------------------------------------------------------------------
 
 
@@ -490,6 +552,53 @@ def test_descargar_y_ver_dejan_sesion_descargada_con_modo_y_propia(
     assert vista.disposicion.startswith("inline; filename*=utf-8''")
     descarga.archivo.close()
     vista.archivo.close()
+
+
+def test_la_direccion_descarga_una_no_compartida_y_queda_propia_falso(
+    con_archivo, docente, direccion
+):
+    # Escenario «Abrir y descargar desde Consolidados».
+    sesion = con_archivo(docente, compartida=False)
+
+    entrega = servicios.entregar_archivo(
+        direccion, sesion.pk, "descargar", visible=servicios.sesion_visible_direccion
+    )
+
+    assert descargas() == [
+        (direccion.pk, "sesion", str(sesion.pk), {"modo": "descargar", "propia": False}),
+    ]
+    assert entrega.archivo.read() == b"%PDF-1.4 cuerpo"
+    entrega.archivo.close()
+
+
+@pytest.mark.parametrize("caso", ["otra institución", "referencia", "inexistente"])
+def test_la_direccion_no_recibe_lo_que_no_ve_ni_deja_entrada(
+    con_archivo, material_de_referencia, colega_de_otra, direccion, caso
+):
+    id_sesion = {
+        "otra institución": lambda: con_archivo(colega_de_otra, compartida=True).pk,
+        "referencia": lambda: material_de_referencia().pk,
+        "inexistente": uuid.uuid4,
+    }[caso]()
+
+    for modo in ("descargar", "ver"):
+        with pytest.raises(servicios.SesionNoDisponible):
+            servicios.entregar_archivo(
+                direccion, id_sesion, modo, visible=servicios.sesion_visible_direccion
+            )
+
+    assert descargas() == []
+
+
+def test_entregar_archivo_sigue_negando_a_la_direccion_una_no_compartida(
+    con_archivo, docente, direccion
+):
+    sesion = con_archivo(docente, compartida=False)
+
+    with pytest.raises(servicios.SesionNoDisponible):
+        servicios.entregar_archivo(direccion, sesion.pk, "descargar")
+
+    assert descargas() == []
 
 
 def test_un_nombre_ascii_va_entre_comillas(con_archivo, docente):
