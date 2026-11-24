@@ -10,13 +10,14 @@ from dataclasses import dataclass, field
 
 from django.db.models import Count, Q
 from django.http import Http404
+from django.urls import reverse
 from django.utils import timezone
 
 from asistencia import servicios as asistencia
 from catalogo.models import InstitucionArea
 from cuentas.models import Usuario
 from institucion.models import AnioEscolar, Estudiante, Seccion
-from institucion.servicios import texto_seccion_corto
+from institucion.servicios import texto_seccion, texto_seccion_corto
 from notas import servicios as notas
 from repositorio import servicios as repositorio
 from repositorio.models import Sesion
@@ -121,6 +122,51 @@ class EstadoSeccion:
     def considerada(self):
         """Cuenta en «N de M»: ni «Sin docente» ni «Sin estudiantes»."""
         return self.estado in (ATRASADA, AL_DIA)
+
+    @property
+    def clase(self):
+        """El modificador de estilo de su celda en el mapa."""
+        return _CLASE_DE_LA_CELDA[self.estado]
+
+    @property
+    def lector(self):
+        """« de 2.º, Ana Quispe»: lo que oye el lector de pantalla tras la letra de la celda."""
+        tutora = f", {self.tutora.get_full_name()}" if self.tutora is not None else ""
+        return f" de {self.seccion.grado}.º{tutora}"
+
+    @property
+    def texto_notas(self):
+        """«Faltan 34 notas» o «Falta 1 nota»; vacío si no falta ninguna."""
+        if not self.notas_faltan:
+            return ""
+        if self.notas_faltan == 1:
+            return "Falta 1 nota"
+        return f"Faltan {self.notas_faltan} notas"
+
+    @property
+    def texto_dias(self):
+        """«3 días sin completar» o «1 día sin completar»; vacío si no hay ninguno."""
+        if not self.dias_sin_completar:
+            return ""
+        if self.dias_sin_completar == 1:
+            return "1 día sin completar"
+        return f"{self.dias_sin_completar} días sin completar"
+
+    @property
+    def destino(self):
+        """El nombre de la ruta a la que lleva su celda (D2): Notas; Sesiones si no tiene
+        estudiantes (Notas y Asistencia no tienen nada que mostrar); ninguna sin docente."""
+        if self.estado == SIN_DOCENTE:
+            return None
+        return "direccion:sesiones" if self.estado == SIN_ESTUDIANTES else "direccion:notas"
+
+
+_CLASE_DE_LA_CELDA = {
+    AL_DIA: "al-dia",
+    ATRASADA: "atrasada",
+    SIN_DOCENTE: "sin",
+    SIN_ESTUDIANTES: "sin",
+}
 
 
 def estado_de_las_secciones(institucion, periodo, hoy):
@@ -247,6 +293,350 @@ def resumen_de_la_ie(estados, periodo, hoy):
         dias_para_el_cierre=max((periodo.fecha_fin - hoy).days, 0),
         sin_docente=[e.seccion for e in estados if e.estado == SIN_DOCENTE],
         sin_estudiantes=[e.seccion for e in estados if e.estado == SIN_ESTUDIANTES],
+    )
+
+
+# --- D3 y D4. Consolidados: periodos, mapa y resumen ---
+
+ORDINALES = {1: "Primer", 2: "Segundo", 3: "Tercer", 4: "Cuarto", 5: "Quinto", 6: "Sexto"}
+
+
+def texto_fecha(fecha):
+    """«24 de julio»."""
+    return f"{fecha.day} de {asistencia.MESES[fecha.month - 1]}"
+
+
+def linea_del_periodo(elegido, hoy):
+    """«IV bimestre vigente · hoy, lunes 23 de noviembre»; en uno que terminó, «II bimestre ·
+    terminó el 24 de julio». ``elegido`` es el ``PeriodoDeLaSeccion`` de la consulta."""
+    if elegido.estado == notas.VIGENTE:
+        return f"{elegido.nombre_romano} vigente · hoy, {asistencia.texto_dia(hoy)}"
+    return f"{elegido.nombre_romano} · terminó el {texto_fecha(elegido.fecha_fin)}"
+
+
+@dataclass
+class GradoDelMapa:
+    """Una fila del mapa de Consolidados: un grado con sus secciones por orden de nombre."""
+
+    grado: int
+    celdas: list[EstadoSeccion]
+
+    @property
+    def nombre(self):
+        return f"{self.grado}.º"
+
+    @property
+    def nombre_largo(self):
+        return f"{ORDINALES[self.grado]} grado"
+
+
+@dataclass
+class Consolidados:
+    """Lo que dicen Consolidados y el detalle sobre el periodo elegido (spec
+    consolidados-direccion, «Bimestre de los consolidados»).
+
+    ``elegido`` es el ``PeriodoDeLaSeccion`` que abre la pantalla o ``None`` (sin periodos, o
+    antes del primero). Solo con él hay ``estados`` y ``resumen``.
+    """
+
+    anio: int
+    hoy: datetime.date
+    periodos: list
+    elegido: object = None
+    estados: list[EstadoSeccion] = field(default_factory=list)
+    resumen: ResumenIE | None = None
+
+    @property
+    def hay_periodos(self):
+        return bool(self.periodos)
+
+    @property
+    def primero(self):
+        """El primer periodo del año: el que empieza, si hoy es antes de todos."""
+        return self.periodos[0] if self.periodos else None
+
+    @property
+    def linea(self):
+        return linea_del_periodo(self.elegido, self.hoy) if self.elegido is not None else ""
+
+    @property
+    def grados(self):
+        por_grado = {}
+        for estado in self.estados:
+            por_grado.setdefault(estado.seccion.grado, []).append(estado)
+        return [GradoDelMapa(grado, celdas) for grado, celdas in sorted(por_grado.items())]
+
+    @property
+    def titulo_del_mapa(self):
+        if len(self.estados) == 1:
+            return "La sección"
+        return f"Las {len(self.estados)} secciones"
+
+
+def periodos_de_la_consulta(institucion, pedido, hoy):
+    """Los periodos del año ABIERTO y el elegido (``?periodo=``), sin calcular el estado de las
+    secciones: lo que necesita el detalle de una sección."""
+    anio = _anio_abierto(institucion)
+    periodos = notas.periodos_del_anio_escolar(anio, hoy) if anio is not None else []
+    return Consolidados(
+        anio=anio.anio if anio is not None else hoy.year,
+        hoy=hoy,
+        periodos=periodos,
+        elegido=periodo_de_la_consulta(periodos, pedido),
+    )
+
+
+def consolidados(institucion, pedido, hoy):
+    """Los periodos, el elegido y, con él, el estado de las secciones y el resumen de la I.E.
+    Seis consultas más con periodo (D3, D4).
+
+    Las funciones del estado esperan el ``Periodo`` del modelo: se pasa ``elegido.periodo``.
+    """
+    datos = periodos_de_la_consulta(institucion, pedido, hoy)
+    if datos.elegido is not None:
+        datos.estados = estado_de_las_secciones(institucion, datos.elegido.periodo, hoy)
+        if datos.estados:
+            datos.resumen = resumen_de_la_ie(datos.estados, datos.elegido.periodo, hoy)
+    return datos
+
+
+# --- D2. Detalle de una sección ---
+
+PESTANAS = [("notas", "Notas"), ("asistencia", "Asistencia"), ("sesiones", "Sesiones")]
+
+
+@dataclass
+class Pestana:
+    clave: str
+    titulo: str
+    url: str | None
+
+
+@dataclass
+class DetalleSeccion:
+    """La cabecera común de las tres pestañas del detalle de una sección."""
+
+    seccion: Seccion
+    estudiantes: int
+    datos: Consolidados
+
+    @property
+    def titulo(self):
+        return texto_seccion(self.seccion)
+
+    @property
+    def corta(self):
+        return texto_seccion_corto(self.seccion)
+
+    @property
+    def tutora(self):
+        return self.seccion.docente
+
+    @property
+    def linea_tutora(self):
+        """«Tutora: Ana Quispe · 25 estudiantes · 2027»."""
+        tutora = self.tutora.get_full_name() if self.tutora is not None else "sin docente"
+        n = "1 estudiante" if self.estudiantes == 1 else f"{self.estudiantes} estudiantes"
+        return f"Tutora: {tutora} · {n} · {self.datos.anio}"
+
+    @property
+    def apoyo(self):
+        """Bajo el título del café: «Vigente, hasta hoy lunes 23 de noviembre» o «Terminado ·
+        24 de julio»."""
+        elegido = self.datos.elegido
+        if elegido.estado == notas.VIGENTE:
+            return f"Vigente, hasta hoy {asistencia.texto_dia(self.datos.hoy)}"
+        return f"Terminado · {texto_fecha(elegido.fecha_fin)}"
+
+    def pestanas(self):
+        """Notas, Asistencia y Sesiones con su enlace (con ``?periodo=`` si hay periodo). Notas y
+        Asistencia no tienen enlace si la sección no tiene estudiantes."""
+        sufijo = f"?periodo={self.datos.elegido.numero}" if self.datos.elegido else ""
+        pestanas = []
+        for clave, titulo in PESTANAS:
+            url = reverse(f"direccion:{clave}", args=[self.seccion.pk]) + sufijo
+            disponible = clave == "sesiones" or self.estudiantes > 0
+            pestanas.append(Pestana(clave, titulo, url if disponible else None))
+        return pestanas
+
+
+def detalle_de_la_seccion(seccion, pedido, hoy):
+    """La cabecera del detalle de ``seccion`` en el periodo de ``?periodo=``."""
+    activos = seccion.estudiantes.filter(estado=Estudiante.Estado.ACTIVO).count()
+    datos = periodos_de_la_consulta(seccion.anio_escolar.institucion, pedido, hoy)
+    return DetalleSeccion(seccion=seccion, estudiantes=activos, datos=datos)
+
+
+# --- D3. Pestaña Notas ---
+
+
+@dataclass
+class AreaDeNotas:
+    """Un área de la tutora con sus competencias marcadas: su fila de la tabla y su hoja."""
+
+    hoja: notas.HojaDelArea
+    niveles: dict | None
+
+    @property
+    def codigo(self):
+        return self.hoja.area.codigo_siagie
+
+    @property
+    def nombre(self):
+        return self.hoja.area.nombre
+
+    @property
+    def sin_marcas(self):
+        return not self.hoja.columnas
+
+    @property
+    def faltan(self):
+        return self.hoja.faltantes
+
+    @property
+    def conteos(self):
+        """``{"AD": n, "A": n, "B": n, "C": n}``, con ceros si el área no tiene notas."""
+        return {nivel: (self.niveles or {}).get(nivel, 0) for nivel in ("AD", "A", "B", "C")}
+
+
+@dataclass
+class FilaDeNotas:
+    """Un estudiante activo con el nivel de cada competencia marcada (``None``: sin nota)."""
+
+    numero: int
+    estudiante: Estudiante
+    celdas: list[tuple[notas.Columna, str | None]]
+
+    @property
+    def pendiente(self):
+        return any(nivel is None for _, nivel in self.celdas)
+
+
+@dataclass
+class NotasDelDetalle:
+    """Lo que dice la pestaña Notas: la tabla por área, la hoja del área elegida y el recuadro."""
+
+    areas: list[AreaDeNotas]
+    elegida: AreaDeNotas | None
+    solo_pendientes: bool
+    filas: list[FilaDeNotas]
+    pendientes: int
+    estudiantes: int
+    conteo: notas.ConteoDeNotas
+
+    @property
+    def hay_marcas(self):
+        return any(not area.sin_marcas for area in self.areas)
+
+    @property
+    def detalle_de_la_hoja(self):
+        if self.solo_pendientes:
+            n = self.pendientes
+            return f"{n} estudiante{'' if n == 1 else 's'} con notas faltantes · Solo lectura"
+        n = self.estudiantes
+        competencias = len(self.elegida.hoja.columnas)
+        return (
+            f"{n} estudiante{'' if n == 1 else 's'} · "
+            f"{competencias} competencia{'' if competencias == 1 else 's'} · Solo lectura"
+        )
+
+
+def notas_del_detalle(seccion, periodo, pedida="", filtro=""):
+    """La pestaña Notas de ``seccion`` en ``periodo`` (un ``Periodo``).
+
+    Las áreas son las de la tutora (``puede_marcar``), las mismas de la hoja; las que faltan son
+    las de ``hoja_de_notas`` y su total, el de ``faltantes_por_seccion``: el mismo número que la
+    celda del mapa (RNF-017). Un área pedida que no es de la tutora se ignora y se abre la
+    primera con competencias marcadas. Siete consultas.
+    """
+    tutora = seccion.docente
+    marcables = []
+    if tutora is not None:
+        marcables = [a for a in notas.areas_de_la_seccion(tutora, seccion) if a.marcable]
+    hojas = notas.hoja_de_notas(tutora, seccion, periodo, marcables) if marcables else []
+    niveles = notas.niveles_por_area(seccion, periodo) if hojas else {}
+    areas = [AreaDeNotas(hoja, niveles.get(hoja.area.pk)) for hoja in hojas]
+    elegida = next((a for a in areas if a.codigo == pedida), None) or next(
+        (a for a in areas if not a.sin_marcas), None
+    )
+    filas = []
+    if elegida is not None and not elegida.sin_marcas:
+        hoja = elegida.hoja
+        filas = [
+            FilaDeNotas(
+                numero,
+                estudiante,
+                [
+                    (c, (hoja.notas.get((estudiante.pk, c.competencia.pk)) or (None,))[0])
+                    for c in hoja.columnas
+                ],
+            )
+            for numero, estudiante in enumerate(hoja.filas, start=1)
+        ]
+    pendientes = [f for f in filas if f.pendiente]
+    solo_pendientes = filtro == "pendientes" and bool(filas)
+    return NotasDelDetalle(
+        areas=areas,
+        elegida=elegida,
+        solo_pendientes=solo_pendientes,
+        filas=pendientes if solo_pendientes else filas,
+        pendientes=len(pendientes),
+        estudiantes=len(filas),
+        conteo=notas.faltantes_por_seccion([seccion], periodo)[seccion.pk],
+    )
+
+
+# --- D5. Pestaña Asistencia ---
+
+
+@dataclass
+class AsistenciaDelDetalle:
+    """Lo que dice la pestaña Asistencia: los días de clase, los totales por estudiante activo
+    hoy y los de la sección, y los días sin completar (los mismos de la celda del mapa)."""
+
+    dias: list[datetime.date]
+    estudiantes: list[asistencia.TotalesDelEstudiante]
+    totales: asistencia.Totales
+    dias_sin_completar: int
+
+    @property
+    def texto_dias(self):
+        """«11 días de clase, del 9 al 23 de noviembre»."""
+        if not self.dias:
+            return "Aún no hay días de clase"
+        primero, ultimo = self.dias[0], self.dias[-1]
+        n = len(self.dias)
+        dias = "1 día de clase" if n == 1 else f"{n} días de clase"
+        if n == 1:
+            return f"{dias}, el {texto_fecha(primero)}"
+        desde = str(primero.day) if primero.month == ultimo.month else texto_fecha(primero)
+        return f"{dias}, del {desde} al {texto_fecha(ultimo)}"
+
+    @property
+    def texto_porcentaje(self):
+        return self.totales.texto_porcentaje
+
+    @property
+    def texto_sin_completar(self):
+        if not self.dias_sin_completar:
+            return "Todos los días completos"
+        if self.dias_sin_completar == 1:
+            return "1 día sin completar"
+        return f"{self.dias_sin_completar} días sin completar"
+
+
+def asistencia_del_detalle(seccion, periodo, hoy):
+    """La pestaña Asistencia de ``seccion`` en ``periodo`` (un ``Periodo``). Cuatro consultas.
+
+    Hoy cuenta entre los días de clase y no entre los días sin completar (D5).
+    """
+    return AsistenciaDelDetalle(
+        dias=asistencia.dias_de_clase(periodo, hoy),
+        estudiantes=asistencia.totales_por_estudiante(seccion, periodo, hoy),
+        totales=asistencia.totales_de_la_seccion(seccion, periodo, hoy),
+        dias_sin_completar=asistencia.dias_sin_completar_por_seccion([seccion], periodo, hoy)[
+            seccion.pk
+        ],
     )
 
 

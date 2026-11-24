@@ -1,6 +1,8 @@
 """Vistas del módulo direccion (US-040)."""
 
-from django.shortcuts import render
+from urllib.parse import urlencode
+
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
@@ -10,7 +12,6 @@ from asistencia.servicios import saludo
 from cuentas.acceso import RolRequeridoMixin
 from cuentas.models import Usuario
 from direccion import servicios
-from institucion.servicios import texto_seccion
 from repositorio import servicios as repositorio
 from repositorio.views import EntregaBase, no_disponible
 
@@ -22,31 +23,95 @@ class DireccionMixin(RolRequeridoMixin):
 
 
 class ConsolidadosView(DireccionMixin, TemplateView):
-    """Consolidados de la dirección. Por ahora solo el marco con el ☰ (US-040, D2 y D8): el mapa
-    y el resumen llegan en el grupo 6."""
+    """Consolidados de la dirección (US-040, D2, D3 y D4): el mapa de las secciones y el resumen
+    de la I.E. en el periodo de ``?periodo=`` (si no vale, el vigente). Solo lee."""
 
     http_method_names = ["get", "head", "options"]
     template_name = "direccion/consolidados.html"
 
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        institucion = self.request.user.institucion
+        contexto["institucion"] = institucion
+        contexto["url_base"] = reverse("direccion:consolidados")
+        contexto["datos"] = servicios.consolidados(
+            institucion, self.request.GET.get("periodo", ""), timezone.localdate()
+        )
+        return contexto
 
-class SeccionView(DireccionMixin, TemplateView):
+
+class SeccionView(DireccionMixin, View):
     """Una pestaña del detalle de una sección (D2). Solo lectura: ``seccion_de_la_direccion``
     da 404 para otra institución, un año CERRADO o una sección que no existe.
 
-    Por ahora solo el título de la sección; las pestañas llegan en los grupos 6 y 7.
+    Las tres pestañas comparten la cabecera, la tira de bimestres y el recuadro café; cada una
+    pone su contenido en ``contexto_de_la_pestana``. Notas y Asistencia de una sección sin
+    estudiantes llevan (302) a Sesiones, con el mismo ``?periodo=``.
     """
 
     http_method_names = ["get", "head", "options"]
-    template_name = "direccion/seccion.html"
     pestana = ""
 
-    def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        seccion = servicios.seccion_de_la_direccion(self.request.user, self.kwargs["id_seccion"])
-        contexto.update(
-            seccion=seccion, titulo_seccion=texto_seccion(seccion), pestana=self.pestana
-        )
-        return contexto
+    @property
+    def template_name(self):
+        return f"direccion/seccion_{self.pestana}.html"
+
+    def get(self, request, id_seccion):
+        seccion = servicios.seccion_de_la_direccion(request.user, id_seccion)
+        pedido = request.GET.get("periodo", "")
+        detalle = servicios.detalle_de_la_seccion(seccion, pedido, timezone.localdate())
+        if self.pestana != "sesiones" and not detalle.estudiantes:
+            consulta = f"?{urlencode({'periodo': pedido})}" if pedido else ""
+            return redirect(reverse("direccion:sesiones", args=[seccion.pk]) + consulta)
+        contexto = {
+            "seccion": seccion,
+            "detalle": detalle,
+            "datos": detalle.datos,
+            "pestanas": detalle.pestanas(),
+            "pestana": self.pestana,
+            "url_base": reverse(f"direccion:{self.pestana}", args=[seccion.pk]),
+        }
+        if detalle.datos.elegido is not None:
+            contexto.update(self.contexto_de_la_pestana(request, detalle))
+        return render(request, self.template_name, contexto)
+
+    def contexto_de_la_pestana(self, request, detalle):
+        return {}
+
+
+class NotasView(SeccionView):
+    """Pestaña Notas: la tabla por área y la hoja del área elegida (``?area=``), con el filtro
+    ``?filtro=pendientes``. Una consulta que no vale se ignora (D2)."""
+
+    pestana = "notas"
+
+    def contexto_de_la_pestana(self, request, detalle):
+        periodo = detalle.datos.elegido.periodo
+        return {
+            "notas": servicios.notas_del_detalle(
+                detalle.seccion, periodo, request.GET.get("area", ""), request.GET.get("filtro", "")
+            )
+        }
+
+
+class AsistenciaView(SeccionView):
+    """Pestaña Asistencia: los días de clase y los totales por estudiante y por sección."""
+
+    pestana = "asistencia"
+
+    def contexto_de_la_pestana(self, request, detalle):
+        periodo = detalle.datos.elegido.periodo
+        return {
+            "asistencia": servicios.asistencia_del_detalle(
+                detalle.seccion, periodo, detalle.datos.hoy
+            )
+        }
+
+
+class SesionesView(SeccionView):
+    """Pestaña Sesiones."""
+
+    pestana = "sesiones"
 
 
 def _volver_a_consolidados():

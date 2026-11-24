@@ -1,0 +1,48 @@
+{% extends "direccion/seccion.html" %}
+{% comment %}
+Pestaña Asistencia del detalle de una sección (US-040, D5; spec consolidados-direccion, «Pestaña Asistencia»): los días de clase del
+bimestre hasta hoy y, por estudiante activo, sus totales de Asistió, Tarde, Faltó y Justificado y su porcentaje; en el celular cada
+estudiante va en dos líneas. El recuadro café dice el porcentaje de la sección, los cuatro totales y si los días están completos.
+Recibe asistencia (direccion.servicios.AsistenciaDelDetalle). Solo lectura.
+{% endcomment %}
+
+{% block cafe %}
+<div class="cafe__bloque">
+  <h3>Asistencia</h3>
+  <p class="cafe__cifra"><strong>{{ asistencia.texto_porcentaje }}</strong> <span>de asistencia</span></p>
+  <dl class="cafe__totales">
+    <div><dt><span class="cafe__punto cafe__punto--asistio" aria-hidden="true"></span>Asistió</dt><dd>{{ asistencia.totales.asistio }}</dd></div>
+    <div><dt><span class="cafe__punto cafe__punto--tarde" aria-hidden="true"></span>Tarde</dt><dd>{{ asistencia.totales.tarde }}</dd></div>
+    <div><dt><span class="cafe__punto cafe__punto--falto" aria-hidden="true"></span>Faltó</dt><dd>{{ asistencia.totales.falto }}</dd></div>
+    <div><dt><span class="cafe__punto cafe__punto--justificado" aria-hidden="true"></span>Justificado</dt><dd>{{ asistencia.totales.justificado }}</dd></div>
+  </dl>
+  <p class="cafe__apoyo">{% if asistencia.dias_sin_completar %}{% include "iconos/circle-alert.svg" %}{% else %}{% include "iconos/check.svg" %}{% endif %}{{ asistencia.texto_sin_completar }}</p>
+</div>
+{% endblock %}
+
+{% block pestana %}
+<section class="det-bloque det-asis" aria-labelledby="asis-titulo">
+  <header class="det-bloque__cabecera">
+    <h2 id="asis-titulo">Totales por estudiante</h2>
+    <p class="small">{{ asistencia.texto_dias }}</p>
+  </header>
+  <table class="det-tabla">
+    <caption class="sr-only">Asistencia de {{ detalle.corta }} por estudiante, {{ datos.elegido.nombre_romano }}</caption>
+    <thead>
+      <tr><th scope="col" class="det-est">Apellidos y nombres</th><th scope="col" class="det-num">Asistió</th><th scope="col" class="det-num">Tarde</th><th scope="col" class="det-num">Faltó</th><th scope="col" class="det-num">Justif.</th><th scope="col" class="det-num">%</th></tr>
+    </thead>
+    <tbody>
+      {% for fila in asistencia.estudiantes %}
+      <tr>
+        <th scope="row" class="det-est"><span class="det-n" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span><span><span class="hn-apellidos">{{ fila.estudiante.apellidos }},</span> {{ fila.estudiante.nombres }}</span></th>
+        <td class="det-num det-num--asistio{% if not fila.totales.asistio %} det-num--cero{% endif %}"><span class="estado estado--asistio con-punto det-punto" aria-hidden="true">{% include "iconos/check.svg" %}</span><span class="sr-only">Asistió </span>{{ fila.totales.asistio }}</td>
+        <td class="det-num det-num--tarde{% if not fila.totales.tarde %} det-num--cero{% endif %}"><span class="estado estado--tarde con-punto det-punto" aria-hidden="true">{% include "iconos/clock.svg" %}</span><span class="sr-only">Tarde </span>{{ fila.totales.tarde }}</td>
+        <td class="det-num det-num--falto{% if not fila.totales.falto %} det-num--cero{% endif %}"><span class="estado estado--falto con-punto det-punto" aria-hidden="true">{% include "iconos/x.svg" %}</span><span class="sr-only">Faltó </span>{{ fila.totales.falto }}</td>
+        <td class="det-num det-num--justificado{% if not fila.totales.justificado %} det-num--cero{% endif %}"><span class="estado estado--justificado con-punto det-punto" aria-hidden="true">J</span><span class="sr-only">Justificado </span>{{ fila.totales.justificado }}</td>
+        <td class="det-num det-pct"><span class="sr-only">Asistencia </span>{{ fila.totales.texto_porcentaje }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

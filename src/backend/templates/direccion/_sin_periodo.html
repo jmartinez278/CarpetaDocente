@@ -1,0 +1,9 @@
+{% comment %}
+Estado vacío de Consolidados y del detalle cuando no hay periodo que mostrar (spec consolidados-direccion, «Sin bimestres» y
+«Antes del primer bimestre»): sin bimestres configurados, o hoy antes del primero. Recibe datos (direccion.servicios.Consolidados).
+{% endcomment %}
+{% if datos.hay_periodos %}
+<div class="empty dir-vacio">{% include "iconos/calendar-check.svg" with clase="empty-icono" %}<p class="empty-titulo">Hoy no hay un bimestre vigente</p><p>El {{ datos.primero.nombre_romano }} empieza el {{ datos.primero.fecha_inicio|date:"j \d\e F" }}.</p></div>
+{% else %}
+<div class="empty dir-vacio">{% include "iconos/inbox.svg" with clase="empty-icono" %}<p class="empty-titulo">Aún no hay bimestres configurados</p><p>Los consolidados aparecerán cuando el administrador configure los bimestres de {{ datos.anio }}.</p></div>
+{% endif %}

@@ -153,9 +153,14 @@ class PeriodoDeLaSeccion:
         return NUMEROS_ROMANOS[self.periodo.numero]
 
     @property
+    def palabra(self):
+        """«bimestre» o «trimestre» (sale de ``nombre_largo``)."""
+        return self.nombre_largo.split()[0].lower()
+
+    @property
     def nombre_romano(self):
-        """«IV bimestre» o «III trimestre» (la palabra sale de ``nombre_largo``)."""
-        return f"{self.romano} {self.nombre_largo.split()[0].lower()}"
+        """«IV bimestre» o «III trimestre»."""
+        return f"{self.romano} {self.palabra}"
 
     @property
     def fecha_inicio(self):

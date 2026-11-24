@@ -1,13 +1,45 @@
 {% extends "marco.html" %}
 {% comment %}
-Detalle de una sección de la dirección (US-040, D2). Por ahora solo el título: las pestañas Notas, Asistencia y Sesiones llegan en
-los grupos 6 y 7. Recibe seccion, titulo_seccion y pestana.
+Detalle de una sección de la dirección, común a Notas, Asistencia y Sesiones (US-040, D2; spec consolidados-direccion, «Detalle de
+una sección»; boceto prototipos-cd/US-040-final/seccion-*.html): la tutora, los estudiantes y el año; el título de la sección;
+la tira de bimestres; las pestañas (enlaces; la activa marcada; sin enlace las que la sección sin estudiantes no tiene); y un solo
+recuadro café que resume la pestaña activa. Cada pestaña llena los bloques cafe y pestana. Recibe seccion, detalle
+(direccion.servicios.DetalleSeccion), datos (Consolidados con los periodos), pestanas, pestana y url_base. Solo lectura.
 {% endcomment %}
 
-{% block titulo %}{{ titulo_seccion }} · CarpetaDocente{% endblock %}
+{% block titulo %}{{ detalle.titulo }} · CarpetaDocente{% endblock %}
 
 {% block titulo_barra %}Consolidados{% endblock %}
 
 {% block principal %}
-<h1>{{ titulo_seccion }}</h1>
+<div class="dir det">
+  <header class="det-cabecera">
+    <div>
+      <p class="small">{{ detalle.linea_tutora }}</p>
+      <h1>{{ detalle.titulo }}</h1>
+    </div>
+    {% if datos.hay_periodos %}{% include "direccion/_periodos.html" %}{% endif %}
+  </header>
+  <nav class="det-pestanas" aria-label="Consolidado de {{ detalle.corta }}">
+    {% for p in pestanas %}{% if p.url %}<a href="{{ p.url }}"{% if p.clave == pestana %} aria-current="page"{% endif %}>{{ p.titulo }}</a>{% else %}<span aria-disabled="true">{{ p.titulo }}</span>{% endif %}{% endfor %}
+  </nav>
+  {% if not datos.elegido %}
+  {% include "direccion/_sin_periodo.html" %}
+  {% else %}
+  <div class="det-dos">
+    <section class="cafe det-cafe" aria-labelledby="cafe-titulo">
+      <div class="cafe__cabecera">
+        <div>
+          <h2 id="cafe-titulo">{{ detalle.corta }} · {{ datos.elegido.nombre_romano }}</h2>
+          <p class="cafe__apoyo">{{ detalle.apoyo }}</p>
+        </div>
+      </div>
+      {% block cafe %}{% endblock %}
+    </section>
+    <div class="det-contenido">
+      {% block pestana %}{% endblock %}
+    </div>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

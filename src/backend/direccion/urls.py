@@ -11,17 +11,17 @@ urlpatterns = [
     path("consolidados/", views.ConsolidadosView.as_view(), name="consolidados"),
     path(
         "consolidados/secciones/<int:id_seccion>/notas/",
-        views.SeccionView.as_view(pestana="notas"),
+        views.NotasView.as_view(),
         name="notas",
     ),
     path(
         "consolidados/secciones/<int:id_seccion>/asistencia/",
-        views.SeccionView.as_view(pestana="asistencia"),
+        views.AsistenciaView.as_view(),
         name="asistencia",
     ),
     path(
         "consolidados/secciones/<int:id_seccion>/sesiones/",
-        views.SeccionView.as_view(pestana="sesiones"),
+        views.SesionesView.as_view(),
         name="sesiones",
     ),
     path("sesiones/<uuid:id_sesion>/", views.SesionView.as_view(), name="sesion"),
