@@ -16,9 +16,9 @@ Cuatro bloques (zona de cuidado «Tamaño»), cada uno en verde antes del siguie
 
 ## 2. Portada de la docente con el calendario de Asistencia [riesgo: alto]
 
-- [ ] 2.1 Prueba primero, `cuentas/tests/test_pantallas.py`: la línea de la sección ya no lleva la fecha («2.º grado, sección A»; varias; sin sección); la miniatura dice «Lunes», «23», «noviembre» y la fecha completa una sola vez para el lector; «18 de 25 estudiantes marcados» con `<progress>`; «Día sin clases» en sábado; «Sin estudiantes»; «Registro no disponible» con varias secciones o ninguna; «Hoy: pendiente» sigue igual. Luego el contexto de `PortadaDocenteView` y `rb/miniatura_asistencia.html` (D10). Verificar: rojo y luego verde; `uv run pytest src/backend/cuentas`
-- [ ] 2.2 Saludo con el nombre en Besley 600 (`--tipografia-nombre`) y precarga de Besley en la portada; estilos de la miniatura calendario según `miniatura-asistencia-exploracion` (D10). Verificar: `npm run build` y Marco ve la portada en claro/oscuro a 360 y 1280 px
-- [ ] 2.3 Prueba primero, `cuentas/tests/test_portada_e2e.py`: axe y ancho del documento de la portada con el calendario (con avance y sin sección) en ambos temas a 360 px. `verificar.py` y commit. Verificar: rojo y luego verde; solo este archivo e2e
+- [x] 2.1 Prueba primero, `cuentas/tests/test_pantallas.py`: la línea de la sección ya no lleva la fecha («2.º grado, sección A»; varias; sin sección); la miniatura dice «Lunes», «23», «noviembre» y la fecha completa una sola vez para el lector; «18 de 25 estudiantes marcados» con `<progress>`; «Día sin clases» en sábado; «Sin estudiantes»; «Registro no disponible» con varias secciones o ninguna; «Hoy: pendiente» sigue igual. Luego el contexto de `PortadaDocenteView` y `rb/miniatura_asistencia.html` (D10). Verificar: rojo y luego verde; `uv run pytest src/backend/cuentas`
+- [x] 2.2 Saludo con el nombre en Besley 600 (`--tipografia-nombre`) y precarga de Besley en la portada; estilos de la miniatura calendario según `miniatura-asistencia-exploracion` (D10). Verificar: `npm run build` y Marco ve la portada en claro/oscuro a 360 y 1280 px
+- [x] 2.3 Prueba primero, `cuentas/tests/test_portada_e2e.py`: axe y ancho del documento de la portada con el calendario (con avance y sin sección) en ambos temas a 360 px. `verificar.py` y commit. Verificar: rojo y luego verde; solo este archivo e2e
 
 # Bloque 3 · Portada y ☰ de la dirección
 

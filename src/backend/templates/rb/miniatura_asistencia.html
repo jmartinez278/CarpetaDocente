@@ -1,9 +1,20 @@
-{% comment %}Miniatura de Asistencia (boceto de la portada; rebrand-portada, D4): la clave de los cuatro estados y tres filas de línea, sin alumno ni día.{% endcomment %}
-<div class="miniatura miniatura--asistencia" aria-hidden="true">
-  <div class="hoja-asistencia">
-    <div class="hoja-asistencia-clave"><span>Asistió</span><span>Tarde</span><span>Faltó</span><span>Justificado</span></div>
-    <div class="hoja-asistencia-fila"><i class="tinta"></i><div><i class="marca marca--asistio"></i><i class="marca"></i><i class="marca"></i><i class="marca"></i></div></div>
-    <div class="hoja-asistencia-fila"><i class="tinta"></i><div><i class="marca marca--asistio"></i><i class="marca"></i><i class="marca"></i><i class="marca"></i></div></div>
-    <div class="hoja-asistencia-fila"><i class="tinta"></i><div><i class="marca"></i><i class="marca"></i><i class="marca marca--falto"></i><i class="marca"></i></div></div>
+{% comment %}
+Miniatura calendario de Asistencia (US-040, D10; boceto prototipos-cd/US-040-final). Recibe miniatura (asistencia.servicios.MiniaturaDelDia):
+la fecha de hoy y, según su estado, el avance de la jornada, «Día sin clases», «Sin estudiantes» o «Registro no disponible».
+El lector oye la fecha completa una sola vez (la parte visible va en aria-hidden); la barra repite el avance y no se lee.
+{% endcomment %}
+<div class="miniatura miniatura--asistencia miniatura--calendario">
+  <time class="calendario-fecha" datetime="{{ miniatura.fecha|date:'Y-m-d' }}"><span class="calendario-fecha-completa">{{ miniatura.fecha_completa }}</span><span aria-hidden="true">{{ miniatura.dia_semana }}</span><strong aria-hidden="true">{{ miniatura.fecha.day }}</strong><span aria-hidden="true">{{ miniatura.mes }}</span></time>
+  <div class="calendario-registro">
+    {% if miniatura.estado == "avance" %}
+    <p class="avance-registro-lectura"><strong>{{ miniatura.marcados }} <span>de</span> {{ miniatura.total }}</strong> <span>estudiantes marcados</span></p>
+    <progress class="avance-registro-barra" max="{{ miniatura.total }}" value="{{ miniatura.marcados }}" aria-hidden="true"></progress>
+    {% elif miniatura.estado == "sin_clases" %}
+    <p class="calendario-aviso">Día sin clases</p>
+    {% elif miniatura.estado == "sin_estudiantes" %}
+    <p class="calendario-aviso">Sin estudiantes</p>
+    {% else %}
+    <p class="calendario-aviso">Registro no disponible</p>
+    {% endif %}
   </div>
 </div>

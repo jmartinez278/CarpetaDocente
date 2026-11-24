@@ -60,6 +60,8 @@
   --preview-line: #C2B290;
   --preview-action: #76543E;
   --preview-sand: #E3D4AD;
+  --preview-fecha: #EDE4D2;
+  --preview-barra: #E4D9C4;
 
   --font-text: 'Instrument Sans', Arial, sans-serif;
   --font-display: var(--font-text);
@@ -256,6 +258,16 @@
     --preview-sand: #C5AD88;
   }
 
+  /* La miniatura calendario de Asistencia (US-040) usa los mismos valores que las vistas previas. */
+  html[data-theme=dark] .miniatura--calendario {
+    --preview-paper: #E8DDCA;
+    --preview-card: #E8DDCA;
+    --preview-action: #5B3D28;
+    --preview-sand: #AA9270;
+    --preview-fecha: #D6C5A9;
+    --preview-barra: #D0BEA1;
+  }
+
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme=light]) :is(.miniatura--sesiones, .miniatura--notas, .sesion-hoja) {
       --preview-line: #A38B69;
@@ -271,6 +283,15 @@
     :root:not([data-theme=light]) .sesion-hoja {
       --preview-paper: #E8DDCA;
       --preview-sand: #C5AD88;
+    }
+
+    :root:not([data-theme=light]) .miniatura--calendario {
+      --preview-paper: #E8DDCA;
+      --preview-card: #E8DDCA;
+      --preview-action: #5B3D28;
+      --preview-sand: #AA9270;
+      --preview-fecha: #D6C5A9;
+      --preview-barra: #D0BEA1;
     }
   }
 

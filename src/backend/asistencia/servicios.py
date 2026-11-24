@@ -355,6 +355,47 @@ def lista_del_dia(seccion, fecha):
     return ListaDeHoy(jornada=jornada, filas=filas, no_activos=no_activos, totales=totales)
 
 
+@dataclass
+class MiniaturaDelDia:
+    """Lo que dice la miniatura calendario de Asistencia en la portada (US-040, D10).
+
+    ``estado`` es ``avance`` (con ``marcados`` de ``total``), ``sin_clases`` (sábado o domingo),
+    ``sin_estudiantes`` o ``no_disponible`` (sin sección única).
+    """
+
+    fecha: datetime.date
+    estado: str
+    marcados: int = 0
+    total: int = 0
+
+    @property
+    def dia_semana(self):
+        return DIAS[self.fecha.weekday()]
+
+    @property
+    def mes(self):
+        return MESES[self.fecha.month - 1]
+
+    @property
+    def fecha_completa(self):
+        return texto_fecha(self.fecha)
+
+
+def miniatura_del_dia(seccion, hoy):
+    """La fecha de hoy y, con una sección única en un día de clases, el avance de la jornada.
+
+    ``seccion`` es ``None`` sin sección única. El fin de semana manda sobre «Sin estudiantes».
+    """
+    if seccion is None:
+        return MiniaturaDelDia(hoy, "no_disponible")
+    if not es_dia_de_clases(hoy):
+        return MiniaturaDelDia(hoy, "sin_clases")
+    lista = lista_del_dia(seccion, hoy)
+    if lista.total == 0:
+        return MiniaturaDelDia(hoy, "sin_estudiantes")
+    return MiniaturaDelDia(hoy, "avance", marcados=lista.marcados, total=lista.total)
+
+
 def pendiente_hoy(seccion, hoy=None):
     """Para la píldora de la portada: día de clases, con activos y la jornada sin completar."""
     hoy = hoy or timezone.localdate()

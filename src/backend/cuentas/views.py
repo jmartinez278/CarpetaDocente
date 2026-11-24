@@ -95,8 +95,9 @@ class PortadaDocenteView(RolRequeridoMixin, TemplateView):
     """Portada del docente, con las tres dimensiones (spec pantallas-de-inicio).
 
     Cada tarjeta enlaza a su pantalla o queda en "Próximamente" según su bandera (D7). Desde
-    US-030: el saludo según la hora de Lima, la fecha delante de la sección y, con sección única,
-    la tarjeta Asistencia con su píldora "Hoy: pendiente" (design de US-030, D10).
+    US-030: el saludo según la hora de Lima y, con sección única, la tarjeta Asistencia con su
+    píldora "Hoy: pendiente" (design de US-030, D10). Desde US-040 la fecha va en la miniatura
+    calendario de Asistencia, no en la línea de la sección (design de US-040, D10).
     """
 
     rol_requerido = Usuario.Rol.DOCENTE
@@ -108,7 +109,7 @@ class PortadaDocenteView(RolRequeridoMixin, TemplateView):
         tarjetas = dimensiones.para_portada(dimensiones.DIMENSIONES, entrada)
         contexto["dimensiones"] = tarjetas
         contexto["saludo"] = asistencia.saludo(timezone.localtime().hour)
-        contexto["fecha"] = asistencia.texto_fecha(timezone.localdate())
+        contexto["miniatura"] = asistencia.miniatura_del_dia(entrada, timezone.localdate())
         contexto["secciones"] = servicios.texto_secciones_docente(self.request.user)
         contexto["entrada"] = entrada
         contexto["pendiente_hoy"] = entrada is not None and asistencia.pendiente_hoy(entrada)

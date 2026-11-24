@@ -259,3 +259,33 @@ def test_la_portada_no_se_desplaza_en_horizontal(
 
     for medida in sin_desplazamiento(page):
         assert medida["ancho"] <= medida["visible"], (caso, medida)
+
+
+# --- Miniatura calendario de Asistencia (US-040, D10) ---
+
+
+@pytest.mark.parametrize("tema", TEMAS)
+@pytest.mark.parametrize("caso", ["con-avance", "sin-seccion"])
+def test_la_portada_con_el_calendario_pasa_axe_y_no_se_desplaza_a_360(
+    live_server, page, request, docente, clave, tema, caso
+):
+    """Escenarios «Calendario de Asistencia con avance» y «sin registro» en ambos temas a 360 px."""
+    if caso == "con-avance":
+        seccion = request.getfixturevalue("seccion_de_ana")
+        jornada = Jornada.objects.create(
+            seccion=seccion, fecha=MIERCOLES, registrado_por=seccion.docente
+        )
+        Asistencia.objects.create(
+            jornada=jornada, estudiante=seccion.estudiantes.first(), estado="ASISTIO"
+        )
+    abrir_portada(page, live_server, docente, clave, 360, tema)
+    calendario = page.locator("#c-asistencia .miniatura--calendario")
+    expect(calendario).to_be_visible()
+    if caso == "con-avance":
+        expect(calendario).to_contain_text("1 de 3 estudiantes marcados")
+    else:
+        expect(calendario).to_contain_text("Registro no disponible")
+
+    for medida in sin_desplazamiento(page):
+        assert medida["ancho"] <= medida["visible"], (caso, tema, medida)
+    revisar_con_axe(page, f"portada-calendario-{caso}-{tema}")
