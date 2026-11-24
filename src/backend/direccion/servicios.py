@@ -938,3 +938,72 @@ def sesiones_de_curso_del_grado(institucion, grado, periodo):
         docentes,
         key=lambda d: (d.autor.last_name, d.autor.first_name, d.autor.pk, d.area.nombre),
     )
+
+
+# --- D6. Pestaña Sesiones ---
+
+
+@dataclass
+class CursoDelDia:
+    """Un docente de curso del grado con sus tarjetas del día elegido."""
+
+    docente: DocenteDeCurso
+    tarjetas: list
+
+
+@dataclass
+class SesionesDelDetalle:
+    """Lo que dice la pestaña Sesiones: la semana y las tarjetas de la tutora, y aparte los
+    docentes de curso del grado, que no se atribuyen a la sección (D6)."""
+
+    seccion: Seccion
+    sesiones: SesionesDeLaSeccion
+    dia: datetime.date
+    semana: asistencia.Semana
+    cursos: list[CursoDelDia]
+
+    @property
+    def tarjetas(self):
+        return self.sesiones.del_dia(self.dia)
+
+    @property
+    def titulo_del_dia(self):
+        """«Viernes 20 de noviembre · 4 sesiones»."""
+        n = len(self.tarjetas)
+        cantidad = "sin sesiones" if not n else "1 sesión" if n == 1 else f"{n} sesiones"
+        return f"{asistencia.texto_fecha(self.dia)} · {cantidad}"
+
+    @property
+    def titulo_de_curso(self):
+        """«Docentes de curso de 2.º grado · lunes 23»."""
+        return (
+            f"Docentes de curso de {self.seccion.grado}.º grado · "
+            f"{asistencia.texto_dia_corto(self.dia)}"
+        )
+
+    @property
+    def hay_sesiones(self):
+        return bool(self.sesiones.sesiones or self.cursos)
+
+    @property
+    def dias_de_clase(self):
+        return len(self.sesiones.dias_de_clase)
+
+
+def sesiones_del_detalle(seccion, periodo, hoy, pedido="", url_de=datetime.date.isoformat):
+    """La pestaña Sesiones de ``seccion`` en ``periodo`` (un ``Periodo``). Dos consultas.
+
+    ``pedido`` es el ``?dia=AAAA-MM-DD``; ``url_de(fecha)`` arma el enlace de cada día y de las
+    flechas. Las sesiones de la sección son las de su tutora; las de los docentes de curso del
+    grado van aparte y no suman a la sección.
+    """
+    sesiones = sesiones_de_la_seccion(seccion, periodo, hoy)
+    dia = sesiones.dia_elegido(pedido)
+    cursos = sesiones_de_curso_del_grado(seccion.anio_escolar.institucion, seccion.grado, periodo)
+    return SesionesDelDetalle(
+        seccion=seccion,
+        sesiones=sesiones,
+        dia=dia,
+        semana=sesiones.semana(dia, url_de),
+        cursos=[CursoDelDia(docente, docente.del_dia(dia)) for docente in cursos],
+    )

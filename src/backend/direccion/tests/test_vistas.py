@@ -24,6 +24,7 @@ from institucion.models import AnioEscolar, Estudiante, Periodo
 from notas.models import Calificacion
 from notas.tests.conftest import (
     COMUNICACION,
+    EDUCACION_FISICA,
     MATEMATICA,
     competencia,
     crear_estudiantes,
@@ -31,7 +32,7 @@ from notas.tests.conftest import (
     marcar,
     poner_nota,
 )
-from repositorio.models import TIPO_DOCX, SesionVista
+from repositorio.models import TIPO_DOCX, Sesion, SesionVista
 
 pytestmark = pytest.mark.django_db
 
@@ -1424,6 +1425,21 @@ def test_una_seccion_sin_estudiantes_lleva_de_notas_y_asistencia_a_sesiones(
     assert respuesta.url == url_de("direccion:sesiones", vacia, periodo=3)
 
 
+def test_una_seccion_sin_estudiantes_desactiva_notas_y_asistencia_y_lo_explica(
+    detalle, anio_abierto, docente, bimestres
+):
+    """Escenario «Pestañas desactivadas»."""
+    vacia = crear_seccion(anio_abierto, 6, "D", docente=docente, estudiantes=0)
+
+    html = detalle(url_de("direccion:sesiones", vacia))
+
+    nav = pestanas(html)
+    assert len(re.findall(r'<span aria-disabled="true">(Notas|Asistencia)</span>', nav)) == 2
+    assert re.search(r'<a href="[^"]*" aria-current="page">Sesiones</a>', nav)
+    assert nav.count("<a ") == 1
+    assert "Sin estudiantes: no hay notas ni asistencia que sumar." in texto(cafe_del_detalle(html))
+
+
 def test_una_seccion_sin_docente_dice_que_no_hay_notas_que_mostrar(
     detalle, anio_abierto, bimestres
 ):
@@ -1673,4 +1689,491 @@ def test_la_pestana_de_asistencia_no_tiene_formularios_ni_campos(detalle, con_as
     principal = bloque(html, r"<main[^>]*>.*?</main>")
 
     for ausente in ("<form", "<input", "<button", "<select", "Marcar", "Guardar"):
+        assert ausente not in principal, ausente
+
+
+# --- Pestaña Sesiones y docentes de curso del grado (D6; specs consolidados-direccion) ---
+
+
+def en_lima(dia, hora=10):
+    return datetime.datetime(dia.year, dia.month, dia.day, hora, 0, tzinfo=LIMA)
+
+
+NOV = datetime.date
+
+
+@pytest.fixture
+def con_sesiones(anio_abierto, docente, bimestres, crear_sesion):
+    """2.º A con su tutora y sesiones: lunes 15, martes 16 y miércoles 17 una cada día, el jueves
+    18 ninguna y el viernes 19 dos: 4 de los 11 días de clase del IV bimestre hasta hoy."""
+    seccion = crear_seccion(anio_abierto, 2, "A", docente=docente, estudiantes=2)
+    for dia, titulo in [
+        (NOV(2027, 11, 15), "Contamos"),
+        (NOV(2027, 11, 16), "Sumamos"),
+        (NOV(2027, 11, 17), "Restamos"),
+        (NOV(2027, 11, 19), "Medimos"),
+        (NOV(2027, 11, 19), "Leemos"),
+    ]:
+        crear_sesion(
+            docente, creado_en=en_lima(dia, 9 if titulo != "Leemos" else 11), titulo=titulo
+        )
+    return seccion
+
+
+@pytest.fixture
+def docente_de_curso(crear_usuario, areas_a_cargo):
+    return crear_usuario("csoto", first_name="Carmen", last_name="Soto")
+
+
+@pytest.fixture
+def educacion_fisica(areas_a_cargo):
+    return Area.objects.get(codigo_siagie=EDUCACION_FISICA)
+
+
+def semana_de(html):
+    """La semana: etiqueta, enlaces de las flechas y ``[(texto, sin sesiones, elegido, href)]``."""
+    semana = bloque(html, r'<div class="dir-ses-semana">.*?</div>')
+    anterior = re.search(r'<(a|span)[^>]*aria-label="Semana anterior[^"]*"[^>]*>', semana)
+    siguiente = re.search(r'<(a|span)[^>]*aria-label="Semana siguiente[^"]*"[^>]*>', semana)
+
+    def href(marca):
+        enlace = re.search(r'href="([^"]*)"', marca.group(0))
+        return enlace.group(1).replace("&amp;", "&") if enlace else None
+
+    dias = []
+    lista = bloque(html, r'<ul class="dir-ses-dias".*?</ul>')
+    for item in re.findall(r"<li>.*?</li>", lista, re.DOTALL):
+        enlace = re.search(r'href="([^"]*)"', item)
+        dias.append(
+            (
+                texto(item),
+                "dir-ses-dia--sin" in item,
+                "aria-current" in item,
+                enlace.group(1).replace("&amp;", "&") if enlace else None,
+            )
+        )
+    return {
+        "etiqueta": texto(bloque(semana, r"<h3[^>]*>.*?</h3>")),
+        "anterior": href(anterior),
+        "siguiente": href(siguiente),
+        "dias": dias,
+    }
+
+
+def tarjetas_del_dia(html):
+    """``(título del día, [títulos de las tarjetas])`` de las sesiones de la sección."""
+    bloque_del_dia = bloque(html, r'<h3 class="dir-ses-dia-titulo">.*?(?:</ul>|</p>)')
+    return (
+        texto(bloque(bloque_del_dia, r"<h3.*?</h3>")),
+        re.findall(r'<span class="sesion-titulo">([^<]*)</span>', bloque_del_dia),
+    )
+
+
+def bloque_de_curso(html):
+    return bloque(
+        html,
+        r'<section class="det-bloque dir-ses-bloque" aria-labelledby="dir-curso">.*?</section>',
+    )
+
+
+def test_la_semana_abre_en_el_ultimo_dia_con_sesiones_de_la_seccion(detalle, con_sesiones):
+    """Escenario «Semana de la sección»: hoy (lunes 22) no tiene sesiones y abre el viernes 19."""
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    semana = semana_de(html)
+    assert semana["etiqueta"] == "Semana del 15 al 19 de noviembre"
+    assert [(t, sin, actual) for t, sin, actual, _ in semana["dias"]] == [
+        ("Lun 15 1 sesión", False, False),
+        ("Mar 16 1 sesión", False, False),
+        ("Mié 17 1 sesión", False, False),
+        ("Jue 18 — sin sesiones", True, False),
+        ("Vie 19 2 sesiones", False, True),
+    ]
+    assert tarjetas_del_dia(html) == ("Viernes 19 de noviembre · 2 sesiones", ["Leemos", "Medimos"])
+    assert re.search(r'<a href="[^"]*" aria-current="page">Sesiones</a>', pestanas(html))
+
+
+def test_los_dias_de_la_semana_son_enlaces_get_con_el_bimestre(detalle, con_sesiones):
+    semana = semana_de(detalle(url_de("direccion:sesiones", con_sesiones)))
+
+    base = url_de("direccion:sesiones", con_sesiones)
+    assert [href for *_, href in semana["dias"]] == [
+        f"{base}?periodo=4&dia=2027-11-{dia}" for dia in (15, 16, 17, 18, 19)
+    ]
+
+
+def test_las_flechas_llevan_a_la_semana_anterior_y_a_la_siguiente_dentro_del_bimestre(
+    detalle, con_sesiones
+):
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    semana = semana_de(html)
+    base = url_de("direccion:sesiones", con_sesiones)
+    assert semana["anterior"] == f"{base}?periodo=4&dia=2027-11-12"
+    assert semana["siguiente"] == f"{base}?periodo=4&dia=2027-11-22", "no pasa de hoy"
+    assert 'aria-label="Semana anterior' in html and 'aria-label="Semana siguiente' in html
+
+
+def test_sin_semana_anterior_o_siguiente_la_flecha_no_es_un_enlace(detalle, con_sesiones):
+    html = detalle(url_de("direccion:sesiones", con_sesiones, dia="2027-11-12"))
+
+    semana = semana_de(html)
+    assert semana["anterior"] is None, "la semana del 1 al 5 ya no es del bimestre"
+    assert semana["siguiente"] is not None
+    assert re.search(r'<a [^>]*aria-disabled="true"[^>]*aria-label="Semana anterior', html)
+
+
+def test_hoy_abre_si_la_tutora_envio_alguna_sesion_hoy(
+    detalle, con_sesiones, docente, crear_sesion
+):
+    crear_sesion(docente, creado_en=en_lima(HOY, 8), titulo="De hoy")
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    assert semana_de(html)["etiqueta"] == "Semana del 22 al 26 de noviembre"
+    assert tarjetas_del_dia(html) == ("Lunes 22 de noviembre · 1 sesión", ["De hoy"])
+    assert [actual for _, _, actual, _ in semana_de(html)["dias"]] == [
+        True,
+        False,
+        False,
+        False,
+        False,
+    ]
+
+
+def test_los_dias_futuros_de_la_semana_no_son_enlaces(detalle, con_sesiones, docente, crear_sesion):
+    crear_sesion(docente, creado_en=en_lima(HOY, 8))
+
+    semana = semana_de(detalle(url_de("direccion:sesiones", con_sesiones)))
+
+    assert [href is not None for *_, href in semana["dias"]] == [True, False, False, False, False]
+    assert semana["siguiente"] is None
+
+
+@pytest.mark.parametrize(
+    ("dia", "esperado"),
+    [
+        ("2027-11-16", "Martes 16 de noviembre · 1 sesión"),
+        ("2027-11-20", "Viernes 19 de noviembre · 2 sesiones"),
+        ("2027-11-23", "Viernes 19 de noviembre · 2 sesiones"),
+        ("2027-10-04", "Viernes 19 de noviembre · 2 sesiones"),
+        ("no-es-un-dia", "Viernes 19 de noviembre · 2 sesiones"),
+    ],
+    ids=["valido", "sabado", "futuro", "antes-del-bimestre", "basura"],
+)
+def test_el_dia_pedido_se_usa_si_se_puede_abrir_y_si_no_se_ignora(
+    detalle, con_sesiones, dia, esperado
+):
+    html = detalle(url_de("direccion:sesiones", con_sesiones, dia=dia))
+
+    assert tarjetas_del_dia(html)[0] == esperado
+
+
+def test_un_dia_sin_sesiones_de_la_seccion_lo_dice(detalle, con_sesiones):
+    html = detalle(url_de("direccion:sesiones", con_sesiones, dia="2027-11-18"))
+
+    titulo, tarjetas = tarjetas_del_dia(html)
+    assert titulo == "Jueves 18 de noviembre · sin sesiones"
+    assert tarjetas == []
+    assert "La tutora no envió sesiones este día." in texto(html)
+
+
+def test_las_tarjetas_son_las_de_us_011_y_abren_la_pagina_de_la_direccion(detalle, con_sesiones):
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    lista = bloque(html, r'<ul class="sesiones-lista">.*?</ul>')
+    enlaces = re.findall(r'<li class="sesion-tarjeta"><a href="([^"]*)">', lista)
+    assert len(enlaces) == 2
+    assert all(re.fullmatch(r"/direccion/sesiones/[0-9a-f-]{36}/", e) for e in enlaces)
+    assert '<span class="sr-only">Abrir </span>' in lista
+    assert "Ana Quispe · 19 nov" in texto(lista)
+    for ausente in ("Mis sesiones", "colega", "Enviada", "Compartida", "/docente/sesiones/"):
+        assert ausente not in lista, ausente
+
+
+def test_una_sesion_no_compartida_de_la_tutora_aparece(detalle, con_sesiones):
+    assert not Sesion.objects.filter(compartida=True).exists()
+
+    assert tarjetas_del_dia(detalle(url_de("direccion:sesiones", con_sesiones)))[1]
+
+
+def test_no_hay_chips_por_docente_ni_plan_anual(detalle, con_sesiones, docente_de_curso):
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    for ausente in ("dir-ses-chips", "hn-pildora", "Todas", "Plan anual", "Unidades"):
+        assert ausente not in html, ausente
+
+
+def test_el_cafe_cuenta_los_dias_con_sesion_de_la_tutora_y_nada_mas(
+    detalle, con_sesiones, docente_de_curso, educacion_fisica, crear_sesion
+):
+    """Escenario «Días con sesión de la tutora»: 4 de los 11 días de clase."""
+    crear_sesion(
+        docente_de_curso,
+        creado_en=en_lima(NOV(2027, 11, 18)),
+        area=educacion_fisica,
+        titulo="Juegos",
+    )
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    cafe = cafe_del_detalle(html)
+    assert re.search(r"<h3>Sesiones</h3>", cafe)
+    assert re.search(r"<dt>Ana Quispe<span>Tutora</span>\s*</dt>", cafe)
+    assert re.search(r"<strong>4 de 11</strong> días con sesión", cafe)
+    assert re.search(r'<progress class="cafe__barra" max="11" value="4" aria-hidden="true">', cafe)
+    assert "Carmen" not in cafe and "Educación Física" not in cafe
+
+
+def test_el_cafe_con_un_solo_dia_va_en_singular(
+    detalle, anio_abierto, docente, bimestres, crear_sesion
+):
+    seccion = crear_seccion(anio_abierto, 3, "B", docente=docente, estudiantes=1)
+    crear_sesion(docente, creado_en=en_lima(NOV(2027, 11, 15)), grado=3)
+
+    cafe = cafe_del_detalle(detalle(url_de("direccion:sesiones", seccion)))
+
+    assert re.search(r"<strong>1 de 11</strong> días con sesión", cafe)
+
+
+def test_una_sesion_de_la_tutora_para_otro_grado_no_aparece(
+    detalle, con_sesiones, docente, crear_sesion
+):
+    """Escenario «Sesión de la tutora para otro grado»."""
+    crear_sesion(docente, creado_en=en_lima(NOV(2027, 11, 18)), grado=3, titulo="De tercero")
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones, dia="2027-11-18"))
+
+    assert "De tercero" not in html
+    assert "Jue 18 — sin sesiones" in [t for t, *_ in semana_de(html)["dias"]]
+
+
+def test_las_sesiones_de_una_colega_no_son_de_esta_seccion(
+    detalle, con_sesiones, otra_docente, crear_sesion
+):
+    crear_sesion(otra_docente, creado_en=en_lima(NOV(2027, 11, 18)), titulo="De otra tutora")
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones, dia="2027-11-18"))
+
+    assert "De otra tutora" not in html
+
+
+def test_el_material_de_referencia_no_entra(detalle, con_sesiones, material_de_referencia):
+    material_de_referencia(
+        titulo="Material", creado_en=en_lima(NOV(2027, 11, 18)), grado=2, grado_hasta=2
+    )
+
+    assert "Material" not in detalle(url_de("direccion:sesiones", con_sesiones, dia="2027-11-18"))
+
+
+def test_los_docentes_de_curso_van_en_un_bloque_aparte_del_dia_elegido(
+    detalle, con_sesiones, docente_de_curso, educacion_fisica, crear_sesion
+):
+    """Escenario «Docente de curso»: dos días con sesión de Educación Física, la última el 19."""
+    for dia, titulo in [(NOV(2027, 11, 17), "Saltamos"), (NOV(2027, 11, 19), "Corremos")]:
+        crear_sesion(docente_de_curso, creado_en=en_lima(dia), area=educacion_fisica, titulo=titulo)
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    curso = bloque_de_curso(html)
+    assert re.search(r'<h2 id="dir-curso">Docentes de curso de 2\.º grado · viernes 19</h2>', curso)
+    plano = texto(curso)
+    assert "Carmen Soto" in plano and "Educación Física" in plano
+    assert "2 días con sesión · Última: vie 19 nov" in plano
+    assert re.findall(r'<span class="sesion-titulo">([^<]*)</span>', curso) == ["Corremos"]
+    assert re.findall(r'<li class="sesion-tarjeta"><a href="([^"]*)">', curso)[0].startswith(
+        "/direccion/sesiones/"
+    )
+    # El bloque va después de las tarjetas de la sección.
+    assert html.index('id="dir-curso"') > html.index('class="dir-ses-dia-titulo"')
+
+
+def test_la_sesion_de_un_docente_de_curso_no_se_atribuye_a_la_seccion(
+    detalle, con_sesiones, docente_de_curso, educacion_fisica, crear_sesion
+):
+    """Escenario «No se atribuye a la sección»: el jueves 18 solo hay una sesión de curso."""
+    crear_sesion(
+        docente_de_curso,
+        creado_en=en_lima(NOV(2027, 11, 18)),
+        area=educacion_fisica,
+        titulo="Juegos",
+    )
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones, dia="2027-11-18"))
+
+    assert "Jue 18 — sin sesiones" in [t for t, *_ in semana_de(html)["dias"]]
+    assert [sin for _, sin, _, _ in semana_de(html)["dias"]][3] is True
+    assert tarjetas_del_dia(html) == ("Jueves 18 de noviembre · sin sesiones", [])
+    curso = bloque_de_curso(html)
+    assert "Docentes de curso de 2.º grado · jueves 18" in texto(curso)
+    assert re.findall(r'<span class="sesion-titulo">([^<]*)</span>', curso) == ["Juegos"]
+    assert re.search(r"<strong>4 de 11</strong> días con sesión", cafe_del_detalle(html))
+
+
+def test_un_docente_de_curso_sin_sesion_el_dia_elegido_dice_que_no_envio(
+    detalle, con_sesiones, docente_de_curso, educacion_fisica, crear_sesion
+):
+    crear_sesion(
+        docente_de_curso,
+        creado_en=en_lima(NOV(2027, 11, 16)),
+        area=educacion_fisica,
+        titulo="Juegos",
+    )
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    curso = texto(bloque_de_curso(html))
+    assert "Carmen Soto" in curso and "1 día con sesión · Última: mar 16 nov" in curso
+    assert "Sin sesiones este día." in curso
+
+
+def test_las_sesiones_de_curso_de_otro_grado_no_salen(
+    detalle, con_sesiones, docente_de_curso, educacion_fisica, crear_sesion
+):
+    """Escenario «Otro grado»."""
+    crear_sesion(
+        docente_de_curso,
+        creado_en=en_lima(NOV(2027, 11, 18)),
+        area=educacion_fisica,
+        grado=3,
+        titulo="De tercero",
+    )
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    assert "dir-curso" not in html and "Docentes de curso" not in html
+
+
+def test_un_area_que_no_es_del_docente_de_curso_no_va_en_el_bloque(
+    detalle, con_sesiones, docente_de_curso, crear_sesion
+):
+    crear_sesion(docente_de_curso, creado_en=en_lima(NOV(2027, 11, 18)), titulo="Comunicación")
+
+    assert "Docentes de curso" not in detalle(url_de("direccion:sesiones", con_sesiones))
+
+
+def test_el_bloque_de_curso_es_el_mismo_en_las_secciones_del_grado(
+    detalle,
+    anio_abierto,
+    docente,
+    otra_docente,
+    bimestres,
+    docente_de_curso,
+    educacion_fisica,
+    crear_sesion,
+):
+    a = crear_seccion(anio_abierto, 2, "A", docente=docente, estudiantes=1)
+    b = crear_seccion(anio_abierto, 2, "B", docente=otra_docente, estudiantes=1)
+    crear_sesion(
+        docente_de_curso,
+        creado_en=en_lima(NOV(2027, 11, 18)),
+        area=educacion_fisica,
+        titulo="Juegos",
+    )
+
+    en_a = detalle(url_de("direccion:sesiones", a, dia="2027-11-18"))
+    en_b = detalle(url_de("direccion:sesiones", b, dia="2027-11-18"))
+
+    assert texto(bloque_de_curso(en_a)) == texto(bloque_de_curso(en_b))
+
+
+def test_una_seccion_sin_estudiantes_y_sin_sesiones_lo_explica(
+    detalle, anio_abierto, docente, bimestres
+):
+    """Escenario «Pestañas desactivadas» y 6.º D: café que explica y tutora con 0 días."""
+    vacia = crear_seccion(anio_abierto, 6, "D", docente=docente, estudiantes=0)
+
+    html = detalle(url_de("direccion:sesiones", vacia))
+
+    cafe = cafe_del_detalle(html)
+    assert "Sin estudiantes: no hay notas ni asistencia que sumar." in texto(cafe)
+    assert re.search(r"<strong>0 de 11</strong> días con sesión", cafe)
+    assert "Sin sesiones en el IV bimestre" in html
+    assert "Las docentes de 6.º D aún no han subido sesiones en este bimestre." in texto(html)
+    assert "dir-ses-dias" not in html
+
+
+def test_una_seccion_sin_estudiantes_con_sesiones_las_muestra(
+    detalle, anio_abierto, docente, bimestres, crear_sesion
+):
+    vacia = crear_seccion(anio_abierto, 6, "D", docente=docente, estudiantes=0)
+    crear_sesion(docente, creado_en=en_lima(NOV(2027, 11, 18)), grado=6, titulo="De sexto")
+
+    html = detalle(url_de("direccion:sesiones", vacia))
+
+    assert tarjetas_del_dia(html)[1] == ["De sexto"]
+    assert "Sin estudiantes: no hay notas ni asistencia que sumar." in texto(cafe_del_detalle(html))
+
+
+def test_una_seccion_sin_docente_no_tiene_sesiones_propias(
+    detalle, anio_abierto, bimestres, docente_de_curso, educacion_fisica, crear_sesion
+):
+    seccion = crear_seccion(anio_abierto, 2, "C", docente=None, estudiantes=1)
+    crear_sesion(
+        docente_de_curso,
+        creado_en=en_lima(NOV(2027, 11, 18)),
+        area=educacion_fisica,
+        titulo="Juegos",
+    )
+
+    html = detalle(url_de("direccion:sesiones", seccion))
+
+    assert "Sin docente" in texto(cafe_del_detalle(html))
+    assert "Docentes de curso de 2.º grado" in texto(html)
+
+
+def test_un_bimestre_anterior_abre_el_ultimo_dia_con_sesiones_de_ese_bimestre(
+    detalle, con_sesiones, docente, crear_sesion
+):
+    crear_sesion(docente, creado_en=en_lima(NOV(2027, 6, 10)), titulo="De junio")
+
+    html = detalle(url_de("direccion:sesiones", con_sesiones, periodo=2))
+
+    assert semana_de(html)["etiqueta"] == "Semana del 7 al 11 de junio"
+    assert tarjetas_del_dia(html) == ("Jueves 10 de junio · 1 sesión", ["De junio"])
+    assert "Terminado · 24 de julio" in texto(cafe_del_detalle(html))
+
+
+def test_la_fecha_de_envio_es_la_de_lima(detalle, con_sesiones, docente, crear_sesion):
+    """Las 23:30 de Lima del miércoles 17 son las 04:30 UTC del jueves 18: cuenta como miércoles."""
+    crear_sesion(
+        docente,
+        creado_en=datetime.datetime(2027, 11, 17, 23, 30, tzinfo=LIMA),
+        titulo="Tarde",
+    )
+
+    semana = semana_de(detalle(url_de("direccion:sesiones", con_sesiones)))
+
+    assert semana["dias"][2][0] == "Mié 17 2 sesiones"
+    assert semana["dias"][3][0] == "Jue 18 — sin sesiones"
+
+
+def test_sesiones_no_crece_en_consultas(
+    client,
+    direccion,
+    con_sesiones,
+    docente_de_curso,
+    educacion_fisica,
+    crear_sesion,
+    django_assert_max_num_queries,
+):
+    crear_sesion(
+        docente_de_curso,
+        creado_en=en_lima(NOV(2027, 11, 18)),
+        area=educacion_fisica,
+        titulo="Juegos",
+    )
+    client.force_login(direccion)
+
+    with django_assert_max_num_queries(20):
+        assert client.get(url_de("direccion:sesiones", con_sesiones)).status_code == 200
+
+
+def test_sesiones_usa_solo_tokens_y_no_cambia_nada(detalle, con_sesiones):
+    html = detalle(url_de("direccion:sesiones", con_sesiones))
+
+    assert not re.search(r"#[0-9A-Fa-f]{3,8}\b", re.sub(r'href="#[^"]*"', "", html))
+    assert " style=" not in html
+    principal = bloque(html, r"<main[^>]*>.*?</main>")
+    for ausente in ("<form", "<input", "<button", "Eliminar", "Compartir"):
         assert ausente not in principal, ausente

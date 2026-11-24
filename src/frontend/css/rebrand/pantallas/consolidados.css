@@ -818,6 +818,177 @@
     color: var(--muted);
   }
 
+  /* --- Sesiones: la semana por días, las tarjetas del día y los docentes de curso del grado --- */
+
+  .dir-ses-bloque + .dir-ses-bloque {
+    margin-top: var(--s-5);
+  }
+
+  .dir-ses-cuerpo {
+    display: grid;
+    gap: var(--s-4);
+    padding: 0 var(--s-5) var(--s-5);
+  }
+
+  .dir-ses-semana {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2);
+  }
+
+  .dir-ses-semana__t {
+    font-size: var(--text-subsection);
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .dir-ses-semana .icon-button[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .dir-ses-dias {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--s-2);
+  }
+
+  .dir-ses-dias > li {
+    display: grid;
+  }
+
+  .dir-ses-dia {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 2px;
+    min-height: 76px;
+    padding: var(--s-2) var(--s-1);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    color: var(--ink);
+    font-size: var(--text-label);
+    text-decoration: none;
+  }
+
+  .dir-ses-dia strong {
+    font-size: var(--text-subsection);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dir-ses-dia__n {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  a.dir-ses-dia:hover {
+    background: var(--row-hover);
+  }
+
+  .dir-ses-dia--sin {
+    background: var(--grid-hatch);
+    border-style: dashed;
+  }
+
+  .dir-ses-dia--no {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .dir-ses-dia[aria-current] {
+    background: var(--action);
+    border-color: var(--action);
+    color: var(--action-ink);
+  }
+
+  .dir-ses-dia[aria-current] .dir-ses-dia__n {
+    color: inherit;
+  }
+
+  .dir-ses-dia-titulo {
+    padding-top: var(--s-2);
+    border-top: 1px solid var(--line);
+    font-size: var(--text-subsection);
+    font-weight: 500;
+  }
+
+  .det-docente + .det-docente {
+    margin-top: var(--s-2);
+  }
+
+  .det-docente__cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-1) var(--s-3);
+    margin-bottom: var(--s-3);
+  }
+
+  .det-docente__cabecera h3 {
+    font-size: var(--text-subsection);
+    line-height: var(--leading-subsection);
+    letter-spacing: var(--tracking-subsection);
+    font-weight: 500;
+  }
+
+  .det-ninguna {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-4);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r-md);
+    color: var(--muted);
+  }
+
+  .det-ninguna .icono {
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+
+  .dir-ses-docentes > div {
+    display: grid;
+    gap: 2px;
+    padding-block: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--cocoa-ink) 22%, transparent);
+  }
+
+  .dir-ses-docentes > div:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .dir-ses-docentes dt {
+    font-weight: 500;
+  }
+
+  .dir-ses-docentes dt span,
+  .dir-ses-docentes dd span {
+    display: block;
+    color: var(--cocoa-muted);
+    font-size: var(--text-label);
+    font-weight: 400;
+  }
+
+  .dir-ses-docentes dd {
+    color: var(--cocoa-muted);
+  }
+
+  .dir-ses-docentes dd strong {
+    color: var(--cocoa-ink);
+    font-size: var(--text-subsection);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dir-ses-docentes .cafe__barra {
+    margin-top: var(--s-2);
+  }
+
   /* --- PC estrecho: el café pasa arriba --- */
 
   @media (max-width: 959px) {
@@ -974,6 +1145,18 @@
 
     .det-tabla td.det-pct {
       justify-content: flex-end;
+    }
+
+    .dir-ses-cuerpo {
+      padding: 0 var(--s-4) var(--s-4);
+    }
+
+    .dir-ses-semana__t {
+      font-size: var(--text-body);
+    }
+
+    .dir-ses-dias {
+      gap: var(--s-1);
     }
   }
 }

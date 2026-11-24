@@ -109,9 +109,27 @@ class AsistenciaView(SeccionView):
 
 
 class SesionesView(SeccionView):
-    """Pestaña Sesiones."""
+    """Pestaña Sesiones: la semana y las tarjetas de la tutora (``?dia=``) y, aparte, los
+    docentes de curso del grado."""
 
     pestana = "sesiones"
+
+    def contexto_de_la_pestana(self, request, detalle):
+        elegido = detalle.datos.elegido
+        base = reverse("direccion:sesiones", args=[detalle.seccion.pk])
+
+        def url_de(fecha):
+            return f"{base}?{urlencode({'periodo': elegido.numero, 'dia': fecha.isoformat()})}"
+
+        return {
+            "sesiones": servicios.sesiones_del_detalle(
+                detalle.seccion,
+                elegido.periodo,
+                detalle.datos.hoy,
+                request.GET.get("dia", ""),
+                url_de,
+            )
+        }
 
 
 def _volver_a_consolidados():
