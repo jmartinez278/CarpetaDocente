@@ -1,9 +1,10 @@
 {% comment %}
-☰ de las pantallas interiores de la docente (spec pantallas-de-inicio, «Navegación de la docente»; rebrand-base, D4 y D6).
-Sin JavaScript es un enlace a la portada, cuyas tarjetas llevan a cada dimensión; marco.js lo cambia por el botón que abre
-el <dialog>. Los destinos los arma cuentas.dimensiones.navegacion_docente: aquí solo se pintan.
+☰ de las pantallas interiores de la docente y de la dirección (spec pantallas-de-inicio, «Navegación de la docente» y
+«Navegación de la dirección»; rebrand-base, D4 y D6; US-040, D8). Sin JavaScript es un enlace a la portada del rol
+(url_inicio); marco.js lo cambia por el botón que abre el <dialog>. Los destinos los arman cuentas.dimensiones.navegacion_docente
+y navegacion_direccion: aquí solo se pintan.
 {% endcomment %}
-<a class="btn icon-button" href="{% url 'docente:portada' %}" aria-label="Inicio" data-menu-navegacion>{% include "iconos/menu.svg" %}</a>
+<a class="btn icon-button" href="{{ url_inicio }}" aria-label="Inicio" data-menu-navegacion>{% include "iconos/menu.svg" %}</a>
 <dialog class="drawer drawer-nav" id="navegacion" aria-labelledby="navegacion-titulo">
   <div class="drawer-brand">
     <strong id="navegacion-titulo">CarpetaDocente</strong>

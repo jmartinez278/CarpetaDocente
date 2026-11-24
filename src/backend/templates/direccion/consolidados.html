@@ -1,0 +1,14 @@
+{% extends "marco.html" %}
+{% comment %}
+Consolidados de la dirección (US-040). Por ahora solo el marco con su ☰; el mapa y el resumen llegan en el grupo 6
+(design D3 y D4).
+{% endcomment %}
+
+{% block titulo %}Consolidados · CarpetaDocente{% endblock %}
+
+{% block titulo_barra %}Consolidados{% endblock %}
+
+{% block principal %}
+<h1>Consolidados</h1>
+{% include "rb/estado_vacio.html" with icono="inbox" texto="Los consolidados de la I.E. estarán aquí en la próxima entrega." %}
+{% endblock %}

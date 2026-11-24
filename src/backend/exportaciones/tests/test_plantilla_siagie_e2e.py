@@ -56,7 +56,8 @@ def inicio(live_server, page, b_con_notas, direccion, clave):
 
 
 def boton_subir(page):
-    return page.get_by_role("button", name="Subir plantilla", exact=True)
+    """El botón de la portada de la dirección (US-040, D9)."""
+    return page.get_by_role("button", name="Completar plantilla del SIAGIE", exact=True)
 
 
 def dialogo(page):

@@ -11,6 +11,7 @@
 @import "./rebrand/pantallas/ingreso.css";
 @import "./rebrand/pantallas/estudiantes.css";
 @import "./rebrand/pantallas/portada.css";
+@import "./rebrand/pantallas/direccion.css";
 @import "./rebrand/pantallas/asistencia.css";
 @import "./rebrand/pantallas/competencias.css";
 @import "./rebrand/pantallas/notas.css";
@@ -26,7 +27,7 @@
 @source "../../backend/templates/repositorio";
 @source "../../backend/templates/institucion/estudiantes";
 @source "../../backend/templates/cuentas/portada_docente.html";
-@source "../../backend/templates/direccion/inicio.html";
+@source "../../backend/templates/direccion";
 @source "../../backend/templates/exportaciones";
 @source "../../backend/templates/asistencia";
 @source "../../backend/templates/notas/competencias.html";

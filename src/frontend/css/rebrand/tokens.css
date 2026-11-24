@@ -258,8 +258,9 @@
     --preview-sand: #C5AD88;
   }
 
-  /* La miniatura calendario de Asistencia (US-040) usa los mismos valores que las vistas previas. */
-  html[data-theme=dark] .miniatura--calendario {
+  /* La miniatura calendario de Asistencia y las de la portada de la dirección (US-040) usan los mismos valores que las
+     vistas previas. */
+  html[data-theme=dark] :is(.miniatura--calendario, .dir-mini, .dir-pila-mini) {
     --preview-paper: #E8DDCA;
     --preview-card: #E8DDCA;
     --preview-action: #5B3D28;
@@ -285,7 +286,7 @@
       --preview-sand: #C5AD88;
     }
 
-    :root:not([data-theme=light]) .miniatura--calendario {
+    :root:not([data-theme=light]) :is(.miniatura--calendario, .dir-mini, .dir-pila-mini) {
       --preview-paper: #E8DDCA;
       --preview-card: #E8DDCA;
       --preview-action: #5B3D28;

@@ -5,6 +5,7 @@ portada y el detalle usan estas, para que sus números no se separen (RNF-017). 
 que dependen del día reciben ``hoy`` para que las pruebas lo fijen sin tocar el reloj.
 """
 
+import datetime
 from dataclasses import dataclass, field
 
 from django.db.models import Count, Q
@@ -27,12 +28,16 @@ DEFINICION_AL_DIA = "Al día: sin notas que falten y sin días por completar."
 # --- D4. Periodo elegido ---
 
 
+def _anio_abierto(institucion):
+    return AnioEscolar.objects.filter(
+        institucion=institucion, estado=AnioEscolar.Estado.ABIERTO
+    ).first()
+
+
 def periodos_del_anio(institucion, hoy):
     """Los periodos del año ABIERTO de la institución con su estado; sin año o sin periodos,
     lista vacía."""
-    anio = AnioEscolar.objects.filter(
-        institucion=institucion, estado=AnioEscolar.Estado.ABIERTO
-    ).first()
+    anio = _anio_abierto(institucion)
     if anio is None:
         return []
     return notas.periodos_del_anio_escolar(anio, hoy)
@@ -205,3 +210,104 @@ def resumen_de_la_ie(estados, periodo, hoy):
         sin_docente=[e.seccion for e in estados if e.estado == SIN_DOCENTE],
         sin_estudiantes=[e.seccion for e in estados if e.estado == SIN_ESTUDIANTES],
     )
+
+
+# --- D9. Portada de la dirección ---
+
+GRADOS = range(1, 7)
+COLUMNAS_DEL_MAPA = 4
+
+# Casilla de la miniatura: «o» al día, «x» atrasada, «s» sin docente o sin estudiantes, «v» vacía.
+CASILLA_AL_DIA = "o"
+CASILLA_ATRASADA = "x"
+CASILLA_SIN_TRABAJO = "s"
+CASILLA_VACIA = "v"
+
+_CASILLA_DEL_ESTADO = {
+    AL_DIA: CASILLA_AL_DIA,
+    ATRASADA: CASILLA_ATRASADA,
+    SIN_DOCENTE: CASILLA_SIN_TRABAJO,
+    SIN_ESTUDIANTES: CASILLA_SIN_TRABAJO,
+}
+
+
+@dataclass
+class FilaDelMapa:
+    """Un grado de la miniatura de la portada con sus casillas, hasta completar las columnas."""
+
+    grado: int
+    casillas: list[str]
+
+
+@dataclass
+class InicioDireccion:
+    """Lo que dice la portada de la dirección (spec pantallas-de-inicio, «Inicio de la dirección»).
+
+    ``vigente`` es el bimestre vigente (``PeriodoDeLaSeccion``) o ``None``. Solo con vigente hay
+    ``secciones``, ``atrasadas`` y ``mapa``: sin él (sin bimestres, antes del primero, entre dos o
+    después del último) la banda no cuenta nada y la miniatura lleva solo la fecha.
+    """
+
+    anio: int
+    hoy: datetime.date
+    hay_periodos: bool
+    vigente: object = None
+    secciones: int = 0
+    atrasadas: int = 0
+    mapa: list[FilaDelMapa] = field(default_factory=list)
+
+    @property
+    def dia_semana(self):
+        return asistencia.DIAS[self.hoy.weekday()]
+
+    @property
+    def mes(self):
+        return asistencia.MESES[self.hoy.month - 1]
+
+    @property
+    def fecha_para_el_lector(self):
+        return f"Hoy, {asistencia.texto_dia(self.hoy)}"
+
+    @property
+    def hasta(self):
+        """El fin del vigente: «18 de diciembre»."""
+        fin = self.vigente.fecha_fin
+        return f"{fin.day} de {asistencia.MESES[fin.month - 1]}"
+
+    @property
+    def de_las_secciones(self):
+        """«las 24 secciones» para la frase de la banda; con una, «la sección»."""
+        if self.secciones == 1:
+            return "la sección"
+        return f"las {self.secciones} secciones" if self.secciones else "las secciones"
+
+
+def _filas_del_mapa(estados):
+    por_grado = {grado: [] for grado in GRADOS}
+    for estado in estados:
+        por_grado.setdefault(estado.seccion.grado, []).append(_CASILLA_DEL_ESTADO[estado.estado])
+    return [
+        FilaDelMapa(grado, casillas + [CASILLA_VACIA] * (COLUMNAS_DEL_MAPA - len(casillas)))
+        for grado, casillas in sorted(por_grado.items())
+    ]
+
+
+def inicio_de_la_direccion(institucion, hoy):
+    """La portada de la dirección. Con bimestre vigente, cuatro consultas más para las secciones.
+
+    La pastilla cuenta las atrasadas del vigente (D9); en un bimestre anterior no hay pastilla
+    aunque Consolidados lo abra.
+    """
+    anio = _anio_abierto(institucion)
+    periodos = notas.periodos_del_anio_escolar(anio, hoy) if anio is not None else []
+    inicio = InicioDireccion(
+        anio=anio.anio if anio is not None else hoy.year, hoy=hoy, hay_periodos=bool(periodos)
+    )
+    inicio.vigente = next((p for p in periodos if p.estado == notas.VIGENTE), None)
+    if inicio.vigente is None:
+        return inicio
+    estados = estado_de_las_secciones(institucion, inicio.vigente.periodo, hoy)
+    inicio.secciones = len(estados)
+    inicio.atrasadas = sum(e.estado == ATRASADA for e in estados)
+    inicio.mapa = _filas_del_mapa(estados)
+    return inicio

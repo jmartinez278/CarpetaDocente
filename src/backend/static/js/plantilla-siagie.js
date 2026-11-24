@@ -1,7 +1,7 @@
 // Plantilla de notas del SIAGIE (spec plantilla-notas-siagie; design de US-024/025, D3, D4, D10 y D13). Sin Alpine ni HTMX,
 // con defer, siguiendo el patrón de sesiones.js.
 //
-// - «Subir plantilla» abre el diálogo; cada apertura es un formulario nuevo (se vuelve a pintar el marcado de origen).
+// - «Completar plantilla del SIAGIE» (portada de la dirección) abre el diálogo; cada apertura es un formulario nuevo (se vuelve a pintar el marcado de origen).
 // - Envío con XMLHttpRequest (fetch no informa el avance de la subida): 200 trae el paso «Elige la sección» (que
 //   reemplaza el diálogo) o el resumen (que reemplaza el contenido de <main>); 400 trae {error, ayuda_siagie}; lo demás
 //   (red, 413, 5xx, o sin respuesta en TIEMPO_MAXIMO) es «Se cortó la conexión» y el archivo sigue elegido. Con

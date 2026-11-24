@@ -335,7 +335,6 @@ FRASES = [
     "Envía tu sesión a la dirección y compártela con tus colegas.",
     "Registra tus notas por competencia para el SIAGIE.",
 ]
-VACIO_DIRECCION = "Los consolidados de notas y asistencia estarán aquí en una próxima versión."
 
 
 @pytest.fixture
@@ -991,29 +990,11 @@ def test_la_linea_de_la_seccion_no_lleva_la_fecha(portada_con, hora_de_lima):
     assert "Lunes" not in entrada(html)
 
 
-# --- Inicio de la dirección ---
+# --- Inicio de la dirección (el contenido de la portada está en direccion/tests/test_vistas.py) ---
 
 
-def test_la_direccion_saluda_y_muestra_el_estado_vacio(inicio_direccion):
-    assert saludos(inicio_direccion) == ["Hola, Rosa Huamán"]
-    assert re.search(r'<span class="saludo">Hola,</span>', inicio_direccion)
-    assert re.search(r'<span class="docente">Rosa Huamán</span>', inicio_direccion)
-    assert re.search(r"<p>Dirección</p>", inicio_direccion)
-    seccion = re.search(
-        r'<section\b[^>]*aria-labelledby="consolidados-titulo".*?</section>',
-        inicio_direccion,
-        re.DOTALL,
-    )
-    assert seccion, "no hay sección de consolidados"
-    assert re.search(r"<h2\b[^>]*>Consolidados</h2>", seccion.group(0))
-    assert re.search(r'<div class="empty">', seccion.group(0))
-    assert VACIO_DIRECCION in seccion.group(0)
-    assert re.search(r'<svg\b[^>]*aria-hidden="true"', seccion.group(0))
-
-
-def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_portada_js(inicio_direccion):
+def test_la_direccion_no_muestra_tablas_ni_carga_htmx_ni_portada_js(inicio_direccion):
     assert "<table" not in inicio_direccion
-    assert "<article" not in inicio_direccion
     # Solo los scripts del marco: el tema, la cuenta (notas-borrador.js y menu.js), bfcache y marco.
     scripts = re.findall(r'<script src="([^"]+)"', inicio_direccion)
     assert sorted(scripts) == sorted(
@@ -1027,30 +1008,6 @@ def test_la_direccion_no_muestra_tablas_ni_tarjetas_ni_portada_js(inicio_direcci
         ]
     )
     assert "htmx" not in inicio_direccion.lower()
-
-
-def test_la_direccion_ve_la_plantilla_del_siagie_entre_el_saludo_y_los_consolidados(
-    inicio_direccion,
-):
-    """Spec pantallas-de-inicio, «Acceso a la plantilla del SIAGIE»."""
-    bloque = re.search(
-        r'<section\b[^>]*aria-labelledby="plantilla-titulo-inicio".*?</section>',
-        inicio_direccion,
-        re.DOTALL,
-    )
-    assert bloque, "no hay bloque de la plantilla del SIAGIE"
-    assert re.search(r"<h2\b[^>]*>Plantilla de notas del SIAGIE</h2>", bloque.group(0))
-    assert "Completa la plantilla de una sección con las notas de CarpetaDocente." in texto(
-        bloque.group(0)
-    )
-    boton = re.search(
-        r"<button\b[^>]*data-abrir-plantilla[^>]*>(.*?)</button>", bloque.group(0), re.DOTALL
-    )
-    assert boton, "«Subir plantilla» es un botón que abre el diálogo"
-    assert texto(boton.group(1)) == "Subir plantilla"
-    saludo = inicio_direccion.index('<span class="saludo">')
-    consolidados = inicio_direccion.index('id="consolidados-titulo"')
-    assert saludo < inicio_direccion.index(bloque.group(0)) < consolidados
 
 
 def test_el_inicio_de_la_direccion_trae_el_dialogo_de_subida_cerrado(inicio_direccion):

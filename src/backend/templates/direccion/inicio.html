@@ -1,13 +1,17 @@
 {% extends "marco.html" %}
 {% load static %}
 {% comment %}
-Inicio de la dirección en el marco del rebrand (rebrand-cierre, D1), solo con DESIGN.md: barra de la portada (sin ☰ ni
-título), el encabezado con el marcado de la portada, el bloque «Plantilla de notas del SIAGIE» (US-024/025, D10) y los
-consolidados como estado vacío hasta US-040. El diálogo de subida va aquí mismo (sin carga extra); plantilla-siagie.js lo
-abre y, al completar, cambia el contenido de <main> por el resumen sin tocar el diálogo.
+Portada de la dirección (US-040, D9; spec pantallas-de-inicio, «Inicio de la dirección»; boceto prototipos-cd/US-040-final):
+barra de la portada (solo el tema y la cuenta: sin ☰ ni título), el saludo con el nombre en Besley, la banda café
+«Consolidados» enlazada entera con su miniatura de papel (la fecha y el mapa de las secciones), Entregas (próximamente, sin
+enlace) y el cierre del bimestre con el botón que abre el diálogo de la plantilla del SIAGIE (spec plantilla-notas-siagie).
+Recibe saludo, institucion e inicio (direccion.servicios.InicioDireccion). Sin bimestre vigente la banda no cuenta nada y la
+miniatura lleva solo la fecha. El diálogo va en esta misma página; plantilla-siagie.js lo abre desde [data-abrir-plantilla].
 {% endcomment %}
 
 {% block titulo %}Inicio · CarpetaDocente{% endblock %}
+
+{% block precargas %}<link rel="preload" href="{% static 'dist/fuentes/besley-latin-600-normal.woff2' %}" as="font" type="font/woff2" crossorigin>{% endblock %}
 
 {% block scripts %}<script src="{% static 'js/plantilla-siagie.js' %}" defer></script>{% endblock %}
 
@@ -16,22 +20,61 @@ abre y, al completar, cambia el contenido de <main> por el resumen sin tocar el 
 {% block navegacion %}{% endblock %}
 
 {% block principal %}
-<div class="bienvenida">
-  <h1><span class="saludo">Hola,</span> <span class="docente">{{ user.get_full_name|default:user.username }}</span></h1>
-  <p>Dirección</p>
-</div>
-<section class="inicio-tarea" aria-labelledby="plantilla-titulo-inicio">
-  <div class="inicio-icono">{% include "iconos/file-text.svg" with clase=None %}</div>
-  <div class="inicio-texto">
-    <h2 id="plantilla-titulo-inicio">Plantilla de notas del SIAGIE</h2>
-    <p>Completa la plantilla de una sección con las notas de CarpetaDocente.</p>
-    <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Para completar la plantilla necesitas activar JavaScript." %}</noscript>
+<div class="dir dir-portada">
+  <div class="dir-cabeza">
+    <h1 class="dir-saludo"><span class="saludo">{{ saludo }},</span> <span class="docente">{{ user.get_full_name|default:user.username }}</span></h1>
+    <p class="dir-contexto">Dirección · {% if inicio.vigente %}{{ inicio.vigente.nombre_romano }} vigente, hasta el {{ inicio.hasta }}{% else %}{{ institucion.nombre }}{% endif %}</p>
   </div>
-  <button class="btn btn--primary" type="button" data-abrir-plantilla>Subir plantilla</button>
-</section>
-<section class="inicio-consolidados" aria-labelledby="consolidados-titulo">
-  <h2 id="consolidados-titulo">Consolidados</h2>
-  {% include "rb/estado_vacio.html" with icono="inbox" texto="Los consolidados de notas y asistencia estarán aquí en una próxima versión." %}
-</section>
+  <article class="dir-acceso dir-acceso--banda" aria-labelledby="t-con">
+    <div class="dir-acceso__copia">
+      <div class="dir-acceso__cab">
+        {% include "iconos/list-checks.svg" with clase="dir-acceso__icono" %}
+        <h2 class="dir-acceso__titulo" id="t-con"><a class="dir-acceso__enlace" href="{% url 'direccion:consolidados' %}"{% if inicio.atrasadas %} aria-describedby="p-con"{% endif %}>Consolidados</a></h2>
+      </div>
+      {% if inicio.vigente %}
+      <p class="dir-acceso__frase">Revisa cómo van las notas, la asistencia y las sesiones de {{ inicio.de_las_secciones }}.</p>
+      {% if inicio.atrasadas %}<p class="dir-pendiente" id="p-con">{% include "iconos/circle-alert.svg" with clase=None %}{{ inicio.atrasadas }} {% if inicio.atrasadas == 1 %}sección por revisar{% else %}secciones por revisar{% endif %}</p>{% endif %}
+      {% elif inicio.hay_periodos %}
+      <p class="dir-acceso__frase">Hoy no hay un bimestre vigente.</p>
+      {% else %}
+      <p class="dir-acceso__frase">Aún no hay bimestres configurados. Los consolidados aparecerán cuando el administrador configure los bimestres de {{ inicio.anio }}.</p>
+      {% endif %}
+    </div>
+    <div class="dir-mini{% if not inicio.mapa %} dir-mini--solo-fecha{% endif %}">
+      <time class="dir-fecha" datetime="{{ inicio.hoy|date:'Y-m-d' }}"><span class="sr-only">{{ inicio.fecha_para_el_lector }}</span><span aria-hidden="true">{{ inicio.dia_semana }}</span><strong aria-hidden="true">{{ inicio.hoy.day }}</strong><span aria-hidden="true">{{ inicio.mes }}</span></time>
+      {% if inicio.mapa %}
+      <div class="dir-mapita" aria-hidden="true">{% for fila in inicio.mapa %}<span class="dir-mapita__g">{{ fila.grado }}.º</span>{% for casilla in fila.casillas %}<i class="dir-mapita__c dir-mapita__c--{{ casilla }}"></i>{% endfor %}{% endfor %}</div>
+      {% endif %}
+    </div>
+    <p class="dir-acceso__accion" aria-hidden="true">Ver consolidados{% include "iconos/arrow-right.svg" with clase=None %}</p>
+  </article>
+  <div class="dir-fila">
+    <article class="dir-acceso dir-acceso--proxima" aria-labelledby="t-ent">
+      <div class="dir-acceso__copia">
+        <div class="dir-acceso__cab">
+          {% include "iconos/inbox.svg" with clase="dir-acceso__icono" %}
+          <h2 class="dir-acceso__titulo" id="t-ent">Entregas</h2>
+        </div>
+        <p class="dir-acceso__frase">Al cierre del bimestre, revisa quién entregó sus notas y habilita correcciones.</p>
+        <span class="dir-proxima">Próximamente</span>
+      </div>
+      <div class="dir-pila-mini" aria-hidden="true">
+        <i class="dir-pila dir-pila--3"></i><i class="dir-pila dir-pila--2"></i>
+        <div class="dir-pila dir-pila--1">
+          <div class="dir-pila__fila"><i class="dir-casilla dir-casilla--si">{% include "iconos/check.svg" with clase=None %}</i><i class="tinta tinta--larga"></i></div>
+          <div class="dir-pila__fila"><i class="dir-casilla dir-casilla--si">{% include "iconos/check.svg" with clase=None %}</i><i class="tinta tinta--larga"></i></div>
+          <div class="dir-pila__fila"><i class="dir-casilla"></i><i class="tinta tinta--media"></i></div>
+          <div class="dir-pila__fila"><i class="dir-casilla"></i><i class="tinta tinta--media"></i></div>
+        </div>
+      </div>
+    </article>
+    <section class="dir-cierre" aria-labelledby="t-cierre">
+      <h2 class="dir-cierre__titulo" id="t-cierre">Al cierre del bimestre</h2>
+      <p class="small">Cuando una sección tenga sus notas completas, pásalas a la plantilla.</p>
+      <button class="btn btn--secondary dir-siagie" type="button" data-abrir-plantilla aria-haspopup="dialog">{% include "iconos/file-text.svg" with clase=None %}Completar plantilla del SIAGIE</button>
+      <noscript>{% include "rb/mensaje.html" with tipo="aviso" titulo="Para completar la plantilla necesitas activar JavaScript." %}</noscript>
+    </section>
+  </div>
+</div>
 {% include "exportaciones/_dialogo.html" %}
 {% endblock %}

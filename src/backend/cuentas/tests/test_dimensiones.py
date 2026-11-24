@@ -8,7 +8,13 @@ import pytest
 from django.template.loader import get_template
 from django.urls import NoReverseMatch, reverse
 
-from cuentas.dimensiones import DIMENSIONES, POR_SECCION, navegacion_docente, para_portada
+from cuentas.dimensiones import (
+    DIMENSIONES,
+    POR_SECCION,
+    navegacion_direccion,
+    navegacion_docente,
+    para_portada,
+)
 
 CARPETA_PLANTILLAS = Path(__file__).resolve().parents[2] / "templates"
 
@@ -178,3 +184,45 @@ def test_ubicacion_actual(vista, actual):
 def test_un_destino_no_disponible_no_es_el_actual():
     assert not any(d.actual for d in destinos(seccion=None, vista="notas:hoja"))
     assert not any(d.actual for d in destinos(seccion=None, vista="asistencia:hoy"))
+
+
+# --- Destinos del ☰ de la dirección (spec pantallas-de-inicio; US-040, D8) ---
+
+
+def test_la_direccion_ve_inicio_consolidados_y_entregas_en_ese_orden():
+    """Escenario «Abrir el ☰ de la dirección»."""
+    destinos = navegacion_direccion(None)
+
+    assert [(d.clave, d.titulo, d.url) for d in destinos] == [
+        ("inicio", "Inicio", reverse("direccion:inicio")),
+        ("consolidados", "Consolidados", reverse("direccion:consolidados")),
+        ("entregas", "Entregas", None),
+    ]
+
+
+def test_cada_destino_de_la_direccion_tiene_su_icono():
+    for destino in navegacion_direccion(None):
+        assert (CARPETA_PLANTILLAS / "iconos" / f"{destino.icono}.svg").is_file()
+
+
+@pytest.mark.parametrize(
+    ("vista", "actual"),
+    [
+        ("direccion:inicio", "inicio"),
+        ("direccion:consolidados", "consolidados"),
+        ("direccion:notas", "consolidados"),
+        ("direccion:asistencia", "consolidados"),
+        ("direccion:sesiones", "consolidados"),
+        ("direccion:sesion", "consolidados"),
+        ("direccion:descargar", "consolidados"),
+        ("plantilla_siagie:completar", None),
+        ("docente:sin_permiso", None),
+        (None, None),
+    ],
+)
+def test_ubicacion_actual_de_la_direccion(vista, actual):
+    """Escenario «Ubicación actual en el detalle»: Consolidados en todo ``direccion:*`` salvo el
+    inicio; Entregas no tiene enlace y nunca es la actual."""
+    marcados = [d.clave for d in navegacion_direccion(vista) if d.actual]
+
+    assert marcados == ([actual] if actual else [])
