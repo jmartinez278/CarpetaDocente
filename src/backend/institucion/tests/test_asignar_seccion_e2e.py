@@ -7,8 +7,6 @@ sección no desborda a 320 px; su axe va en la vista ``portada-una-seccion`` de
 pide con ``uv run pytest -m e2e --browser chromium``.
 """
 
-import re
-
 import pytest
 from playwright.sync_api import expect
 
@@ -17,8 +15,8 @@ from cuentas.tests.e2e import con_pantalla, ingresar
 pytestmark = pytest.mark.e2e
 
 SECCION = "2.º grado, sección A"
-# Desde US-030 la línea empieza con la fecha de hoy: "Jueves 29 de octubre · 2.º grado, sección A".
-LINEA = re.compile(rf"^\S+ \d{{1,2}} de \S+ · {re.escape(SECCION)}$")
+# Desde US-040 la línea de la sección ya no lleva la fecha (la lleva la miniatura de Asistencia).
+LINEA = SECCION
 OCUPADA = "La sección ya tiene un docente asignado"
 
 
