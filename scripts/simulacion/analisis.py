@@ -23,12 +23,14 @@ import os
 import subprocess
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from pathlib import Path
 
 import numpy as np
 from scipy import stats
 from scipy.stats import rankdata
 
+from simulacion import docentes as modulo_docentes
 from simulacion import klm, medicion, parametros
 
 ORIGEN = medicion.ORIGEN
@@ -199,8 +201,10 @@ def decidir(contrastes: dict) -> dict:
 
 def _texto_indicador(indicador: str, rechaza: bool) -> str:
     texto = "Se rechaza H₀" if rechaza else "No se rechaza H₀"
-    if indicador not in HIPOTESIS_DE:
+    if indicador == "likert_global":
         return f"{texto} (apoyo; no entra en HE ni HG; datos simulados)"
+    if indicador not in HIPOTESIS_DE:
+        return f"{texto} (complementario del escenario; no entra en HE ni HG; datos simulados)"
     return f"{texto} (datos simulados)"
 
 
@@ -227,9 +231,9 @@ def _tabla_decisiones(decision: dict) -> list[dict]:
     return filas
 
 
-def analizar(resultado) -> dict:
+def analizar(resultado, indicadores: dict | None = None) -> dict:
     contrastes = {}
-    for indicador, meta in INDICADORES.items():
+    for indicador, meta in (indicadores or INDICADORES).items():
         fila = contrastar(*pares(resultado, indicador), meta["sentido"])
         fila[COLUMNA_DECISION] = _texto_indicador(indicador, fila["rechaza"])
         contrastes[indicador] = fila
@@ -257,11 +261,16 @@ def _mapear(funcion, tareas: list, procesos: int | None) -> list:
         return list(ejecutor.map(funcion, tareas, chunksize=trozo))
 
 
-def _una_replica(tarea) -> list[dict]:
-    valores, tabla, semilla = tarea
+def _simular(valores, tabla, semilla, ajuste=None):
     resultado = medicion.simular(valores, semilla, tabla)
+    return ajuste(resultado, valores, tabla, semilla) if ajuste else resultado
+
+
+def _una_replica(tarea) -> list[dict]:
+    valores, tabla, semilla, ajuste, indicadores = tarea
+    resultado = _simular(valores, tabla, semilla, ajuste)
     filas = []
-    for indicador, meta in INDICADORES.items():
+    for indicador, meta in indicadores.items():
         c = contrastar(*pares(resultado, indicador), meta["sentido"])
         filas.append({
             "semilla": semilla,
@@ -276,9 +285,20 @@ def _una_replica(tarea) -> list[dict]:
     return filas
 
 
-def replicas(valores: dict, tabla: dict, semillas, procesos: int | None = None) -> list[dict]:
-    """Una fila por semilla e indicador. No toca la base: solo ``medicion.simular``."""
-    tareas = [(valores, tabla, int(s)) for s in semillas]
+def replicas(
+    valores: dict,
+    tabla: dict,
+    semillas,
+    procesos: int | None = None,
+    ajuste=None,
+    indicadores: dict | None = None,
+) -> list[dict]:
+    """Una fila por semilla e indicador. No toca la base: solo ``medicion.simular``.
+
+    ``ajuste`` (escenarios) recibe el resultado de cada semilla y devuelve otro.
+    """
+    indicadores = indicadores or INDICADORES
+    tareas = [(valores, tabla, int(s), ajuste, indicadores) for s in semillas]
     return [fila for filas in _mapear(_una_replica, tareas, procesos) for fila in filas]
 
 
@@ -892,6 +912,575 @@ def ejecutar_principal(
     return contexto
 
 
+# --- Escenarios ---------------------------------------------------------------------------------
+# Cada escenario cambia una copia de los valores o de las rutas; la corrida principal y
+# parametros.yaml no cambian. Se corre con la semilla principal y con las mismas réplicas.
+
+MARCA_MASIVO = "restantes"  # «Marcar los N restantes como Asistió» (marcado masivo)
+
+
+def rutas_sin_marcado_masivo(rutas: list[dict]) -> list[dict]:
+    """Asistencia marcada estudiante por estudiante, como quien no encuentra el botón masivo.
+
+    Quita el paso del marcado masivo y los pasos ``por_excepcion`` pasan a ``por_estudiante``.
+    No cuenta un segundo toque para quien no asistió: es una cota inferior del tiempo.
+    """
+    salida = []
+    for ruta in rutas:
+        ruta = copy.deepcopy(ruta)
+        if ruta["tarea"].startswith("asistencia_"):
+            masivos = [p for p in ruta["pasos"] if MARCA_MASIVO in p["objetivo"]]
+            if len(masivos) != 1:
+                raise ValueError(
+                    f"{ruta['persona']} · {ruta['tarea']}: se esperaba un paso de marcado masivo "
+                    f"(«{MARCA_MASIVO}» en el objetivo) y hay {len(masivos)}."
+                )
+            pasos = []
+            for paso in ruta["pasos"]:
+                if paso is masivos[0]:
+                    continue
+                if paso.pop("por_excepcion", False):
+                    paso["por_estudiante"] = True
+                pasos.append(paso)
+            ruta["pasos"] = pasos
+        salida.append(ruta)
+    return salida
+
+
+def valores_tutora_marca_todas(valores: dict) -> dict:
+    """La tutora marca también Inglés y Educación Física (nota de ``areas_de_docente_de_curso``)."""
+    otros = copy.deepcopy(valores)
+    otros["catalogo"]["areas_de_docente_de_curso"] = []
+    return otros
+
+
+ARCHIVO_ESCENARIOS = Path(__file__).with_name("escenarios.yaml")
+INDICADOR_DIA = {
+    "sesion_dia_min": {
+        "nombre": "Tiempo de elaborar y entregar las sesiones de un día (escenario)",
+        "unidad": "min por día",
+        "sentido": "menor",
+    }
+}
+
+
+def cargar_escenarios(ruta: Path = ARCHIVO_ESCENARIOS) -> dict:
+    """Supuestos de los escenarios, con el validador de parametros.yaml."""
+    return parametros.cargar(ruta)
+
+
+def _rng_escenario(semilla: int) -> np.random.Generator:
+    """Quinto hijo de la semilla: no cambia docentes, O1, O2 ni la carga (G3)."""
+    return np.random.default_rng(np.random.SeedSequence(semilla).spawn(5)[4])
+
+
+def _copiar(resultado):
+    return medicion.Resultado(docentes=resultado.docentes, filas=copy.deepcopy(resultado.filas))
+
+
+def ajustar_cola(resultado, valores, tabla, semilla, esc, n_fijo=None, impresion=False):
+    """«Entrega con cola»: O1 = ir a la puerta + cola (una vez al día) + revisión presencial por
+    sesión (+ impresión en la variante). O2 sigue con el KLM de subir y enviar.
+
+    Por sesión: (puerta + cola [+ librería]) ÷ n + revisión [+ impresión propia]. Por día: n
+    elaboraciones + la entrega del día. La cola, la revisión y la impresión no dependen del ritmo
+    de la docente: solo llevan el ruido de medición.
+    """
+    rng = _rng_escenario(semilla)
+    cv = valores["ruido"]["medicion_cv"]
+
+    def ruido():
+        return float(modulo_docentes.factor_lognormal(rng, cv))
+
+    otro = _copiar(resultado)
+    por = {(f["codigo"], f["momento"]): f for f in otro.filas}
+    minimo, maximo = esc["sesiones_dia"]
+    imp = esc["impresion"]
+    mediana = valores["o1"]["sesion"]["elaboracion_mediana"]
+    for momento in ("pretest", "postest"):
+        for d in otro.docentes:
+            fila = por[(d.codigo, momento)]
+            n = n_fijo or int(rng.integers(minimo, maximo + 1))
+            elaboraciones = fila["sesion_elaboracion_min"] + sum(
+                mediana * d.ritmo * ruido() for _ in range(n - 1)
+            )
+            propia = rng.random() < imp["proporcion_impresora_propia"]
+            if momento == "pretest":
+                dia = (esc["ir_a_la_puerta"] + esc["espera_cola"]) * ruido()
+                dia += sum(esc["revision_presencial"] * ruido() for _ in range(n))
+                if impresion:
+                    dia += (
+                        n * imp["propia_por_sesion"] * ruido()
+                        if propia
+                        else imp["libreria_por_dia"] * ruido()
+                    )
+                fila["sesion_entrega_min"] = dia / n
+                fila["sesion_min"] = fila["sesion_elaboracion_min"] + dia / n
+            else:
+                lento = valores["o2"][f"factor_no_experto_{d.persona.lower()}"] * d.ritmo
+                envio = medicion._klm(tabla, d.persona, "sesion_entrega", d.n_estudiantes)
+                dia = fila["sesion_entrega_min"] + sum(
+                    envio * lento * ruido() for _ in range(n - 1)
+                )
+            fila["sesiones_dia"] = n
+            fila["sesion_dia_min"] = elaboraciones + dia
+    return otro
+
+
+def ajustar_banco(resultado, valores, tabla, semilla, esc):
+    """«Con banco de sesiones»: en O2, quien no tiene una sesión propia adecuada y encuentra una
+    en el repositorio la descarga y la adapta (fracción de la elaboración + descarga). O1 no
+    cambia. La descarga es SUPUESTO hasta grabar la ruta del agente (pendientes.md).
+    """
+    rng = _rng_escenario(semilla)
+    cv = valores["ruido"]["medicion_cv"]
+    otro = _copiar(resultado)
+    por = {(f["codigo"], f["momento"]): f for f in otro.filas}
+    for d in otro.docentes:
+        tiene_propia = rng.random() < esc["proporcion_con_archivo_propio"]
+        encuentra = rng.random() < esc["cobertura_repositorio"]
+        ruido = float(modulo_docentes.factor_lognormal(rng, cv))
+        if tiene_propia or not encuentra:
+            continue
+        fila = por[(d.codigo, "postest")]
+        elaboracion = (
+            fila["sesion_elaboracion_min"] * esc["fraccion_adaptacion"]
+            + esc["descarga"] * d.ritmo * ruido
+        )
+        fila["sesion_elaboracion_min"] = elaboracion
+        fila["sesion_min"] = elaboracion + fila["sesion_entrega_min"]
+    return otro
+
+
+def _ajuste_cola(esc, **opciones):
+    return partial(ajustar_cola, esc=esc["entrega_con_cola"], **opciones)
+
+
+def _ajuste_banco(esc):
+    return partial(ajustar_banco, esc=esc["con_banco"])
+
+
+CON_DIA = {**INDICADORES, **INDICADOR_DIA}
+ESCENARIOS = {
+    "sin_marcado_masivo": {
+        "nombre": "Sin marcado masivo (asistencia uno por uno)",
+        "rutas": rutas_sin_marcado_masivo,
+    },
+    "tutora_marca_todas": {
+        "nombre": "La tutora marca todas las áreas",
+        "valores": valores_tutora_marca_todas,
+    },
+    "entrega_con_cola": {
+        "nombre": "Entrega con cola (n de 2 a 4)",
+        "ajuste": _ajuste_cola,
+        "indicadores": CON_DIA,
+    },
+    "entrega_con_cola_n2": {
+        "nombre": "Entrega con cola (n = 2)",
+        "ajuste": partial(_ajuste_cola, n_fijo=2),
+        "indicadores": CON_DIA,
+    },
+    "entrega_con_cola_n4": {
+        "nombre": "Entrega con cola (n = 4)",
+        "ajuste": partial(_ajuste_cola, n_fijo=4),
+        "indicadores": CON_DIA,
+    },
+    "entrega_con_cola_impresion": {
+        "nombre": "Entrega con cola y con impresión (variante)",
+        "ajuste": partial(_ajuste_cola, impresion=True),
+        "indicadores": CON_DIA,
+    },
+    "con_banco": {"nombre": "Con banco de sesiones", "ajuste": _ajuste_banco},
+}
+
+
+def correr_escenario(
+    valores, rutas, semilla, semillas, procesos=None, ajuste=None, indicadores=None
+) -> dict:
+    indicadores = indicadores or INDICADORES
+    tabla = klm.construir_tabla(rutas, valores)
+    filas = _correr_replicas(valores, tabla, semillas, procesos, ajuste, indicadores)
+    return {
+        "principal": analizar(_simular(valores, tabla, semilla, ajuste), indicadores),
+        "resumen": resumir_replicas(filas),
+        "hipotesis": resumir_hipotesis(filas),
+        "indicadores": indicadores,
+    }
+
+
+BARRIDO_COBERTURAS = [round(0.1 * k, 1) for k in range(7)]
+BARRIDO_FRACCIONES = [round(0.3 + 0.1 * k, 1) for k in range(6)]
+
+
+def barrido_banco(
+    replicas: int | None = None,
+    procesos: int | None = None,
+    coberturas=None,
+    fracciones=None,
+    propias=None,
+) -> list[dict]:
+    """% de réplicas en que HE1 rechaza H₀, por cobertura × fracción de adaptación, con la
+    proporción con archivo propio en su valor central y en sus extremos."""
+    arbol_esc = cargar_escenarios()
+    esc = parametros.valores(arbol_esc)["con_banco"]
+    valores = parametros.valores(parametros.cargar())
+    tabla = klm.construir_tabla(klm.cargar_rutas(), valores)
+    primera, ultima = valores["semillas"]["replicas"]
+    cantidad = replicas if replicas is not None else ultima - primera + 1
+    semillas = range(primera, primera + cantidad)
+    rango = dict(parametros.supuestos(arbol_esc))["con_banco.proporcion_con_archivo_propio"]
+    propias = propias or [rango[0], esc["proporcion_con_archivo_propio"], rango[1]]
+    solo_he1 = {"sesion_min": INDICADORES["sesion_min"]}
+    filas = []
+    for propia in propias:
+        for fraccion in fracciones or BARRIDO_FRACCIONES:
+            for cobertura in coberturas or BARRIDO_COBERTURAS:
+                otro = dict(
+                    esc,
+                    proporcion_con_archivo_propio=propia,
+                    cobertura_repositorio=cobertura,
+                    fraccion_adaptacion=fraccion,
+                )
+                ajuste = partial(ajustar_banco, esc=otro)
+                r = _correr_replicas(valores, tabla, semillas, procesos, ajuste, solo_he1)
+                filas.append({
+                    "proporcion_con_archivo_propio": propia,
+                    "fraccion_adaptacion": fraccion,
+                    "cobertura_repositorio": cobertura,
+                    "replicas": cantidad,
+                    "pct_rechazo_he1": resumir_replicas(r)["sesion_min"]["pct_rechazo"],
+                })  # fmt: skip
+    return filas
+
+
+def _tabla_barrido(filas: list[dict]) -> str:
+    coberturas = sorted({f["cobertura_repositorio"] for f in filas})
+    celdas = {}
+    for f in filas:
+        clave = (f["proporcion_con_archivo_propio"], f["fraccion_adaptacion"])
+        celdas.setdefault(clave, {})[f["cobertura_repositorio"]] = f["pct_rechazo_he1"]
+    filas_md = [
+        [num(p, 2), num(fr, 1), *(num(c[cob], 1) for cob in coberturas)]
+        for (p, fr), c in sorted(celdas.items())
+    ]
+    return _tabla_md(
+        "Tabla S13. Con banco de sesiones: % de réplicas en que HE1 rechaza H₀ por cobertura del "
+        "repositorio y fracción de adaptación (Datos simulados)",
+        ["Con archivo propio", "Fracción de adaptación",
+         *(f"Cobertura {num(c, 1)}" for c in coberturas)],
+        filas_md,
+        f"Datos simulados ({filas[0]['replicas']} réplicas por celda). Solo ahorra en O2 quien no "
+        "tiene una sesión propia adecuada y encuentra una en el repositorio: la descarga (1 min, "
+        "SUPUESTO hasta grabar la ruta del agente) y la adapta en una fracción del tiempo de "
+        "elaborarla. Cobertura 0 equivale a la corrida principal. HE1 sigue midiendo «elaborar» "
+        "(ajustes-cap3, punto 13).",
+    )  # fmt: skip
+
+
+def _filas_escenario(clave: str, nombre: str, r: dict) -> list[dict]:
+    filas = []
+    for indicador, meta in r["indicadores"].items():
+        c = r["principal"]["contrastes"][indicador]
+        rep = r["resumen"][indicador]
+        filas.append({
+            "escenario": clave, "nombre_escenario": nombre, "indicador": indicador,
+            "nombre": meta["nombre"], "pre_media": c["pre_media"], "post_media": c["post_media"],
+            "dif_media": c["dif_media"], "prueba": c["prueba"], "p": c["p"],
+            "efecto_nombre": c["efecto_nombre"], "efecto": c["efecto"],
+            COLUMNA_DECISION: c[COLUMNA_DECISION], "replicas": rep["replicas"],
+            "pct_rechazo_replicas": rep["pct_rechazo"],
+        })  # fmt: skip
+    for h, pct in r["hipotesis"].items():
+        decision = next(
+            d[COLUMNA_DECISION] for d in r["principal"]["decisiones_tabla"] if d["hipotesis"] == h
+        )
+        filas.append({
+            "escenario": clave, "nombre_escenario": nombre, "indicador": h,
+            COLUMNA_DECISION: decision, "pct_rechazo_replicas": pct,
+        })  # fmt: skip
+    return filas
+
+
+def _tablas_escenarios(resultados: dict, contexto: dict) -> str:
+    nota = (
+        f"Datos simulados (semilla {contexto['semilla']}; {contexto['n_replicas']} réplicas con "
+        f"semillas {contexto['semillas'][0]}…{contexto['semillas'][-1]}). Cada escenario cambia "
+        "una copia de los valores o de las rutas; parametros.yaml no se modifica. Misma regla de "
+        "3.5.2 (unilateral, α = 0,05)."
+    )
+    filas = []
+    for clave, nombre in contexto["nombres"]:
+        for indicador, meta in resultados[clave]["indicadores"].items():
+            c = resultados[clave]["principal"]["contrastes"][indicador]
+            filas.append([
+                nombre, meta["nombre"], num(c["pre_media"]), num(c["post_media"]),
+                num(c["variacion_pct"], 1), _p(c["p"]), c[COLUMNA_DECISION],
+                num(resultados[clave]["resumen"][indicador]["pct_rechazo"], 1),
+            ])  # fmt: skip
+    bloques = [
+        "# Escenarios de la simulación (Datos simulados)\n\n"
+        "Nada de lo que sigue es una medición real. «Base» es la corrida principal de tablas.md.\n"
+        f"parametros.yaml: blob {contexto['blob']}; no se modifica.\n",
+        _tabla_md(
+            "Tabla S11. Escenarios: medias, p de la corrida principal y % de réplicas que rechaza "
+            "H₀ (Datos simulados)",
+            ["Escenario", "Indicador", "O1 media", "O2 media", "Variación (%)",
+             "p (corrida principal)", COLUMNA_DECISION, "% réplicas que rechaza H₀"],
+            filas,
+            nota + " «Sin marcado masivo»: la asistencia se marca estudiante por estudiante (sin "
+            "segundo toque para quien no asistió: cota inferior). «La tutora marca todas»: "
+            "también Inglés y Educación Física; como suma competencias, cambia cuántos números "
+            "saca el generador y las demás mediciones de ese escenario también varían por azar "
+            "(por ejemplo, sesión), no por efecto del escenario.",
+        ),
+    ]  # fmt: skip
+    filas = []
+    for clave, nombre in contexto["nombres"]:
+        r = resultados[clave]
+        for d in r["principal"]["decisiones_tabla"]:
+            filas.append([
+                nombre, d["hipotesis"], d[COLUMNA_DECISION], num(r["hipotesis"][d["hipotesis"]], 1)
+            ])  # fmt: skip
+    bloques.append(
+        _tabla_md(
+            "Tabla S12. Escenarios: decisión por hipótesis con la regla propuesta "
+            "(Datos simulados)",
+            ["Escenario", "Hipótesis", f"{COLUMNA_DECISION}, corrida principal", "% réplicas"],
+            filas,
+            nota + " Regla propuesta (ajustes-cap3, punto 10).",
+        )
+    )
+    return "\n".join(bloques)
+
+
+def ejecutar_escenarios(
+    salida: Path = SALIDA,
+    nombres: list[str] | None = None,
+    replicas: int | None = None,
+    procesos: int | None = None,
+    barrido: bool = True,
+) -> dict:
+    """Corre «base» y cada escenario; escribe simulados_escenarios.csv y tablas_escenarios.md.
+
+    Con ``barrido`` y el escenario del banco, agrega el barrido cobertura × fracción (S13).
+    """
+    salida = Path(salida)
+    nombres = list(nombres or ESCENARIOS)
+    valores = parametros.valores(parametros.cargar())
+    rutas = klm.cargar_rutas()
+    semilla = valores["semillas"]["principal"]
+    primera, ultima = valores["semillas"]["replicas"]
+    cantidad = replicas if replicas is not None else ultima - primera + 1
+    semillas = list(range(primera, primera + cantidad))
+
+    resultados = {"base": correr_escenario(valores, rutas, semilla, semillas, procesos)}
+    etiquetas = [("base", "Base")]
+    esc = parametros.valores(cargar_escenarios())
+    for clave in nombres:
+        definicion = ESCENARIOS[clave]
+        v = definicion.get("valores", lambda x: x)(valores)
+        r = definicion.get("rutas", lambda x: x)(rutas)
+        ajuste = definicion["ajuste"](esc) if "ajuste" in definicion else None
+        resultados[clave] = correr_escenario(
+            v, r, semilla, semillas, procesos, ajuste, definicion.get("indicadores")
+        )
+        etiquetas.append((clave, definicion["nombre"]))
+
+    filas = []
+    for clave, nombre in etiquetas:
+        filas += _filas_escenario(clave, nombre, resultados[clave])
+    escribir_csv(salida / "simulados_escenarios.csv", filas)
+    contexto = {
+        "semilla": semilla, "semillas": semillas, "n_replicas": cantidad,
+        "nombres": etiquetas, "blob": _blob(parametros.ARCHIVO),
+    }  # fmt: skip
+    texto = _tablas_escenarios(resultados, contexto)
+    if barrido and "con_banco" in nombres:
+        filas_barrido = barrido_banco(replicas, procesos)
+        escribir_csv(salida / "simulados_banco_barrido.csv", filas_barrido)
+        texto += "\n" + _tabla_barrido(filas_barrido)
+    (salida / "tablas_escenarios.md").write_text(texto, encoding="utf-8")
+    return resultados
+
+
+# --- Sensibilidad -------------------------------------------------------------------------------
+# Un supuesto a la vez, en el mínimo y el máximo de su rango (DEC-1), con la semilla principal y
+# las mismas réplicas. Los de escenarios.yaml se varían dentro de su escenario. Quedan fuera: los
+# cortes del Likert (una lista), las n de la cola (escenarios n = 2 y n = 4), la impresión (es una
+# variante) y las proporciones del banco (barrido de la Tabla S13).
+
+SUPUESTOS_ESCENARIO = {
+    "entrega_con_cola.ir_a_la_puerta": "entrega_con_cola",
+    "entrega_con_cola.espera_cola": "entrega_con_cola",
+    "entrega_con_cola.revision_presencial": "entrega_con_cola",
+    "con_banco.descarga": "con_banco",
+}
+CONTEXTOS = ("base", "entrega_con_cola", "con_banco")
+
+
+def variantes_sensibilidad(arbol: dict, cargar_esc: bool = True) -> list[dict]:
+    variantes = []
+    fuentes = [("parametros", arbol, None)]
+    if cargar_esc:
+        fuentes.append(("escenarios", cargar_escenarios(), SUPUESTOS_ESCENARIO))
+    for archivo, origen, filtro in fuentes:
+        for ruta, (minimo, maximo) in parametros.supuestos(origen):
+            if isinstance(parametros.valor(origen, ruta), list):
+                continue
+            if filtro is not None and ruta not in filtro:
+                continue
+            contexto = filtro[ruta] if filtro else "base"
+            for extremo, valor in (("mínimo", minimo), ("máximo", maximo)):
+                variantes.append({
+                    "parametro": ruta, "archivo": archivo, "contexto": contexto,
+                    "extremo": extremo, "valor": valor,
+                    "valor_actual": parametros.valor(origen, ruta),
+                })  # fmt: skip
+    return variantes
+
+
+def _resumen_he(r: dict) -> dict:
+    return {"decisiones": r["principal"]["decisiones"], "pct": r["hipotesis"]}
+
+
+def es_clave(base: dict, variante: dict) -> bool:
+    """Cambia una decisión de la corrida principal o cruza el 80 % de réplicas en alguna HE."""
+    for h, decision in base["decisiones"].items():
+        if variante["decisiones"].get(h) != decision:
+            return True
+        if (base["pct"][h] >= META_REPLICAS) != (variante["pct"][h] >= META_REPLICAS):
+            return True
+    return False
+
+
+def _correr_contexto(contexto, valores, rutas, esc, semilla, semillas, procesos):
+    if contexto == "base":
+        return correr_escenario(valores, rutas, semilla, semillas, procesos)
+    definicion = ESCENARIOS[contexto]
+    return correr_escenario(
+        valores, rutas, semilla, semillas, procesos, definicion["ajuste"](esc),
+        definicion.get("indicadores"),
+    )  # fmt: skip
+
+
+def ejecutar_sensibilidad(
+    salida: Path = SALIDA,
+    replicas: int | None = None,
+    procesos: int | None = None,
+    solo: list[str] | None = None,
+) -> list[dict]:
+    """Escribe simulados_sensibilidad.csv y tablas_sensibilidad.md (S14 y S15)."""
+    salida = Path(salida)
+    arbol = parametros.cargar()
+    arbol_esc = cargar_escenarios()
+    valores = parametros.valores(arbol)
+    esc = parametros.valores(arbol_esc)
+    rutas = klm.cargar_rutas()
+    semilla = valores["semillas"]["principal"]
+    primera, ultima = valores["semillas"]["replicas"]
+    cantidad = replicas if replicas is not None else ultima - primera + 1
+    semillas = list(range(primera, primera + cantidad))
+
+    variantes = [v for v in variantes_sensibilidad(arbol) if not solo or v["parametro"] in solo]
+    contextos = {v["contexto"] for v in variantes}
+    bases = {
+        c: _resumen_he(_correr_contexto(c, valores, rutas, esc, semilla, semillas, procesos))
+        for c in CONTEXTOS
+        if c in contextos
+    }
+    filas, resumen = [], []
+    for v in variantes:
+        if v["archivo"] == "parametros":
+            vals, e = (
+                parametros.valores(parametros.con_valor(arbol, v["parametro"], v["valor"])),
+                esc,
+            )
+        else:
+            vals = valores
+            e = parametros.valores(parametros.con_valor(arbol_esc, v["parametro"], v["valor"]))
+        r = _correr_contexto(v["contexto"], vals, rutas, e, semilla, semillas, procesos)
+        he = _resumen_he(r)
+        clave = es_clave(bases[v["contexto"]], he)
+        resumen.append({**v, "clave": clave, "base": bases[v["contexto"]], "he": he})
+        for indicador in r["indicadores"]:
+            c = r["principal"]["contrastes"][indicador]
+            filas.append({
+                **v, "indicador": indicador, "p_principal": c["p"],
+                COLUMNA_DECISION: c[COLUMNA_DECISION],
+                "pct_rechazo_replicas": r["resumen"][indicador]["pct_rechazo"],
+                "replicas": cantidad, "clave": clave,
+            })  # fmt: skip
+        for h in (*HIPOTESIS, "HG"):
+            filas.append({
+                **v, "indicador": h, "decision_principal": he["decisiones"][h],
+                "pct_rechazo_replicas": he["pct"][h], "replicas": cantidad, "clave": clave,
+            })  # fmt: skip
+    escribir_csv(salida / "simulados_sensibilidad.csv", filas)
+    (salida / "tablas_sensibilidad.md").write_text(
+        _tablas_sensibilidad(resumen, cantidad, semillas), encoding="utf-8"
+    )
+    return resumen
+
+
+def _tablas_sensibilidad(resumen: list[dict], cantidad: int, semillas: list[int]) -> str:
+    nota = (
+        f"Datos simulados (semilla principal 2026; {cantidad} réplicas con semillas "
+        f"{semillas[0]}…{semillas[-1]} por variante). Un supuesto a la vez, en el mínimo y el "
+        "máximo de su rango; parametros.yaml y escenarios.yaml no se modifican. Contexto: «base» "
+        "es la corrida principal; los supuestos de un escenario se varían dentro de él. Regla "
+        "propuesta para HE y HG (ajustes-cap3, punto 10)."
+    )
+    hs = (*HIPOTESIS, "HG")
+    claves = [r for r in resumen if r["clave"]]
+    filas = []
+    for r in claves:
+        cambios = [
+            h for h in hs
+            if r["he"]["decisiones"][h] != r["base"]["decisiones"][h]
+            or (r["he"]["pct"][h] >= META_REPLICAS) != (r["base"]["pct"][h] >= META_REPLICAS)
+        ]  # fmt: skip
+        filas.append([
+            r["parametro"], r["contexto"], r["extremo"], num(r["valor"], 3),
+            ", ".join(cambios), *(num(r["he"]["pct"][h], 1) for h in hs),
+        ])  # fmt: skip
+    if not filas:
+        filas = [["Ninguno", "—", "—", "—", "—", "—", "—", "—", "—"]]
+    bloques = [
+        "# Sensibilidad de la simulación (Datos simulados)\n\n"
+        "Nada de lo que sigue es una medición real.\n",
+        _tabla_md(
+            "Tabla S14. Supuestos clave: cambian una decisión de la corrida principal o cruzan el "
+            f"{META_REPLICAS} % de réplicas (Datos simulados)",
+            ["Supuesto", "Contexto", "Extremo", "Valor", "HE que cambia",
+             "% HE1", "% HE2", "% HE3", "% HG"],
+            filas,
+            nota + f" Clave: cambia la «{COLUMNA_DECISION}» de la corrida principal en alguna HE "
+            f"o la HG, o su % de réplicas cruza el {META_REPLICAS} %."
+            " Un supuesto que solo cambia cuántos números saca el generad"
+            "or (por ejemplo, autorregistro.sesiones_semana, que no entra"
+            " en HE1) puede mover la corrida principal por azar; el % de "
+            "réplicas muestra si el efecto es real.",
+        ),
+    ]  # fmt: skip
+    por_parametro = {}
+    for r in resumen:
+        fila = por_parametro.setdefault((r["parametro"], r["contexto"]), {h: 100.0 for h in hs})
+        for h in hs:
+            fila[h] = min(fila[h], r["he"]["pct"][h])
+    orden = sorted(por_parametro.items(), key=lambda kv: (kv[1]["HG"], kv[0]))
+    filas = [[p, c, *(num(v[h], 1) for h in hs)] for (p, c), v in orden]
+    bloques.append(
+        _tabla_md(
+            "Tabla S15. Sensibilidad por supuesto: el menor % de réplicas que rechaza H₀ entre "
+            "sus dos extremos (Datos simulados)",
+            ["Supuesto", "Contexto", "% HE1", "% HE2", "% HE3", "% HG"],
+            filas,
+            nota + " Ordenada de menor a mayor % de la HG.",
+        )
+    )
+    return "\n".join(bloques)
+
+
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description="Análisis de la simulación (datos simulados).")
     sub = parser.add_subparsers(dest="orden", required=True)
@@ -900,10 +1489,24 @@ def main(argv=None) -> None:
     p.add_argument("--procesos", type=int, default=None)
     p.add_argument("--paso-quiebre", type=float, default=0.01)
     p.add_argument("--salida", type=Path, default=SALIDA)
+    e = sub.add_parser("escenarios", help="base y escenarios, con la corrida principal y réplicas")
+    e.add_argument("--solo", nargs="*", choices=list(ESCENARIOS), default=None)
+    e.add_argument("--replicas", type=int, default=None)
+    e.add_argument("--procesos", type=int, default=None)
+    e.add_argument("--salida", type=Path, default=SALIDA)
+    s = sub.add_parser("sensibilidad", help="un supuesto a la vez, en el mínimo y el máximo")
+    s.add_argument("--solo", nargs="*", default=None)
+    s.add_argument("--replicas", type=int, default=None)
+    s.add_argument("--procesos", type=int, default=None)
+    s.add_argument("--salida", type=Path, default=SALIDA)
     args = parser.parse_args(argv)
     if args.orden == "principal":
         ejecutar_principal(args.salida, args.replicas, args.procesos, args.paso_quiebre)
-        print(f"Salidas (datos simulados) en {args.salida}")
+    elif args.orden == "escenarios":
+        ejecutar_escenarios(args.salida, args.solo, args.replicas, args.procesos)
+    else:
+        ejecutar_sensibilidad(args.salida, args.replicas, args.procesos, args.solo)
+    print(f"Salidas (datos simulados) en {args.salida}")
 
 
 if __name__ == "__main__":

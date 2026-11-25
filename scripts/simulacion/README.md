@@ -104,7 +104,43 @@ momento), `simulados_principal_jamovi.csv` (pre y post lado a lado, para Jamovi)
 `simulados_principal_contrastes.csv`, `simulados_replicas_resumen.csv` y `simulados_quiebre.csv`.
 `simulados_replicas.csv` (una fila por semilla e indicador) no se versiona: sale con el comando.
 
-## Pendiente para G4 (sensibilidad)
+## Escenarios (G4)
 
-- Escenario **«sin marcado masivo»**: la asistencia se marca estudiante por estudiante
-  (`por_estudiante` en vez de `por_excepcion`), como lo haría quien no encuentra el botón.
+    uv run --group simulacion python -m simulacion.analisis escenarios [--solo NOMBRE ...]
+
+Corre «base» (la corrida principal) y cada escenario con la semilla principal y las mismas réplicas;
+escribe `salidas/simulados_escenarios.csv` y `salidas/tablas_escenarios.md` (tablas S11 y S12).
+Cada escenario cambia una copia de los valores o de las rutas, nunca `parametros.yaml` ni `rutas/`.
+
+- **«Sin marcado masivo»**: se quita el paso del marcado masivo de las rutas de asistencia y los
+  pasos `por_excepcion` pasan a `por_estudiante`, como lo haría quien no encuentra el botón. No
+  cuenta un segundo toque para quien no asistió: es una cota inferior del tiempo.
+- **«La tutora marca todas»**: también Inglés y Educación Física (`areas_de_docente_de_curso` = []).
+  Como suma competencias, cambia cuántos números saca el generador: las demás mediciones de ese
+  escenario varían por azar, no por efecto del escenario.
+- **«Entrega con cola»** (y sus variantes n = 2, n = 4 y «con impresión»): la dirección está en el
+  mismo local; en O1 la entrega es diaria: ir a la puerta + esperar el turno (una vez al día) +
+  estar presente mientras revisan cada sesión. En O2 se sube y envía (KLM); la revisión ocurre sin
+  la docente. Se reporta HE1 por sesión (`sesion_min`, la de la Tabla 5) y por día
+  (`sesion_dia_min`, complementario). n sale al azar entre 2 y 4 por docente y día. La impresión
+  va solo como variante: la docente imprime igual las fichas de sus estudiantes.
+- **«Con banco de sesiones»**: en O2, quien no tiene una sesión propia adecuada y encuentra una en
+  el repositorio la descarga y la adapta (una fracción del tiempo de elaborarla). La funcionalidad
+  existe (US-011/012/016), pero **la descarga va como SUPUESTO** (1 min) y no por KLM: la ruta del
+  agente queda pendiente (`insumos/simulacion/pendientes.md`, PEND-1). Se agrega el barrido
+  cobertura × fracción con el % de rechazo de HE1 (Tabla S13, `simulados_banco_barrido.csv`).
+
+Los supuestos de estos dos escenarios están en `escenarios.yaml` (mismo formato y validador que
+`parametros.yaml`, que no se toca). Su azar sale de un quinto generador hijo de la semilla: no
+cambia docentes, O1, O2 ni la carga.
+
+## Sensibilidad (G4)
+
+    uv run --group simulacion python -m simulacion.analisis sensibilidad [--solo SUPUESTO ...]
+
+Un supuesto a la vez, en el mínimo y el máximo de su rango, con la corrida principal y las mismas
+réplicas; los de `escenarios.yaml` (cola y descarga) se varían dentro de su escenario. Quedan fuera
+los cortes del Likert (una lista), las n de la cola (escenarios n = 2 y n = 4), la impresión (una
+variante) y las proporciones del banco (su barrido). Un supuesto es **clave** si cambia una
+decisión de la corrida principal o si el % de réplicas de alguna HE o de la HG cruza el 80 %.
+Salidas: `simulados_sensibilidad.csv` y `tablas_sensibilidad.md` (tablas S14 y S15).

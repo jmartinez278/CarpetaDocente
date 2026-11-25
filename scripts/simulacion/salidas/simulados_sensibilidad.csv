@@ -1,0 +1,1367 @@
+origen,parametro,archivo,contexto,extremo,valor,valor_actual,indicador,p_principal,Decisión estadística (datos simulados),pct_rechazo_replicas,replicas,clave,decision_principal
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,sesion_min,0.005067581721775719,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,notas_min,3.9745213811444753e-13,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,notas_exactitud,0.00018047381118223386,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,asistencia_exactitud,1.4413530430770815e-05,Se rechaza H₀ (datos simulados),99.2,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,likert_global,1.168558715184029e-10,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,HE1,,,96.1,1000,no,sí
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,HE3,,,99.2,1000,no,sí
+Datos simulados,poblacion.estudiantes_centro,parametros,base,mínimo,25,30,HG,,,95.3,1000,no,sí
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,sesion_min,0.002811430849434372,Se rechaza H₀ (datos simulados),94.1,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,notas_min,1.1697372580110419e-15,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,notas_exactitud,9.701748740262219e-06,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,asistencia_min,4.59284177740495e-11,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,asistencia_exactitud,2.608833362374479e-05,Se rechaza H₀ (datos simulados),99.8,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,likert_global,9.106413295366854e-11,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,HE1,,,94.1,1000,no,sí
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,HE3,,,99.8,1000,no,sí
+Datos simulados,poblacion.estudiantes_centro,parametros,base,máximo,35,30,HG,,,93.9,1000,no,sí
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,asistencia_min,1.0157867747411345e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,HE1,,,96.1,1000,no,sí
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,HE3,,,99.6,1000,no,sí
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,mínimo,0,0.1,HG,,,95.7,1000,no,sí
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,HE1,,,96.1,1000,no,sí
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,HE3,,,99.6,1000,no,sí
+Datos simulados,poblacion.tasa_excepciones_asistencia,parametros,base,máximo,0.3,0.1,HG,,,95.7,1000,no,sí
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,HE1,,,96.1,1000,no,sí
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,HE3,,,99.6,1000,no,sí
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,mínimo,0,0.25,HG,,,95.7,1000,no,sí
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,HE1,,,96.1,1000,no,sí
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,HE3,,,99.6,1000,no,sí
+Datos simulados,poblacion.proporcion_conclusion_notas,parametros,base,máximo,0.5,0.25,HG,,,95.7,1000,no,sí
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,HE1,,,96.1,1000,no,sí
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,HE3,,,99.6,1000,no,sí
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,mínimo,10,40,HG,,,95.7,1000,no,sí
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,HE1,,,96.1,1000,no,sí
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,HE3,,,99.6,1000,no,sí
+Datos simulados,poblacion.caracteres_conclusion,parametros,base,máximo,200,40,HG,,,95.7,1000,no,sí
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,sesion_min,0.0010004639625549316,Se rechaza H₀ (datos simulados),96.2,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,notas_min,3.894452540844816e-15,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,notas_exactitud,9.621156984395945e-07,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,asistencia_exactitud,0.0006294974284134635,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,likert_global,1.9666473796627952e-10,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,HE1,,,96.2,1000,no,sí
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,HE3,,,99.6,1000,no,sí
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,mínimo,0,5,HG,,,95.8,1000,no,sí
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,sesion_min,0.002335926919605385,Se rechaza H₀ (datos simulados),95.1,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,notas_min,1.9257922840048038e-13,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,notas_exactitud,1.7881393432617188e-07,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,asistencia_min,5.298993367829798e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,asistencia_exactitud,0.002892173527725607,Se rechaza H₀ (datos simulados),99.7,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,likert_global,7.593132202740415e-10,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,HE1,,,95.1,1000,no,sí
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,HE2,,,100.0,1000,no,sí
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,HE3,,,99.7,1000,no,sí
+Datos simulados,poblacion.estudiantes_amplitud,parametros,base,máximo,8,5,HG,,,94.8,1000,no,sí
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,sesion_min,0.0017526077022657909,Se rechaza H₀ (datos simulados),96.2,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,asistencia_min,2.5322742794930117e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,HE1,,,96.2,1000,no,sí
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.proporcion_p1,parametros,base,mínimo,0.15,0.3,HG,,,95.8,1000,no,sí
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,sesion_min,0.0019316490125065372,Se rechaza H₀ (datos simulados),95.6,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,asistencia_min,2.4516387126512775e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,HE1,,,95.6,1000,no,sí
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.proporcion_p1,parametros,base,máximo,0.5,0.3,HG,,,95.2,1000,no,sí
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,sesion_min,0.0018519945668359994,Se rechaza H₀ (datos simulados),95.9,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,asistencia_min,2.542173146913954e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,HE1,,,95.9,1000,no,sí
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.proporcion_p3,parametros,base,mínimo,0.15,0.3,HG,,,95.5,1000,no,sí
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,sesion_min,0.0017785092974182386,Se rechaza H₀ (datos simulados),96.2,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,asistencia_min,2.3320889139443785e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,HE1,,,96.2,1000,no,sí
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.proporcion_p3,parametros,base,máximo,0.5,0.3,HG,,,95.8,1000,no,sí
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,likert_global,1.1358639988297413e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,HE1,,,96.1,1000,no,sí
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,mínimo,0.0,0.3,HG,,,95.7,1000,no,sí
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,likert_global,1.4154611644041559e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,HE1,,,96.1,1000,no,sí
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.correlacion_destreza_actitud,parametros,base,máximo,0.6,0.3,HG,,,95.7,1000,no,sí
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,sesion_min,0.0025308350079229955,Se rechaza H₀ (datos simulados),96.5,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,HE1,,,96.5,1000,no,sí
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.ritmo_cv,parametros,base,mínimo,0.15,0.25,HG,,,96.1,1000,no,sí
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,sesion_min,0.0012830168507191207,Se rechaza H₀ (datos simulados),94.6,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,asistencia_min,1.0308839850032936e-09,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,HE1,,,94.6,1000,no,sí
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.ritmo_cv,parametros,base,máximo,0.4,0.25,HG,,,94.2,1000,no,sí
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,notas_exactitud,3.2823852440448403e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,asistencia_exactitud,0.0108333900429972,Se rechaza H₀ (datos simulados),99.8,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,HE1,,,96.1,1000,no,sí
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,HE3,,,99.8,1000,no,sí
+Datos simulados,rasgos.cuidado_cv,parametros,base,mínimo,0.3,0.5,HG,,,95.9,1000,no,sí
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,notas_exactitud,5.2940485365230704e-09,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,asistencia_exactitud,7.151003669658029e-05,Se rechaza H₀ (datos simulados),99.8,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,HE1,,,96.1,1000,no,sí
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,HE3,,,99.8,1000,no,sí
+Datos simulados,rasgos.cuidado_cv,parametros,base,máximo,0.8,0.5,HG,,,95.9,1000,no,sí
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,asistencia_exactitud,0.00024883610495130687,Se rechaza H₀ (datos simulados),99.9,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,HE1,,,96.1,1000,no,sí
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,HE3,,,99.9,1000,no,sí
+Datos simulados,rasgos.proporcion_diferido,parametros,base,mínimo,0.1,0.3,HG,,,96.0,1000,no,sí
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,asistencia_min,3.874463702421504e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,asistencia_exactitud,0.0005442202667150948,Se rechaza H₀ (datos simulados),98.6,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,HE1,,,96.1,1000,no,sí
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,HE3,,,98.6,1000,no,sí
+Datos simulados,rasgos.proporcion_diferido,parametros,base,máximo,0.5,0.3,HG,,,94.7,1000,no,sí
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,notas_exactitud,3.608930464604118e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,HE1,,,96.1,1000,no,sí
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.proporcion_excel,parametros,base,mínimo,0.4,0.6,HG,,,95.7,1000,no,sí
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,notas_exactitud,3.801699807183439e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,HE1,,,96.1,1000,no,sí
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,HE2,,,100.0,1000,no,sí
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,HE3,,,99.6,1000,no,sí
+Datos simulados,rasgos.proporcion_excel,parametros,base,máximo,0.8,0.6,HG,,,95.7,1000,no,sí
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,sesion_min,1.7444361147230113e-05,Se rechaza H₀ (datos simulados),99.8,1000,no,
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,asistencia_min,2.012696645749926e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,HE1,,,99.8,1000,no,sí
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,HE2,,,100.0,1000,no,sí
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,HE3,,,99.6,1000,no,sí
+Datos simulados,ruido.medicion_cv,parametros,base,mínimo,0.1,0.15,HG,,,99.4,1000,no,sí
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,sesion_min,0.12781204824302,No se rechaza H₀ (datos simulados),51.0,1000,sí,
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,asistencia_min,6.976454118941775e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,sí,
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,sí,
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,HE1,,,51.0,1000,sí,no
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,HE2,,,100.0,1000,sí,sí
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,HE3,,,99.6,1000,sí,sí
+Datos simulados,ruido.medicion_cv,parametros,base,máximo,0.3,0.15,HG,,,50.8,1000,sí,no
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,sesion_min,1.1599390376950853e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,HE1,,,100.0,1000,no,sí
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,mínimo,30,90,HG,,,99.6,1000,no,sí
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,sesion_min,0.0863160840681311,No se rechaza H₀ (datos simulados),49.8,1000,sí,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,sí,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,sí,
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,HE1,,,49.8,1000,sí,no
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,HE2,,,100.0,1000,sí,sí
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,HE3,,,99.6,1000,sí,sí
+Datos simulados,o1.sesion.elaboracion_mediana,parametros,base,máximo,180,90,HG,,,49.6,1000,sí,no
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,sesion_min,0.30668936812547937,No se rechaza H₀ (datos simulados),22.4,1000,sí,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,sí,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,sí,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,HE1,,,22.4,1000,sí,no
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,HE2,,,100.0,1000,sí,sí
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,HE3,,,99.6,1000,sí,sí
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,mínimo,5,15,HG,,,22.2,1000,sí,no
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,sesion_min,2.1262656839465108e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,HE1,,,100.0,1000,no,sí
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.sesion.entrega_mediana,parametros,base,máximo,60,15,HG,,,99.6,1000,no,sí
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.notas.apertura,parametros,base,mínimo,1,2,HG,,,95.7,1000,no,sí
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.notas.apertura,parametros,base,máximo,10,2,HG,,,95.7,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,mínimo,0.1,0.4,HG,,,95.7,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_cuaderno,parametros,base,máximo,1,0.4,HG,,,95.7,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,mínimo,0.1,0.3,HG,,,95.7,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,notas_min,5.780912935902536e-14,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.notas.por_estudiante_excel,parametros,base,máximo,1,0.3,HG,,,95.7,1000,no,sí
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,mínimo,0.01,0.02,HG,,,95.7,1000,no,sí
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.notas.por_caracter_conclusion,parametros,base,máximo,0.05,0.02,HG,,,95.7,1000,no,sí
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,mínimo,0.05,0.15,HG,,,95.7,1000,no,sí
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,asistencia_min,4.2531669667030275e-16,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.asistencia.por_estudiante,parametros,base,máximo,0.5,0.15,HG,,,95.7,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,asistencia_min,1.3729374243808277e-13,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,mínimo,0,3,HG,,,95.7,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_apertura,parametros,base,máximo,10,3,HG,,,95.7,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,asistencia_min,1.0764059683321633e-11,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,mínimo,0.05,0.1,HG,,,95.7,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.asistencia.transcripcion_por_estudiante,parametros,base,máximo,0.3,0.1,HG,,,95.7,1000,no,sí
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,mínimo,0,0.2,HG,,,95.7,1000,no,sí
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.corregir_nota.probabilidad,parametros,base,máximo,0.5,0.2,HG,,,95.7,1000,no,sí
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.corregir_nota.costo,parametros,base,mínimo,0.5,1,HG,,,95.7,1000,no,sí
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,HE1,,,96.1,1000,no,sí
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,HE2,,,100.0,1000,no,sí
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,HE3,,,99.6,1000,no,sí
+Datos simulados,o1.corregir_nota.costo,parametros,base,máximo,5,1,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,notas_exactitud,2.1481281190150526e-05,Se rechaza H₀ (datos simulados),99.7,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,HE2,,,99.7,1000,no,sí
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E1,parametros,base,mínimo,0,0.02,HG,,,95.4,1000,no,sí
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,notas_exactitud,2.7058272552213065e-11,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E1,parametros,base,máximo,0.05,0.02,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,notas_exactitud,3.024229198544055e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,mínimo,0,0.002,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,notas_exactitud,1.401060730553736e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E2_cuaderno,parametros,base,máximo,0.01,0.002,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,notas_exactitud,1.8078254304140544e-09,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,mínimo,0,0.01,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,notas_exactitud,5.30367504744443e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E2_excel,parametros,base,máximo,0.03,0.01,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,notas_exactitud,1.4413530430770815e-05,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,mínimo,0,0.02,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,notas_exactitud,1.0274564664807023e-09,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E3_cuaderno,parametros,base,máximo,0.05,0.02,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,notas_exactitud,8.122065375048294e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,mínimo,0,0.008,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,notas_exactitud,7.157821255148083e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E3_excel,parametros,base,máximo,0.03,0.008,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,notas_exactitud,3.249643333310772e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E4,parametros,base,mínimo,0,0.01,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,notas_exactitud,5.3693895316720455e-11,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.notas.E4,parametros,base,máximo,0.05,0.01,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,asistencia_exactitud,0.008882959447408667,Se rechaza H₀ (datos simulados),91.2,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,HE3,,,91.2,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,mínimo,0,0.01,HG,,,87.3,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,asistencia_exactitud,0.00019739151720493626,Se rechaza H₀ (datos simulados),99.8,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,HE3,,,99.8,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_momento,parametros,base,máximo,0.03,0.01,HG,,,95.9,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,asistencia_exactitud,0.0011726703614387257,Se rechaza H₀ (datos simulados),99.2,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,HE3,,,99.2,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,mínimo,0,0.02,HG,,,95.3,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.asistencia.E1_diferido,parametros,base,máximo,0.05,0.02,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,asistencia_exactitud,0.0015477095331468346,Se rechaza H₀ (datos simulados),98.3,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,HE3,,,98.3,1000,no,sí
+Datos simulados,errores_o1.asistencia.E2,parametros,base,mínimo,0,0.003,HG,,,94.4,1000,no,sí
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,asistencia_exactitud,0.0002891576761810898,Se rechaza H₀ (datos simulados),99.8,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,HE3,,,99.8,1000,no,sí
+Datos simulados,errores_o1.asistencia.E2,parametros,base,máximo,0.01,0.003,HG,,,95.9,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,asistencia_exactitud,0.008882959447408667,Se rechaza H₀ (datos simulados),91.2,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,HE3,,,91.2,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,mínimo,0,0.01,HG,,,87.3,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,asistencia_exactitud,0.00019739151720493626,Se rechaza H₀ (datos simulados),99.8,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,HE3,,,99.8,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_momento,parametros,base,máximo,0.03,0.01,HG,,,95.9,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,asistencia_exactitud,0.0017622493334740375,Se rechaza H₀ (datos simulados),99.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,HE3,,,99.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,mínimo,0,0.03,HG,,,95.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,asistencia_exactitud,0.0006881463364169617,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,HE3,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E3_diferido,parametros,base,máximo,0.1,0.03,HG,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.4,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,HE3,,,99.4,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,mínimo,0,0.005,HG,,,95.5,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,asistencia_exactitud,0.0006205204641556308,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_momento,parametros,base,máximo,0.02,0.005,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,asistencia_exactitud,0.0013585986859264195,Se rechaza H₀ (datos simulados),98.2,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,HE3,,,98.2,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,mínimo,0,0.05,HG,,,94.3,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,asistencia_exactitud,0.0005442202667150948,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,HE3,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.E4_diferido,parametros,base,máximo,0.15,0.05,HG,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.2,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,HE3,,,99.2,1000,no,sí
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,mínimo,0,0.03,HG,,,95.3,1000,no,sí
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,asistencia_exactitud,7.151003669658029e-05,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,HE3,,,100.0,1000,no,sí
+Datos simulados,errores_o1.asistencia.olvida_dia,parametros,base,máximo,0.15,0.03,HG,,,96.1,1000,no,sí
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,HE1,,,96.1,1000,no,sí
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.ventana_semanas,parametros,base,mínimo,2,4,HG,,,95.7,1000,no,sí
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,HE1,,,96.1,1000,no,sí
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.ventana_semanas,parametros,base,máximo,8,4,HG,,,95.7,1000,no,sí
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,sesion_min,0.0013751134840419461,Se rechaza H₀ (datos simulados),96.7,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,HE1,,,96.7,1000,no,sí
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.K,parametros,base,mínimo,0.1,0.28,HG,,,96.3,1000,no,sí
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,sesion_min,0.0024575571549323117,Se rechaza H₀ (datos simulados),94.7,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,HE1,,,94.7,1000,no,sí
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.K,parametros,base,máximo,0.5,0.28,HG,,,94.3,1000,no,sí
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,sesion_min,0.001706722313763564,Se rechaza H₀ (datos simulados),96.2,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,asistencia_min,2.3561821206725034e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,HE1,,,96.2,1000,no,sí
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.P,parametros,base,mínimo,0.8,1.1,HG,,,95.8,1000,no,sí
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,sesion_min,0.0019903287353139243,Se rechaza H₀ (datos simulados),95.6,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,asistencia_min,3.3361501417980354e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,HE1,,,95.6,1000,no,sí
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.P,parametros,base,máximo,1.8,1.1,HG,,,95.2,1000,no,sí
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,sesion_min,0.0017721621545310866,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,asistencia_min,2.568103341905338e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,HE1,,,96.1,1000,no,sí
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.B,parametros,base,mínimo,0.05,0.1,HG,,,95.7,1000,no,sí
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,sesion_min,0.0018495076215356244,Se rechaza H₀ (datos simulados),95.8,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,asistencia_min,2.800608586673526e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,HE1,,,95.8,1000,no,sí
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.B,parametros,base,máximo,0.3,0.1,HG,,,95.4,1000,no,sí
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,sesion_min,0.0017630960428987132,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,HE1,,,96.1,1000,no,sí
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.H,parametros,base,mínimo,0.2,0.4,HG,,,95.7,1000,no,sí
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,sesion_min,0.0018369142270493039,Se rechaza H₀ (datos simulados),95.8,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,HE1,,,95.8,1000,no,sí
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.H,parametros,base,máximo,0.8,0.4,HG,,,95.4,1000,no,sí
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,sesion_min,0.0017346850652243592,Se rechaza H₀ (datos simulados),96.2,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,asistencia_min,2.4437171789006653e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,HE1,,,96.2,1000,no,sí
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.M,parametros,base,mínimo,1.0,1.35,HG,,,95.8,1000,no,sí
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,sesion_min,0.001889408350445248,Se rechaza H₀ (datos simulados),95.8,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,asistencia_min,2.9620365581677237e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,HE1,,,95.8,1000,no,sí
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.M,parametros,base,máximo,2.0,1.35,HG,,,95.4,1000,no,sí
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,sesion_min,0.0017450997558358182,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,HE1,,,96.1,1000,no,sí
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,mínimo,0.3,1.0,HG,,,95.7,1000,no,sí
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,sesion_min,0.001913751264423074,Se rechaza H₀ (datos simulados),95.7,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,HE1,,,95.7,1000,no,sí
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.R_domestica,parametros,base,máximo,3.0,1.0,HG,,,95.3,1000,no,sí
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,asistencia_min,1.3305824788019646e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,HE1,,,96.1,1000,no,sí
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,mínimo,1.0,3.0,HG,,,95.7,1000,no,sí
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,HE1,,,96.1,1000,no,sí
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.operadores_klm.R_slow_4g,parametros,base,máximo,8.0,3.0,HG,,,95.7,1000,no,sí
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,sesion_min,0.001662652939789535,Se rechaza H₀ (datos simulados),96.3,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,asistencia_min,2.035433784841436e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,HE1,,,96.3,1000,no,sí
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.factor_no_experto_p1,parametros,base,mínimo,1.5,2.0,HG,,,95.9,1000,no,sí
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,sesion_min,0.002068096134155256,Se rechaza H₀ (datos simulados),95.6,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,asistencia_min,4.5386728326436146e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,HE1,,,95.6,1000,no,sí
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.factor_no_experto_p1,parametros,base,máximo,3.0,2.0,HG,,,95.2,1000,no,sí
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,sesion_min,0.0016980369683110169,Se rechaza H₀ (datos simulados),96.3,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,asistencia_min,2.444934575977966e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,HE1,,,96.3,1000,no,sí
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.factor_no_experto_p2,parametros,base,mínimo,1.2,1.5,HG,,,95.9,1000,no,sí
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,sesion_min,0.0019488915055420194,Se rechaza H₀ (datos simulados),95.5,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,HE1,,,95.5,1000,no,sí
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.factor_no_experto_p2,parametros,base,máximo,2.0,1.5,HG,,,95.1,1000,no,sí
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,sesion_min,0.0017224294209980113,Se rechaza H₀ (datos simulados),96.2,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,asistencia_min,2.484439671095925e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,HE1,,,96.2,1000,no,sí
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.factor_no_experto_p3,parametros,base,mínimo,1.0,1.2,HG,,,95.8,1000,no,sí
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,sesion_min,0.0018896293575307462,Se rechaza H₀ (datos simulados),95.9,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,asistencia_min,2.83922356173627e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,HE1,,,95.9,1000,no,sí
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,HE2,,,100.0,1000,no,sí
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,HE3,,,99.6,1000,no,sí
+Datos simulados,o2.factor_no_experto_p3,parametros,base,máximo,1.5,1.2,HG,,,95.5,1000,no,sí
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,notas_exactitud,2.7558454831380343e-11,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o2.notas.E1,parametros,base,mínimo,0.0,0.005,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,notas_exactitud,1.441446445102222e-09,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o2.notas.E1,parametros,base,máximo,0.01,0.005,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,notas_exactitud,2.7558454831380343e-11,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o2.notas.E3,parametros,base,mínimo,0.0,0.005,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,notas_exactitud,1.441446445102222e-09,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o2.notas.E3,parametros,base,máximo,0.01,0.005,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o2.notas.E4,parametros,base,mínimo,0.0,0.002,HG,,,95.7,1000,no,sí
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,notas_exactitud,1.627014399269071e-08,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,HE2,,,99.6,1000,no,sí
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,HE3,,,99.6,1000,no,sí
+Datos simulados,errores_o2.notas.E4,parametros,base,máximo,0.01,0.002,HG,,,95.3,1000,no,sí
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,asistencia_exactitud,0.0005442202667150948,Se rechaza H₀ (datos simulados),99.8,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,HE3,,,99.8,1000,no,sí
+Datos simulados,errores_o2.asistencia.E1,parametros,base,mínimo,0.0,0.003,HG,,,95.9,1000,no,sí
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,asistencia_exactitud,0.024767625255337957,Se rechaza H₀ (datos simulados),93.5,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,HE3,,,93.5,1000,no,sí
+Datos simulados,errores_o2.asistencia.E1,parametros,base,máximo,0.01,0.003,HG,,,89.7,1000,no,sí
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,asistencia_exactitud,0.00037381098636730514,Se rechaza H₀ (datos simulados),99.9,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,HE3,,,99.9,1000,no,sí
+Datos simulados,errores_o2.asistencia.E3,parametros,base,mínimo,0.0,0.005,HG,,,96.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,asistencia_exactitud,0.007453058884495632,Se rechaza H₀ (datos simulados),97.2,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,HE3,,,97.2,1000,no,sí
+Datos simulados,errores_o2.asistencia.E3,parametros,base,máximo,0.01,0.005,HG,,,93.3,1000,no,sí
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,HE3,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,mínimo,0.0,0.02,HG,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),96.4,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,HE3,,,96.4,1000,no,sí
+Datos simulados,errores_o2.asistencia.E4_diferido,parametros,base,máximo,0.05,0.02,HG,,,92.7,1000,no,sí
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,asistencia_exactitud,9.866832562405979e-05,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,HE3,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,mínimo,0.0,0.01,HG,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,asistencia_exactitud,0.0066637828588693255,Se rechaza H₀ (datos simulados),93.7,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,HE1,,,96.1,1000,no,sí
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,HE2,,,100.0,1000,no,sí
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,HE3,,,93.7,1000,no,sí
+Datos simulados,errores_o2.asistencia.olvida_dia,parametros,base,máximo,0.05,0.01,HG,,,90.0,1000,no,sí
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,likert_global,1.53084161972814e-11,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.media_pre,parametros,base,mínimo,-0.5,0.0,HG,,,95.7,1000,no,sí
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,likert_global,1.5297996799621552e-10,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.media_pre,parametros,base,máximo,0.5,0.0,HG,,,95.7,1000,no,sí
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,likert_global,0.5303649557655746,No se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),4.3,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.efecto_post,parametros,base,mínimo,0.0,1.0,HG,,,95.7,1000,no,sí
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,likert_global,1.0727181779353642e-14,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.efecto_post,parametros,base,máximo,1.5,1.0,HG,,,95.7,1000,no,sí
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,likert_global,1.4306468911379083e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.carga_actitud,parametros,base,mínimo,0.0,0.5,HG,,,95.7,1000,no,sí
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,likert_global,6.185924974573808e-11,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.carga_actitud,parametros,base,máximo,0.8,0.5,HG,,,95.7,1000,no,sí
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,likert_global,5.860543637728691e-13,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.ruido_docente,parametros,base,mínimo,0.3,0.5,HG,,,95.7,1000,no,sí
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,likert_global,4.2229726888211065e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.ruido_docente,parametros,base,máximo,0.8,0.5,HG,,,95.7,1000,no,sí
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,likert_global,9.401999526354598e-06,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.ruido_item,parametros,base,mínimo,0.4,0.7,HG,,,95.7,1000,no,sí
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,likert_global,2.1144824214636475e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,HE1,,,96.1,1000,no,sí
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,HE2,,,100.0,1000,no,sí
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,HE3,,,99.6,1000,no,sí
+Datos simulados,likert.ruido_item,parametros,base,máximo,1.0,0.7,HG,,,95.7,1000,no,sí
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,HE1,,,96.1,1000,no,sí
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,HE2,,,100.0,1000,no,sí
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,HE3,,,99.6,1000,no,sí
+Datos simulados,sus.media_latente,parametros,base,mínimo,0.0,0.5,HG,,,95.7,1000,no,sí
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,HE1,,,96.1,1000,no,sí
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,HE2,,,100.0,1000,no,sí
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,HE3,,,99.6,1000,no,sí
+Datos simulados,sus.media_latente,parametros,base,máximo,1.0,0.5,HG,,,95.7,1000,no,sí
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,HE1,,,96.1,1000,no,sí
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,sus.carga_destreza,parametros,base,mínimo,0.0,0.3,HG,,,95.7,1000,no,sí
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,sesion_min,0.001787373790755609,Se rechaza H₀ (datos simulados),96.1,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,HE1,,,96.1,1000,no,sí
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,HE2,,,100.0,1000,no,sí
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,HE3,,,99.6,1000,no,sí
+Datos simulados,sus.carga_destreza,parametros,base,máximo,0.6,0.3,HG,,,95.7,1000,no,sí
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,sesion_min,0.0027988717074337987,Se rechaza H₀ (datos simulados),95.1,1000,no,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,notas_min,4.76576081525348e-12,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,notas_exactitud,1.0845666620089245e-06,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,asistencia_min,2.7239523321557117e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,asistencia_exactitud,5.955758573220817e-05,Se rechaza H₀ (datos simulados),99.4,1000,no,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,likert_global,2.103681846419601e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,HE1,,,95.1,1000,no,sí
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,HE2,,,100.0,1000,no,sí
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,HE3,,,99.4,1000,no,sí
+Datos simulados,autorregistro.sesiones_semana,parametros,base,mínimo,1,3,HG,,,94.5,1000,no,sí
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,sesion_min,0.05604343348644544,No se rechaza H₀ (datos simulados),96.1,1000,sí,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,notas_exactitud,9.701748740262219e-06,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,asistencia_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,asistencia_exactitud,5.3080028473044675e-05,Se rechaza H₀ (datos simulados),99.5,1000,sí,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,likert_global,4.0794870151673725e-09,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,sí,
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,HE1,,,96.1,1000,sí,no
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,HE2,,,100.0,1000,sí,sí
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,HE3,,,99.5,1000,sí,sí
+Datos simulados,autorregistro.sesiones_semana,parametros,base,máximo,5,3,HG,,,95.6,1000,sí,no
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,sesion_min,0.060310921145455026,No se rechaza H₀ (datos simulados),55.0,1000,no,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,sesion_dia_min,0.13131609428293103,No se rechaza H₀ (complementario del escenario; no entra en HE ni HG; datos simulados),20.7,1000,no,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,HE1,,,55.0,1000,no,no
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,HE2,,,100.0,1000,no,sí
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,HE3,,,99.6,1000,no,sí
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,mínimo,0.5,1,HG,,,54.8,1000,no,no
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,sesion_min,0.0368933352245825,Se rechaza H₀ (datos simulados),63.6,1000,sí,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,sí,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,sesion_dia_min,0.1117222287725457,No se rechaza H₀ (complementario del escenario; no entra en HE ni HG; datos simulados),24.3,1000,sí,
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,HE1,,,63.6,1000,sí,sí
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,HE2,,,100.0,1000,sí,sí
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,HE3,,,99.6,1000,sí,sí
+Datos simulados,entrega_con_cola.ir_a_la_puerta,escenarios,entrega_con_cola,máximo,3,1,HG,,,63.4,1000,sí,sí
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,sesion_min,0.2641222349996919,No se rechaza H₀ (datos simulados),24.8,1000,no,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,sesion_dia_min,0.22799042540976758,No se rechaza H₀ (complementario del escenario; no entra en HE ni HG; datos simulados),10.3,1000,no,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,HE1,,,24.8,1000,no,no
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,HE2,,,100.0,1000,no,sí
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,HE3,,,99.6,1000,no,sí
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,mínimo,0,10,HG,,,24.6,1000,no,no
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,sesion_min,0.0004553461357802975,Se rechaza H₀ (datos simulados),96.2,1000,sí,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,sí,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,sesion_dia_min,0.02907992854606453,Se rechaza H₀ (complementario del escenario; no entra en HE ni HG; datos simulados),49.4,1000,sí,
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,HE1,,,96.2,1000,sí,sí
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,HE2,,,100.0,1000,sí,sí
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,HE3,,,99.6,1000,sí,sí
+Datos simulados,entrega_con_cola.espera_cola,escenarios,entrega_con_cola,máximo,30,10,HG,,,95.8,1000,sí,sí
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,sesion_min,0.34269816370039474,No se rechaza H₀ (datos simulados),22.0,1000,no,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,sesion_dia_min,0.2654803634096927,No se rechaza H₀ (complementario del escenario; no entra en HE ni HG; datos simulados),8.7,1000,no,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,HE1,,,22.0,1000,no,no
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,HE2,,,100.0,1000,no,sí
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,HE3,,,99.6,1000,no,sí
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,mínimo,1,5,HG,,,21.8,1000,no,no
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,sesion_min,4.693670800466232e-05,Se rechaza H₀ (datos simulados),99.1,1000,sí,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,sí,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,sí,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,sesion_dia_min,0.012837729791416246,Se rechaza H₀ (complementario del escenario; no entra en HE ni HG; datos simulados),62.1,1000,sí,
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,HE1,,,99.1,1000,sí,sí
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,HE2,,,100.0,1000,sí,sí
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,HE3,,,99.6,1000,sí,sí
+Datos simulados,entrega_con_cola.revision_presencial,escenarios,entrega_con_cola,máximo,15,5,HG,,,98.7,1000,sí,sí
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,sesion_min,0.00034086378820268406,Se rechaza H₀ (datos simulados),98.6,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,HE1,,,98.6,1000,no,sí
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,HE2,,,100.0,1000,no,sí
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,HE3,,,99.6,1000,no,sí
+Datos simulados,con_banco.descarga,escenarios,con_banco,mínimo,0.5,1,HG,,,98.2,1000,no,sí
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,sesion_min,0.000322243136301538,Se rechaza H₀ (datos simulados),98.6,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,notas_min,5.960464477539063e-08,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,notas_exactitud,2.2710092957010046e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,asistencia_min,2.612892495441248e-10,Se rechaza H₀ (datos simulados),100.0,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,asistencia_exactitud,0.0010401337054556463,Se rechaza H₀ (datos simulados),99.6,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,likert_global,1.1546326565669808e-05,Se rechaza H₀ (apoyo; no entra en HE ni HG; datos simulados),100.0,1000,no,
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,HE1,,,98.6,1000,no,sí
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,HE2,,,100.0,1000,no,sí
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,HE3,,,99.6,1000,no,sí
+Datos simulados,con_banco.descarga,escenarios,con_banco,máximo,3,1,HG,,,98.2,1000,no,sí

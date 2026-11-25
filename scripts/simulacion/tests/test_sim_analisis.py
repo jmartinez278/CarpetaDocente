@@ -337,3 +337,222 @@ def test_figura_dice_datos_simulados(principal, valores, tabla):
     fig = analisis.figura(r, "notas_min")
     assert "Datos simulados" in fig.axes[0].get_title()
     assert [t.get_text() for t in fig.axes[0].get_xticklabels()] == ["Pretest (O1)", "Postest (O2)"]
+
+
+# --- Escenarios ---------------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def rutas():
+    return klm.cargar_rutas()
+
+
+def test_sin_marcado_masivo_quita_el_boton_y_marca_uno_por_uno(rutas, valores):
+    otras = analisis.rutas_sin_marcado_masivo(rutas)
+    for antes, despues in zip(rutas, otras, strict=True):
+        if not antes["tarea"].startswith("asistencia_"):
+            assert despues == antes
+            continue
+        assert not any("restantes" in p["objetivo"] for p in despues["pasos"])
+        assert not any(p.get("por_excepcion") for p in despues["pasos"])
+        assert len(despues["pasos"]) == len(antes["pasos"]) - 1
+    # Las rutas originales no cambian.
+    assert any("restantes" in p["objetivo"] for r in rutas for p in r["pasos"])
+    base = klm.construir_tabla(rutas, valores)
+    sin = klm.construir_tabla(otras, valores)
+    for persona in ("P1", "P2", "P3"):
+        for tarea in ("asistencia_momento", "asistencia_diferido"):
+            assert sin[persona][tarea]["por_estudiante"] > base[persona][tarea]["por_estudiante"]
+            assert sin[persona][tarea]["fijo"] < base[persona][tarea]["fijo"]
+        assert sin[persona]["notas"] == base[persona]["notas"]
+
+
+def test_sin_marcado_masivo_falla_si_una_ruta_no_tiene_el_boton(rutas):
+    import copy
+
+    rota = copy.deepcopy(rutas)
+    ruta = next(r for r in rota if r["tarea"] == "asistencia_momento")
+    ruta["pasos"] = [p for p in ruta["pasos"] if "restantes" not in p["objetivo"]]
+    with pytest.raises(ValueError, match="marcado masivo"):
+        analisis.rutas_sin_marcado_masivo(rota)
+
+
+def test_tutora_marca_todas_suma_competencias_y_no_toca_el_original(valores, tabla):
+    otros = analisis.valores_tutora_marca_todas(valores)
+    assert otros["catalogo"]["areas_de_docente_de_curso"] == []
+    assert valores["catalogo"]["areas_de_docente_de_curso"] == ["0003", "031"]
+    base = medicion.simular(valores, 7, tabla).filas[0]
+    todas = medicion.simular(otros, 7, tabla).filas[0]
+    assert todas["notas_revisados"] > base["notas_revisados"]
+
+
+def test_escenarios_marcados_y_parametros_intactos(tmp_path):
+    antes = _sha(parametros.ARCHIVO)
+    analisis.ejecutar_escenarios(
+        tmp_path, ["sin_marcado_masivo", "tutora_marca_todas"], replicas=3, procesos=1
+    )
+    assert _sha(parametros.ARCHIVO) == antes
+    with (tmp_path / "simulados_escenarios.csv").open(encoding="utf-8", newline="") as f:
+        filas = list(csv.DictReader(f))
+    assert {f["escenario"] for f in filas} == {"base", "sin_marcado_masivo", "tutora_marca_todas"}
+    assert all(f["origen"] == "Datos simulados" for f in filas)
+    tablas = (tmp_path / "tablas_escenarios.md").read_text(encoding="utf-8")
+    titulos = [linea for linea in tablas.splitlines() if linea.startswith("**Tabla S")]
+    assert titulos and all("Datos simulados" in t for t in titulos)
+    assert analisis.COLUMNA_DECISION in tablas
+
+
+# --- Escenarios «entrega con cola» y «con banco de sesiones» -------------------------------------
+
+
+@pytest.fixture(scope="module")
+def esc():
+    return parametros.valores(analisis.cargar_escenarios())
+
+
+@pytest.fixture(scope="module")
+def sin_ruido(valores):
+    otros = analisis.copy.deepcopy(valores)
+    otros["ruido"]["medicion_cv"] = 0.0
+    return otros
+
+
+def _por_momento(resultado, momento):
+    return [f for f in resultado.filas if f["momento"] == momento]
+
+
+def test_escenarios_yaml_es_valido_y_no_toca_parametros(esc):
+    assert esc["entrega_con_cola"]["espera_cola"] == 10
+    assert esc["con_banco"]["cobertura_repositorio"] == 0.3
+    assert analisis.ARCHIVO_ESCENARIOS != parametros.ARCHIVO
+
+
+def test_cola_por_sesion_y_por_dia_en_o1(sin_ruido, tabla, esc):
+    base = medicion.simular(sin_ruido, 3, tabla)
+    cola = analisis.ajustar_cola(base, sin_ruido, tabla, 3, esc=esc["entrega_con_cola"])
+    c = esc["entrega_con_cola"]
+    for antes, f in zip(_por_momento(base, "pretest"), _por_momento(cola, "pretest"), strict=True):
+        n = f["sesiones_dia"]
+        assert n in (2, 3, 4)
+        dia = c["ir_a_la_puerta"] + c["espera_cola"] + n * c["revision_presencial"]
+        assert f["sesion_entrega_min"] == pytest.approx(dia / n)
+        assert f["sesion_min"] == pytest.approx(antes["sesion_elaboracion_min"] + dia / n)
+        # Por día: n elaboraciones (sin ruido, todas iguales) + la entrega del día.
+        assert f["sesion_dia_min"] == pytest.approx(n * antes["sesion_elaboracion_min"] + dia)
+        assert f["notas_min"] == antes["notas_min"]
+
+
+def test_cola_no_cambia_o2_por_sesion_y_suma_n_envios_por_dia(sin_ruido, tabla, esc):
+    base = medicion.simular(sin_ruido, 3, tabla)
+    cola = analisis.ajustar_cola(base, sin_ruido, tabla, 3, esc=esc["entrega_con_cola"])
+    for antes, f in zip(_por_momento(base, "postest"), _por_momento(cola, "postest"), strict=True):
+        n = f["sesiones_dia"]
+        assert f["sesion_min"] == antes["sesion_min"]
+        assert f["sesion_dia_min"] == pytest.approx(n * antes["sesion_min"])
+
+
+def test_cola_con_n_fijo_y_con_impresion(sin_ruido, tabla, esc):
+    base = medicion.simular(sin_ruido, 3, tabla)
+    c = esc["entrega_con_cola"]
+    dos = analisis.ajustar_cola(base, sin_ruido, tabla, 3, esc=c, n_fijo=2)
+    assert {f["sesiones_dia"] for f in dos.filas} == {2}
+    sin = analisis.ajustar_cola(base, sin_ruido, tabla, 3, esc=c, n_fijo=3)
+    con = analisis.ajustar_cola(base, sin_ruido, tabla, 3, esc=c, n_fijo=3, impresion=True)
+    i = c["impresion"]
+    for a, b in zip(_por_momento(sin, "pretest"), _por_momento(con, "pretest"), strict=True):
+        extra = b["sesion_entrega_min"] - a["sesion_entrega_min"]
+        assert extra == pytest.approx(i["propia_por_sesion"]) or extra == pytest.approx(
+            i["libreria_por_dia"] / 3
+        )
+
+
+def test_banco_solo_ahorra_sin_propia_y_con_hallazgo(sin_ruido, tabla, esc):
+    base = medicion.simular(sin_ruido, 3, tabla)
+    b = dict(esc["con_banco"], proporcion_con_archivo_propio=0.0, cobertura_repositorio=1.0)
+    todos = analisis.ajustar_banco(base, sin_ruido, tabla, 3, esc=b)
+    d = {x.codigo: x for x in base.docentes}
+    for antes, f in zip(_por_momento(base, "postest"), _por_momento(todos, "postest"), strict=True):
+        ritmo = d[f["codigo"]].ritmo
+        esperado = (
+            antes["sesion_elaboracion_min"] * b["fraccion_adaptacion"] + b["descarga"] * ritmo
+        )
+        assert f["sesion_elaboracion_min"] == pytest.approx(esperado)
+        assert f["sesion_min"] == pytest.approx(esperado + antes["sesion_entrega_min"])
+    nadie = analisis.ajustar_banco(
+        base, sin_ruido, tabla, 3, esc=dict(b, cobertura_repositorio=0.0)
+    )
+    assert nadie.filas == base.filas
+    for a, f in zip(_por_momento(base, "pretest"), _por_momento(todos, "pretest"), strict=True):
+        assert f == a  # O1 no cambia
+
+
+def test_los_ajustes_no_cambian_la_corrida_principal(valores, tabla, esc):
+    base = medicion.simular(valores, 2026, tabla)
+    copia = analisis.copy.deepcopy(base.filas)
+    analisis.ajustar_cola(base, valores, tabla, 2026, esc=esc["entrega_con_cola"])
+    analisis.ajustar_banco(base, valores, tabla, 2026, esc=esc["con_banco"])
+    assert base.filas == copia
+
+
+def test_barrido_del_banco(tmp_path):
+    filas = analisis.barrido_banco(
+        replicas=2, procesos=1, coberturas=[0.0, 0.6], fracciones=[0.3], propias=[0.7]
+    )
+    assert len(filas) == 2
+    assert {f["cobertura_repositorio"] for f in filas} == {0.0, 0.6}
+    assert all(0 <= f["pct_rechazo_he1"] <= 100 for f in filas)
+
+
+def test_escenarios_de_cola_y_banco_en_las_salidas(tmp_path):
+    analisis.ejecutar_escenarios(
+        tmp_path, ["entrega_con_cola", "con_banco"], replicas=2, procesos=1, barrido=False
+    )
+    with (tmp_path / "simulados_escenarios.csv").open(encoding="utf-8", newline="") as f:
+        filas = list(csv.DictReader(f))
+    cola = [f for f in filas if f["escenario"] == "entrega_con_cola"]
+    assert any(f["indicador"] == "sesion_dia_min" for f in cola)
+    dia = next(f for f in cola if f["indicador"] == "sesion_dia_min")
+    assert "no entra en HE ni HG" in dia[analisis.COLUMNA_DECISION]
+
+
+# --- Sensibilidad ---------------------------------------------------------------------------------
+
+
+def test_variantes_de_sensibilidad_cubren_cada_supuesto_escalar(arbol):
+    variantes = analisis.variantes_sensibilidad(arbol, cargar_esc=False)
+    rutas = {v["parametro"] for v in variantes}
+    escalares = {r for r, _ in parametros.supuestos(arbol)} - {"likert.umbrales"}
+    assert rutas == escalares
+    for v in variantes:
+        assert v["extremo"] in ("mínimo", "máximo")
+    assert len(variantes) == 2 * len(escalares)
+
+
+def test_variantes_incluyen_los_supuestos_de_la_cola_y_la_descarga(arbol):
+    rutas = {v["parametro"] for v in analisis.variantes_sensibilidad(arbol)}
+    assert "entrega_con_cola.espera_cola" in rutas
+    assert "con_banco.descarga" in rutas
+    assert "entrega_con_cola.sesiones_dia" not in rutas  # ya van como n = 2 y n = 4
+
+
+def test_un_supuesto_es_clave_si_cambia_una_decision_o_cruza_el_80():
+    base = {"decisiones": {"HE1": True, "HE2": True}, "pct": {"HE1": 96.0, "HE2": 100.0}}
+    assert not analisis.es_clave(base, base)
+    cambia = {"decisiones": {"HE1": False, "HE2": True}, "pct": {"HE1": 90.0, "HE2": 100.0}}
+    assert analisis.es_clave(base, cambia)
+    cruza = {"decisiones": {"HE1": True, "HE2": True}, "pct": {"HE1": 79.9, "HE2": 100.0}}
+    assert analisis.es_clave(base, cruza)
+
+
+def test_sensibilidad_salidas_y_parametros_intactos(tmp_path, arbol):
+    antes = _sha(parametros.ARCHIVO)
+    solo = ["o1.sesion.entrega_mediana", "entrega_con_cola.espera_cola"]
+    analisis.ejecutar_sensibilidad(tmp_path, replicas=2, procesos=1, solo=solo)
+    assert _sha(parametros.ARCHIVO) == antes
+    with (tmp_path / "simulados_sensibilidad.csv").open(encoding="utf-8", newline="") as f:
+        filas = list(csv.DictReader(f))
+    assert {f["parametro"] for f in filas} == set(solo)
+    assert all(f["origen"] == "Datos simulados" for f in filas)
+    tablas = (tmp_path / "tablas_sensibilidad.md").read_text(encoding="utf-8")
+    titulos = [linea for linea in tablas.splitlines() if linea.startswith("**Tabla S")]
+    assert titulos and all("Datos simulados" in t for t in titulos)

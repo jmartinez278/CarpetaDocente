@@ -1,0 +1,83 @@
+# Supuestos de los escenarios de G4. Datos simulados: nada de esto es una medición real.
+#
+# Mismo formato y validador que parametros.yaml. La corrida principal no lee este archivo:
+# parametros.yaml sigue congelado (6a8e1ea). Aprobados por Marco el 25-11.
+
+entrega_con_cola:
+  # O1: la dirección está en el mismo local. La entrega es diaria: ir a la puerta + esperar el
+  # turno (una vez al día) + estar presente mientras revisan cada sesión. O2: subir y enviar
+  # (KLM); la revisión ocurre sin la docente.
+  ir_a_la_puerta:
+    valor: 1
+    unidad: min por día
+    supuesto: true
+    ancla: "Mecanismo: Nayely (25-11); la cifra no tiene ancla"
+    rango: [0.5, 3]
+  espera_cola:
+    valor: 10
+    unidad: min por día (una vez, para todas las sesiones del día)
+    supuesto: true
+    ancla: "Mecanismo: Nayely (25-11); la cifra no tiene ancla"
+    rango: [0, 30]
+  revision_presencial:
+    valor: 5
+    unidad: min por sesión (la docente presente mientras la revisan)
+    supuesto: true
+    ancla: "Mecanismo: Nayely (25-11); la cifra no tiene ancla"
+    rango: [1, 15]
+  sesiones_dia:
+    valor: [2, 4]
+    unidad: sesiones entregadas en el día; entero al azar entre ambos, por docente y día medido
+    supuesto: true
+    ancla: "Horario normal de primaria (Marco, 25-11)"
+    rango: [2, 4]
+  impresion:
+    # Solo en la variante «con impresión» (decisión de Marco, 25-11): la docente imprime igual
+    # las fichas de sus estudiantes y no todas trabajan con fichas; su peso marginal es dudoso.
+    proporcion_impresora_propia:
+      valor: 0.4
+      unidad: proporción de docentes que imprimen en casa (el resto, en la librería cercana)
+      supuesto: true
+      ancla: "Mecanismo: Marco y Nayely (25-11); la cifra no tiene ancla"
+      rango: [0.1, 0.7]
+    propia_por_sesion:
+      valor: 1
+      unidad: min por sesión (imprimir y recoger en casa)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.5, 3]
+    libreria_por_dia:
+      valor: 15
+      unidad: min por día (ir a la librería, esperar, pagar y volver; el día antes o a primera hora, igual tiempo)
+      supuesto: true
+      ancla: "Mecanismo: Marco y Nayely (25-11); la cifra no tiene ancla"
+      rango: [5, 30]
+
+con_banco:
+  # O1: la elaboración ya es una adaptación de sesiones propias. O2: solo ahorra quien no tiene
+  # una sesión propia adecuada y encuentra una en el repositorio (US-011/012/016): la descarga y
+  # la adapta en lugar de elaborarla.
+  proporcion_con_archivo_propio:
+    valor: 0.7
+    unidad: proporción de sesiones para las que la docente tiene una propia adecuada
+    supuesto: true
+    ancla: "Mecanismo: entrevista a docente, conversación del equipo; la cifra no tiene ancla"
+    rango: [0.4, 0.9]
+  cobertura_repositorio:
+    valor: 0.3
+    unidad: probabilidad de encontrar en el repositorio una sesión que sirva
+    supuesto: true
+    ancla: "Mecanismo: entrevista a docente, conversación del equipo; la cifra no tiene ancla"
+    rango: [0, 0.6]
+  fraccion_adaptacion:
+    valor: 0.5
+    unidad: tiempo de adaptar una sesión del repositorio ÷ tiempo de elaborarla
+    supuesto: true
+    ancla: "Mecanismo: entrevista a docente, conversación del equipo; la cifra no tiene ancla"
+    rango: [0.3, 0.8]
+  descarga:
+    valor: 1
+    unidad: min (buscar, filtrar y descargar en el repositorio); SUPUESTO hasta grabar la ruta del agente (pendientes.md)
+    supuesto: true
+    ancla: "sin ancla (funcionalidad implementada, US-011/012/016; ruta KLM pendiente)"
+    rango: [0.5, 3]
