@@ -110,7 +110,18 @@ def _tiempos_o1(rng, d, v, ruido):
     elaboracion = o1["sesion"]["elaboracion_mediana"] * d.ritmo * ruido()
     entrega = o1["sesion"]["entrega_mediana"] * d.ritmo * ruido()
     por_estudiante = o1["notas"][f"por_estudiante_{d.medio_notas_o1}"]
-    notas = (o1["notas"]["apertura"] + por_estudiante * d.n_estudiantes) * d.ritmo * ruido()
+    # Conclusión de B y C (RN-003): la misma proporción y los mismos caracteres que en O2.
+    p = v["poblacion"]
+    conclusion = (
+        p["proporcion_conclusion_notas"]
+        * p["caracteres_conclusion"]
+        * o1["notas"]["por_caracter_conclusion"]
+    )
+    notas = (
+        (o1["notas"]["apertura"] + (por_estudiante + conclusion) * d.n_estudiantes)
+        * d.ritmo
+        * ruido()
+    )
     if rng.random() < o1["corregir_nota"]["probabilidad"]:
         notas += o1["corregir_nota"]["costo"] * d.ritmo
     a = o1["asistencia"]

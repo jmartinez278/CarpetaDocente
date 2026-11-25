@@ -1,0 +1,26 @@
+persona: P3
+tarea: corregir_nota
+exito: true
+errores: []
+confusiones: []
+notas: Un solo agente interpretó a las tres personas en secuencia (P1, P2, P3). P1 exploró la pantalla
+  en vivo; P2 y P3 repitieron la ruta con un script de Playwright, con datos restablecidos y resultado
+  verificado (4 B, 4 C, 22 A guardados y una nota corregida a AD).
+pasos:
+- accion: tap
+  objetivo: abrir Notas desde el inicio
+  inicia_subtarea: true
+- accion: espera
+  objetivo: carga de la hoja del IV bimestre
+- accion: tap
+  objetivo: celda del estudiante cuyo nivel se corrige
+  decision: true
+- accion: tecla
+  objetivo: escribir A
+- accion: tecla
+  objetivo: escribir D (queda AD)
+- accion: tap
+  objetivo: «Guardar»
+- accion: espera
+  objetivo: aviso «Arte y Cultura guardada»
+  verifica: true

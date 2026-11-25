@@ -30,12 +30,39 @@ poblacion:
     supuesto: true
     ancla: "Nayely, comunicación verbal aproximada (24-11)"
     rango: [25, 35]
+  tasa_excepciones_asistencia:
+    valor: 0.10
+    unidad: proporción de estudiantes por jornada que no marcan «Asistió» (faltó, tarde o justificado); un solo parámetro, compartido por O1 y O2
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.03, 0.20]
+  proporcion_conclusion_notas:
+    valor: 0.25
+    unidad: proporción de estudiantes con nivel B o C en una competencia, que llevan conclusión; un solo parámetro, compartido por O1 y O2
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.10, 0.40]
+  caracteres_conclusion:
+    valor: 40
+    unidad: caracteres de una conclusión descriptiva (dentro de los límites de reglas_app); compartido por O1 y O2
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [10, 120]
   estudiantes_amplitud:
     valor: 5
     unidad: estudiantes (entero uniforme en centro ± amplitud)
     supuesto: true
     ancla: "sin ancla"
     rango: [0, 8]
+
+reglas_app:
+  # Lo que la app exige: no es SUPUESTO. La conclusión de B y C la cita la spec registro-notas.
+  conclusion_niveles:
+    valor: ["B", "C"]
+    fuente: "openspec/specs/registro-notas, «Conclusión en B y C»; RN-003 (docs/09): RVM 094-2020, 5.1.1.3, num. 7, lit. c) y 5.1.2.2, num. 5 la exigen en C; la I.E. la escribe en B y C (decisión del equipo, 01/11/2026)"
+  conclusion_caracteres:
+    valor: [10, 500]
+    fuente: "openspec/specs/registro-notas, «Conclusión en B y C» (de 10 a 500 caracteres); RN-003 (docs/09); RVM 094-2020, 5.1.1.3, num. 7, lit. c)"
 
 catalogo:
   # Las competencias que marca la tutora se cuentan del catálogo SIAGIE del repo; no se
@@ -139,6 +166,12 @@ o1:
       supuesto: true
       ancla: "sin ancla"
       rango: [0.15, 0.6]
+    por_caracter_conclusion:
+      valor: 0.02
+      unidad: min por carácter de la conclusión de B y C (escrita a mano o en Excel); se suma con la proporción y los caracteres de poblacion
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.01, 0.04]
   asistencia:
     por_estudiante:
       valor: 0.15
@@ -276,6 +309,52 @@ o2:
   tiempos_klm:
     valor: "klm/"   # tablas de G2, por persona, tarea y variante
     fuente: "KLM sobre las rutas de los agentes (G2); falta la referencia de KLM y de KLM táctil"
+  operadores_klm:
+    # Operadores KLM en segundos, para convertir las rutas de los agentes (klm.py). Son SUPUESTO
+    # sin ancla hasta abrir la fuente original de KLM; los valores son de orden de magnitud, no
+    # citados. R es la respuesta del sistema según la conexión de la tarea (contexto_tarea).
+    K:
+      valor: 0.28
+      unidad: segundos por tecla
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.1, 0.5]
+    P:
+      valor: 1.1
+      unidad: segundos por apuntar (ratón o dedo)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.8, 1.8]
+    B:
+      valor: 0.1
+      unidad: segundos por clic o toque (la pulsación sola)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.05, 0.3]
+    H:
+      valor: 0.4
+      unidad: segundos por cambio de manos (teclado ↔ ratón o pantalla)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.2, 0.8]
+    M:
+      valor: 1.35
+      unidad: segundos por preparación mental
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [1.0, 2.0]
+    R_domestica:
+      valor: 1.0
+      unidad: segundos de espera por respuesta, conexión doméstica (PC)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.3, 3.0]
+    R_slow_4g:
+      valor: 3.0
+      unidad: segundos de espera por respuesta, celular con Slow 4G
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [1.0, 8.0]
   factor_no_experto_p1:
     valor: 2.0
     unidad: multiplica el tiempo KLM (KLM estima a un experto sin errores)

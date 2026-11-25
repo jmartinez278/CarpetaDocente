@@ -1,0 +1,34 @@
+persona: P1
+tarea: asistencia_momento
+exito: true
+errores: []
+confusiones:
+- paso: 4
+  esperaba: un aviso claro de que la marca ya quedó guardada
+  paso_real: tras el marcado masivo el estado dice «Pendiente de deshacer» antes de «Guardado»
+- paso: 1
+  esperaba: entender los estados con la leyenda de la fila
+  paso_real: abrió la ayuda para saber cuántos toques llevan a Tarde y Justificado
+notas: 'Un solo agente interpretó a las tres personas en secuencia (P2 primero, P1 y P3 después). Hallazgo de interfaz: hay dos botones
+  idénticos de marcado masivo (uno por tarjeta, otro «debajo»); a 360 px solo se ve el de «debajo».'
+pasos:
+- accion: tap
+  objetivo: abrir la ayuda «Un toque cambia el estado»
+  desvio: true
+- accion: tap
+  objetivo: abrir Asistencia desde el inicio
+  inicia_subtarea: true
+- accion: espera
+  objetivo: carga de la jornada de hoy
+- accion: tap
+  objetivo: «Marcar los 30 restantes como Asistió» (marcado masivo)
+  decision: true
+- accion: espera
+  objetivo: aviso «Guardado» y avance 30/30
+  verifica: true
+- accion: tap
+  objetivo: cambiar a Faltó a quien no asistió
+  por_excepcion: true
+- accion: espera
+  objetivo: el sistema guarda el cambio
+  por_excepcion: true

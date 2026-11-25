@@ -1,0 +1,39 @@
+persona: P3
+tarea: notas
+exito: true
+errores: []
+confusiones: []
+notas: Un solo agente interpretó a las tres personas en secuencia (P1, P2, P3). P1 exploró la pantalla
+  en vivo; P2 y P3 repitieron la ruta con un script de Playwright, con datos restablecidos y resultado
+  verificado (4 B, 4 C, 22 A guardados y una nota corregida a AD).
+pasos:
+- accion: tap
+  objetivo: abrir Notas desde el inicio
+  inicia_subtarea: true
+- accion: espera
+  objetivo: carga de la hoja del IV bimestre
+- accion: tap
+  objetivo: «Rellenar vacías» (relleno de la competencia)
+  decision: true
+- accion: lectura
+  objetivo: leer «Se rellenarán 30 celdas…» y el nivel A preseleccionado
+  verifica: true
+- accion: tap
+  objetivo: «Rellenar con A»
+- accion: tap
+  objetivo: celda de un estudiante con B o C
+  por_conclusion: true
+- accion: tecla
+  objetivo: escribir el nivel B o C (reemplaza la A)
+  por_conclusion: true
+- accion: texto
+  objetivo: escribir la conclusión (se abre sola)
+  por_conclusion: true
+- accion: tecla
+  objetivo: 'Escape: cierra la conclusión'
+  por_conclusion: true
+- accion: tap
+  objetivo: «Guardar»
+- accion: espera
+  objetivo: aviso «Arte y Cultura guardada»
+  verifica: true

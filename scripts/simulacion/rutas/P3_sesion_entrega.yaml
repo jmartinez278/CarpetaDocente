@@ -1,0 +1,55 @@
+persona: P3
+tarea: sesion_entrega
+exito: true
+errores: []
+confusiones: []
+notas: 'Un solo agente interpretó a las tres personas en secuencia (P1, P2, P3). P1 exploró la pantalla
+  en vivo; P2 y P3 repitieron la ruta con un script de Playwright, con datos restablecidos y resultado
+  verificado (sesión enviada, «Mis sesiones» = 1). Consigna fija: Matemática, 3.º, título de 32 caracteres
+  y propósito de 53; sin compartir en el repositorio.'
+pasos:
+- accion: tap
+  objetivo: abrir Sesiones desde el inicio
+  inicia_subtarea: true
+- accion: espera
+  objetivo: carga de Sesiones
+- accion: tap
+  objetivo: «Subir una sesión»
+- accion: tap
+  objetivo: «Elegir archivo» (abre el selector del sistema)
+- accion: tap
+  objetivo: el Word de la sesión en el selector (doble clic)
+  decision: true
+- accion: clic
+  objetivo: segundo clic del doble clic
+- accion: tap
+  objetivo: abrir el selector de área
+- accion: tap
+  objetivo: elegir «Matemática»
+  decision: true
+- accion: lectura
+  objetivo: comprobar que el grado ya viene en 3.º
+  verifica: true
+- accion: tap
+  objetivo: campo Título
+- accion: manos
+  objetivo: del ratón al teclado
+- accion: texto
+  objetivo: escribir el título (consigna fija)
+  caracteres: 32
+- accion: manos
+  objetivo: del teclado al ratón
+- accion: tap
+  objetivo: campo Propósito
+- accion: manos
+  objetivo: del ratón al teclado
+- accion: texto
+  objetivo: escribir el propósito (consigna fija)
+  caracteres: 53
+- accion: manos
+  objetivo: del teclado al ratón
+- accion: tap
+  objetivo: «Enviar a la dirección»
+- accion: espera
+  objetivo: subida al 100 % y aviso «Sesión enviada a la dirección»
+  verifica: true

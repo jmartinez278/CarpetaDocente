@@ -191,3 +191,56 @@ def test_autorregistro_del_anexo_2(valores):
 
 def test_cada_fila_dice_datos_simulados(valores):
     assert all(f["origen"] == "Datos simulados" for f in _simular(valores).filas)
+
+
+# ── conclusiones de B y C en O1 (misma proporción y caracteres que O2) ───────────────────────
+
+
+def _sin_azar(valores):
+    valores["rasgos"]["ritmo_cv"] = 1e-9
+    valores["ruido"]["medicion_cv"] = 1e-9
+    valores["o1"]["corregir_nota"]["probabilidad"] = 0.0
+    return valores
+
+
+def _notas_o1(valores):
+    resultado = _simular(valores)
+    d = {x.codigo: x for x in resultado.docentes}
+    return [(d[f["codigo"]], f["notas_min"]) for f in resultado.filas if f["momento"] == "pretest"]
+
+
+def test_o1_suma_el_costo_de_escribir_las_conclusiones(valores):
+    valores = _sin_azar(valores)
+    o1 = valores["o1"]["notas"]
+    prop = valores["poblacion"]["proporcion_conclusion_notas"]
+    caracteres = valores["poblacion"]["caracteres_conclusion"]
+    for d, minutos in _notas_o1(valores):
+        por_estudiante = o1[f"por_estudiante_{d.medio_notas_o1}"]
+        esperado = o1["apertura"] + d.n_estudiantes * (
+            por_estudiante + prop * caracteres * o1["por_caracter_conclusion"]
+        )
+        assert minutos == pytest.approx(esperado * d.ritmo, rel=1e-6)
+
+
+def test_la_proporcion_y_los_caracteres_se_comparten_con_o1(valores):
+    valores = _sin_azar(valores)
+    antes = dict((d.codigo, m) for d, m in _notas_o1(valores))
+    valores["poblacion"]["proporcion_conclusion_notas"] = 0.0
+    sin = dict((d.codigo, m) for d, m in _notas_o1(valores))
+    assert all(sin[c] < antes[c] for c in antes)
+    valores["poblacion"]["proporcion_conclusion_notas"] = 0.4
+    valores["poblacion"]["caracteres_conclusion"] = 10
+    corto = dict((d.codigo, m) for d, m in _notas_o1(valores))
+    valores["poblacion"]["caracteres_conclusion"] = 120
+    largo = dict((d.codigo, m) for d, m in _notas_o1(valores))
+    assert all(largo[c] > corto[c] for c in corto)
+
+
+def test_las_conclusiones_no_cambian_los_errores_ni_las_demas_mediciones(valores):
+    base = _simular(valores)
+    valores["poblacion"]["proporcion_conclusion_notas"] = 0.40
+    otra = _simular(valores)
+    for a, b in zip(base.filas, otra.filas, strict=True):
+        assert a["asistencia_min"] == b["asistencia_min"]
+        assert a["sesion_min"] == b["sesion_min"]
+        assert a["notas_E1"] == b["notas_E1"]

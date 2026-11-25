@@ -1,0 +1,29 @@
+persona: P2
+tarea: asistencia_diferido
+exito: true
+errores: []
+confusiones: []
+notas: Un solo agente interpretó a las tres personas en secuencia.
+pasos:
+- accion: tap
+  objetivo: abrir Asistencia desde el inicio
+  inicia_subtarea: true
+- accion: espera
+  objetivo: carga de la jornada de hoy
+- accion: tap
+  objetivo: elegir el día pasado en la semana (Mar 24)
+  decision: true
+- accion: espera
+  objetivo: carga de la jornada del día elegido
+- accion: tap
+  objetivo: «Marcar los 30 restantes como Asistió» (marcado masivo)
+  decision: true
+- accion: espera
+  objetivo: aviso «Guardado» y avance 30/30
+  verifica: true
+- accion: tap
+  objetivo: cambiar a Faltó a quien no asistió
+  por_excepcion: true
+- accion: espera
+  objetivo: el sistema guarda el cambio
+  por_excepcion: true

@@ -1,0 +1,48 @@
+P1:
+  asistencia_diferido:
+    fijo: 0.3
+    por_estudiante: 0.007000000000000001
+  asistencia_momento:
+    fijo: 0.20750000000000002
+    por_estudiante: 0.007000000000000001
+  corregir_nota:
+    fijo: 0.17016666666666666
+    por_estudiante: 0.0
+  notas:
+    fijo: 0.20333333333333337
+    por_estudiante: 0.054000000000000006
+  sesion_entrega:
+    fijo: 0.7508333333333344
+    por_estudiante: 0.0
+P2:
+  asistencia_diferido:
+    fijo: 0.3
+    por_estudiante: 0.007000000000000001
+  asistencia_momento:
+    fijo: 0.20750000000000002
+    por_estudiante: 0.007000000000000001
+  corregir_nota:
+    fijo: 0.17016666666666666
+    por_estudiante: 0.0
+  notas:
+    fijo: 0.20333333333333337
+    por_estudiante: 0.054000000000000006
+  sesion_entrega:
+    fijo: 0.7508333333333344
+    por_estudiante: 0.0
+P3:
+  asistencia_diferido:
+    fijo: 0.3
+    por_estudiante: 0.007000000000000001
+  asistencia_momento:
+    fijo: 0.20750000000000002
+    por_estudiante: 0.007000000000000001
+  corregir_nota:
+    fijo: 0.17016666666666666
+    por_estudiante: 0.0
+  notas:
+    fijo: 0.20333333333333337
+    por_estudiante: 0.054000000000000006
+  sesion_entrega:
+    fijo: 0.7508333333333344
+    por_estudiante: 0.0
