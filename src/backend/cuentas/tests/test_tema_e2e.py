@@ -93,3 +93,41 @@ def test_sin_eleccion_sigue_al_sistema_y_la_eleccion_llega_a_la_otra_pestana(
 
     expect(otra.locator("html")).to_have_attribute("data-theme", "dark")
     expect(boton(otra, A_CLARO)).to_be_visible()
+
+
+# M-01: con el puntero, el cambio de tema se funde (View Transition de 200 ms); con el teclado, no.
+CONTAR_TRANSICIONES = """(() => {
+    window.__transiciones = 0;
+    const original = Document.prototype.startViewTransition;
+    if (!original) return;
+    Document.prototype.startViewTransition = function (...argumentos) {
+        window.__transiciones += 1;
+        return original.apply(this, argumentos);
+    };
+})()"""
+
+
+def test_con_el_puntero_el_cambio_de_tema_se_funde(live_server, page, docente, clave):
+    page.add_init_script(CONTAR_TRANSICIONES)
+    abrir_portada(page, live_server, docente, clave)
+
+    boton(page, A_OSCURO).click()
+
+    expect(page.locator("html")).to_have_attribute("data-theme", "dark")
+    assert page.evaluate("window.__transiciones") == 1
+    duracion = page.evaluate(
+        """() => getComputedStyle(document.documentElement, "::view-transition-new(root)")
+            .animationDuration"""
+    )
+    assert duracion == "0.2s"
+
+
+def test_con_el_teclado_el_tema_cambia_sin_fundido(live_server, page, docente, clave):
+    page.add_init_script(CONTAR_TRANSICIONES)
+    abrir_portada(page, live_server, docente, clave)
+    boton(page, A_OSCURO).focus()
+
+    page.keyboard.press("Enter")
+
+    expect(page.locator("html")).to_have_attribute("data-theme", "dark")
+    assert page.evaluate("window.__transiciones") == 0

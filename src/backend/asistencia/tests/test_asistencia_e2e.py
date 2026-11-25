@@ -1186,3 +1186,99 @@ def test_el_periodo_cerrado_pasa_axe(
 
     revisar_con_axe(page, f"asistencia-periodo-cerrado-{tema}")
     assert page.evaluate("document.documentElement.scrollWidth") <= 360
+
+
+# --- Movimiento para la presentación (M-02 y M-03; DESIGN.md, Movimiento) ---
+
+# Transiciones que corren en el elemento justo después de tocar, en el mismo turno de JS.
+TRANSICIONES = """(selector) => [...document.querySelector(selector).getAnimations()]
+    .map((a) => a.transitionProperty).sort()"""
+
+
+def test_el_circulo_tocado_funde_su_color_en_140_ms(abrir_asistencia, veinticinco):
+    page = abrir_asistencia(1280)
+    # Al cargar, ningún círculo entra con el fundido: solo el que cambia.
+    expect(page.locator(".marcar .estado[data-cambio]")).to_have_count(0)
+
+    tocar(page, veinticinco[0])
+
+    nuevo = circulo(page, veinticinco[0]).locator(".estado")
+    expect(nuevo).to_have_attribute("data-cambio", "")
+    assert nuevo.evaluate("(e) => getComputedStyle(e).transitionDuration") == "0.14s, 0.14s, 0.14s"
+    assert nuevo.evaluate("(e) => getComputedStyle(e).transitionProperty") == (
+        "background-color, border-color, color"
+    )
+    esperar_guardado(page)
+
+
+def test_el_circulo_marcado_con_el_teclado_cambia_sin_fundido(abrir_asistencia, veinticinco):
+    page = abrir_asistencia(1280)
+    circulo(page, veinticinco[0]).focus()
+
+    page.keyboard.press("Enter")
+
+    nuevo = circulo(page, veinticinco[0]).locator(".estado")
+    expect(nuevo).to_have_attribute("data-cambio", "")
+    assert nuevo.evaluate("(e) => getComputedStyle(e).transitionDuration") == "0s"
+    esperar_guardado(page)
+
+
+def test_repintar_el_mismo_estado_no_cambia_el_circulo(abrir_asistencia, veinticinco):
+    """El fallo repinta la fila con el mismo estado: el círculo no se reemplaza ni se funde."""
+    page = abrir_asistencia(1280)
+    retenidas = []
+    page.route("**/estudiantes/*/", lambda route: retenidas.append(route))
+    tocar(page, veinticinco[0])
+    circulo(page, veinticinco[0]).locator(".estado").evaluate("(e) => { e.dataset.marca = '1'; }")
+
+    esperar_retenida(page, retenidas).abort()
+
+    expect(fila(page, veinticinco[0]).locator("[data-fallo]")).to_be_visible()
+    expect(circulo(page, veinticinco[0]).locator(".estado")).to_have_attribute("data-marca", "1")
+
+
+def abrir_barra(page, marca):
+    """Abre la barra con un clic en «Marcar…» tras ``marca`` (``pointerdown`` o ``keydown``, con los
+    que marco.js quita o pone ``data-teclado``) y devuelve las transiciones que arrancan."""
+    return page.evaluate(
+        """([marca, t]) => {
+            const evento = marca === "keydown" ? new KeyboardEvent(marca) : new PointerEvent(marca);
+            document.dispatchEvent(evento);
+            document.querySelector("[data-marcar-todos]:not([hidden])").click();
+            return (eval(t))("[data-barra-deshacer]");
+        }""",
+        [marca, TRANSICIONES],
+    )
+
+
+def test_la_barra_deshacer_entra_y_sale_desde_abajo(abrir_asistencia, veinticinco):
+    page = abrir_asistencia(1280)
+
+    assert abrir_barra(page, "pointerdown") == ["opacity", "transform"]
+    expect(barra(page)).to_be_visible()
+    # Se cierra con la entrada terminada: a medio entrar, la opacidad aún vale 0 y no hay salida.
+    barra(page).evaluate("(e) => Promise.all(e.getAnimations().map((a) => a.finished))")
+
+    salida = page.evaluate(
+        """(t) => { document.querySelector("[data-deshacer]").click();
+                    return (eval(t))("[data-barra-deshacer]"); }""",
+        TRANSICIONES,
+    )
+    assert {"opacity", "transform"} <= set(salida)
+    expect(barra(page)).to_be_hidden()
+
+
+def test_con_movimiento_reducido_la_barra_deshacer_solo_se_funde(abrir_asistencia, veinticinco):
+    page = abrir_asistencia(1280)
+    page.emulate_media(reduced_motion="reduce")
+
+    assert abrir_barra(page, "pointerdown") == ["opacity"]
+
+
+def test_la_barra_deshacer_abierta_con_el_teclado_aparece_sin_entrada(
+    abrir_asistencia, veinticinco
+):
+    page = abrir_asistencia(1280)
+
+    assert abrir_barra(page, "keydown") == []
+    expect(barra(page)).to_be_visible()

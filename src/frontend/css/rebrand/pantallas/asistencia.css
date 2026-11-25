@@ -566,6 +566,27 @@
     color: var(--justificado-ink);
   }
 
+  /* M-02: el círculo que cambia (asistencia.js le pone data-cambio) entra con la entrada de color de 140 ms desde el
+     de Sin marcar. Solo color: vale igual con movimiento reducido. Con el teclado, el cambio es inmediato (regla 1). */
+  .marcar .estado[data-cambio] {
+    transition:
+      background-color var(--m-in) var(--m-ease),
+      border-color var(--m-in) var(--m-ease),
+      color var(--m-in) var(--m-ease);
+  }
+
+  @starting-style {
+    .marcar .estado[data-cambio] {
+      background-color: transparent;
+      border-color: var(--line-strong);
+      color: transparent;
+    }
+  }
+
+  html[data-teclado] .marcar .estado[data-cambio] {
+    transition: none;
+  }
+
   .nota-justificacion {
     grid-column: 2 / -1;
     padding-block: var(--s-1);
@@ -637,6 +658,52 @@
     color: var(--g-main);
     font-size: var(--text-label);
     transform: translateX(-50%);
+    /* M-03: entra desde abajo (8 px y opacidad) en --m-panel y sale por el mismo borde en --m-out; display con
+       allow-discrete para que [hidden] la quite al terminar la salida, como el diálogo. */
+    transition:
+      transform var(--m-out) var(--m-ease),
+      opacity var(--m-out) var(--m-ease),
+      display var(--m-out) allow-discrete;
+  }
+
+  .barra-deshacer:not([hidden]) {
+    transition-duration: var(--m-panel);
+  }
+
+  .barra-deshacer[hidden] {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+
+  @starting-style {
+    .barra-deshacer:not([hidden]) {
+      opacity: 0;
+      transform: translate(-50%, 8px);
+    }
+  }
+
+  /* Regla 1: abierta o cerrada con el teclado, sin transición. */
+  html[data-teclado] .barra-deshacer {
+    transition: none;
+  }
+
+  /* Movimiento reducido: sin desplazamiento; solo el fundido. */
+  @media (prefers-reduced-motion: reduce) {
+    .barra-deshacer {
+      transition:
+        opacity var(--m-out) var(--m-ease),
+        display var(--m-out) allow-discrete;
+    }
+
+    .barra-deshacer[hidden] {
+      transform: translateX(-50%);
+    }
+
+    @starting-style {
+      .barra-deshacer:not([hidden]) {
+        transform: translateX(-50%);
+      }
+    }
   }
 
   /* Mientras la barra está a la vista, el foco que baja por la lista queda sobre ella (A-14, WCAG 2.4.11):
