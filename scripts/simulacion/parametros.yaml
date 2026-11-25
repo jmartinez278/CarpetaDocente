@@ -1,0 +1,450 @@
+# Parámetros de la simulación (Tesis 2). Datos simulados: nada de esto es una medición real.
+#
+# Cada parámetro es un mapa con `valor` y su origen:
+#   - `fuente`: de dónde sale (tesis, anexo, dato de la I.E., spec o código del repo), o
+#   - `supuesto: true` con `ancla` (texto: entrevista, Nayely, antecedente —avisando si es de
+#     otro nivel— o "sin ancla") y `rango` [mínimo, máximo] para la sensibilidad.
+# El cargador (parametros.py) rechaza un parámetro sin fuente ni SUPUESTO, y un SUPUESTO
+# numérico sin rango o con el valor fuera de su rango.
+#
+# Se congelan en un commit antes de G4 y no se tocan después de ver resultados.
+#
+# Unidades: minutos (min), proporciones de 0 a 1, desviaciones en unidades del latente (DE).
+# "cv" es el coeficiente de variación de una lognormal (sigma = sqrt(ln(1 + cv²))).
+# Fuera de la simulación: la lista de notas diarias que traen algunas sesiones no es la nota
+# bimestral por competencia (plan.md, Ajuste 25-11). No se modela.
+
+poblacion:
+  n_docentes:
+    valor: 24
+    fuente: "Dato I.E. (23-11); Tesis 3.3.3 (n = N = 24)"
+  grados:
+    valor: 6
+    fuente: "plan.md, decisión 2 (6 × 4)"
+  secciones_por_grado:
+    valor: 4
+    fuente: "plan.md, decisión 2 (6 × 4)"
+  estudiantes_centro:
+    valor: 30
+    unidad: estudiantes por sección
+    supuesto: true
+    ancla: "Nayely, comunicación verbal aproximada (24-11)"
+    rango: [25, 35]
+  estudiantes_amplitud:
+    valor: 5
+    unidad: estudiantes (entero uniforme en centro ± amplitud)
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0, 8]
+
+catalogo:
+  # Las competencias que marca la tutora se cuentan del catálogo SIAGIE del repo; no se
+  # escriben aquí. El catálogo no distingue grado: es el mismo de 1.º a 6.º.
+  origen:
+    valor: "catalogo.migrations.0002_catalogo_siagie.CATALOGO"
+    fuente: "Migración 0002 del catálogo (registro de notas del SIAGIE)"
+  areas_que_no_se_trabajan:
+    valor: "catalogo.migrations.0002_catalogo_siagie.AREAS_QUE_NO_SE_TRABAJAN"
+    fuente: "Migración 0002 del catálogo"
+  areas_de_docente_de_curso:
+    valor: ["0003", "031"]   # Inglés y Educación Física
+    supuesto: true
+    ancla: "Tesis 3.3.2 (hay docentes de Educación Física e Inglés); el dato real es InstitucionArea.a_cargo_docente_curso [DATO I.E. PENDIENTE]"
+    nota: "Sensibilidad: con y sin estas áreas (la tutora marca todas)."
+
+rasgos:
+  # Destreza digital z1 ~ N(0, 1); define la persona por cuantiles.
+  proporcion_p1:
+    valor: 0.30
+    unidad: proporción de docentes con habilidad digital baja
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.15, 0.50]
+  proporcion_p3:
+    valor: 0.30
+    unidad: proporción de docentes con habilidad digital alta
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.15, 0.50]
+  correlacion_destreza_actitud:
+    valor: 0.30
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.0, 0.60]
+  ritmo_cv:
+    valor: 0.25
+    unidad: cv del factor de ritmo de cada docente (multiplica sus tiempos)
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.15, 0.40]
+  cuidado_cv:
+    valor: 0.50
+    unidad: cv del factor de cuidado de cada docente (multiplica sus tasas de error)
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.30, 0.80]
+  proporcion_diferido:
+    valor: 0.30
+    unidad: proporción de docentes que pasan la asistencia en diferido (igual en O1 y O2)
+    supuesto: true
+    ancla: "plan.md, Ajuste 25-11: varios la pasan en diferido (Nayely, entrevista); la cifra no tiene ancla"
+    rango: [0.10, 0.50]
+  proporcion_excel:
+    valor: 0.60
+    unidad: proporción de docentes que en O1 registran notas en Excel (el resto, cuaderno)
+    supuesto: true
+    ancla: "plan.md, Ajuste 25-11: mayormente en PC (Nayely, entrevista); la cifra no tiene ancla"
+    rango: [0.40, 0.80]
+
+ruido:
+  medicion_cv:
+    valor: 0.15
+    unidad: cv del ruido de cada medición (entre jornadas, entre momentos)
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.10, 0.30]
+
+o1:
+  sesion:
+    # HE1 = elaboración + entrega (plan.md, Ajuste 25-11; ajustes-cap3.md, punto 1).
+    elaboracion_mediana:
+      valor: 90
+      unidad: min (misma distribución en O1 y O2)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [60, 150]
+    entrega_mediana:
+      valor: 15
+      unidad: min (imprimir el Word y llevarlo a la dirección)
+      supuesto: true
+      ancla: "plan.md, Ajuste 25-11 (el procedimiento); la cifra no tiene ancla"
+      rango: [5, 30]
+  notas:
+    # Tiempo: una competencia del bimestre para toda la sección (plan.md, Ajuste 25-11).
+    apertura:
+      valor: 2
+      unidad: min (abrir el cuaderno o el Excel de la sección)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [1, 5]
+    por_estudiante_cuaderno:
+      valor: 0.4
+      unidad: min por estudiante
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.2, 0.8]
+    por_estudiante_excel:
+      valor: 0.3
+      unidad: min por estudiante
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.15, 0.6]
+  asistencia:
+    por_estudiante:
+      valor: 0.15
+      unidad: min por estudiante (pase de lista)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.1, 0.3]
+    transcripcion_apertura:
+      valor: 3
+      unidad: min por jornada (solo en diferido)
+      supuesto: true
+      ancla: "Anexo 1 (el tiempo incluye la transcripción); la cifra no tiene ancla"
+      rango: [1, 6]
+    transcripcion_por_estudiante:
+      valor: 0.1
+      unidad: min por estudiante (solo en diferido)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.05, 0.2]
+  corregir_nota:
+    probabilidad:
+      valor: 0.20
+      unidad: proporción de docentes que corrigen una nota durante la medición
+      supuesto: true
+      ancla: "plan.md, Tabla de parámetros (conducta de la entrevista); la cifra no tiene ancla"
+      rango: [0.0, 0.40]
+    costo:
+      valor: 1
+      unidad: min (tachar y reescribir, o buscar la celda)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.5, 3]
+
+errores_o1:
+  # Probabilidad por registro para una docente de cuidado promedio (Anexo 3).
+  # Un registro con más de un error cuenta una vez (nota del Anexo 3).
+  notas:
+    E1:
+      valor: 0.02
+      unidad: omisión, por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.01, 0.05]
+    E2_cuaderno:
+      valor: 0.002
+      unidad: duplicidad, por registro
+      supuesto: true
+      ancla: "sin ancla; menos duplicidad en cuaderno que en Excel (decisión de Marco, 25-11)"
+      rango: [0.0, 0.005]
+    E2_excel:
+      valor: 0.01
+      unidad: duplicidad, por registro (copiar y pegar filas)
+      supuesto: true
+      ancla: "sin ancla; Excel → más E2 (decisión de Marco, 25-11)"
+      rango: [0.005, 0.02]
+    E3_cuaderno:
+      valor: 0.02
+      unidad: nivel mal transcrito, por registro
+      supuesto: true
+      ancla: "sin ancla; cuaderno → más E3 (decisión de Marco, 25-11)"
+      rango: [0.01, 0.04]
+    E3_excel:
+      valor: 0.008
+      unidad: nivel mal transcrito, por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.003, 0.015]
+    E4:
+      valor: 0.01
+      unidad: por competencia (la competencia entera queda sin niveles; ajustes-cap3.md, punto 6)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.03]
+  asistencia:
+    E1_momento:
+      valor: 0.01
+      unidad: estudiante sin estado, por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.005, 0.03]
+    E1_diferido:
+      valor: 0.02
+      unidad: estudiante sin estado, por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.01, 0.05]
+    E2:
+      valor: 0.003
+      unidad: estudiante duplicado, por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.01]
+    E3_momento:
+      valor: 0.01
+      unidad: estado mal registrado, por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.005, 0.03]
+    E3_diferido:
+      valor: 0.03
+      unidad: estado mal registrado, por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.01, 0.06]
+    E4_momento:
+      valor: 0.005
+      unidad: por jornada (toda la jornada con fecha errónea)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.02]
+    E4_diferido:
+      valor: 0.05
+      unidad: por jornada (toda la jornada con fecha errónea)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.02, 0.10]
+    olvida_dia:
+      valor: 0.03
+      unidad: por jornada, solo en diferido (la jornada entera queda sin estado → E1)
+      supuesto: true
+      ancla: "plan.md, Tabla de parámetros (conducta de la entrevista); la cifra no tiene ancla"
+      rango: [0.0, 0.10]
+
+o2:
+  ventana_semanas:
+    valor: 4
+    unidad: semanas de uso antes del postest
+    supuesto: true
+    ancla: "plan.md, Tabla de parámetros (la fija el equipo)"
+    rango: [2, 8]
+  fecha_fin:
+    valor: "2026-11-20"
+    unidad: último día de la ventana (viernes); dentro del año ABIERTO de la base local
+    fuente: "Equipo (fecha simulada para la carga de G3)"
+  tiempos_klm:
+    valor: "klm/"   # tablas de G2, por persona, tarea y variante
+    fuente: "KLM sobre las rutas de los agentes (G2); falta la referencia de KLM y de KLM táctil"
+  factor_no_experto_p1:
+    valor: 2.0
+    unidad: multiplica el tiempo KLM (KLM estima a un experto sin errores)
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [1.5, 3.0]
+  factor_no_experto_p2:
+    valor: 1.5
+    unidad: multiplica el tiempo KLM
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [1.2, 2.0]
+  factor_no_experto_p3:
+    valor: 1.2
+    unidad: multiplica el tiempo KLM
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [1.0, 1.5]
+  contexto_tarea:
+    valor:
+      asistencia: {dispositivo: celular, ancho_px: 360, conexion: "Slow 4G"}
+      notas: {dispositivo: pc, conexion: domestica}
+      sesion: {dispositivo: pc, conexion: domestica}
+    fuente: "plan.md, Ajuste 25-11 (el dispositivo lo define la tarea)"
+
+errores_o2:
+  # Lo que la app impide vale 0 y cita su regla; el resto es residual (SUPUESTO).
+  notas:
+    E2:
+      valor: 0
+      fuente: "notas/models.py (UniqueConstraint); spec registro-notas, «Guardar la hoja del área»"
+    E3_escala_invalida:
+      valor: 0
+      fuente: "spec registro-notas, «Valor fuera de la escala»"
+    E1:
+      valor: 0.005
+      unidad: omisión residual, por registro («Notas faltantes del área» la avisa, no la impide)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.01]
+    E3:
+      valor: 0.005
+      unidad: nivel distinto del original (toque equivocado), por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.01]
+    E4:
+      valor: 0.002
+      unidad: por competencia («Pendientes de registro» la avisa, no la impide)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.01]
+  asistencia:
+    E2:
+      valor: 0
+      fuente: "asistencia/models.py (uq_asistencia, uq_jornada); spec asistencia-jornada, «Guardado sin duplicados» y «Una jornada por sección y fecha»"
+    E4_futuro_o_fin_de_semana:
+      valor: 0
+      fuente: "spec asistencia-jornada, «Días que se pueden abrir» y «Fin de semana»"
+    E1:
+      valor: 0.003
+      unidad: estudiante sin estado, por registro («Avance de la jornada» la avisa)
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.01]
+    E3:
+      valor: 0.005
+      unidad: estado mal registrado (toque equivocado), por registro
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.01]
+    E4_diferido:
+      valor: 0.02
+      unidad: por jornada (eligió otro día hábil pasado), solo en diferido
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.05]
+    olvida_dia:
+      valor: 0.01
+      unidad: por jornada, solo en diferido
+      supuesto: true
+      ancla: "sin ancla"
+      rango: [0.0, 0.05]
+
+likert:
+  # Anexo 4: 15 ítems de 1 a 5, 5 por dimensión. Latente de la dimensión =
+  # media del momento + efecto del postest + carga_actitud · actitud + ruido de la docente;
+  # cada ítem = latente + ruido del ítem, cortado por los umbrales.
+  items_por_dimension:
+    valor: 5
+    fuente: "Anexo 4; Tesis 3.4.2 c)"
+  dimensiones:
+    valor: [planificacion, notas, asistencia]
+    fuente: "Anexo 4; Tesis 1.5.4"
+  niveles_dimension:
+    valor: {desfavorable: [5, 11], regular: [12, 18], favorable: [19, 25]}
+    fuente: "Anexo 4, Nivel de percepción"
+  niveles_global:
+    valor: {desfavorable: [15, 35], regular: [36, 55], favorable: [56, 75]}
+    fuente: "Anexo 4, Nivel de percepción"
+  umbrales:
+    valor: [-1.5, -0.5, 0.5, 1.5]
+    unidad: cortes del latente entre 1|2|3|4|5
+    supuesto: true
+    ancla: "sin ancla (cortes simétricos)"
+    rango: [-1.5, 1.5]
+  media_pre:
+    valor: 0.0
+    unidad: DE
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [-0.5, 0.5]
+  efecto_post:
+    valor: 1.0
+    unidad: DE (igual en las tres dimensiones)
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.0, 1.5]
+  carga_actitud:
+    valor: 0.5
+    unidad: DE por DE de actitud
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.0, 0.8]
+  ruido_docente:
+    valor: 0.5
+    unidad: DE
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.3, 0.8]
+  ruido_item:
+    valor: 0.7
+    unidad: DE
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.4, 1.0]
+
+sus:
+  # Solo postest (Tesis 3.4.2 e). Ítems impares positivos, pares negativos;
+  # puntaje = (Σ(impar − 1) + Σ(5 − par)) × 2,5.
+  items:
+    valor: 10
+    fuente: "Tesis 3.4.2 e) [46], [47]"
+  media_latente:
+    valor: 0.5
+    unidad: DE (acuerdo con la usabilidad)
+    supuesto: true
+    ancla: "sin ancla; los referentes [48], [49] van solo a la discusión"
+    rango: [0.0, 1.0]
+  carga_destreza:
+    valor: 0.3
+    unidad: DE por DE de destreza digital
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [0.0, 0.6]
+
+autorregistro:
+  # Anexo 2 (complementario; no contrasta la HE1). Una semana en O1 y otra en O2.
+  sesiones_semana:
+    valor: 3
+    unidad: sesiones planificadas fuera de la institución por semana (Poisson)
+    supuesto: true
+    ancla: "sin ancla"
+    rango: [1, 5]
+
+semillas:
+  principal:
+    valor: 2026
+    fuente: "Script (declarada)"
+  replicas:
+    valor: [1, 1000]
+    fuente: "plan.md, decisión 6"

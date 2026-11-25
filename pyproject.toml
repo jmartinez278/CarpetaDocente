@@ -35,6 +35,11 @@ dev = [
     "pytest-xdist>=3.8.0",
     "ruff>=0.17.1",
 ]
+simulacion = [
+    "numpy>=2.5.5",
+    "pyyaml>=6.0.4",
+    "scipy>=1.18.1",
+]
 
 [tool.pytest]
 DJANGO_SETTINGS_MODULE = "config.settings"
@@ -66,7 +71,9 @@ select = ["E", "W", "F", "I", "B", "UP", "DJ", "S"]
 [tool.coverage.run]
 # Código propio de src/backend y scripts/; no cuentan las migraciones generadas ni las pruebas.
 source = ["src/backend", "scripts"]
-omit = ["*/migrations/*", "*/tests/*"]
+# scripts/simulacion (tesis, grupo «simulacion» de uv) no se instala en el CI: sus pruebas
+# se saltan allí y su código no cuenta para el umbral.
+omit = ["*/migrations/*", "*/tests/*", "scripts/simulacion/*"]
 # Rutas relativas en coverage.xml: SonarQube Cloud no encuentra las rutas absolutas del ejecutor.
 relative_files = true
 # Las pruebas de settings.py, wsgi.py y manage.py corren en un proceso aparte (sin leer .env):
