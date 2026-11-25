@@ -513,6 +513,8 @@ def test_escenarios_de_cola_y_banco_en_las_salidas(tmp_path):
     assert any(f["indicador"] == "sesion_dia_min" for f in cola)
     dia = next(f for f in cola if f["indicador"] == "sesion_dia_min")
     assert "no entra en HE ni HG" in dia[analisis.COLUMNA_DECISION]
+    tablas = (tmp_path / "tablas_escenarios.md").read_text(encoding="utf-8")
+    assert "n al azar entre O1 y O2; no comparable, pendiente de corrección" in tablas
 
 
 # --- Sensibilidad ---------------------------------------------------------------------------------

@@ -57,6 +57,18 @@ Nada de lo que sigue es una medición real: es el ensayo del plan de análisis d
 
 *Nota.* Datos simulados (semilla 2026; n = 24 docentes). No son mediciones reales. Regla propuesta, pendiente de decisión del equipo (ajustes-cap3, punto 10): una HE rechaza H₀ si la rechazan todos sus indicadores; la HG, si la rechazan las tres HE. El puntaje global del cuestionario no entra en la regla.
 
+**Tabla S4b. HE1 con la entrega con cola, junto a la corrida principal (Datos simulados)**
+
+| Variante | O1 media (min) | O2 media (min) | Variación (%) | p (corrida principal) | Decisión estadística (datos simulados) | % réplicas que rechaza H₀ |
+|---|---|---|---|---|---|---|
+| Corrida principal (entrega de 15 min, sin ancla) | 105,83 | 93,81 | −11,4 | 0,002 | Se rechaza H₀ (datos simulados) | 96,1 |
+| Entrega con cola (n de 2 a 4) | 99,31 | 93,81 | −5,5 | 0,055 | No se rechaza H₀ (datos simulados) | 57,1 |
+| Entrega con cola (n = 2) | 101,49 | 93,81 | −7,6 | 0,017 | Se rechaza H₀ (datos simulados) | 72,2 |
+| Entrega con cola (n = 4) | 98,40 | 93,81 | −4,7 | 0,090 | No se rechaza H₀ (datos simulados) | 45,3 |
+| Entrega con cola y con impresión (variante) | 104,54 | 93,81 | −10,3 | 0,001 | Se rechaza H₀ (datos simulados) | 84,9 |
+
+*Nota.* Datos simulados (semilla 2026; 1000 réplicas con semillas 1…1000). Indicador: tiempo empleado en elaborar una sesión (por sesión, Tabla 5). «Entrega con cola» es el único escenario con el mecanismo anclado (testimonio de Nayely, 25-11): la dirección está en el mismo local; en O1, ir a la puerta (1 min) + esperar el turno (10 min, una vez al día) + estar presente mientras revisan cada sesión (5 min por sesión), repartido entre las n sesiones del día; en O2, subir y enviar (KLM), sin presencia en la revisión. Las cifras son SUPUESTO sin ancla (escenarios.yaml). Cifras copiadas de tablas_escenarios.md (Tabla S11). La definición de la entrega sigue abierta (ajustes-cap3, punto 15).
+
 **Tabla S5. Cuestionario de percepción (Anexo 4) por dimensión (Datos simulados)**
 
 | Dimensión | Pre: media (DE) | Pre: D/R/F | Post: media (DE) | Post: D/R/F |

@@ -96,6 +96,11 @@ del registro de actividad y las marcas de tiempo quedan en la fecha simulada, as
   p < 0,05 (barrido de 0,01). Réplicas: el menor f con el que al menos 80 % rechaza H₀ (bisección).
 - `parametros.yaml` no se modifica (congelado en 6a8e1ea): las variantes son copias en memoria y una
   prueba comprueba su hash.
+- **«Entrega con cola» va junto a la corrida principal** (Tabla S4b de `tablas.md`): es el único
+  escenario con el mecanismo anclado (testimonio de Nayely, 25-11). Con él, HE1 rechaza H₀ en el
+  57 % de las réplicas, frente al 96 % de la corrida principal. Sus cifras siguen siendo SUPUESTO y la
+  definición de la entrega sigue abierta (ajustes-cap3, punto 15). La Tabla S4b se copió a mano
+  desde `tablas_escenarios.md`: `principal` no la regenera (pendientes.md, PEND-4).
 
 Salidas en `salidas/` (todas con `origen = Datos simulados` en cada fila o «Datos simulados» en el
 título): `tablas.md` (tablas S1–S10, coma decimal), `figuras/<indicador>.png` (cajas pre/post) y los

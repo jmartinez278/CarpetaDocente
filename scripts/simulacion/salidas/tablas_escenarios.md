@@ -62,6 +62,8 @@ parametros.yaml: blob 84c6706; no se modifica.
 
 *Nota.* Datos simulados (semilla 2026; 1000 réplicas con semillas 1…1000). Cada escenario cambia una copia de los valores o de las rutas; parametros.yaml no se modifica. Misma regla de 3.5.2 (unilateral, α = 0,05). «Sin marcado masivo»: la asistencia se marca estudiante por estudiante (sin segundo toque para quien no asistió: cota inferior). «La tutora marca todas»: también Inglés y Educación Física; como suma competencias, cambia cuántos números saca el generador y las demás mediciones de ese escenario también varían por azar (por ejemplo, sesión), no por efecto del escenario.
 
+*Nota sobre HE1 por día* («Tiempo de elaborar y entregar las sesiones de un día»): n al azar entre O1 y O2; no comparable, pendiente de corrección.
+
 **Tabla S12. Escenarios: decisión por hipótesis con la regla propuesta (Datos simulados)**
 
 | Escenario | Hipótesis | Decisión estadística (datos simulados), corrida principal | % réplicas |

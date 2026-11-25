@@ -1061,6 +1061,10 @@ def _ajuste_banco(esc):
 
 
 CON_DIA = {**INDICADORES, **INDICADOR_DIA}
+NOTA_HE1_DIA = (
+    "*Nota sobre HE1 por día* («Tiempo de elaborar y entregar las sesiones de un día»): n al "
+    "azar entre O1 y O2; no comparable, pendiente de corrección."
+)
 ESCENARIOS = {
     "sin_marcado_masivo": {
         "nombre": "Sin marcado masivo (asistencia uno por uno)",
@@ -1234,6 +1238,8 @@ def _tablas_escenarios(resultados: dict, contexto: dict) -> str:
             "(por ejemplo, sesión), no por efecto del escenario.",
         ),
     ]  # fmt: skip
+    if any("sesion_dia_min" in r["indicadores"] for r in resultados.values()):
+        bloques[-1] += f"\n{NOTA_HE1_DIA}\n"
     filas = []
     for clave, nombre in contexto["nombres"]:
         r = resultados[clave]
