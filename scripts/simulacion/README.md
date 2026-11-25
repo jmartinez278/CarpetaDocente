@@ -44,6 +44,30 @@ No toca la institución 1 ni la demo. Solo con `DEBUG`. G3 reutiliza esa base.
 desactiva las cuentas `simNN`; la base armada queda. Se niega si la institución simulada tiene
 datos que no son de la simulación.
 
+## Carga en la app (G3)
+
+`carga.py` lleva a la base local la ventana O2 (`o2.ventana_semanas` semanas que terminan en
+`o2.fecha_fin`) de las 24 docentes `sim01…sim24` de la corrida principal (semilla principal, los
+mismos rasgos que `medicion.simular`). Todo pasa por los servicios (`asistencia.marcar_restantes`
+y `marcar`, `notas.guardar_hoja`, `repositorio.enviar_sesion`) con `hoy` simulado; cada entrada
+del registro de actividad y las marcas de tiempo quedan en la fecha simulada, así que
+«Indicadores por semana» cuenta esas semanas.
+
+    SIM_CLAVE='<clave>' uv run python scripts/simulacion/carga.py cargar --confirmar
+    uv run python scripts/simulacion/carga.py quitar --confirmar
+
+- La base muestra **conductas** (modalidad, olvidos del diferido, excepciones de asistencia, B y C
+  con conclusión, corrección A → AD, sesiones por semana), **no los errores E1–E4**: las tablas
+  del Cap. IV salen de `medicion.py`.
+- Las constantes de relleno de `carga.py` (horas, retraso del diferido, reparto de las
+  excepciones, AD/A y B/C) **no entran al análisis**.
+- Usa su propio generador (cuarto hijo de la semilla): no cambia O1, O2 ni las réplicas.
+- Solo con `DEBUG` y `--confirmar`. Se niega si la institución simulada tiene datos ajenos, si ya
+  hay una carga (también la de `preparar_rutas.py`: primero `quitar`) o si una `simNN` existe en
+  otra institución. Si falla, no deja nada, tampoco archivos.
+- `quitar` limpia como `preparar_rutas.py quitar` y además borra el registro de actividad de las
+  `simNN` (también el de los agentes de G2).
+
 ## Limitaciones
 
 - **Un solo agente interpretó a las tres personas, en secuencia** (P1, P2 y P3 en cada tarea, uno
