@@ -36,6 +36,7 @@ dev = [
     "ruff>=0.17.1",
 ]
 simulacion = [
+    "matplotlib>=3.10",
     "numpy>=2.5.5",
     "pyyaml>=6.0.4",
     "scipy>=1.18.1",

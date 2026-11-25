@@ -1,0 +1,22 @@
+origen,tarea,indicador,media_o1_actual,media_o2,p_actual,pct_rechazo_actual,factor_principal,media_o1_en_factor_principal,factor_replicas,media_o1_en_factor_replicas,conclusion_principal,conclusion_replicas,paso_barrido,tolerancia_biseccion,replicas,criterio,parametro,valor_actual,factor,valor_en_quiebre,rango_min,rango_max,rango_desde_cero,dentro_del_rango
+Datos simulados,sesion,sesion_min,105.82840079120133,93.81306686714335,0.001787373790755609,96.1,0.62,99.98629173000211,0.7604492187499998,102.14555397604875,depende del supuesto,depende del supuesto,0.01,0.01,1000,,,,,,,,,
+Datos simulados,notas,notas_min,19.594923261780547,2.774998378930384,5.960464477539063e-08,100.0,0.17,3.3311369545026928,0.1854296875,3.6334804970184464,robusta,robusta,0.01,0.01,1000,,,,,,,,,
+Datos simulados,asistencia,asistencia_min,7.205047503857595,0.7046660692957888,2.612892495441248e-10,100.0,0.12,0.8646057004629113,0.15619140625,1.12536650172557,robusta,robusta,0.01,0.01,1000,,,,,,,,,
+Datos simulados,sesion,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.sesion.entrega_mediana,15,0.62,9.3,5,60,no,sí
+Datos simulados,sesion,,,,,,,,,,,,,,,réplicas (80 %),o1.sesion.entrega_mediana,15,0.7604492187499998,11.406738281249996,5,60,no,sí
+Datos simulados,notas,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.notas.apertura,2,0.17,0.34,1,10,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.notas.por_estudiante_cuaderno,0.4,0.17,0.068,0.1,1,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.notas.por_estudiante_excel,0.3,0.17,0.051000000000000004,0.1,1,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.notas.por_caracter_conclusion,0.02,0.17,0.0034000000000000002,0.01,0.05,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.corregir_nota.costo,1,0.17,0.17,0.5,5,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,réplicas (80 %),o1.notas.apertura,2,0.1854296875,0.370859375,1,10,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,réplicas (80 %),o1.notas.por_estudiante_cuaderno,0.4,0.1854296875,0.074171875,0.1,1,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,réplicas (80 %),o1.notas.por_estudiante_excel,0.3,0.1854296875,0.05562890625,0.1,1,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,réplicas (80 %),o1.notas.por_caracter_conclusion,0.02,0.1854296875,0.00370859375,0.01,0.05,no,no
+Datos simulados,notas,,,,,,,,,,,,,,,réplicas (80 %),o1.corregir_nota.costo,1,0.1854296875,0.1854296875,0.5,5,no,no
+Datos simulados,asistencia,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.asistencia.por_estudiante,0.15,0.12,0.018,0.05,0.5,no,no
+Datos simulados,asistencia,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.asistencia.transcripcion_apertura,3,0.12,0.36,0,10,sí,
+Datos simulados,asistencia,,,,,,,,,,,,,,,"corrida principal (p < 0,05)",o1.asistencia.transcripcion_por_estudiante,0.1,0.12,0.012,0.05,0.3,no,no
+Datos simulados,asistencia,,,,,,,,,,,,,,,réplicas (80 %),o1.asistencia.por_estudiante,0.15,0.15619140625,0.0234287109375,0.05,0.5,no,no
+Datos simulados,asistencia,,,,,,,,,,,,,,,réplicas (80 %),o1.asistencia.transcripcion_apertura,3,0.15619140625,0.46857421875,0,10,sí,
+Datos simulados,asistencia,,,,,,,,,,,,,,,réplicas (80 %),o1.asistencia.transcripcion_por_estudiante,0.1,0.15619140625,0.015619140625,0.05,0.3,no,no

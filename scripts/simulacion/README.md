@@ -77,6 +77,33 @@ del registro de actividad y las marcas de tiempo quedan en la fecha simulada, as
 - Los operadores KLM y la tasa de excepciones son SUPUESTO sin ancla; los valores se reemplazan
   cuando se abra la fuente de KLM.
 
+## Análisis (G4)
+
+`analisis.py` sigue 3.5 de la tesis sobre la corrida principal (semilla 2026) y las réplicas
+(semillas 1…1000), que no tocan la base:
+
+    uv run --group simulacion python -m simulacion.analisis principal [--replicas N] [--procesos N]
+
+- Descriptivos y variación %, Shapiro-Wilk sobre las diferencias (post − pre), luego t de Student
+  (con d de Cohen) o Wilcoxon (con biserial de rangos; descarta los ceros y corrige por continuidad,
+  como Jamovi), **unilaterales** en el sentido de H₁ (ajustes-cap3, punto 9), α = 0,05.
+- HE y HG con la **regla propuesta** (ajustes-cap3, punto 10): una HE rechaza H₀ si la rechazan
+  todos sus indicadores; la HG, si la rechazan las tres HE. El puntaje global del cuestionario se
+  contrasta como apoyo y no entra en la regla. La columna se llama «Decisión estadística (datos
+  simulados)».
+- **Punto de quiebre (DEC-2):** un factor f multiplica solo los tiempos de O1 propios de cada tarea
+  (en sesión, la entrega). Corrida principal: el menor f desde el cual todos los f mayores dan
+  p < 0,05 (barrido de 0,01). Réplicas: el menor f con el que al menos 80 % rechaza H₀ (bisección).
+- `parametros.yaml` no se modifica (congelado en 6a8e1ea): las variantes son copias en memoria y una
+  prueba comprueba su hash.
+
+Salidas en `salidas/` (todas con `origen = Datos simulados` en cada fila o «Datos simulados» en el
+título): `tablas.md` (tablas S1–S10, coma decimal), `figuras/<indicador>.png` (cajas pre/post) y los
+CSV (coma como separador, punto decimal): `simulados_principal_filas.csv` (una fila por docente y
+momento), `simulados_principal_jamovi.csv` (pre y post lado a lado, para Jamovi),
+`simulados_principal_contrastes.csv`, `simulados_replicas_resumen.csv` y `simulados_quiebre.csv`.
+`simulados_replicas.csv` (una fila por semilla e indicador) no se versiona: sale con el comando.
+
 ## Pendiente para G4 (sensibilidad)
 
 - Escenario **«sin marcado masivo»**: la asistencia se marca estudiante por estudiante

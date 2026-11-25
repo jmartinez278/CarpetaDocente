@@ -54,3 +54,6 @@ docs/PENDIENTES_TESIS.md
 .claude/skills/openspec-*/
 # EN-02, D7: carpeta que crea `vercel link`
 .vercel/
+
+# Simulación (G4): réplicas a nivel de semilla (pesado y reproducible con el comando)
+scripts/simulacion/salidas/simulados_replicas.csv
