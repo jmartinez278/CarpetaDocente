@@ -97,7 +97,9 @@ Tablas en Markdown con coma decimal; CSV con coma como separador y punto decimal
 
 Resultado en una línea (datos simulados): HE2 y HE3 se sostienen en todos los supuestos; HE1
 depende de cómo se defina la entrega (96 % de réplicas en la corrida principal, 57 % con la
-entrega con cola).
+entrega con cola, 84,9 % con la entrega con cola y con impresión). **Referencia para la discusión
+de HE1: «entrega con cola y con impresión»** (la sesión se sella en físico, así que se imprime;
+dato confirmado por Nayely, 25-11). La corrida principal no cambia.
 
 ## Cómo salen los tiempos de O2
 
@@ -187,6 +189,11 @@ del registro de actividad y las marcas de tiempo quedan en la fecha simulada, as
   57 % de las réplicas, frente al 96 % de la corrida principal. Sus cifras siguen siendo SUPUESTO y la
   definición de la entrega sigue abierta (ajustes-cap3, punto 15). La Tabla S4b se copió a mano
   desde `tablas_escenarios.md`: `principal` no la regenera (pendientes.md, PEND-4).
+- **Referencia para la discusión de HE1: «entrega con cola y con impresión»** (25-11). La sesión se
+  sella en físico, así que se imprime (dato confirmado por Nayely). En esa variante, HE1 rechaza H₀
+  en el 84,9 % de las réplicas (p = 0,001 en la corrida principal; Tablas S11 y S12 de
+  `tablas_escenarios.md`). La Tabla S4b muestra la cola **sin** impresión y no se cambió. La corrida
+  principal sigue igual: es la de las tablas S1–S10 y la que se carga en la app.
 
 Salidas en `salidas/` (todas con `origen = Datos simulados` en cada fila o «Datos simulados» en el
 título): `tablas.md` (tablas S1–S10, coma decimal), `figuras/<indicador>.png` (cajas pre/post) y los
@@ -214,7 +221,8 @@ Cada escenario cambia una copia de los valores o de las rutas, nunca `parametros
   estar presente mientras revisan cada sesión. En O2 se sube y envía (KLM); la revisión ocurre sin
   la docente. Se reporta HE1 por sesión (`sesion_min`, la de la Tabla 5) y por día
   (`sesion_dia_min`, complementario). n sale al azar entre 2 y 4 por docente y día. La impresión
-  va solo como variante: la docente imprime igual las fichas de sus estudiantes.
+  va como variante («con impresión»). Desde el 25-11 es **la referencia para la discusión de HE1**:
+  la sesión se sella en físico, así que se imprime (Nayely). Sus cifras siguen siendo SUPUESTO.
 - **«Con banco de sesiones»**: en O2, quien no tiene una sesión propia adecuada y encuentra una en
   el repositorio la descarga y la adapta (una fracción del tiempo de elaborarla). La funcionalidad
   existe (US-011/012/016), pero **la descarga va como SUPUESTO** (1 min) y no por KLM: la ruta del
@@ -250,7 +258,8 @@ Salidas: `simulados_sensibilidad.csv` y `tablas_sensibilidad.md` (tablas S14 y S
 **De HE1 (sesión)**
 - La app no redacta la sesión: la elaboración tiene la misma distribución en O1 y O2 y la diferencia
   sale solo de la entrega. El resultado de HE1 depende de cómo se defina la entrega (quiebre cerca de
-  11,4 min; 96 % frente a 57 % con la cola). Ver `ajustes-cap3.md`, puntos 1, 13 y 15.
+  11,4 min; 96 % en la corrida principal, 57 % con la cola, 84,9 % con la cola y la impresión, que
+  es la referencia para la discusión). Ver `ajustes-cap3.md`, puntos 1, 13 y 15.
 - En «entrega con cola», n (sesiones por día) sale al azar por separado en O1 y O2: HE1 por día no
   es comparable (PEND-2). En «con banco de sesiones», la descarga es SUPUESTO (PEND-1).
 
