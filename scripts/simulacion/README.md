@@ -1,8 +1,103 @@
-# Simulación de datos (Tesis 2) — borrador de G2
+# Simulación de datos (Tesis 2)
 
-Datos simulados: nada de lo que sale de aquí es una medición real. El plan completo está en
-`insumos/simulacion/plan.md` (local); G6 completa este README (comando, semillas, versiones,
-salidas, parámetros).
+**Datos simulados: nada de lo que sale de aquí es una medición real.** Es un ensayo del plan de
+análisis del Cap. III (diseño preexperimental O1 → X → O2 con 24 docentes): O1 sale de supuestos
+declarados y O2 de KLM sobre las rutas reales de la app. Nada da el pretest ni el postest por
+aplicado. El plan completo está en `insumos/simulacion/plan.md` (local, no versionado).
+
+No es un cambio de OpenSpec: es una herramienta de la tesis, no una funcionalidad del sistema.
+Escribe en la base solo por los servicios de la app (como cualquier docente) y solo en la base
+local, en su propia institución.
+
+## Requisitos y versiones
+
+| Qué | Versión (de `uv.lock`) |
+|---|---|
+| Python | 3.13 (`.python-version`) |
+| Grupo `simulacion` de uv | numpy 2.5.5 · scipy 1.18.1 · matplotlib 3.11.2 · pyyaml 6.0.4 |
+| App (para `preparar_rutas.py` y `carga.py`) | Django 5.2.18 y PostgreSQL de `docker compose up -d db` |
+| Agentes de G2 | Playwright MCP con Edge (`--browser msedge`) |
+
+El grupo `simulacion` no se instala en el CI: sus pruebas se saltan allí y su código no cuenta para
+la cobertura (`pyproject.toml`). El análisis no necesita la base; la carga y la base propia, sí.
+
+## Orden de ejecución
+
+Desde la raíz del repo, salvo el análisis, que corre desde `scripts/`:
+
+    # 1. Tabla KLM desde las rutas (solo si cambian rutas/ o parametros.yaml)
+    cd scripts && uv run python -m simulacion.klm
+
+    # 2. Análisis: corrida principal + 1000 réplicas + quiebre + figuras, luego escenarios y sensibilidad
+    cd scripts && uv run --group simulacion python -m simulacion.analisis principal
+    cd scripts && uv run --group simulacion python -m simulacion.analisis escenarios
+    cd scripts && uv run --group simulacion python -m simulacion.analisis sensibilidad
+
+    # 3. Opcional: llevar la ventana O2 de la corrida principal a la base local (G3)
+    docker compose up -d db
+    SIM_CLAVE='<clave>' uv run python scripts/simulacion/carga.py cargar --confirmar
+    uv run python scripts/simulacion/carga.py quitar --confirmar
+
+    # Pruebas de la simulación (las de base y carga necesitan la base levantada)
+    uv run --group simulacion pytest scripts/simulacion
+
+Opciones de `analisis`: `--replicas N` (por omisión, las de `parametros.yaml`), `--procesos N`,
+`--salida RUTA` (por omisión, `salidas/`), `--paso-quiebre` (solo `principal`, 0,01) y `--solo`
+(escenarios o supuestos). `SIM_CLAVE` va siempre en la línea de comando, nunca en un archivo.
+
+**Ojo:** `principal` reescribe `tablas.md` y borra la Tabla S4b, que se copió a mano (PEND-4).
+
+## Semillas
+
+| Uso | Semilla | Generadores |
+|---|---|---|
+| Corrida principal (Cap. IV y carga) | 2026 (`semillas.principal`) | `SeedSequence(2026).spawn(3)`: docentes, O1 y O2 |
+| Réplicas | 1 … 1000 (`semillas.replicas`) | Las mismas tres por semilla; no tocan la base |
+| Carga en la app (G3) | la principal | Cuarto hijo (`spawn(4)[3]`): no cambia docentes, O1 ni O2 |
+| Escenarios | la principal y las réplicas | Quinto hijo (`spawn(5)[4]`): no cambia docentes, O1, O2 ni la carga |
+
+La misma semilla da la misma salida. Cambiar la tabla KLM no cambia O1 (generadores separados).
+
+## Parámetros
+
+- **`parametros.yaml`**: cada parámetro lleva `valor` y su origen: `fuente` (tesis, anexo, dato de
+  la I.E., spec o código) o `supuesto: true` con `ancla` («sin ancla» si no la tiene) y `rango` para
+  la sensibilidad. `parametros.py` rechaza un parámetro sin fuente ni SUPUESTO, y un SUPUESTO sin
+  rango o con el valor fuera de él. Bloques: `poblacion`, `reglas_app`, `catalogo`, `rasgos`,
+  `ruido`, `o1`, `errores_o1`, `o2`, `errores_o2`, `likert`, `sus`, `autorregistro` y `semillas`.
+- **Congelado** en 6a8e1ea (blob `84c6706`) tras aprobar los rangos de O1 (DEC-1). Una prueba
+  comprueba su hash y que cada valor cae en su rango; las variantes del análisis son copias en
+  memoria.
+- **`escenarios.yaml`**: supuestos de los escenarios (cola de la entrega, descarga del banco), con el
+  mismo formato y validador.
+- **`rutas/`** y **`agentes/`**: las rutas de P1, P2 y P3 en cada tarea y la descripción de cada
+  persona. **`klm/tabla.yaml`**: la tabla KLM que lee `medicion.py`.
+
+Los supuestos que deciden el resultado: la entrega de O1 en la sesión (`o1.sesion.entrega_mediana`,
+15 min, sin ancla; el quiebre de HE1 está en unos 11,4 min) y los operadores KLM
+(`o2.operadores_klm`, sin ancla hasta abrir la fuente original).
+
+## Salidas
+
+Todo en `salidas/`, con «Datos simulados» en el título o `origen = Datos simulados` en cada fila.
+Tablas en Markdown con coma decimal; CSV con coma como separador y punto decimal.
+
+| Archivo | Lo escribe | Contenido |
+|---|---|---|
+| `tablas.md` | `principal` | Tablas S1–S10 (y S4b, a mano) |
+| `figuras/*.png` | `principal` | Cajas pre/post por indicador (sesión, notas, asistencia, exactitud, Likert) |
+| `simulados_principal_filas.csv` | `principal` | Una fila por docente y momento |
+| `simulados_principal_jamovi.csv` | `principal` | Pre y post lado a lado, para Jamovi |
+| `simulados_principal_contrastes.csv` | `principal` | Pruebas, p, tamaño del efecto y decisión |
+| `simulados_replicas_resumen.csv` | `principal` | % de réplicas que rechaza H₀ e IC de la diferencia |
+| `simulados_quiebre.csv` | `principal` | Punto de quiebre por tarea |
+| `simulados_replicas.csv` | `principal` | Una fila por semilla e indicador (**no se versiona**) |
+| `tablas_escenarios.md`, `simulados_escenarios.csv`, `simulados_banco_barrido.csv` | `escenarios` | Tablas S11–S13 |
+| `tablas_sensibilidad.md`, `simulados_sensibilidad.csv` | `sensibilidad` | Tablas S14–S15 |
+
+Resultado en una línea (datos simulados): HE2 y HE3 se sostienen en todos los supuestos; HE1
+depende de cómo se defina la entrega (96 % de réplicas en la corrida principal, 57 % con la
+entrega con cola).
 
 ## Cómo salen los tiempos de O2
 
@@ -67,15 +162,6 @@ del registro de actividad y las marcas de tiempo quedan en la fecha simulada, as
   otra institución. Si falla, no deja nada, tampoco archivos.
 - `quitar` limpia como `preparar_rutas.py quitar` y además borra el registro de actividad de las
   `simNN` (también el de los agentes de G2).
-
-## Limitaciones
-
-- **Un solo agente interpretó a las tres personas, en secuencia** (P1, P2 y P3 en cada tarea, uno
-  tras otro). Sus confusiones son indicativas, no evidencia de usabilidad.
-- En asistencia en el momento, **P2 fue primero** (piloto), antes que P1 y P3: ya conocía la pantalla
-  de ese día.
-- Los operadores KLM y la tasa de excepciones son SUPUESTO sin ancla; los valores se reemplazan
-  cuando se abra la fuente de KLM.
 
 ## Análisis (G4)
 
@@ -149,3 +235,38 @@ los cortes del Likert (una lista), las n de la cola (escenarios n = 2 y n = 4), 
 variante) y las proporciones del banco (su barrido). Un supuesto es **clave** si cambia una
 decisión de la corrida principal o si el % de réplicas de alguna HE o de la HG cruza el 80 %.
 Salidas: `simulados_sensibilidad.csv` y `tablas_sensibilidad.md` (tablas S14 y S15).
+
+## Limitaciones
+
+**De los datos**
+- Todo es simulado. Los tiempos de O1 son SUPUESTO (la mayoría «sin ancla»); los de O2 salen de KLM
+  con operadores también SUPUESTO hasta abrir la fuente original. Las tablas sirven para ensayar el
+  análisis, no para afirmar que la app ahorra tiempo.
+- Los errores E1–E4 de O1 y los residuales de O2 son tasas supuestas; los que la app impide salen de
+  las specs (`reglas_app`). El Likert y el SUS salen de un rasgo latente supuesto.
+- O1 y O2 son el mismo modelo con otra fuente de tiempos: no hay aprendizaje, cansancio ni efecto
+  de la medición entre momentos.
+
+**De HE1 (sesión)**
+- La app no redacta la sesión: la elaboración tiene la misma distribución en O1 y O2 y la diferencia
+  sale solo de la entrega. El resultado de HE1 depende de cómo se defina la entrega (quiebre cerca de
+  11,4 min; 96 % frente a 57 % con la cola). Ver `ajustes-cap3.md`, puntos 1, 13 y 15.
+- En «entrega con cola», n (sesiones por día) sale al azar por separado en O1 y O2: HE1 por día no
+  es comparable (PEND-2). En «con banco de sesiones», la descarga es SUPUESTO (PEND-1).
+
+**De los agentes y KLM**
+- Un solo agente interpretó a las tres personas, en secuencia (P1, P2 y P3 en cada tarea). Sus
+  confusiones son indicativas, no evidencia de usabilidad.
+- En asistencia en el momento, P2 fue primero (piloto), antes que P1 y P3: ya conocía la pantalla.
+- Solo cuenta la ruta ideal; desvíos y confusiones no suman tiempo. P1, P2 y P3 dan la misma tabla
+  KLM y se distinguen solo por `factor_no_experto_*`.
+
+**Del código**
+- La Tabla S4b se copió a mano y `principal` la borra (PEND-4).
+- `es_clave()` cuenta también un cambio de decisión de la corrida principal y deja pasar falsos
+  claves por azar (PEND-3).
+- Los pendientes PEND-1 a PEND-4 están en `insumos/simulacion/pendientes.md` (local).
+
+**Del instrumento**
+- Los indicadores y unidades siguen la Tabla 5 de la tesis y los Anexos 1 a 5. Donde chocan con la
+  app, el choque va a `insumos/simulacion/ajustes-cap3.md`; la simulación no lo resuelve.
