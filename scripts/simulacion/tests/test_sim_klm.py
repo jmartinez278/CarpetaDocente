@@ -369,8 +369,9 @@ def test_la_conclusion_y_su_regla_vienen_de_la_spec_y_los_supuestos_son_comparti
     car = arbol["poblacion"]["caracteres_conclusion"]
     for nodo in (prop, car):
         assert nodo["supuesto"] is True and nodo["ancla"] == "sin ancla"
-    assert prop["rango"] == [0.10, 0.40] and prop["valor"] == 0.25
-    assert car["rango"] == [10, 120] and car["valor"] == 40
+    # Rangos de DEC-1 (25-11).
+    assert prop["rango"] == [0, 0.5] and prop["valor"] == 0.25
+    assert car["rango"] == [10, 200] and car["valor"] == 40
     regla = arbol["reglas_app"]
     assert regla["conclusion_niveles"]["valor"] == ["B", "C"]
     assert regla["conclusion_caracteres"]["valor"] == [10, 500]
