@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CarpetaDocente · Despliegue (plan A vigente)",
+    "locale": "es",
+    "output": "12-c4-despliegue.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "lap",
+      "type": "external",
+      "label": "Laptop del equipo",
+      "sublabel": "Docker Compose: Django + PostgreSQL",
+      "pos": [
+        40,
+        60
+      ],
+      "size": [
+        210,
+        72
+      ]
+    },
+    {
+      "id": "gh",
+      "type": "cloud",
+      "label": "GitHub",
+      "sublabel": "Repositorio público",
+      "pos": [
+        340,
+        60
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "gha",
+      "type": "backend",
+      "label": "GitHub Actions",
+      "sublabel": "pytest, Playwright, Ruff",
+      "pos": [
+        640,
+        10
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "sq",
+      "type": "security",
+      "label": "CodeQL y SonarQube Cloud",
+      "sublabel": "Calidad del código",
+      "pos": [
+        640,
+        120
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "ver",
+      "type": "backend",
+      "label": "Vercel Hobby",
+      "sublabel": "Build: CSS y migraciones · Django + CDN",
+      "pos": [
+        325,
+        260
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "neon",
+      "type": "database",
+      "label": "Neon · producción",
+      "sublabel": "PostgreSQL",
+      "pos": [
+        120,
+        460
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "neonpr",
+      "type": "database",
+      "label": "Neon · vista previa",
+      "sublabel": "Una rama por Pull Request",
+      "pos": [
+        345,
+        460
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "r2",
+      "type": "cloud",
+      "label": "Cloudflare R2",
+      "sublabel": "Archivos de sesiones",
+      "pos": [
+        560,
+        460
+      ],
+      "size": [
+        190,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Plan A · S/ 0 al mes",
+      "wraps": [
+        "ver",
+        "neon",
+        "neonpr",
+        "r2"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "lap-gh",
+      "from": "lap",
+      "to": "gh",
+      "label": "git push",
+      "variant": "dashed"
+    },
+    {
+      "id": "gh-gha",
+      "from": "gh",
+      "to": "gha",
+      "label": "Cada PR"
+    },
+    {
+      "id": "gh-sq",
+      "from": "gh",
+      "to": "sq",
+      "label": "Cada PR"
+    },
+    {
+      "id": "gh-ver",
+      "from": "gh",
+      "to": "ver",
+      "label": "Fusión en main y vista previa por PR",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ver-neon",
+      "from": "ver",
+      "to": "neon",
+      "label": "SQL sobre TLS"
+    },
+    {
+      "id": "ver-neonpr",
+      "from": "ver",
+      "to": "neonpr",
+      "label": "Vista previa",
+      "variant": "dashed"
+    },
+    {
+      "id": "ver-r2",
+      "from": "ver",
+      "to": "r2",
+      "label": "API S3 y enlaces firmados"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Vista previa por Pull Request",
+      "items": [
+        "Cada PR genera una vista previa en Vercel",
+        "Usa su propia rama de base de Neon, distinta de producción (spec despliegue)"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Plan B (escalamiento)",
+      "items": [
+        "VPS con Docker Compose, proxy inverso con HTTPS y respaldo diario externo",
+        "Se activa si cambian las condiciones del plan A"
+      ]
+    }
+  ]
+}

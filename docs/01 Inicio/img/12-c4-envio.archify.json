@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Flujo crítico · Enviar una sesión a la dirección",
+    "locale": "es",
+    "output": "12-c4-envio.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "d",
+      "type": "external",
+      "icon": "person",
+      "label": "Docente"
+    },
+    {
+      "id": "w",
+      "type": "frontend",
+      "label": "Interfaz web",
+      "sublabel": "navegador"
+    },
+    {
+      "id": "a",
+      "type": "backend",
+      "label": "Aplicación Django",
+      "sublabel": "servicios"
+    },
+    {
+      "id": "r",
+      "type": "cloud",
+      "label": "Cloudflare R2",
+      "sublabel": "bucket privado"
+    },
+    {
+      "id": "b",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "Neon"
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 300,
+      "label": "En el navegador"
+    },
+    {
+      "from": 310,
+      "to": 420,
+      "label": "Validar y extraer texto"
+    },
+    {
+      "from": 430,
+      "to": 560,
+      "label": "Guardar todo o nada"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "d",
+      "to": "w",
+      "y": 175,
+      "label": "Grado, área, título y archivo",
+      "note": "Revisa tipo (PDF o .docx) y tamaño (≤ 4 MB)"
+    },
+    {
+      "id": "m2",
+      "from": "w",
+      "to": "d",
+      "y": 235,
+      "label": "Términos de publicación (si comparte)",
+      "variant": "return"
+    },
+    {
+      "id": "m3",
+      "from": "d",
+      "to": "w",
+      "y": 270,
+      "label": "«Acepto y envío»"
+    },
+    {
+      "id": "m4",
+      "from": "w",
+      "to": "a",
+      "y": 325,
+      "label": "Datos y archivo (HTTPS, con avance)",
+      "variant": "emphasis",
+      "note": "Revisa permiso, datos, tipo por el contenido y tamaño (RN-021); luego extrae el texto para la búsqueda (si no puede, sigue sin texto)"
+    },
+    {
+      "id": "m5",
+      "from": "a",
+      "to": "r",
+      "y": 445,
+      "label": "Guarda el archivo (clave sin datos personales)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m6",
+      "from": "a",
+      "to": "b",
+      "y": 480,
+      "label": "Sesión + SESION_ENVIADA (una transacción)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m7",
+      "from": "a",
+      "to": "r",
+      "y": 515,
+      "label": "Si la base falla: borra el archivo",
+      "variant": "default"
+    },
+    {
+      "id": "m8",
+      "from": "a",
+      "to": "w",
+      "y": 550,
+      "label": "«Sesión enviada a la dirección»",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "w",
+      "from": 170,
+      "to": 555,
+      "type": "frontend"
+    },
+    {
+      "participant": "a",
+      "from": 320,
+      "to": 555,
+      "type": "backend"
+    },
+    {
+      "participant": "r",
+      "from": 440,
+      "to": 521,
+      "type": "cloud"
+    },
+    {
+      "participant": "b",
+      "from": 475,
+      "to": 486,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Todo o nada",
+      "items": [
+        "Si la base falla, se borra el archivo de R2",
+        "Si R2 rechaza el archivo, no queda sesión ni entrada de actividad"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Términos (RF-014)",
+      "items": [
+        "Compartir sin aceptar los términos: el servidor no guarda nada"
+      ]
+    }
+  ]
+}

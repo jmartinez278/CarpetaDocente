@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CarpetaDocente · Contenedores (C4 nivel 2, plan A)",
+    "locale": "es",
+    "output": "12-c4-contenedores.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "adm",
+      "type": "external",
+      "icon": "person",
+      "label": "Administrador",
+      "pos": [
+        60,
+        40
+      ],
+      "size": [
+        180,
+        56
+      ]
+    },
+    {
+      "id": "doc",
+      "type": "external",
+      "icon": "person",
+      "label": "Docente",
+      "pos": [
+        300,
+        40
+      ],
+      "size": [
+        180,
+        56
+      ]
+    },
+    {
+      "id": "dir",
+      "type": "external",
+      "icon": "person",
+      "label": "Dirección",
+      "pos": [
+        540,
+        40
+      ],
+      "size": [
+        180,
+        56
+      ]
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Interfaz web",
+      "sublabel": "Navegador: HTML, Tailwind, HTMX, Alpine.js",
+      "pos": [
+        280,
+        200
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "cdn",
+      "type": "cloud",
+      "label": "Archivos estáticos",
+      "sublabel": "CDN de Vercel",
+      "pos": [
+        40,
+        400
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "Aplicación web",
+      "sublabel": "Django en una función de Vercel",
+      "pos": [
+        280,
+        400
+      ],
+      "size": [
+        220,
+        76
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "Base de datos",
+      "sublabel": "PostgreSQL en Neon",
+      "pos": [
+        295,
+        600
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "r2",
+      "type": "cloud",
+      "label": "Almacenamiento de sesiones",
+      "sublabel": "Cloudflare R2 (PDF y .docx)",
+      "pos": [
+        720,
+        400
+      ],
+      "size": [
+        220,
+        70
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "CarpetaDocente · plan A",
+      "wraps": [
+        "web",
+        "cdn",
+        "app",
+        "db"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "doc-web",
+      "from": "doc",
+      "to": "web",
+      "label": "Usa",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dir-web",
+      "from": "dir",
+      "to": "web",
+      "label": "Usa"
+    },
+    {
+      "id": "adm-web",
+      "from": "adm",
+      "to": "web",
+      "label": "Panel de administración"
+    },
+    {
+      "id": "web-app",
+      "from": "web",
+      "to": "app",
+      "label": "HTTPS: páginas, HTMX y archivos ≤ 4 MB",
+      "variant": "emphasis"
+    },
+    {
+      "id": "web-cdn",
+      "from": "web",
+      "to": "cdn",
+      "label": "HTTPS: estáticos",
+      "fromSide": "left",
+      "toSide": "top"
+    },
+    {
+      "id": "app-db",
+      "from": "app",
+      "to": "db",
+      "label": "SQL sobre TLS (ORM)"
+    },
+    {
+      "id": "app-r2",
+      "from": "app",
+      "to": "r2",
+      "label": "API S3: guarda, borra, firma"
+    },
+    {
+      "id": "web-r2",
+      "from": "web",
+      "to": "r2",
+      "label": "Descarga con enlace firmado (60 s)",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Por qué el archivo pasa por Django",
+      "items": [
+        "Vercel acepta envíos de hasta 4,5 MB; el tope es 4 MB (RN-021)",
+        "Se revisa el tipo por el contenido y se guarda en el mismo paso"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Límites de confianza",
+      "items": [
+        "Todo por HTTPS; cierre a los 60 min sin actividad",
+        "Bucket privado: solo enlace firmado tras revisar el permiso"
+      ]
+    }
+  ]
+}

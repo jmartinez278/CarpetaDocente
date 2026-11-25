@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CarpetaDocente · Contexto (C4 nivel 1)",
+    "locale": "es",
+    "output": "12-c4-contexto.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "adm",
+      "type": "external",
+      "icon": "person",
+      "label": "Administrador",
+      "sublabel": "Equipo del proyecto",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "doc",
+      "type": "external",
+      "icon": "person",
+      "label": "Docente de primaria",
+      "sublabel": "Tutora de la sección",
+      "pos": [
+        300,
+        40
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "dir",
+      "type": "external",
+      "icon": "person",
+      "label": "Dirección de la I.E.",
+      "sublabel": "Monitoreo y SIAGIE",
+      "pos": [
+        560,
+        40
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "sys",
+      "type": "backend",
+      "label": "CarpetaDocente",
+      "sublabel": "Sesiones, notas y asistencia",
+      "pos": [
+        280,
+        240
+      ],
+      "size": [
+        230,
+        80
+      ]
+    },
+    {
+      "id": "r2",
+      "type": "cloud",
+      "label": "Cloudflare R2",
+      "sublabel": "Archivos de las sesiones",
+      "pos": [
+        300,
+        440
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "siagie",
+      "type": "external",
+      "label": "SIAGIE",
+      "sublabel": "Registro oficial, sin conexión",
+      "pos": [
+        820,
+        240
+      ],
+      "size": [
+        200,
+        70
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "adm-sys",
+      "from": "adm",
+      "to": "sys",
+      "label": "Administra (HTTPS)"
+    },
+    {
+      "id": "doc-sys",
+      "from": "doc",
+      "to": "sys",
+      "label": "Usa (HTTPS, celular o PC)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dir-sys",
+      "from": "dir",
+      "to": "sys",
+      "label": "Usa (HTTPS)"
+    },
+    {
+      "id": "sys-r2",
+      "from": "sys",
+      "to": "r2",
+      "label": "Guarda y firma la descarga"
+    },
+    {
+      "id": "dir-siagie",
+      "from": "dir",
+      "to": "siagie",
+      "label": "Manual: plantilla «Periodo por Excel»",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Personas",
+      "items": [
+        "Docente: envía sesiones, registra asistencia, competencias y notas",
+        "Dirección: consolidados, sesiones y plantilla del SIAGIE",
+        "Administrador: panel de Django"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "SIAGIE sin conexión",
+      "items": [
+        "La dirección descarga la plantilla, el sistema la devuelve llena y ella la carga",
+        "La línea punteada es un intercambio manual"
+      ]
+    }
+  ]
+}
