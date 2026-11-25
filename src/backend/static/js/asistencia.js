@@ -71,6 +71,7 @@
       contador: li.querySelector("[data-contador]"),
       deseado: { ...actual },
       guardado: { ...actual },
+      pintado: actual.estado,
       enCurso: false,
       fallida: false,
       lote: false,
@@ -128,7 +129,14 @@
     fila.li.dataset.estado = estado;
     fila.etiqueta.textContent = PALABRAS[estado];
     fila.boton.setAttribute("aria-label", `${fila.nombre}: ${PALABRAS[estado]}. Cambiar a ${PALABRAS[CICLO[estado]]}`);
-    fila.boton.replaceChildren(moldes[estado].cloneNode(true));
+    // El círculo se reemplaza solo si cambia el estado: data-cambio lo hace entrar con el fundido de color (M-02),
+    // y un reintento o un fallo, que repintan con el mismo estado, no lo repiten.
+    if (fila.pintado !== estado) {
+      const nuevo = moldes[estado].cloneNode(true);
+      nuevo.setAttribute("data-cambio", "");
+      fila.boton.replaceChildren(nuevo);
+      fila.pintado = estado;
+    }
     fila.fallo.hidden = !fila.fallida;
     if (fila.fallida) {
       fila.falloTexto.textContent = `${PALABRAS[estado]} · sin guardar. Reintentando…`;

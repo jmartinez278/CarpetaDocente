@@ -48,9 +48,15 @@
     for (const boton of document.querySelectorAll("[data-tema]")) {
       boton.addEventListener("click", () => {
         const nuevo = actual() === "dark" ? "light" : "dark";
-        aplicar(nuevo);
-        guardar(nuevo);
-        nombrar();
+        const cambiar = () => {
+          aplicar(nuevo);
+          guardar(nuevo);
+          nombrar();
+        };
+        // M-01: con el puntero, la página se funde al otro tema (200 ms, marco.css); con el teclado (data-teclado
+        // de marco.js) o sin View Transitions, el cambio es inmediato.
+        if (document.startViewTransition && !raiz.hasAttribute("data-teclado")) document.startViewTransition(cambiar);
+        else cambiar();
       });
     }
   }

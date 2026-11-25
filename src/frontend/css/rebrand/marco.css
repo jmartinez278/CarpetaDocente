@@ -408,6 +408,14 @@
     transform: none;
   }
 
+  /* M-01: el cambio de tema con el puntero se funde en 200 ms (tema.js, View Transition). Es solo opacidad, así que
+     vale igual con movimiento reducido (DESIGN.md: fundidos de hasta 200 ms). */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--m-out);
+    animation-timing-function: var(--m-ease);
+  }
+
   /* Movimiento reducido: el ☰ abre y cierra sin desplazarse (marco.js cierra de inmediato). */
   @media (prefers-reduced-motion: reduce) {
     .drawer,

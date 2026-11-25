@@ -207,7 +207,7 @@ Al enviar una sesión, el sistema SHALL extraer el texto de su archivo (.docx o 
 - **THEN** cada una queda con su texto, o sin texto si no se pudo leer, y volver a correrlo no cambia las que ya lo tienen
 
 ### Requirement: Listas solo del rol Docente
-«Mis sesiones» y «Repositorio» MUST ser solo del rol Docente, tenga o no sección asignada. La dirección y el Administrador van a su pantalla de inicio y una visita sin sesión, al ingreso.
+«Mis sesiones» y «Repositorio» MUST ser solo del rol Docente, tenga o no sección asignada. La dirección y el Administrador van a su pantalla de inicio y una visita sin sesión, al ingreso. Desde US-040, la dirección ve las sesiones de su institución (RN-019) solo desde la pestaña Sesiones del detalle de una sección (spec `consolidados-direccion`), no en estas listas.
 
 #### Scenario: Docente sin sección
 - **WHEN** una docente sin sección en el año ABIERTO abre el repositorio
